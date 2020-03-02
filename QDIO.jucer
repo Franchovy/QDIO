@@ -3,22 +3,13 @@
 <JUCERPROJECT id="aQWvG6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7">
   <MAINGROUP id="tJ6B41" name="QDIO">
     <GROUP id="{E863998F-FB31-468F-0385-AAE19ED05747}" name="Source">
-      <GROUP id="{E5B11829-C272-BFD2-9C5C-C0B046621D75}" name="PluginTest">
-        <FILE id="WD1OYb" name="PluginEditor.cpp" compile="1" resource="0"
-              file="../FlexPlugin/Source/PluginEditor.cpp"/>
-        <FILE id="L3mZOA" name="PluginEditor.h" compile="0" resource="0" file="../FlexPlugin/Source/PluginEditor.h"/>
-        <FILE id="PEcx5w" name="PluginProcessor.cpp" compile="1" resource="0"
-              file="../FlexPlugin/Source/PluginProcessor.cpp"/>
-        <FILE id="sO4oLF" name="PluginProcessor.h" compile="0" resource="0"
-              file="../FlexPlugin/Source/PluginProcessor.h"/>
-      </GROUP>
+      <FILE id="J7t0tf" name="Effect.cpp" compile="1" resource="0" file="Source/Effect.cpp"/>
+      <FILE id="dCkOG4" name="Effect.h" compile="0" resource="0" file="Source/Effect.h"/>
       <FILE id="ndo0dY" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="gqvmFO" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="TKqExf" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
-    <FILE id="TL3THX" name="GUIEffect.cpp" compile="1" resource="0" file="Source/GUIEffect.cpp"/>
-    <FILE id="X2sn2U" name="GUIEffect.h" compile="0" resource="0" file="Source/GUIEffect.h"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
