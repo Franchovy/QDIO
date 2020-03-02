@@ -62,11 +62,11 @@ void MainComponent::mouseDown(const MouseEvent &event) {
             EffectVT::Ptr testEffect = new EffectVT();
             // Check and use child effect if selected
             if (auto g = dynamic_cast<GUIEffect*>(event.originalComponent)){
-
-                //TODO RECURSIVE MECHANISM
-                auto parentTree = effectsTree.getChildWithProperty("GUI", g);
-
-                parentTree.appendChild(testEffect->getTree(), &undoManager);
+                auto parentTree = getTreeFromComponent(g, "GUI");
+                if (parentTree.isValid())
+                    parentTree.appendChild(testEffect->getTree(), &undoManager);
+                else
+                    std::cout << "Error: unable to retrieve tree from component.";
             } else {
                 effectsTree.appendChild(testEffect->getTree(), &undoManager);
             }
@@ -90,6 +90,33 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
 
         effectGui->setCentrePosition(menuPos - effectGui->getParentComponent()->getPosition());
     }
+}
+
+/**
+ * //TODO Create or find a "Property Component" type to replace GUIEffect* cast with for open-type usage
+ * Function iterates upwards through component hierarchy, then down through matching tree hierarchy
+ * @param g property of valuetree that is searched for
+ * @param name name of property to search for (throughout the tree)
+ * @return final valuetree match that contains property g
+ */
+ValueTree MainComponent::getTreeFromComponent(Component *g, String name) {
+    // Iterate upwards through parents populating parentArray
+    Array<Component*> parentArray;
+    auto component = g;
+    do {
+        parentArray.add(component);
+        component = component->getParentComponent();
+    } while (component->getComponentID() != "MainWindow");
+
+    // Iterate down from TreeTop checking at every step for a match
+    ValueTree vt = effectsTree;
+    for (int i = parentArray.size()-1; i >= 0 ; i--)
+    {
+        if (auto p = dynamic_cast<GUIEffect*>(parentArray[i]))
+            vt = vt.getChildWithProperty(name, p);
+        else return ValueTree(); // return invalid valuetree on failure
+    }
+    return vt;
 }
 /*
 void MainComponent::addEffect(GUIEffect::Ptr effectPtr)

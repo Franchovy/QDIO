@@ -40,6 +40,8 @@ private:
 
     Point<int> menuPos;
 
+    ValueTree getTreeFromComponent(Component* g, String name);
+
     // StringRefs - move these to Includer file
     Identifier ID_TREE_TOP = "Treetop";
     Identifier ID_EFFECT_TREE = "effectTree";
