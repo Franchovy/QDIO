@@ -10,7 +10,7 @@
 
 #include <JuceHeader.h>
 
-#include "GUIEffect.h"
+#include "Effect.h"
 
 //==============================================================================
 /*
