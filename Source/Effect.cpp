@@ -19,10 +19,15 @@ GUIEffect::GUIEffect ()
     // outline Rectangle
     outline.setWidth(5);
     outline.setSize(getWidth(), getHeight());
+
+    // Add resizer
+    addAndMakeVisible(resizer);
+
 }
 
 GUIEffect::~GUIEffect()
 {
+
 }
 
 //==============================================================================
@@ -36,6 +41,20 @@ void GUIEffect::paint (Graphics& g)
 
 void GUIEffect::resized()
 {
+    outline.setSize(getWidth(), getHeight());
+}
+
+void GUIEffect::mouseDown(const MouseEvent &event) {
+    dragger.startDraggingComponent(this, event);
+
+    if (event.mods.isRightButtonDown())
+        getParentComponent()->mouseDown(event);
+    Component::mouseDown(event);
+}
+
+void GUIEffect::mouseDrag(const MouseEvent &event) {
+    dragger.dragComponent(this, event, nullptr);
+    Component::mouseDrag(event);
 }
 
 

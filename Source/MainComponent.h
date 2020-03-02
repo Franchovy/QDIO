@@ -38,9 +38,7 @@ private:
 
     UndoManager undoManager;
 
-    // GUI Test
-    GUIEffect test;
-
+    Point<int> menuPos;
 
     // StringRefs - move these to Includer file
     Identifier ID_TREE_TOP = "Treetop";

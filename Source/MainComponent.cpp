@@ -18,13 +18,14 @@ MainComponent::MainComponent() :
 
     // Manage EffectsTree
     effectsTree.addListener(this);
-
-
-
 }
 
 MainComponent::~MainComponent()
 {
+    for (int i = 0; i < effectsTree.getNumChildren(); i++)
+        effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();
+
+    //std::cout << effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->getReferenceCount();
 }
 
 //==============================================================================
@@ -47,8 +48,10 @@ void MainComponent::resized()
 
 void MainComponent::mouseDown(const MouseEvent &event) {
     if (event.mods.isRightButtonDown()){
+
         // Right-click menu
         PopupMenu m;
+        menuPos = getMouseXYRelative();
         m.addItem(1, "Create Effect");
         int result = m.show();
 
@@ -57,8 +60,16 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         } else if (result == 1) {
             // Create Effect
             EffectVT::Ptr testEffect = new EffectVT();
-            std::cout << "ref count: " << testEffect.get()->getReferenceCount() << newLine;
-            effectsTree.appendChild(testEffect->getTree(), &undoManager);
+            // Check and use child effect if selected
+            if (auto g = dynamic_cast<GUIEffect*>(event.originalComponent)){
+
+                //TODO RECURSIVE MECHANISM
+                auto parentTree = effectsTree.getChildWithProperty("GUI", g);
+
+                parentTree.appendChild(testEffect->getTree(), &undoManager);
+            } else {
+                effectsTree.appendChild(testEffect->getTree(), &undoManager);
+            }
         }
 
     }
@@ -69,7 +80,15 @@ void MainComponent::mouseDown(const MouseEvent &event) {
 void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_TREE){
         auto effectGui = static_cast<GUIEffect*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_GUI).getObject());
-        addAndMakeVisible(effectGui);
+
+        if (parentTree.getType() == ID_EFFECT_TREE){
+            auto parentEffectGui = static_cast<GUIEffect*>(parentTree.getProperty(ID_EFFECT_GUI).getObject());
+            parentEffectGui->addAndMakeVisible(effectGui);
+        } else {
+            addAndMakeVisible(effectGui);
+        }
+
+        effectGui->setCentrePosition(menuPos - effectGui->getParentComponent()->getPosition());
     }
 }
 /*
