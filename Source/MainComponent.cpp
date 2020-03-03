@@ -10,6 +10,7 @@
 
 //==============================================================================
 MainComponent::MainComponent() :
+        saveStateFile(),
         effectsTree("TreeTop"),
         deviceSelector(deviceManager, 0,2,0,2,false,false,true,false),
         processorGraph(new AudioProcessorGraph()),
@@ -19,17 +20,50 @@ MainComponent::MainComponent() :
     setName("MainWindow");
     setSize (600, 400);
 
+
+    //========================================================================================
+    // Check Save state
+
+    std::cout << File::getCurrentWorkingDirectory().getParentDirectory().getFullPathName();
+    saveStateFile = File::getCurrentWorkingDirectory().getParentDirectory().getFullPathName() + "Device-Settings";
+
+
+    bool initialiseDevicesWithSaveState = true;
+    if (!saveStateFile.exists()){
+        std::cout << "Creating file";
+        saveStateFile.create();
+        initialiseDevicesWithSaveState = false;
+    } else {
+        std::cout << "File found";
+    }
+
+
+    //========================================================================================
     // Manage EffectsTree
+
     effectsTree.addListener(this);
 
+    //========================================================================================
     // Manage Audio
+
     //auto inputDevice  = MidiInput::getDevices()  [MidiInput::getDefaultDeviceIndex()];
     //auto outputDevice = MidiOutput::getDevices() [MidiOutput::getDefaultDeviceIndex()];
 
     processorGraph->enableAllBuses();
 
-    deviceManager.initialiseWithDefaultDevices (processorGraph->getMainBusNumInputChannels(),
-            processorGraph->getMainBusNumOutputChannels());         // [1]
+    if (initialiseDevicesWithSaveState){
+        std::unique_ptr<XmlElement> deviceXmlSettings = parseXMLIfTagMatches(saveStateFile, TAG_DEVICE_SETTINGS);
+        deviceManager.initialise(processorGraph->getMainBusNumInputChannels(),
+                processorGraph->getMainBusNumOutputChannels(),
+                deviceXmlSettings.get(), true);
+    } else {
+        deviceManager.initialiseWithDefaultDevices(processorGraph->getMainBusNumInputChannels(),
+                                                   processorGraph->getMainBusNumOutputChannels());
+        std::unique_ptr<XmlElement> saveStateXml = deviceManager.createStateXml();
+        saveStateXml->setTagName(TAG_DEVICE_SETTINGS);
+        saveStateXml->writeTo(saveStateFile);
+
+    }
     deviceManager.addAudioCallback (&player);                  // [2]
 
     //deviceManager.setMidiInputEnabled (inputDevice, true);
@@ -39,22 +73,18 @@ MainComponent::MainComponent() :
     initialiseGraph();
     player.setProcessor (processorGraph.get());
 
-    /*
-    hideDeviceSelector.onClick = [=](){
-        deviceSelector.setVisible(false);
-    };
-    addAndMakeVisible(deviceSelectorGroup);
-    deviceSelectorGroup.addAndMakeVisible(hideDeviceSelector);
-    deviceSelectorGroup.addAndMakeVisible(deviceSelector);
-     */
-
-
     deviceSelectorComponent.addAndMakeVisible(deviceSelector);
+    deviceSelectorComponent.setTitle("Device Settings");
+    deviceSelectorComponent.setSize(deviceSelector.getWidth(), deviceSelector.getHeight()+150);
     addAndMakeVisible(deviceSelectorComponent);
 }
 
 MainComponent::~MainComponent()
 {
+    std::unique_ptr<XmlElement>saveState = deviceManager.createStateXml();
+    saveState->setTagName(TAG_DEVICE_SETTINGS);
+    saveState->writeTo(saveStateFile);
+
     for (int i = 0; i < effectsTree.getNumChildren(); i++)
         effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();
 }

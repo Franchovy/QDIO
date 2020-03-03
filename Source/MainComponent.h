@@ -16,17 +16,28 @@
 class GUIWrapper : public Component
 {
 public:
-    GUIWrapper(){
+    GUIWrapper() {
         outline.setBounds(0,0,getWidth(),getHeight());
+        setMouseCursor(MouseCursor::DraggingHandCursor);
 
         addChildComponent(resizer);
         resizer.setAlwaysOnTop(true);
+
+        closeButton.setButtonText("Close");
+        addChildComponent(closeButton);
+        closeButton.onClick = [=]{
+            setVisible(false);
+        };
+
+        addChildComponent(title);
     }
 
     void paint (Graphics& g) override {
         g.drawRect(outline);
     }
     void resized() override {
+        title.setBounds(getWidth()/2 - 30, 10, 80, 30);
+        closeButton.setBounds(getWidth() - 80, 10, 70, 30);
         outline.setBounds(0,0,getWidth(),getHeight());
         for (auto c : childComponents)
             c->setBounds(30,30,getWidth()-30,getHeight()-30);
@@ -51,26 +62,39 @@ public:
         menu.addItem(item);
     }
 
+    void setTitle(String name){
+        title.setText(name,dontSendNotification);
+    }
+
     void setVisible(bool shouldBeVisible) override {
+        closeButton.setVisible(shouldBeVisible);
         resizer.setVisible(shouldBeVisible);
-        for (auto c : getChildren()){
+        title.setVisible(shouldBeVisible);
+        for (auto c : childComponents){
             c->setVisible(shouldBeVisible);
         }
         Component::setVisible(shouldBeVisible);
     }
 
     void childrenChanged() override {
+        childComponents.clear();
         for (auto c : getChildren()){
-            if (c != &resizer)
+            if (c != &resizer && c != &closeButton && c != &title)
                 childComponents.add(c);
         }
         Component::childrenChanged();
         resized();
     }
 
+    ~GUIWrapper() override {
+        childComponents.clear();
+    }
+
 private:
+    Label title;
     Rectangle<float> outline;
     ComponentDragger dragger;
+    TextButton closeButton;
     PopupMenu menu;
     Resizer resizer;
     Array<Component*> childComponents;
@@ -114,6 +138,10 @@ private:
     Point<int> menuPos;
 
     ValueTree getTreeFromComponent(Component* g, String name);
+
+    //==============================================================================
+    File saveStateFile;
+    String TAG_DEVICE_SETTINGS = "DeviceSettings";
 
     //==============================================================================
     // Audio shit
