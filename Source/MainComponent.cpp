@@ -10,7 +10,9 @@
 
 //==============================================================================
 MainComponent::MainComponent() :
-        effectsTree("TreeTop")
+        effectsTree("TreeTop"),
+        deviceSelector(deviceManager, 0,2,0,2,false,false,true,false),
+        processorGraph(new AudioProcessorGraph())
 {
     setComponentID("MainWindow");
     setName("MainWindow");
@@ -18,14 +20,38 @@ MainComponent::MainComponent() :
 
     // Manage EffectsTree
     effectsTree.addListener(this);
+
+    // Manage Audio
+    //auto inputDevice  = MidiInput::getDevices()  [MidiInput::getDefaultDeviceIndex()];
+    //auto outputDevice = MidiOutput::getDevices() [MidiOutput::getDefaultDeviceIndex()];
+
+    processorGraph->enableAllBuses();
+
+    deviceManager.initialiseWithDefaultDevices (processorGraph->getMainBusNumInputChannels(),
+            processorGraph->getMainBusNumOutputChannels());         // [1]
+    deviceManager.addAudioCallback (&player);                  // [2]
+
+    //deviceManager.setMidiInputEnabled (inputDevice, true);
+    //deviceManager.addMidiInputCallback (inputDevice, &player); // [3]
+    //deviceManager.setDefaultMidiOutput (outputDevice);
+
+    initialiseGraph();
+    player.setProcessor (processorGraph.get());
+
+    hideDeviceSelector.onClick = [=](){
+        deviceSelector.setVisible(false);
+    };
+    deviceSelectorGroup.setName("Poop");
+    deviceSelectorGroup.setText("Dumpy");
+    addAndMakeVisible(deviceSelectorGroup);
+    deviceSelectorGroup.addAndMakeVisible(hideDeviceSelector);
+    deviceSelectorGroup.addAndMakeVisible(deviceSelector);
 }
 
 MainComponent::~MainComponent()
 {
     for (int i = 0; i < effectsTree.getNumChildren(); i++)
         effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();
-
-    //std::cout << effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->getReferenceCount();
 }
 
 //==============================================================================
@@ -41,9 +67,8 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
-    // This is called when the MainComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    deviceSelectorGroup.setBounds(10,10,getWidth()-10, getHeight()-10);
+    deviceSelector.setBounds(10,10,getWidth()-10, getHeight()-10);
 }
 
 void MainComponent::mouseDown(const MouseEvent &event) {
@@ -52,7 +77,13 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         // Right-click menu
         PopupMenu m;
         menuPos = getMouseXYRelative();
+
         m.addItem(1, "Create Effect");
+        if (deviceSelectorGroup.isVisible())
+            m.addItem(2, "Hide Settings");
+        else
+            m.addItem(2, "Show Settings");
+
         int result = m.show();
 
         if (result == 0) {
@@ -70,6 +101,9 @@ void MainComponent::mouseDown(const MouseEvent &event) {
             } else {
                 effectsTree.appendChild(testEffect->getTree(), &undoManager);
             }
+        } else if (result == 2) {
+            // Show settings
+            deviceSelectorGroup.setVisible(true);
         }
 
     }
@@ -123,3 +157,73 @@ void MainComponent::addEffect(GUIEffect::Ptr effectPtr)
 {
     effectsArray.add(effectPtr.get());
 }*/
+
+
+void MainComponent::initialiseGraph()
+{
+    processorGraph->clear();
+
+    audioInputNode  = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
+    audioOutputNode = processorGraph->addNode (std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
+
+    connectAudioNodes();
+}
+
+void MainComponent::connectAudioNodes()
+{
+    for (int channel = 0; channel < 2; ++channel)
+        processorGraph->addConnection ({ { audioInputNode->nodeID,  channel },
+                                        { audioOutputNode->nodeID, channel } });
+}
+
+void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
+    emptyMidiMessageBuffer = MidiBuffer(MidiMessage());
+
+    processorGraph->setPlayConfigDetails (numInputChannels,
+                                         numOutputChannels,
+                                         sampleRate, samplesPerBlockExpected);
+
+    processorGraph->prepareToPlay (sampleRate, samplesPerBlockExpected);
+
+    initialiseGraph();
+}
+
+void MainComponent::releaseResources() {
+    processorGraph->releaseResources();
+}
+
+void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) {
+    // don't bother with dat shit
+    //for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
+    //    buffer.clear (i, 0, buffer.getNumSamples());
+
+    updateGraph();
+
+    processorGraph->processBlock (*bufferToFill.buffer, emptyMidiMessageBuffer);
+}
+
+void MainComponent::updateGraph() {
+    /*slot->getProcessor()->setPlayConfigDetails (processorGraph->getMainBusNumInputChannels(),
+                                                processorGraph->getMainBusNumOutputChannels(),
+                                                processorGraph->getSampleRate(),
+                                                processorGraph->getBlockSize());*/
+}
+/*
+void MainComponent::setMidiInput(int index)
+{
+    auto list = MidiInput::getDevices();
+
+    deviceManager.removeMidiInputCallback (list[lastInputIndex], synthAudioSource.getMidiCollector()); // [13]
+
+    auto newInput = list[index];
+
+    if (! deviceManager.isMidiInputEnabled (newInput))
+        deviceManager.setMidiInputEnabled (newInput, true);
+
+    deviceManager.addMidiInputCallback (newInput, synthAudioSource.getMidiCollector()); // [12]
+    midiInputList.setSelectedId (index + 1, dontSendNotification);
+
+    lastInputIndex = index;
+
+}
+*/
