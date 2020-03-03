@@ -12,20 +12,32 @@
 
 #include "Effector.h"
 
+//template<class ComponentType>
 class GUIWrapper : public Component
 {
 public:
     GUIWrapper(){
+        outline.setBounds(0,0,getWidth(),getHeight());
 
+        addChildComponent(resizer);
+        resizer.setAlwaysOnTop(true);
     }
 
-    void paint (Graphics&) override {
+    void paint (Graphics& g) override {
+        g.drawRect(outline);
     }
     void resized() override {
+        outline.setBounds(0,0,getWidth(),getHeight());
+        for (auto c : childComponents)
+            c->setBounds(30,30,getWidth()-30,getHeight()-30);
+
     }
 
     void mouseDown(const MouseEvent& event) override {
         dragger.startDraggingComponent(this, event);
+        if (event.mods.isRightButtonDown())
+            getParentComponent()->mouseDown(event);
+        Component::mouseDown(event);
     }
     void mouseDrag(const MouseEvent& event) override {
         dragger.dragComponent(this, event, nullptr);
@@ -34,9 +46,34 @@ public:
     PopupMenu& getMenu(){
         return menu;
     }
+
+    void addToMenu(String item){
+        menu.addItem(item);
+    }
+
+    void setVisible(bool shouldBeVisible) override {
+        resizer.setVisible(shouldBeVisible);
+        for (auto c : getChildren()){
+            c->setVisible(shouldBeVisible);
+        }
+        Component::setVisible(shouldBeVisible);
+    }
+
+    void childrenChanged() override {
+        for (auto c : getChildren()){
+            if (c != &resizer)
+                childComponents.add(c);
+        }
+        Component::childrenChanged();
+        resized();
+    }
+
 private:
+    Rectangle<float> outline;
     ComponentDragger dragger;
     PopupMenu menu;
+    Resizer resizer;
+    Array<Component*> childComponents;
 };
 
 
@@ -87,7 +124,7 @@ private:
     AudioProcessorPlayer player;
     std::unique_ptr<AudioProcessorGraph> processorGraph;
 
-    GroupComponent deviceSelectorGroup;
+    GUIWrapper deviceSelectorComponent;
     AudioDeviceSelectorComponent deviceSelector;
     ToggleButton hideDeviceSelector;
 

@@ -12,7 +12,8 @@
 MainComponent::MainComponent() :
         effectsTree("TreeTop"),
         deviceSelector(deviceManager, 0,2,0,2,false,false,true,false),
-        processorGraph(new AudioProcessorGraph())
+        processorGraph(new AudioProcessorGraph()),
+        deviceSelectorComponent()
 {
     setComponentID("MainWindow");
     setName("MainWindow");
@@ -38,14 +39,18 @@ MainComponent::MainComponent() :
     initialiseGraph();
     player.setProcessor (processorGraph.get());
 
+    /*
     hideDeviceSelector.onClick = [=](){
         deviceSelector.setVisible(false);
     };
-    deviceSelectorGroup.setName("Poop");
-    deviceSelectorGroup.setText("Dumpy");
     addAndMakeVisible(deviceSelectorGroup);
     deviceSelectorGroup.addAndMakeVisible(hideDeviceSelector);
     deviceSelectorGroup.addAndMakeVisible(deviceSelector);
+     */
+
+
+    deviceSelectorComponent.addAndMakeVisible(deviceSelector);
+    addAndMakeVisible(deviceSelectorComponent);
 }
 
 MainComponent::~MainComponent()
@@ -67,8 +72,8 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
-    deviceSelectorGroup.setBounds(10,10,getWidth()-10, getHeight()-10);
-    deviceSelector.setBounds(10,10,getWidth()-10, getHeight()-10);
+    //deviceSelectorGroup.setBounds(10,10,getWidth()-10, getHeight()-10);
+    deviceSelectorComponent.setBounds(50,50,getWidth()-50,getHeight()-50);
 }
 
 void MainComponent::mouseDown(const MouseEvent &event) {
@@ -79,7 +84,7 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         menuPos = getMouseXYRelative();
 
         m.addItem(1, "Create Effect");
-        if (deviceSelectorGroup.isVisible())
+        if (deviceSelectorComponent.isVisible())
             m.addItem(2, "Hide Settings");
         else
             m.addItem(2, "Show Settings");
@@ -103,7 +108,7 @@ void MainComponent::mouseDown(const MouseEvent &event) {
             }
         } else if (result == 2) {
             // Show settings
-            deviceSelectorGroup.setVisible(true);
+            deviceSelectorComponent.setVisible(true);
         }
 
     }

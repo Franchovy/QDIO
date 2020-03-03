@@ -17,7 +17,6 @@ GUIEffect::GUIEffect ()
     setSize (100, 100);
 
     // outline Rectangle
-    outline.setWidth(5);
     outline.setSize(getWidth(), getHeight());
 
     // Add resizer
