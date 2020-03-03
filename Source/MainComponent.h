@@ -10,7 +10,7 @@
 
 #include <JuceHeader.h>
 
-#include "Effect.h"
+#include "Effector.h"
 
 //==============================================================================
 /*
@@ -33,6 +33,8 @@ public:
     //void addEffect(GUIEffect::Ptr effectPtr);
 
 private:
+    //==============================================================================
+    // Effect tree shit
     ValueTree effectsTree;
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded);
 
@@ -41,6 +43,12 @@ private:
     Point<int> menuPos;
 
     ValueTree getTreeFromComponent(Component* g, String name);
+
+    //==============================================================================
+    // Audio shit
+    AudioDeviceManager deviceManager;
+    AudioProcessorPlayer player;
+    std::unique_ptr<AudioProcessorGraph> processorGraph;
 
     // StringRefs - move these to Includer file
     Identifier ID_TREE_TOP = "Treetop";
