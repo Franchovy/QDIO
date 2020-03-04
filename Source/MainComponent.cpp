@@ -43,7 +43,11 @@ MainComponent::MainComponent() :
     //deviceManager.setDefaultMidiOutput (outputDevice);
 
     initialiseGraph();
+    auto e = new EffectProcessor();
+    //player.setProcessor(e);
+    //addAndMakeVisible(e->createEditor());
     player.setProcessor (processorGraph.get());
+
 
 
     //==============================================================================
@@ -64,6 +68,8 @@ MainComponent::MainComponent() :
 
 MainComponent::~MainComponent()
 {
+    //TODO add audio device stopper
+
     for (int i = 0; i < effectsTree.getNumChildren(); i++)
         effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();
 }
@@ -184,14 +190,39 @@ void MainComponent::initialiseGraph()
     audioInputNode  = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
     audioOutputNode = processorGraph->addNode (std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
 
+    // test stuff
+    testAudioNode = processorGraph->addNode(std::make_unique<EffectProcessor>());
+    addAndMakeVisible(testAudioNode.get()->getProcessor()->createEditor());
+    std::cout << "Processor name: " << testAudioNode->getProcessor()->getName() << newLine;
+
     connectAudioNodes();
 }
 
 void MainComponent::connectAudioNodes()
 {
-    for (int channel = 0; channel < 2; ++channel)
-        processorGraph->addConnection ({ { audioInputNode->nodeID,  channel },
-                                        { audioOutputNode->nodeID, channel } });
+
+    //AudioProcessorGraph::Connection testConnection;
+
+    testAudioNode->getProcessor()->setPlayConfigDetails(processorGraph->getTotalNumInputChannels(),
+            processorGraph->getTotalNumOutputChannels(),
+            processorGraph->getSampleRate(),
+            processorGraph->getBlockSize());
+
+    std::cout << "Can connect?" << newLine;
+    std::cout << processorGraph->canConnect({{audioInputNode->nodeID,  0},
+                                {testAudioNode->nodeID, 0}}) << newLine;
+    std::cout << processorGraph->canConnect({{testAudioNode->nodeID,  0},
+                                    {audioOutputNode->nodeID, 0}}) << newLine;
+
+
+    for (int channel = 0; channel < 2; ++channel) {
+        /*processorGraph->addConnection({{audioInputNode->nodeID, channel},
+                                       {audioOutputNode->nodeID, channel}});*/
+        processorGraph->addConnection({{audioInputNode->nodeID,  channel},
+                                       {testAudioNode->nodeID, channel}});
+        processorGraph->addConnection({{testAudioNode->nodeID,  channel},
+                                       {audioOutputNode->nodeID, channel}});
+    }
 }
 
 void MainComponent::updateGraph() {
