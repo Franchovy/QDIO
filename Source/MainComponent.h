@@ -12,6 +12,11 @@
 
 #include "Effector.h"
 
+
+ApplicationProperties& getAppProperties();
+ApplicationCommandManager& getCommandManager();
+
+
 //template<class ComponentType>
 class GUIWrapper : public Component
 {
@@ -90,11 +95,12 @@ public:
         childComponents.clear();
     }
 
+    TextButton closeButton;
+
 private:
     Label title;
     Rectangle<float> outline;
     ComponentDragger dragger;
-    TextButton closeButton;
     PopupMenu menu;
     Resizer resizer;
     Array<Component*> childComponents;
@@ -141,8 +147,7 @@ private:
     ValueTree getTreeFromComponent(Component* g, String name);
 
     //==============================================================================
-    File saveStateFile;
-    String TAG_DEVICE_SETTINGS = "DeviceSettings";
+    String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
     //==============================================================================
     // Audio shit

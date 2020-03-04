@@ -13,8 +13,6 @@
 
 
 
-ApplicationProperties& getAppProperties();
-ApplicationCommandManager& getCommandManager();
 
 //==============================================================================
 class QDIOApplication  : public JUCEApplication, private AsyncUpdater
