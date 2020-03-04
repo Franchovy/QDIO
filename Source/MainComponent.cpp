@@ -59,9 +59,9 @@ MainComponent::MainComponent() :
     } else {
         deviceManager.initialiseWithDefaultDevices(processorGraph->getMainBusNumInputChannels(),
                                                    processorGraph->getMainBusNumOutputChannels());
-        std::unique_ptr<XmlElement> saveStateXml = deviceManager.createStateXml();
+        /*std::unique_ptr<XmlElement> saveStateXml = deviceManager.createStateXml();
         saveStateXml->setTagName(TAG_DEVICE_SETTINGS);
-        saveStateXml->writeTo(saveStateFile);
+        saveStateXml->writeTo(saveStateFile);*/
 
     }
     deviceManager.addAudioCallback (&player);                  // [2]
@@ -88,6 +88,8 @@ MainComponent::~MainComponent()
     for (int i = 0; i < effectsTree.getNumChildren(); i++)
         effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();
 }
+
+
 
 //==============================================================================
 void MainComponent::paint (Graphics& g)

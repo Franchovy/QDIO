@@ -104,7 +104,8 @@ private:
 /**
  * Main component and shit
  */
-class MainComponent   : public AudioAppComponent, public ValueTree::Listener, public Timer
+class MainComponent   : public AudioAppComponent, //TODO deprecate this (?)
+        public ValueTree::Listener, public Timer
 {
 public:
     //==============================================================================

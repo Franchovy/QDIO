@@ -11,8 +11,13 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
 
+
+
+ApplicationProperties& getAppProperties();
+ApplicationCommandManager& getCommandManager();
+
 //==============================================================================
-class QDIOApplication  : public JUCEApplication
+class QDIOApplication  : public JUCEApplication, private AsyncUpdater
 {
 public:
     //==============================================================================
@@ -25,9 +30,56 @@ public:
     //==============================================================================
     void initialise (const String& commandLine) override
     {
-        // This method is where you should put your application's initialisation code..
+        // initialise our settings file..
 
-        mainWindow.reset (new MainWindow (getApplicationName()));
+        PropertiesFile::Options options;
+        options.applicationName     = "QDIO Effects Creator";
+        options.filenameSuffix      = "settings";
+        options.osxLibrarySubFolder = "Preferences";
+
+        appProperties.reset (new ApplicationProperties());
+        appProperties->setStorageParameters (options);
+
+        mainWindow.reset (new MainWindow(getApplicationName()));
+        mainWindow->setUsingNativeTitleBar (true);
+
+        commandManager.registerAllCommandsForTarget (this);
+        //commandManager.registerAllCommandsForTarget (mainWindow.get());
+
+        //mainWindow->menuItemsChanged();
+
+        // Trigger AsyncUpdate for loading settings
+        triggerAsyncUpdate();
+    }
+
+    void handleAsyncUpdate()
+    {
+        File fileToOpen;
+
+#if JUCE_ANDROID || JUCE_IOS
+        fileToOpen = PluginGraph::getDefaultGraphDocumentOnMobile();
+#else
+        for (int i = 0; i < getCommandLineParameterArray().size(); ++i)
+        {
+            fileToOpen = File::getCurrentWorkingDirectory().getChildFile (getCommandLineParameterArray()[i]);
+
+            if (fileToOpen.existsAsFile())
+                break;
+        }
+#endif
+
+        if (! fileToOpen.existsAsFile())
+        {
+            RecentlyOpenedFilesList recentFiles;
+
+            recentFiles.restoreFromString (getAppProperties().getUserSettings()->getValue ("recentFilterGraphFiles"));
+
+            if (recentFiles.getNumFiles() > 0)
+                fileToOpen = recentFiles.getFile (0);
+        }
+
+        //if (fileToOpen.existsAsFile())
+            // Load app state
     }
 
     void shutdown() override
@@ -51,6 +103,9 @@ public:
         // this method is invoked, and the commandLine parameter tells you what
         // the other instance's command-line arguments were.
     }
+
+    ApplicationCommandManager commandManager;
+    std::unique_ptr<ApplicationProperties> appProperties;
 
     //==============================================================================
     /*
@@ -100,6 +155,11 @@ public:
 private:
     std::unique_ptr<MainWindow> mainWindow;
 };
+
+static QDIOApplication& getApp()                    { return *dynamic_cast<QDIOApplication*>(JUCEApplication::getInstance()); }
+
+ApplicationProperties& getAppProperties()         { return *getApp().appProperties; }
+ApplicationCommandManager& getCommandManager() { return getApp().commandManager; }
 
 //==============================================================================
 // This macro generates the main() routine that launches the app.
