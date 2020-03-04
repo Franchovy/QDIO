@@ -17,7 +17,7 @@ MainComponent::MainComponent() :
 {
     setComponentID("MainWindow");
     setName("MainWindow");
-    setSize (600, 400);
+    setSize (1920, 1080);
 
 
     //========================================================================================
@@ -45,6 +45,10 @@ MainComponent::MainComponent() :
     initialiseGraph();
     player.setProcessor (processorGraph.get());
 
+
+    //==============================================================================
+    // DeviceSelector GUI
+
     deviceSelectorComponent.addAndMakeVisible(deviceSelector);
     deviceSelectorComponent.setTitle("Device Settings");
     deviceSelectorComponent.setSize(deviceSelector.getWidth(), deviceSelector.getHeight()+150);
@@ -55,7 +59,7 @@ MainComponent::MainComponent() :
         getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
         getAppProperties().getUserSettings()->saveIfNeeded();
     };
-    addAndMakeVisible(deviceSelectorComponent);
+    addChildComponent(deviceSelectorComponent);
 }
 
 MainComponent::~MainComponent()
@@ -63,8 +67,6 @@ MainComponent::~MainComponent()
     for (int i = 0; i < effectsTree.getNumChildren(); i++)
         effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();
 }
-
-
 
 //==============================================================================
 void MainComponent::paint (Graphics& g)
@@ -115,13 +117,15 @@ void MainComponent::mouseDown(const MouseEvent &event) {
             }
         } else if (result == 2) {
             // Show settings
-            deviceSelectorComponent.setVisible(true);
+            deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
         }
 
     }
 
     Component::mouseDown(event);
 }
+
+//==============================================================================
 
 void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_TREE){
@@ -170,6 +174,8 @@ void MainComponent::addEffect(GUIEffect::Ptr effectPtr)
     effectsArray.add(effectPtr.get());
 }*/
 
+//==============================================================================
+
 
 void MainComponent::initialiseGraph()
 {
@@ -186,32 +192,6 @@ void MainComponent::connectAudioNodes()
     for (int channel = 0; channel < 2; ++channel)
         processorGraph->addConnection ({ { audioInputNode->nodeID,  channel },
                                         { audioOutputNode->nodeID, channel } });
-}
-
-void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate) {
-    emptyMidiMessageBuffer = MidiBuffer(MidiMessage());
-
-    processorGraph->setPlayConfigDetails (numInputChannels,
-                                         numOutputChannels,
-                                         sampleRate, samplesPerBlockExpected);
-
-    processorGraph->prepareToPlay (sampleRate, samplesPerBlockExpected);
-
-    initialiseGraph();
-}
-
-void MainComponent::releaseResources() {
-    processorGraph->releaseResources();
-}
-
-void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) {
-    // don't bother with dat shit
-    //for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
-    //    buffer.clear (i, 0, buffer.getNumSamples());
-
-    updateGraph();
-
-    processorGraph->processBlock (*bufferToFill.buffer, emptyMidiMessageBuffer);
 }
 
 void MainComponent::updateGraph() {

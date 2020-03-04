@@ -12,12 +12,30 @@
 #include "JuceHeader.h"
 
 
+class EffectProcessor : public AudioProcessor
+{
+public:
 
-/**
-    GUIEffect Component
-    GUI Representation of Effects / Container for plugins
-    ReferenceCountedObject for usage as part of ValueTree system
-*/
+    //===============================================================================
+    // Function overrides - all the default crap
+    const String getName() const override { return String(); }
+    void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override {}
+    void releaseResources() override {}
+    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override {}
+    double getTailLengthSeconds() const override { return 0; }
+    bool acceptsMidi() const override { return false; }
+    bool producesMidi() const override { return false; }
+    AudioProcessorEditor *createEditor() override { return nullptr; }
+    bool hasEditor() const override { return false; }
+    int getNumPrograms() override { return 0; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram(int index) override {}
+    const String getProgramName(int index) override { return String(); }
+    void changeProgramName(int index, const String &newName) override {}
+    void getStateInformation(juce::MemoryBlock &destData) override {}
+    void setStateInformation(const void *data, int sizeInBytes) override {}
+
+};
 
 class Resizer : public Component
 {
@@ -30,10 +48,7 @@ public:
     }
 
     void paint(Graphics& g) override {
-        Path p;
-        p.addRectangle(box);
-        strokeType.createDashedStroke(p,p,dashLengths,2);
-        g.strokePath(p, strokeType);
+        //g.drawRect(box);
     }
 
     void mouseDown(const MouseEvent &event) override{
@@ -90,6 +105,11 @@ private:
 
 };
 
+/**
+    GUIEffect Component
+    GUI Representation of Effects / Container for plugins
+    ReferenceCountedObject for usage as part of ValueTree system
+*/
 class GUIEffect  : public Component, public ReferenceCountedObject
 {
 public:

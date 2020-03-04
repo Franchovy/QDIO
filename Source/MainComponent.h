@@ -22,8 +22,9 @@ class GUIWrapper : public Component
 {
 public:
     GUIWrapper() {
+        setSize(800,800);
+        size.setXY(getWidth(), getHeight());
         outline.setBounds(0,0,getWidth(),getHeight());
-        setMouseCursor(MouseCursor::DraggingHandCursor);
 
         addChildComponent(resizer);
         resizer.setAlwaysOnTop(true);
@@ -41,12 +42,13 @@ public:
         g.drawRect(outline);
     }
     void resized() override {
-        title.setBounds(getWidth()/2 - 30, 10, 80, 30);
-        closeButton.setBounds(getWidth() - 80, 10, 70, 30);
-        outline.setBounds(0,0,getWidth(),getHeight());
-        for (auto c : childComponents)
-            c->setBounds(30,30,getWidth()-30,getHeight()-30);
 
+        title.setBounds(size.x/2 - 30, 10, 80, 30);
+        closeButton.setBounds(size.x - 80, 10, 70, 30);
+        outline.setBounds(0,0,size.x,size.y);
+        for (auto c : childComponents)
+            c->setBounds(30,30,size.x-30,size.y-30);
+        size.setXY(getWidth(),getHeight());
     }
 
     void mouseDown(const MouseEvent& event) override {
@@ -95,9 +97,15 @@ public:
         childComponents.clear();
     }
 
+    void parentSizeChanged() override {
+        // Keep size
+        setSize(size.x, size.y);
+    }
+
     TextButton closeButton;
 
 private:
+    Point<int> size; // unchanging size
     Label title;
     Rectangle<float> outline;
     ComponentDragger dragger;
@@ -110,7 +118,7 @@ private:
 /**
  * Main component and shit
  */
-class MainComponent   : public AudioAppComponent, //TODO deprecate this (?)
+class MainComponent   : public Component,
         public ValueTree::Listener, public Timer
 {
 public:
@@ -125,10 +133,10 @@ public:
     void mouseDown(const MouseEvent &event) override;
 
     //==============================================================================
-    // AudioAppComponent overrides
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+    // AudioSource overrides
+    /*void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void releaseResources() override;
-    void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;
+    void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;*/
 
     //void addEffect(GUIEffect::Ptr effectPtr);
 
