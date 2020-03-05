@@ -316,16 +316,23 @@ private:
 class EffectVT : public ReferenceCountedObject
 {
 public:
-    EffectVT() : effectTree("effectTree")
+    explicit EffectVT(AudioProcessorGraph* graph) : effectTree("effectTree")
     {
+        auto node = graph->addNode(std::make_unique<EffectProcessor>());
+        processor = node->getProcessor();
+
         // Set this object as a property of the owned valuetree....
-        effectTree.setProperty("effectVT", this, nullptr);
+        effectTree.setProperty("effect", this, nullptr);
         // Set GUI object as property
         effectTree.setProperty("GUI", &gui, nullptr);
+        // Create AudioProcessor
+        // default processor
     }
     ~EffectVT()
     {
-        effectTree.removeProperty("effectVT", nullptr);
+        effectTree.removeAllProperties(nullptr);
+        // Delete processor from graph
+        // Delete processorVT
     }
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
@@ -335,5 +342,9 @@ public:
 private:
     ValueTree effectTree;
     GUIEffect gui;
+
+    AudioProcessorGraph* graph;
+    AudioProcessor* processor;
+    AudioProcessorValueTreeState processorVT;
 
 };

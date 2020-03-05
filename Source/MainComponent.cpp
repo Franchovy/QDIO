@@ -200,7 +200,6 @@ void MainComponent::initialiseGraph()
 
 void MainComponent::connectAudioNodes()
 {
-
     //AudioProcessorGraph::Connection testConnection;
 
     testAudioNode->getProcessor()->setPlayConfigDetails(processorGraph->getTotalNumInputChannels(),
