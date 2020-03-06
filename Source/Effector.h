@@ -117,6 +117,7 @@ public:
         for (auto c : childComponents)
             c->setBounds(30,30,size.x-30,size.y-30);
         size.setXY(getWidth(),getHeight());
+        repaint();
     }
 
     void mouseDown(const MouseEvent& event) override {
@@ -213,12 +214,23 @@ private:
 class EffectProcessor : public AudioProcessor
 {
 public:
+
+
     EffectProcessor() : parameters (*this, nullptr, Identifier ("APVTSTutorial"),
                                     {std::make_unique<AudioParameterFloat> ("gain", "Gain", 0.0f, 1.0f, 0.9f)})
     {
         // Note: base class AudioProcessor takes ownership of parameters.
         levelParameter = parameters.getRawParameterValue ("gain");
     }
+/*
+
+    EffectProcessor(AudioProcessorValueTreeState& parameters)
+    {
+        this->parameters = parameters;
+        // Note: base class AudioProcessor takes ownership of parameters.
+        levelParameter = parameters.getRawParameterValue ("gain");
+    }
+*/
 
     //===============================================================================
     // Audio Processing
@@ -228,8 +240,14 @@ public:
                               sampleRate,
                               maximumExpectedSamplesPerBlock);*/
     }
-    void releaseResources() override {}
+    void releaseResources() override {
+
+    }
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override {
+        for (auto c = getMainBusNumInputChannels(); c < getMainBusNumOutputChannels(); c++){
+            buffer.clear(c, 0, buffer.getNumSamples());
+        }
+
         buffer.applyGain(*levelParameter);
     }
 
@@ -290,7 +308,6 @@ public:
     void resized() override;
 
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
 
 
@@ -312,39 +329,61 @@ private:
    destructor should take care of that.
  */
 
-
+template <class ProcessorType>
 class EffectVT : public ReferenceCountedObject
 {
 public:
-    explicit EffectVT(AudioProcessorGraph* graph) : effectTree("effectTree")
+    explicit EffectVT(String name, AudioProcessorGraph* graph) : effectTree("effectTree")
     {
-        auto node = graph->addNode(std::make_unique<EffectProcessor>());
+        // Set name
+        if (name.isNotEmpty())
+            this->name = name;
+        else name = "Default name";
+
+        effectTree.setProperty("Name", name, nullptr);
+
+        std::cout << "Adding to graph???" << newLine;
+        // Creates Processor of given type
+        node = graph->addNode(std::make_unique<ProcessorType>());
+        nodeID = node->nodeID;
+        std::cout << "Test: " << (graph->getNodeForId(nodeID) == node) << newLine;
+        // Saves the default stuff
         processor = node->getProcessor();
+        effectTree.setProperty("Node", node.get(), nullptr);
+
 
         // Set this object as a property of the owned valuetree....
         effectTree.setProperty("effect", this, nullptr);
         // Set GUI object as property
         effectTree.setProperty("GUI", &gui, nullptr);
-        // Create AudioProcessor
-        // default processor
     }
     ~EffectVT()
     {
         effectTree.removeAllProperties(nullptr);
         // Delete processor from graph
-        // Delete processorVT
+        graph->removeNode(nodeID);
+        // Delete processor
+        delete processor;
     }
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
 
-    ValueTree& getTree() {return effectTree;}
+    const ValueTree& getTree() const {return effectTree;}
+    const AudioProcessor* getProcessor() const {return processor;}
+    const AudioProcessorGraph::Node::Ptr getNode() const {return node;}
+    const String &getName() const { return name; }
+    void setName(const String &name) { EffectVT::name = name; }
 
 private:
+    String name;
     ValueTree effectTree;
     GUIEffect gui;
 
     AudioProcessorGraph* graph;
-    AudioProcessor* processor;
-    AudioProcessorValueTreeState processorVT;
 
+    AudioProcessor* processor;
+    AudioProcessorGraph::Node::Ptr node;
+    AudioProcessorGraph::NodeID nodeID;
+
+    AudioProcessorParameterGroup paramGroup;
 };

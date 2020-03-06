@@ -42,8 +42,6 @@ MainComponent::MainComponent() :
     //deviceManager.addMidiInputCallback (inputDevice, &player); // [3]
     //deviceManager.setDefaultMidiOutput (outputDevice);
 
-    initialiseGraph();
-    auto e = new EffectProcessor();
     //player.setProcessor(e);
     //addAndMakeVisible(e->createEditor());
     player.setProcessor (processorGraph.get());
@@ -103,14 +101,15 @@ void MainComponent::mouseDown(const MouseEvent &event) {
             m.addItem(2, "Hide Settings");
         else
             m.addItem(2, "Show Settings");
-
+        m.addItem(3, "Run audiograph");
         int result = m.show();
 
         if (result == 0) {
             // Menu ignored
         } else if (result == 1) {
             // Create Effect
-            EffectVT::Ptr testEffect = new EffectVT();
+            EffectVT<EffectProcessor>::Ptr testEffect = new EffectVT<EffectProcessor>("dis efekt", processorGraph.get());
+
             // Check and use child effect if selected
             if (auto g = dynamic_cast<GUIEffect*>(event.originalComponent)){
                 auto parentTree = getTreeFromComponent(g, "GUI");
@@ -124,6 +123,10 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         } else if (result == 2) {
             // Show settings
             deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
+        } else if (result == 3) {
+            // Start audio
+            initialiseGraph();
+
         }
 
     }
@@ -185,42 +188,67 @@ void MainComponent::addEffect(GUIEffect::Ptr effectPtr)
 
 void MainComponent::initialiseGraph()
 {
-    processorGraph->clear();
+    //processorGraph->clear(); // DIS MOTHAFUCKERRRRRRRRRR // Is this really needed?
 
     audioInputNode  = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
-    audioOutputNode = processorGraph->addNode (std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
+    audioOutputNode = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
 
-    // test stuff
-    testAudioNode = processorGraph->addNode(std::make_unique<EffectProcessor>());
-    addAndMakeVisible(testAudioNode.get()->getProcessor()->createEditor());
-    std::cout << "Processor name: " << testAudioNode->getProcessor()->getName() << newLine;
+    for (auto i = 0; i < effectsTree.getNumChildren(); i++){
+        std::cout << effectsTree.getChild(i).getProperty("Name").toString() << newLine;
+        auto node = static_cast<AudioProcessorGraph::Node*>(effectsTree.getChild(i).getProperty("Node").getObject());
+        // add the mothafucka to da graph, dawg
+        //TODO
+        node->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
+                                                processorGraph->getMainBusNumOutputChannels(),
+                                                processorGraph->getSampleRate(),
+                                                processorGraph->getBlockSize());
+    }
 
     connectAudioNodes();
 }
 
 void MainComponent::connectAudioNodes()
 {
-    //AudioProcessorGraph::Connection testConnection;
+    // Start and End Nodes default
+    if (effectsTree.getNumChildren() == 0){
+        std::cout << "No children" << newLine;
+        processorGraph->addConnection({{audioInputNode->nodeID},
+                                       {audioOutputNode->nodeID}});
+        return;
+    } else {
+        // Connect start and end to effect
+        auto firstEffect = effectsTree.getChild(0);
+        auto firstNode = static_cast<AudioProcessorGraph::Node*>(firstEffect.getProperty("Node").getObject());
+        auto lastEffect = effectsTree.getChild(effectsTree.getNumChildren() - 1);
+        auto lastNode = static_cast<AudioProcessorGraph::Node*>(lastEffect.getProperty("Node").getObject());
 
-    testAudioNode->getProcessor()->setPlayConfigDetails(processorGraph->getTotalNumInputChannels(),
-            processorGraph->getTotalNumOutputChannels(),
-            processorGraph->getSampleRate(),
-            processorGraph->getBlockSize());
+        if (processorGraph->addConnection({
+                    {audioInputNode->nodeID},
+                {firstNode->nodeID}}))
+            std::cout << "In connection ok" << newLine;
+        else std::cout << "Fail 1" << newLine;
 
-    std::cout << "Can connect?" << newLine;
-    std::cout << processorGraph->canConnect({{audioInputNode->nodeID,  0},
-                                {testAudioNode->nodeID, 0}}) << newLine;
-    std::cout << processorGraph->canConnect({{testAudioNode->nodeID,  0},
-                                    {audioOutputNode->nodeID, 0}}) << newLine;
+        if (processorGraph->addConnection({
+                  {lastNode->nodeID},
+              {audioOutputNode->nodeID}}))
+            std::cout << "Out connection ok" << newLine;
+        else std::cout << "Fail 2" << newLine;
 
+        std::cout << "In/Out connections: " << newLine;
+        for (auto i : processorGraph->getConnections()){
+            std::cout << "Source: " << effectsTree.getChildWithProperty("Node", processorGraph->getNodeForId(i.source.nodeID)).getProperty("Name").toString() << newLine;
+            std::cout << "Dest: " << effectsTree.getChildWithProperty("Node", processorGraph->getNodeForId(i.destination.nodeID)).getProperty("Name").toString() << newLine;
+        }
 
-    for (int channel = 0; channel < 2; ++channel) {
-        /*processorGraph->addConnection({{audioInputNode->nodeID, channel},
-                                       {audioOutputNode->nodeID, channel}});*/
-        processorGraph->addConnection({{audioInputNode->nodeID,  channel},
-                                       {testAudioNode->nodeID, channel}});
-        processorGraph->addConnection({{testAudioNode->nodeID,  channel},
-                                       {audioOutputNode->nodeID, channel}});
+        auto source = effectsTree.getChild(0);
+        for (int i = 1; i < effectsTree.getNumChildren(); i++) {
+            auto dest = effectsTree.getChild(i);
+            processorGraph->addConnection({
+                      {static_cast<AudioProcessorGraph::Node*>(source.getProperty("Node").getObject())->nodeID},
+                      {static_cast<AudioProcessorGraph::Node*>(dest.getProperty("Node").getObject())->nodeID}});
+
+            source = effectsTree.getChild(i);
+        }
     }
 }
 
@@ -229,6 +257,9 @@ void MainComponent::updateGraph() {
                                                 processorGraph->getMainBusNumOutputChannels(),
                                                 processorGraph->getSampleRate(),
                                                 processorGraph->getBlockSize());*/
+    // Stop graph
+    // Reconnect graph
+    // Start graph
 }
 /*
 void MainComponent::setMidiInput(int index)

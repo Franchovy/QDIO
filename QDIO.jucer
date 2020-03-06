@@ -3,6 +3,8 @@
 <JUCERPROJECT id="aQWvG6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7">
   <MAINGROUP id="tJ6B41" name="QDIO">
     <GROUP id="{E863998F-FB31-468F-0385-AAE19ED05747}" name="Source">
+      <FILE id="zRXWOI" name="IOEffects.h" compile="0" resource="0" file="Source/IOEffects.h"/>
+      <FILE id="GAYD1q" name="IOEffects.cpp" compile="1" resource="0" file="Source/IOEffects.cpp"/>
       <FILE id="ynG9A9" name="Effector.h" compile="0" resource="0" file="Source/Effector.h"/>
       <FILE id="iN8NJw" name="Effector.cpp" compile="1" resource="0" file="Source/Effector.cpp"/>
       <FILE id="ndo0dY" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
