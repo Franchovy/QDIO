@@ -188,8 +188,6 @@ void MainComponent::addEffect(GUIEffect::Ptr effectPtr)
 
 void MainComponent::initialiseGraph()
 {
-    //processorGraph->clear(); // DIS MOTHAFUCKERRRRRRRRRR // Is this really needed?
-
     audioInputNode  = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
     audioOutputNode = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
 

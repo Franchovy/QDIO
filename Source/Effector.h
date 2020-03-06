@@ -321,7 +321,7 @@ private:
 };
 
 /**
-   EffectVT (ValueTree) is the manager of everything in an Effect.
+   EffectVT (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
 
    This includes GUI, AudioProcessor, and the Effect's ValueTree itself.
 
@@ -333,7 +333,8 @@ template <class ProcessorType>
 class EffectVT : public ReferenceCountedObject
 {
 public:
-    explicit EffectVT(String name, AudioProcessorGraph* graph) : effectTree("effectTree")
+    explicit EffectVT(String name, AudioProcessorGraph* graph)
+        : effectTree("effectTree")
     {
         // Set name
         if (name.isNotEmpty())
@@ -342,11 +343,10 @@ public:
 
         effectTree.setProperty("Name", name, nullptr);
 
-        std::cout << "Adding to graph???" << newLine;
         // Creates Processor of given type
         node = graph->addNode(std::make_unique<ProcessorType>());
         nodeID = node->nodeID;
-        std::cout << "Test: " << (graph->getNodeForId(nodeID) == node) << newLine;
+
         // Saves the default stuff
         processor = node->getProcessor();
         effectTree.setProperty("Node", node.get(), nullptr);
