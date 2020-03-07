@@ -63,6 +63,28 @@ private:
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
+    //
+    EffectVT* testEffect = nullptr;
+    PopupMenu getEffectSelectMenu(){
+        PopupMenu m;
+        m.addItem("Empty Effect", std::function<void()>(
+                [=]{testEffect = new EffectVT(processorGraph.get(), "Empty Effect");}));
+        m.addItem("Empty Effect", std::function<void()>(
+                [=]{testEffect = new EffectVT(processorGraph.get(), "Empty Effect");}));
+        m.addItem("Input Effect", std::function<void()>(
+                [=]{
+                    auto node = processorGraph->addNode(
+                            std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
+                    testEffect = new EffectVT(node->nodeID, processorGraph.get(), "Input Device");}));
+        m.addItem("Output Effect", std::function<void()>(
+                [=]{
+                    auto node = processorGraph->addNode(
+                            std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
+                    testEffect = new EffectVT(node->nodeID, processorGraph.get(), "Output Device");}));
+
+        return m;
+    }
+
     //==============================================================================
     // Audio shit
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;

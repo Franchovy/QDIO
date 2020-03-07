@@ -96,7 +96,10 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         PopupMenu m;
         menuPos = getMouseXYRelative();
 
-        m.addItem(1, "Create Effect");
+        PopupMenu test = getEffectSelectMenu();
+        m.addSubMenu("Create Effect", test);
+        //m.addItem(1, "Create Effect");
+
         if (deviceSelectorComponent.isVisible())
             m.addItem(2, "Hide Settings");
         else
@@ -106,9 +109,10 @@ void MainComponent::mouseDown(const MouseEvent &event) {
 
         if (result == 0) {
             // Menu ignored
-        } else if (result == 1) {
+        } else if (result == -1) {
             // Create Effect
-            EffectVT<EffectProcessor>::Ptr testEffect = new EffectVT<EffectProcessor>("dis efekt", processorGraph.get());
+            std::cout << "Test result: " << (testEffect != nullptr) << newLine;
+            std::cout << testEffect->getName() << newLine;
 
             // Check and use child effect if selected
             if (auto g = dynamic_cast<GUIEffect*>(event.originalComponent)){
@@ -137,6 +141,9 @@ void MainComponent::mouseDown(const MouseEvent &event) {
 //==============================================================================
 
 void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
+    // Add ParameterGroup
+    // Add to AudioProcessorGraph
+
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_TREE){
         auto effectGui = static_cast<GUIEffect*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_GUI).getObject());
 

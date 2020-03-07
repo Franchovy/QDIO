@@ -310,11 +310,12 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
 
+    void setParameters(AudioProcessorParameterGroup& group);
 
 private:
+    // Utility
     Rectangle<float> outline;
     Resizer resizer;
-
     ComponentDragger dragger;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIEffect)
@@ -329,39 +330,77 @@ private:
    destructor should take care of that.
  */
 
-template <class ProcessorType>
 class EffectVT : public ReferenceCountedObject
 {
 public:
-    explicit EffectVT(String name, AudioProcessorGraph* graph)
-        : effectTree("effectTree")
+/**
+     * EffectVT - encapsulator of individual AudioProcessor
+     * This is used to contain BaseEffects, imported Plugins, or AudioGraphIOProcessors
+     * Initialises all data to be used as an individual component, and for further up trees.
+     */
+    /*template <class ProcessorType>
+    static EffectVT create(AudioProcessorGraph* graph, String name = "") {
+        // Creates Processor of given type
+        auto node = graph->addNode(std::make_unique<ProcessorType>());
+        auto nodeID = node->nodeID;
+
+        return EffectVT(nodeID, graph, name);
+    }*/
+
+    /**
+     * Constructor for a set of EffectVTs
+     */
+     EffectVT(Array<EffectVT> effectVTSet, AudioProcessorGraph* graph, String name = ""){
+         // TODO
+     }
+
+    /**
+     * Constructor for base effects, plugins, etc. Create, pass to the audio graph, and then pass nodeID
+     * to this constructor.
+     * @param nodeID
+     * @param graph
+     * @param name
+     */
+    EffectVT(AudioProcessorGraph::NodeID nodeID, AudioProcessorGraph* graph, String name = "") :
+            EffectVT(graph, name)
+    {
+        // Register the processor and node
+        node = graph->getNodeForId(nodeID);
+        processor = node->getProcessor();
+
+        isIndividual = true;
+
+        // Set node property
+        effectTree.setProperty("Node", node.get(), nullptr);
+    }
+
+    /**
+     * Constructor for an empty effect. It doesn't contain anything but can receive contents
+     * upon drag and drop into it.
+     * @param name
+     * @param graph
+     */
+    EffectVT(AudioProcessorGraph* graph, String name = "")
+            : effectTree("effectTree")
     {
         // Set name
         if (name.isNotEmpty())
             this->name = name;
         else name = "Default name";
 
+        // Set name property
         effectTree.setProperty("Name", name, nullptr);
-
-        // Creates Processor of given type
-        node = graph->addNode(std::make_unique<ProcessorType>());
-        nodeID = node->nodeID;
-
-        // Saves the default stuff
-        processor = node->getProcessor();
-        effectTree.setProperty("Node", node.get(), nullptr);
-
-
-        // Set this object as a property of the owned valuetree....
+        // Set this object - "self" - property
         effectTree.setProperty("effect", this, nullptr);
-        // Set GUI object as property
+        // Set GUI property
         effectTree.setProperty("GUI", &gui, nullptr);
     }
+
     ~EffectVT()
     {
         effectTree.removeAllProperties(nullptr);
         // Delete processor from graph
-        graph->removeNode(nodeID);
+        graph->removeNode(node->nodeID);
         // Delete processor
         delete processor;
     }
@@ -375,15 +414,16 @@ public:
     void setName(const String &name) { EffectVT::name = name; }
 
 private:
+    // Used for an individual processor EffectVT. - does not contain anything else
+    bool isIndividual = false;
+    AudioProcessor* processor;
+    AudioProcessorGraph::Node::Ptr node;
+
     String name;
     ValueTree effectTree;
     GUIEffect gui;
 
     AudioProcessorGraph* graph;
-
-    AudioProcessor* processor;
-    AudioProcessorGraph::Node::Ptr node;
-    AudioProcessorGraph::NodeID nodeID;
 
     AudioProcessorParameterGroup paramGroup;
 };
