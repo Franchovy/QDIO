@@ -216,38 +216,12 @@ void MainComponent::connectAudioNodes()
         // Scan through top-level nodes for:
         // Input devices
         for (auto e : effectsTree.getChildWithProperty("Name", "Input Device")){
-            std::cout << "Input: ";// << static_cast<AudioGraphIOProcessor>();
-            static_cast<AudioProcessorGraph::Node*>(e.getProperty("Node").getObject());
+            auto node = static_cast<AudioProcessorGraph::Node*>(e.getProperty("Node").getObject());
+
         }
         // Output devices
         for (auto e : effectsTree.getChildWithProperty("Name", "Output Device")){
-
-        }
-/*
-        // Connect start and end to effect
-        auto firstEffect = effectsTree.getChild(0);
-        auto firstNode = static_cast<AudioProcessorGraph::Node*>(firstEffect.getProperty("Node").getObject());
-        auto lastEffect = effectsTree.getChild(effectsTree.getNumChildren() - 1);
-        auto lastNode = static_cast<AudioProcessorGraph::Node*>(lastEffect.getProperty("Node").getObject());*/
-/*  // TODO connect up input and output nodes
-
-        if (processorGraph->addConnection({
-                    {audioInputNode->nodeID},
-                {firstNode->nodeID}}))
-            std::cout << "In connection ok" << newLine;
-        else std::cout << "Fail 1" << newLine;
-
-        if (processorGraph->addConnection({
-                  {lastNode->nodeID},
-              {audioOutputNode->nodeID}}))
-            std::cout << "Out connection ok" << newLine;
-        else std::cout << "Fail 2" << newLine;
-*/
-
-        std::cout << "In/Out connections: " << newLine;
-        for (auto i : processorGraph->getConnections()){
-            std::cout << "Source: " << effectsTree.getChildWithProperty("Node", processorGraph->getNodeForId(i.source.nodeID)).getProperty("Name").toString() << newLine;
-            std::cout << "Dest: " << effectsTree.getChildWithProperty("Node", processorGraph->getNodeForId(i.destination.nodeID)).getProperty("Name").toString() << newLine;
+            auto node = static_cast<AudioProcessorGraph::Node*>(e.getProperty("Node").getObject());
         }
 
         auto source = effectsTree.getChild(0);
@@ -259,14 +233,18 @@ void MainComponent::connectAudioNodes()
 
             source = effectsTree.getChild(i);
         }
+
+        std::cout << "In/Out connections: " << newLine;
+        for (auto i : processorGraph->getConnections()){
+            std::cout << "Source: " << effectsTree.getChildWithProperty("Node",
+                    processorGraph->getNodeForId(i.source.nodeID)).getProperty("Name").toString() << newLine;
+            std::cout << "Dest: " << effectsTree.getChildWithProperty("Node",
+                    processorGraph->getNodeForId(i.destination.nodeID)).getProperty("Name").toString() << newLine;
+        }
     }
 }
 
 void MainComponent::updateGraph() {
-    /*slot->getProcessor()->setPlayConfigDetails (processorGraph->getMainBusNumInputChannels(),
-                                                processorGraph->getMainBusNumOutputChannels(),
-                                                processorGraph->getSampleRate(),
-                                                processorGraph->getBlockSize());*/
     // Stop graph
     // Reconnect graph
     // Start graph

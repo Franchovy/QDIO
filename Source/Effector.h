@@ -141,6 +141,7 @@ public:
 
     void paint (Graphics& g) override {
         g.drawRect(outline);
+        //g.drawText(title);
     }
     void resized() override {
 
@@ -420,6 +421,7 @@ public:
         if (name.isNotEmpty())
             this->name = name;
         else name = "Default name";
+        gui.setT
 
         // Set name property
         effectTree.setProperty("Name", name, nullptr);
