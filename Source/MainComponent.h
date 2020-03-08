@@ -64,25 +64,42 @@ private:
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
     //
-    EffectVT* testEffect = nullptr;
     PopupMenu getEffectSelectMenu(){
         PopupMenu m;
         m.addItem("Empty Effect", std::function<void()>(
-                [=]{testEffect = new EffectVT(processorGraph.get(), "Empty Effect");}));
-        m.addItem("Empty Effect", std::function<void()>(
-                [=]{testEffect = new EffectVT(processorGraph.get(), "Empty Effect");}));
+                [=]{
+                    auto e = new EffectVT(processorGraph.get(), "Empty Effect");
+                    createEffect(e->getNode(), "Effect");
+                }));
         m.addItem("Input Effect", std::function<void()>(
                 [=]{
-                    auto node = processorGraph->addNode(
-                            std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
-                    testEffect = new EffectVT(node->nodeID, processorGraph.get(), "Input Device");}));
+                    createEffect<AudioGraphIOProcessor>("Input Device", AudioGraphIOProcessor::audioInputNode);}));
         m.addItem("Output Effect", std::function<void()>(
                 [=]{
-                    auto node = processorGraph->addNode(
-                            std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
-                    testEffect = new EffectVT(node->nodeID, processorGraph.get(), "Output Device");}));
-
+                    createEffect<AudioGraphIOProcessor>("Output Device", AudioGraphIOProcessor::audioOutputNode);}));
         return m;
+    }
+
+    template <class Processor>
+    void createEffect(String name, AudioProcessorGraph::AudioGraphIOProcessor::IODeviceType deviceType){
+        if (std::is_same<Processor, AudioProcessorGraph::AudioGraphIOProcessor>()){
+            auto node = processorGraph->addNode(
+                    std::make_unique<AudioGraphIOProcessor>(deviceType));
+            node->getProcessor()->getName();
+            createEffect(node, name);
+        } else {
+            std::cout << "Invalid AudioGraphIOProcessor Type";
+        }
+    }
+
+    template<class Processor>
+    void createEffect(String name, AudioProcessor* processor){
+         //else if (std::is_same<Processor, EffectProcessor) //TODO Base effect?
+    }
+
+    void createEffect(AudioProcessorGraph::Node::Ptr node, String name){
+        EffectVT::Ptr e = new EffectVT(node->nodeID, processorGraph.get(), name);
+        effectsTree.appendChild(e->getTree(),nullptr); //TODO fix mem management
     }
 
     //==============================================================================
@@ -101,11 +118,6 @@ private:
     int numInputChannels = 2;
     int numOutputChannels = 2;
 
-    Node::Ptr audioInputNode;
-    Node::Ptr audioOutputNode;
-    Node::Ptr testAudioNode;
-    Node::Ptr midiInputNode;
-    Node::Ptr midiOutputNode;
 
     MidiBuffer emptyMidiMessageBuffer;
 

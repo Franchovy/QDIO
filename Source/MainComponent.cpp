@@ -46,8 +46,6 @@ MainComponent::MainComponent() :
     //addAndMakeVisible(e->createEditor());
     player.setProcessor (processorGraph.get());
 
-
-
     //==============================================================================
     // DeviceSelector GUI
 
@@ -110,6 +108,8 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         if (result == 0) {
             // Menu ignored
         } else if (result == -1) {
+            /*auto testEffect = static_cast<EffectVT*>(effectsTree.getChild(-1).getProperty("Effect"));
+
             // Create Effect
             std::cout << "Test result: " << (testEffect != nullptr) << newLine;
             std::cout << testEffect->getName() << newLine;
@@ -123,18 +123,15 @@ void MainComponent::mouseDown(const MouseEvent &event) {
                     std::cout << "Error: unable to retrieve tree from component.";
             } else {
                 effectsTree.appendChild(testEffect->getTree(), &undoManager);
-            }
+            }*/
         } else if (result == 2) {
             // Show settings
             deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
         } else if (result == 3) {
             // Start audio
             initialiseGraph();
-
         }
-
     }
-
     Component::mouseDown(event);
 }
 
@@ -184,20 +181,12 @@ ValueTree MainComponent::getTreeFromComponent(Component *g, String name) {
     }
     return vt;
 }
-/*
-void MainComponent::addEffect(GUIEffect::Ptr effectPtr)
-{
-    effectsArray.add(effectPtr.get());
-}*/
 
 //==============================================================================
 
 
 void MainComponent::initialiseGraph()
 {
-    audioInputNode  = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
-    audioOutputNode = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
-
     for (auto i = 0; i < effectsTree.getNumChildren(); i++){
         std::cout << effectsTree.getChild(i).getProperty("Name").toString() << newLine;
         auto node = static_cast<AudioProcessorGraph::Node*>(effectsTree.getChild(i).getProperty("Node").getObject());
@@ -217,15 +206,30 @@ void MainComponent::connectAudioNodes()
     // Start and End Nodes default
     if (effectsTree.getNumChildren() == 0){
         std::cout << "No children" << newLine;
-        processorGraph->addConnection({{audioInputNode->nodeID},
-                                       {audioOutputNode->nodeID}});
         return;
     } else {
+        // TEST: check state
+        //TODO check effectsTree and AudioGraph state to see if everything is added correctly
+        //TODO check in/out busses to fix audio.
+
+        // Connect input and output nodes
+        // Scan through top-level nodes for:
+        // Input devices
+        for (auto e : effectsTree.getChildWithProperty("Name", "Input Device")){
+            std::cout << "Input: ";// << static_cast<AudioGraphIOProcessor>();
+            static_cast<AudioProcessorGraph::Node*>(e.getProperty("Node").getObject());
+        }
+        // Output devices
+        for (auto e : effectsTree.getChildWithProperty("Name", "Output Device")){
+
+        }
+/*
         // Connect start and end to effect
         auto firstEffect = effectsTree.getChild(0);
         auto firstNode = static_cast<AudioProcessorGraph::Node*>(firstEffect.getProperty("Node").getObject());
         auto lastEffect = effectsTree.getChild(effectsTree.getNumChildren() - 1);
-        auto lastNode = static_cast<AudioProcessorGraph::Node*>(lastEffect.getProperty("Node").getObject());
+        auto lastNode = static_cast<AudioProcessorGraph::Node*>(lastEffect.getProperty("Node").getObject());*/
+/*  // TODO connect up input and output nodes
 
         if (processorGraph->addConnection({
                     {audioInputNode->nodeID},
@@ -238,6 +242,7 @@ void MainComponent::connectAudioNodes()
               {audioOutputNode->nodeID}}))
             std::cout << "Out connection ok" << newLine;
         else std::cout << "Fail 2" << newLine;
+*/
 
         std::cout << "In/Out connections: " << newLine;
         for (auto i : processorGraph->getConnections()){

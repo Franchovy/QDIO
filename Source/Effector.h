@@ -80,6 +80,37 @@ private:
 
 };
 
+struct ConnectionPort : public Component
+{
+    ConnectionPort() : rectangle(50,50)
+    {
+    }
+
+    void paint(Graphics &g) override
+    {
+        g.drawRect(rectangle);
+    }
+
+private:
+    Rectangle<int> rectangle;
+};
+
+
+struct ConnectionLine : public Component
+{
+    void paint(Graphics &g) override
+    {
+        Line<float> line(inPort->getPosition().toFloat(), outPort->getPosition().toFloat());
+        g.drawLine(line);
+    }
+
+private:
+    ConnectionPort* inPort;
+    ConnectionPort* outPort;
+
+    Line<float> line;
+};
+
 
 class GUIWrapper : public Component
 {
@@ -104,6 +135,8 @@ public:
         };
 
         addChildComponent(title);
+
+
     }
 
     void paint (Graphics& g) override {
@@ -390,8 +423,8 @@ public:
 
         // Set name property
         effectTree.setProperty("Name", name, nullptr);
-        // Set this object - "self" - property
-        effectTree.setProperty("effect", this, nullptr);
+        // Set "self" property
+        effectTree.setProperty("Effect", this, nullptr);
         // Set GUI property
         effectTree.setProperty("GUI", &gui, nullptr);
     }
@@ -401,8 +434,6 @@ public:
         effectTree.removeAllProperties(nullptr);
         // Delete processor from graph
         graph->removeNode(node->nodeID);
-        // Delete processor
-        delete processor;
     }
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
@@ -411,7 +442,11 @@ public:
     const AudioProcessor* getProcessor() const {return processor;}
     const AudioProcessorGraph::Node::Ptr getNode() const {return node;}
     const String &getName() const { return name; }
-    void setName(const String &name) { EffectVT::name = name; }
+    void setName(const String &name) { this->name = name; }
+
+    /*void setSelfProperty(const EffectVT::Ptr ptr){
+        effectTree.setProperty("Effect", ptr.get(), nullptr);
+    }*/
 
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
