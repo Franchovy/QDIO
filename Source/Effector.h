@@ -80,28 +80,47 @@ private:
 
 };
 
+struct ConnectionLine;
+
 struct ConnectionPort : public Component
 {
-    ConnectionPort() : rectangle(50,50)
+    ConnectionPort(bool isInput) : rectangle(50,50)
     {
+        std::cout << "Created Connection" << newLine;
+        this->isInput = isInput;
     }
 
     void paint(Graphics &g) override
     {
-        g.drawRect(rectangle);
+        g.setColour(Colours::black);
+        g.drawRect(rectangle,2);
     }
 
-private:
+    void connect(ConnectionPort& otherPort);
+
+    bool isInput;
+    ConnectionLine* line;
     Rectangle<int> rectangle;
+    AudioChannelSet* bus;
 };
 
 
 struct ConnectionLine : public Component
 {
+    ConnectionLine(ConnectionPort& p1, ConnectionPort& p2){
+        if (p1.isInput) {
+            inPort = &p1;
+            outPort = &p2;
+        } else {
+            inPort = &p2;
+            outPort = &p1;
+        }
+    }
+
     void paint(Graphics &g) override
     {
         Line<float> line(inPort->getPosition().toFloat(), outPort->getPosition().toFloat());
-        g.drawLine(line);
+        g.drawLine(line,2);
     }
 
 private:
@@ -112,33 +131,36 @@ private:
 };
 
 
-class GUIWrapper : public Component
-{
+class GUIWrapper : public Component {
 public:
     GUIWrapper(Component* child){
         GUIWrapper();
         addAndMakeVisible(child);
     }
 
-    GUIWrapper() {
-        setSize(800,800);
+    GUIWrapper(bool closeButtonEnabled = false) {
+        setSize(100,100);
         size.setXY(getWidth(), getHeight());
         outline.setBounds(0,0,getWidth(),getHeight());
 
         addAndMakeVisible(resizer);
         resizer.setAlwaysOnTop(true);
 
-        closeButton.setButtonText("Close");
-        addAndMakeVisible(closeButton);
-        closeButton.onClick = [=]{
-            setVisible(false);
-        };
+        if (closeButtonEnabled) {
+            closeButton.setButtonText("Close");
+            addAndMakeVisible(closeButton);
+            closeButton.onClick = [=] {
+                setVisible(false);
+            };
+        }
     }
 
     void paint (Graphics& g) override {
+        g.fillAll(Colours::white);
         g.setColour(Colours::black);
         g.drawRect(outline);
         g.drawText(title, 10,10,100,40,Justification::left);
+        Component::paint(g);
     }
     void resized() override {
         closeButton.setBounds(size.x - 80, 10, 70, 30);
@@ -181,8 +203,13 @@ public:
     void childrenChanged() override {
         childComponents.clear();
         for (auto c : getChildren()){
-            if (c != &resizer && c != &closeButton)
+            if (c != &resizer && c != &closeButton) {
                 childComponents.add(c);
+            }
+        }
+        // If this is the first child to be added, adjust to its size
+        if (childComponents.size() == 1){
+            setSize(childComponents.getFirst()->getWidth(),childComponents.getFirst()->getHeight());
         }
         Component::childrenChanged();
         resized();
@@ -320,9 +347,11 @@ private:
 /**
     GUIEffect Component
     GUI Representation of Effects / Container for plugins
+
+    v-- Is this necessary??
     ReferenceCountedObject for usage as part of ValueTree system
 */
-class GUIEffect  : public GUIWrapper, public ReferenceCountedObject
+class GUIEffect  : public Component, public ReferenceCountedObject
 {
 public:
     GUIEffect ();
@@ -332,19 +361,32 @@ public:
 
     void paint (Graphics& g) override;
     void resized() override;
-/*
-
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-*/
 
     void setParameters(AudioProcessorParameterGroup& group);
 
+    void addPort(ConnectionPort* p){
+        if (p->isInput) {
+            p->setCentrePosition(30, inputPortPos);
+            inputPortPos += 30;
+            addAndMakeVisible(p);
+            inputPorts.add(p);
+        } else {
+            p->setCentrePosition(getWidth()-30, outputPortPos);
+            outputPortPos += 30;
+            addAndMakeVisible(p);
+            outputPorts.add(p);
+        }
+    }
+
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
 private:
-/*    // Utility
-    Rectangle<float> outline;
-    Resizer resizer;
-    ComponentDragger dragger;*/
+    Array<ConnectionPort*> inputPorts;
+    Array<ConnectionPort*> outputPorts;
+    int inputPortPos = 50;
+    int outputPortPos = 50;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIEffect)
 };
@@ -383,7 +425,7 @@ public:
      }
 
     /**
-     * Constructor for base effects, plugins, etc. Create, pass to the audio graph, and then pass nodeID
+     * INDIVIDUAL: Constructor for base effects, plugins, etc. Create, pass to the audio graph, and then pass nodeID
      * to this constructor.
      * @param nodeID
      * @param graph
@@ -391,7 +433,8 @@ public:
      */
     EffectVT(AudioProcessorGraph::NodeID nodeID, AudioProcessorGraph* graph, String name = "") :
             EffectVT(graph, name)
-    {
+{
+        //std::cout << "Registering processor from node " << newLine;
         // Register the processor and node
         node = graph->getNodeForId(nodeID);
         processor = node->getProcessor();
@@ -399,7 +442,17 @@ public:
         // Set node property
         effectTree.setProperty("Node", node.get(), nullptr);
 
-
+        gui.addAndMakeVisible(guiEffect);
+        for (auto inB : processor->getBusesLayout().inputBuses){
+            auto p = addPort(true);
+            p->bus = &inB;
+            guiEffect.addPort(p);
+        }
+        for (auto outB : processor->getBusesLayout().outputBuses){
+            auto p = addPort(false);
+            p->bus = &outB;
+            guiEffect.addPort(p);
+        }
 
         // TODO Create Default Ports based on Processor Bus Layout
     }
@@ -425,7 +478,7 @@ public:
         // Set "self" property
         effectTree.setProperty("Effect", this, nullptr);
         // Set GUI property
-        effectTree.setProperty("GUI", &gui, nullptr);
+        //effectTree.setProperty("GUI", , nullptr);
     }
 
     ~EffectVT()
@@ -437,28 +490,36 @@ public:
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
 
+    const String& getName() const { return name; }
+    void setName(const String &name) { this->name = name; }
     const ValueTree& getTree() const {return effectTree;}
+
+    GUIWrapper* getGUIWrapper() {return &gui;}
+
+    // =================================================================================
+    // Individual data
     const AudioProcessor* getProcessor() const {return processor;}
     const AudioProcessorGraph::Node::Ptr getNode() const {return node;}
-    const String &getName() const { return name; }
-    void setName(const String &name) { this->name = name; }
+    const GUIEffect* getGUIEffect() {return &guiEffect;}
 
-    /*void setSelfProperty(const EffectVT::Ptr ptr){
-        effectTree.setProperty("Effect", ptr.get(), nullptr);
-    }*/
-
+    ConnectionPort* addPort(bool isInput){
+        return ports.add(std::make_unique<ConnectionPort>(isInput));
+    }
 
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
     bool isIndividual = false;
     AudioProcessor* processor;
     AudioProcessorGraph::Node::Ptr node;
+    GUIEffect guiEffect;
 
     String name;
     ValueTree effectTree;
-    GUIEffect gui;
+    GUIWrapper gui;
+
+    OwnedArray<ConnectionPort> ports;
+    AudioProcessorParameterGroup parameters;
 
     AudioProcessorGraph* graph;
 
-    AudioProcessorParameterGroup paramGroup;
 };

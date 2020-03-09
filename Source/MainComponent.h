@@ -142,7 +142,8 @@ private:
     // StringRefs - move these to Includer file
     Identifier ID_TREE_TOP = "Treetop";
     Identifier ID_EFFECT_TREE = "effectTree";
-    Identifier ID_EFFECT_GUI = "GUI";
+    Identifier ID_EFFECT_VT = "Effect"; // This is the class that has been defined - where ID_EFFECT_TREE point to
+    //Identifier ID_EFFECT_GUI = "GUI";
 
     //void createEffect(GUIEffect::Ptr parent = nullptr);
 

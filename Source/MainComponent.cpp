@@ -66,8 +66,8 @@ MainComponent::~MainComponent()
 {
     //TODO add audio device stopper
 
-    for (int i = 0; i < effectsTree.getNumChildren(); i++)
-        effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();
+    /*for (int i = 0; i < effectsTree.getNumChildren(); i++)
+        effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();*/
 }
 
 //==============================================================================
@@ -142,17 +142,22 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
     // Add to AudioProcessorGraph
 
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_TREE){
-        auto effectGui = static_cast<GUIEffect*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_GUI).getObject());
+        auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_VT).getObject());
+
+        std::cout << "Test: " << effectVT->getName() << newLine;
+
+        auto effectGui = effectVT->getGUIWrapper();
 
         if (parentTree.getType() == ID_EFFECT_TREE){
-            auto parentEffectGui = static_cast<GUIEffect*>(parentTree.getProperty(ID_EFFECT_GUI).getObject());
-            parentEffectGui->addAndMakeVisible(effectGui);
+            auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EFFECT_VT).getObject());
+            parentEffectVT->getGUIWrapper()->addAndMakeVisible(effectGui);
         } else {
             addAndMakeVisible(effectGui);
         }
 
         effectGui->setCentrePosition(menuPos - effectGui->getParentComponent()->getPosition());
     }
+
 }
 
 /**

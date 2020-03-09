@@ -12,16 +12,9 @@
 
 
 //==============================================================================
-GUIEffect::GUIEffect () : GUIWrapper()
+GUIEffect::GUIEffect () : Component()
 {
     setSize (100, 100);
-
-    // outline Rectangle
-    //outline.setSize(getWidth(), getHeight());
-
-    // Add resizer
-    //addAndMakeVisible(resizer);
-
 }
 
 GUIEffect::~GUIEffect()
@@ -32,9 +25,8 @@ GUIEffect::~GUIEffect()
 //==============================================================================
 void GUIEffect::paint (Graphics& g)
 {
-    g.fillAll (Colour (200,200,200));
-
-    g.setColour(Colour(0,0,0));
+    //g.fillAll (Colour (200,200,200));
+    //Component::paint(g);
     //g.drawRect(outline);
 }
 
@@ -42,6 +34,25 @@ void GUIEffect::resized()
 {
     //outline.setSize(getWidth(), getHeight());
 }
+
+void GUIEffect::mouseDown(const MouseEvent &event) {
+    getParentComponent()->mouseDown(event);
+    //Component::mouseDown(event);
+}
+
+void GUIEffect::mouseDrag(const MouseEvent &event) {
+    getParentComponent()->mouseDrag(event);
+}
+
+void ConnectionPort::connect(ConnectionPort &otherPort) {
+    if (otherPort.isInput ^ isInput){
+        // Ports isInput are of different values
+        new ConnectionLine(*this, otherPort);
+    } else {
+
+    }
+}
+
 
 //==============================================================================
 #if 0
@@ -62,4 +73,3 @@ BEGIN_JUCER_METADATA
 END_JUCER_METADATA
 */
 #endif
-
