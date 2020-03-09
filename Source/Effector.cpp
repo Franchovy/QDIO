@@ -12,15 +12,15 @@
 
 
 //==============================================================================
-GUIEffect::GUIEffect ()
+GUIEffect::GUIEffect () : GUIWrapper()
 {
     setSize (100, 100);
 
     // outline Rectangle
-    outline.setSize(getWidth(), getHeight());
+    //outline.setSize(getWidth(), getHeight());
 
     // Add resizer
-    addAndMakeVisible(resizer);
+    //addAndMakeVisible(resizer);
 
 }
 
@@ -32,32 +32,16 @@ GUIEffect::~GUIEffect()
 //==============================================================================
 void GUIEffect::paint (Graphics& g)
 {
-    g.fillAll (Colour (255,255,255));
+    g.fillAll (Colour (200,200,200));
 
     g.setColour(Colour(0,0,0));
-    g.drawRect(outline);
+    //g.drawRect(outline);
 }
 
 void GUIEffect::resized()
 {
-    outline.setSize(getWidth(), getHeight());
+    //outline.setSize(getWidth(), getHeight());
 }
-
-void GUIEffect::mouseDown(const MouseEvent &event) {
-    dragger.startDraggingComponent(this, event);
-
-    if (event.mods.isRightButtonDown())
-        getParentComponent()->mouseDown(event);
-    Component::mouseDown(event);
-}
-
-void GUIEffect::mouseDrag(const MouseEvent &event) {
-    dragger.dragComponent(this, event, nullptr);
-    Component::mouseDrag(event);
-}
-
-
-
 
 //==============================================================================
 #if 0

@@ -68,8 +68,7 @@ private:
         PopupMenu m;
         m.addItem("Empty Effect", std::function<void()>(
                 [=]{
-                    auto e = new EffectVT(processorGraph.get(), "Empty Effect");
-                    createEffect(e->getNode(), "Effect");
+                    createEffect("Effect");
                 }));
         m.addItem("Input Effect", std::function<void()>(
                 [=]{
@@ -100,9 +99,11 @@ private:
     void createEffect(AudioProcessorGraph::Node::Ptr node, String name){
         EffectVT::Ptr e = new EffectVT(node->nodeID, processorGraph.get(), name);
         effectsTree.appendChild(e->getTree(),nullptr); //TODO fix mem management
+    }
 
-        std::cout << "Test: " << newLine;
-        e->getProcessor().getBus
+    void createEffect(String name){
+        EffectVT::Ptr e = new EffectVT(processorGraph.get(), name);
+        effectsTree.appendChild(e->getTree(),nullptr); //TODO fix mem management
     }
 
     //==============================================================================

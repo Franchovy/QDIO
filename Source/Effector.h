@@ -125,27 +125,22 @@ public:
         size.setXY(getWidth(), getHeight());
         outline.setBounds(0,0,getWidth(),getHeight());
 
-        addChildComponent(resizer);
+        addAndMakeVisible(resizer);
         resizer.setAlwaysOnTop(true);
 
         closeButton.setButtonText("Close");
-        addChildComponent(closeButton);
+        addAndMakeVisible(closeButton);
         closeButton.onClick = [=]{
             setVisible(false);
         };
-
-        addChildComponent(title);
-
-
     }
 
     void paint (Graphics& g) override {
+        g.setColour(Colours::black);
         g.drawRect(outline);
-        //g.drawText(title);
+        g.drawText(title, 10,10,100,40,Justification::left);
     }
     void resized() override {
-
-        title.setBounds(size.x/2 - 30, 10, 80, 30);
         closeButton.setBounds(size.x - 80, 10, 70, 30);
         outline.setBounds(0,0,size.x,size.y);
         for (auto c : childComponents)
@@ -173,13 +168,10 @@ public:
     }
 
     void setTitle(String name){
-        title.setText(name,dontSendNotification);
+        title = name;
     }
 
     void setVisible(bool shouldBeVisible) override {
-        closeButton.setVisible(shouldBeVisible);
-        resizer.setVisible(shouldBeVisible);
-        title.setVisible(shouldBeVisible);
         for (auto c : childComponents){
             c->setVisible(shouldBeVisible);
         }
@@ -189,7 +181,7 @@ public:
     void childrenChanged() override {
         childComponents.clear();
         for (auto c : getChildren()){
-            if (c != &resizer && c != &closeButton && c != &title)
+            if (c != &resizer && c != &closeButton)
                 childComponents.add(c);
         }
         Component::childrenChanged();
@@ -209,7 +201,7 @@ public:
 
 private:
     Point<int> size; // unchanging size
-    Label title;
+    String title;
     Rectangle<float> outline;
     ComponentDragger dragger;
     PopupMenu menu;
@@ -330,7 +322,7 @@ private:
     GUI Representation of Effects / Container for plugins
     ReferenceCountedObject for usage as part of ValueTree system
 */
-class GUIEffect  : public Component, public ReferenceCountedObject
+class GUIEffect  : public GUIWrapper, public ReferenceCountedObject
 {
 public:
     GUIEffect ();
@@ -340,17 +332,19 @@ public:
 
     void paint (Graphics& g) override;
     void resized() override;
+/*
 
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
+*/
 
     void setParameters(AudioProcessorParameterGroup& group);
 
 private:
-    // Utility
+/*    // Utility
     Rectangle<float> outline;
     Resizer resizer;
-    ComponentDragger dragger;
+    ComponentDragger dragger;*/
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIEffect)
 };
@@ -401,11 +395,13 @@ public:
         // Register the processor and node
         node = graph->getNodeForId(nodeID);
         processor = node->getProcessor();
-
         isIndividual = true;
-
         // Set node property
         effectTree.setProperty("Node", node.get(), nullptr);
+
+
+
+        // TODO Create Default Ports based on Processor Bus Layout
     }
 
     /**
@@ -421,7 +417,8 @@ public:
         if (name.isNotEmpty())
             this->name = name;
         else name = "Default name";
-        gui.setT
+
+        gui.setTitle(name);
 
         // Set name property
         effectTree.setProperty("Name", name, nullptr);
@@ -449,6 +446,7 @@ public:
     /*void setSelfProperty(const EffectVT::Ptr ptr){
         effectTree.setProperty("Effect", ptr.get(), nullptr);
     }*/
+
 
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
