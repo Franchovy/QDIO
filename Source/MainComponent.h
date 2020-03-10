@@ -12,21 +12,15 @@
 
 #include "Effector.h"
 
-
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
-
-
-//template<class ComponentType>
-
 
 
 /**
  * Main component and shit
  */
-class MainComponent   : public Component,
-        public ValueTree::Listener, public Timer
-{
+class MainComponent   :
+        public ValueTree::Listener, public Timer, public Component {
 public:
     //==============================================================================
     MainComponent();
@@ -48,17 +42,23 @@ public:
 
     void timerCallback() override { updateGraph(); }
 
+    // Create Connection - called from LineComponent (lineDrag)
+    void createConnection(std::unique_ptr<ConnectionLine> newConnection);
+
+    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
+
+
 private:
     //==============================================================================
     // Effect tree shit
     ValueTree effectsTree;
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded);
-
     UndoManager undoManager;
-
     Point<int> menuPos;
-
     ValueTree getTreeFromComponent(Component* g, String name);
+
+    // GUI Helper class and callback for connections
+    LineComponent dragLine;
 
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";

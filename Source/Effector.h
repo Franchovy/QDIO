@@ -8,8 +8,16 @@
   ==============================================================================
 */
 
+
 #pragma once
+
 #include "JuceHeader.h"
+
+
+
+struct ConnectionLine;
+struct LineComponent;
+
 
 
 class Resizer : public Component
@@ -80,23 +88,30 @@ private:
 
 };
 
-struct ConnectionLine;
+
 
 struct ConnectionPort : public Component
 {
-    ConnectionPort(bool isInput) : rectangle(50,50)
+    ConnectionPort(bool isInput) : rectangle(20,20)
     {
-        std::cout << "Created Connection" << newLine;
+        setBounds(rectangle);
         this->isInput = isInput;
     }
 
     void paint(Graphics &g) override
     {
         g.setColour(Colours::black);
+        //rectangle.setPosition(10,10);
         g.drawRect(rectangle,2);
     }
 
     void connect(ConnectionPort& otherPort);
+
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
 
     bool isInput;
     ConnectionLine* line;
@@ -104,9 +119,10 @@ struct ConnectionPort : public Component
     AudioChannelSet* bus;
 };
 
-
-struct ConnectionLine : public Component
+struct ConnectionLine : public Component, public ReferenceCountedObject
 {
+    using Ptr = ReferenceCountedObjectPtr<ConnectionLine>;
+
     ConnectionLine(ConnectionPort& p1, ConnectionPort& p2){
         if (p1.isInput) {
             inPort = &p1;
@@ -123,12 +139,83 @@ struct ConnectionLine : public Component
         g.drawLine(line,2);
     }
 
-private:
     ConnectionPort* inPort;
     ConnectionPort* outPort;
 
+private:
     Line<float> line;
 };
+
+
+struct LineComponent : public Component
+{
+    LineComponent() : dragLineTree()
+    {
+        LineComponent::dragLine = this;
+    }
+
+    void resized() override {
+
+    }
+
+    void paint(Graphics &g) override {
+        g.drawLine(line);
+    }
+
+    void start(ConnectionPort* port, const Point<int> p2) {
+        std::cout << p2.toString() << newLine;
+        this->port1 = port;
+        p1 = port1->getPosition().toFloat();
+        setBounds(Rectangle<int>(Point<int>(0,0), p2));
+        std::cout << "Mouse down 2" << newLine;
+        line.setStart(p1.toFloat());
+        line.setEnd(p2.toFloat());
+        setVisible(true);
+    }
+
+    void drag(Point<int> p2) {
+        std::cout << "drag" << newLine;
+        line.setEnd(p2.toFloat());
+        setBounds(Rectangle<int>(p1.toInt(), p2));
+    }
+
+    void stop() {
+        if (auto port = dynamic_cast<ConnectionPort*>(getComponentAt(p2.toInt()))){
+            // If mouseup is over port
+            if (port->isInput ^ port1->isInput){
+                lastConnectionLine = convert(port);
+                // This calls the propertyChange update in MainComponent
+                dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
+            } else {
+                std::cout << "Connected wrong port types" << newLine;
+            }
+        } else {
+            std::cout << "No connection made" << newLine;
+        }
+        setVisible(false);
+    }
+
+    ConnectionLine::Ptr convert(ConnectionPort* p2){
+        return new ConnectionLine(*port1, *p2);
+    }
+
+    ConnectionLine::Ptr lastConnectionLine;
+
+    ValueTree getDragLineTree() {return dragLineTree;}
+
+    static LineComponent* getDragLine(){
+        return dragLine;
+    }
+
+private:
+    static LineComponent* dragLine;
+
+    Line<float> line;
+    Point<float> p1, p2;
+    ConnectionPort* port1;
+    ValueTree dragLineTree;
+};
+
 
 
 class GUIWrapper : public Component {
@@ -140,8 +227,10 @@ public:
 
     GUIWrapper(bool closeButtonEnabled = false) {
         setSize(100,100);
+
         size.setXY(getWidth(), getHeight());
         outline.setBounds(0,0,getWidth(),getHeight());
+        setBounds(outline);
 
         addAndMakeVisible(resizer);
         resizer.setAlwaysOnTop(true);
@@ -152,6 +241,7 @@ public:
             closeButton.onClick = [=] {
                 setVisible(false);
             };
+            closeButton.setAlwaysOnTop(true);
         }
     }
 
@@ -160,14 +250,15 @@ public:
         g.setColour(Colours::black);
         g.drawRect(outline);
         g.drawText(title, 10,10,100,40,Justification::left);
-        Component::paint(g);
+        //Component::paint(g);
     }
     void resized() override {
+        size.setXY(getWidth(),getHeight());
         closeButton.setBounds(size.x - 80, 10, 70, 30);
         outline.setBounds(0,0,size.x,size.y);
         for (auto c : childComponents)
-            c->setBounds(30,30,size.x-30,size.y-30);
-        size.setXY(getWidth(),getHeight());
+            c->setBounds(10,10,getWidth()-10,getHeight()-10);
+
         repaint();
     }
 
@@ -229,7 +320,7 @@ public:
 private:
     Point<int> size; // unchanging size
     String title;
-    Rectangle<float> outline;
+    Rectangle<int> outline;
     ComponentDragger dragger;
     PopupMenu menu;
     Resizer resizer;
@@ -344,6 +435,8 @@ private:
     std::atomic<float>* levelParameter  = nullptr;
 };
 
+class EffectVT;
+
 /**
     GUIEffect Component
     GUI Representation of Effects / Container for plugins
@@ -366,16 +459,13 @@ public:
 
     void addPort(ConnectionPort* p){
         if (p->isInput) {
-            p->setCentrePosition(30, inputPortPos);
-            inputPortPos += 30;
             addAndMakeVisible(p);
             inputPorts.add(p);
         } else {
-            p->setCentrePosition(getWidth()-30, outputPortPos);
-            outputPortPos += 30;
             addAndMakeVisible(p);
             outputPorts.add(p);
         }
+        resized();
     }
 
     void mouseDown(const MouseEvent &event) override;
@@ -385,8 +475,11 @@ public:
 private:
     Array<ConnectionPort*> inputPorts;
     Array<ConnectionPort*> outputPorts;
-    int inputPortPos = 50;
-    int outputPortPos = 50;
+    int portIncrement = 30;
+    int inputPortStartPos = 50;
+    int inputPortPos = inputPortStartPos;
+    int outputPortStartPos = 50;
+    int outputPortPos = outputPortStartPos;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIEffect)
 };
@@ -420,7 +513,7 @@ public:
     /**
      * Constructor for a set of EffectVTs
      */
-     EffectVT(Array<EffectVT> effectVTSet, AudioProcessorGraph* graph, String name = ""){
+     EffectVT(Array<EffectVT> effectVTSet, AudioProcessorGraph* graph, String name = "") {
          // TODO
      }
 
@@ -518,6 +611,7 @@ private:
     GUIWrapper gui;
 
     OwnedArray<ConnectionPort> ports;
+
     AudioProcessorParameterGroup parameters;
 
     AudioProcessorGraph* graph;

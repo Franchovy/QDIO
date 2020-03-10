@@ -13,7 +13,6 @@
 
 
 
-
 //==============================================================================
 class QDIOApplication  : public JUCEApplication, private AsyncUpdater
 {

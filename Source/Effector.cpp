@@ -10,6 +10,7 @@
 
 #include "Effector.h"
 
+LineComponent* LineComponent::dragLine = nullptr;
 
 //==============================================================================
 GUIEffect::GUIEffect () : Component()
@@ -25,6 +26,7 @@ GUIEffect::~GUIEffect()
 //==============================================================================
 void GUIEffect::paint (Graphics& g)
 {
+    //g.fillAll(Colours::purple);
     //g.fillAll (Colour (200,200,200));
     //Component::paint(g);
     //g.drawRect(outline);
@@ -32,7 +34,16 @@ void GUIEffect::paint (Graphics& g)
 
 void GUIEffect::resized()
 {
-    //outline.setSize(getWidth(), getHeight());
+    inputPortPos = inputPortStartPos;
+    outputPortPos = outputPortStartPos;
+    for (auto p : inputPorts){
+        p->setCentrePosition(portIncrement, inputPortPos);
+        inputPortPos += portIncrement;
+    }
+    for (auto p : outputPorts){
+        p->setCentrePosition(getWidth() - portIncrement, outputPortPos);
+        outputPortPos += portIncrement;
+    }
 }
 
 void GUIEffect::mouseDown(const MouseEvent &event) {
@@ -51,6 +62,19 @@ void ConnectionPort::connect(ConnectionPort &otherPort) {
     } else {
 
     }
+}
+
+void ConnectionPort::mouseDown(const MouseEvent &event) {
+    std::cout << event.position.toString() << newLine;
+    LineComponent::getDragLine()->start(this, event.getScreenPosition());
+}
+
+void ConnectionPort::mouseDrag(const MouseEvent &event) {
+    LineComponent::getDragLine()->drag(event.getScreenPosition());
+}
+
+void ConnectionPort::mouseUp(const MouseEvent &event) {
+    Component::mouseUp(event);
 }
 
 

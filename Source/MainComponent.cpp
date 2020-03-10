@@ -13,12 +13,18 @@ MainComponent::MainComponent() :
         effectsTree("TreeTop"),
         deviceSelector(deviceManager, 0,2,0,2,false,false,true,false),
         processorGraph(new AudioProcessorGraph()),
-        deviceSelectorComponent()
+        deviceSelectorComponent(true),
+        dragLine()
 {
     setComponentID("MainWindow");
     setName("MainWindow");
     setSize (1920, 1080);
 
+    //========================================================================================
+    // Drag Line GUI
+    addChildComponent(dragLine);
+    dragLine.setAlwaysOnTop(true);
+    effectsTree.appendChild(dragLine.getDragLineTree(), nullptr);
 
     //========================================================================================
     // Manage EffectsTree
@@ -59,8 +65,9 @@ MainComponent::MainComponent() :
         getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
         getAppProperties().getUserSettings()->saveIfNeeded();
     };
-    addChildComponent(deviceSelectorComponent);
+    addAndMakeVisible(deviceSelectorComponent);
 }
+
 
 MainComponent::~MainComponent()
 {
@@ -75,16 +82,13 @@ void MainComponent::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
-    g.setFont (Font (16.0f));
-    g.setColour (Colours::white);
-    g.drawText ("Hello World!", getLocalBounds(), Justification::centred, true);
 }
 
 void MainComponent::resized()
 {
     //deviceSelectorGroup.setBounds(10,10,getWidth()-10, getHeight()-10);
-    deviceSelectorComponent.setBounds(50,50,getWidth()-50,getHeight()-50);
+    deviceSelector.setBounds(50,50,500,500);
+    deviceSelectorComponent.setBounds(50,50,600,600);
 }
 
 void MainComponent::mouseDown(const MouseEvent &event) {
@@ -254,6 +258,21 @@ void MainComponent::updateGraph() {
     // Reconnect graph
     // Start graph
 }
+
+void MainComponent::createConnection(std::unique_ptr<ConnectionLine> newConnection) {
+    std::cout << "Created connection" << newLine;
+}
+
+void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    if (treeWhosePropertyHasChanged == dragLine.getDragLineTree() && property.toString() == "Connection"){
+        // Add connection
+        std::cout << "Add connection!!!!!!!" << newLine;
+    }
+
+    Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
+}
+
+
 /*
 void MainComponent::setMidiInput(int index)
 {
