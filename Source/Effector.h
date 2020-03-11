@@ -113,6 +113,29 @@ struct ConnectionPort : public Component
 
     void mouseUp(const MouseEvent &event) override;
 
+    /**
+     * @return Position of parent relative to maincomponent
+     */
+    Point<int> getMainParentPos(){
+        auto p = getParentComponent();
+        auto pos = Point<int>(0,0);
+        while (p->getName() != "QDIO"){
+            pos += p->getPosition();
+            p = p->getParentComponent();
+        }
+        return pos;
+    }
+
+    /**
+     * @return centre position relative to maincomponent
+     */
+    Point<int> getMainCentrePos(){
+        auto pos = getMainParentPos();
+        pos += getPosition();
+        pos += Point<int>(getWidth()/2, getHeight()/2);
+        return pos;
+    }
+
     bool isInput;
     ConnectionLine* line;
     Rectangle<int> rectangle;
@@ -151,6 +174,7 @@ struct LineComponent : public Component
 {
     LineComponent() : dragLineTree()
     {
+        setBounds(0,0,10000,10000);
         LineComponent::dragLine = this;
     }
 
@@ -161,40 +185,7 @@ struct LineComponent : public Component
     void paint(Graphics &g) override {
         g.drawLine(line);
     }
-
-    void start(ConnectionPort* port, const Point<int> p2) {
-        std::cout << p2.toString() << newLine;
-        this->port1 = port;
-        p1 = port1->getPosition().toFloat();
-        setBounds(Rectangle<int>(Point<int>(0,0), p2));
-        std::cout << "Mouse down 2" << newLine;
-        line.setStart(p1.toFloat());
-        line.setEnd(p2.toFloat());
-        setVisible(true);
-    }
-
-    void drag(Point<int> p2) {
-        std::cout << "drag" << newLine;
-        line.setEnd(p2.toFloat());
-        setBounds(Rectangle<int>(p1.toInt(), p2));
-    }
-
-    void stop() {
-        if (auto port = dynamic_cast<ConnectionPort*>(getComponentAt(p2.toInt()))){
-            // If mouseup is over port
-            if (port->isInput ^ port1->isInput){
-                lastConnectionLine = convert(port);
-                // This calls the propertyChange update in MainComponent
-                dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
-            } else {
-                std::cout << "Connected wrong port types" << newLine;
-            }
-        } else {
-            std::cout << "No connection made" << newLine;
-        }
-        setVisible(false);
-    }
-
+    
     ConnectionLine::Ptr convert(ConnectionPort* p2){
         return new ConnectionLine(*port1, *p2);
     }
@@ -206,6 +197,12 @@ struct LineComponent : public Component
     static LineComponent* getDragLine(){
         return dragLine;
     }
+
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
 
 private:
     static LineComponent* dragLine;
