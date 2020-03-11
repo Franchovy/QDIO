@@ -172,9 +172,9 @@ private:
 
 struct LineComponent : public Component
 {
-    LineComponent() : dragLineTree()
+    LineComponent() : dragLineTree("DragLine")
     {
-        setBounds(0,0,10000,10000);
+        setBounds(0,0,getParentWidth(), getParentHeight());
         LineComponent::dragLine = this;
     }
 
@@ -183,9 +183,9 @@ struct LineComponent : public Component
     }
 
     void paint(Graphics &g) override {
-        g.drawLine(line);
+        g.drawLine(line.toFloat());
     }
-    
+
     ConnectionLine::Ptr convert(ConnectionPort* p2){
         return new ConnectionLine(*port1, *p2);
     }
@@ -207,8 +207,8 @@ struct LineComponent : public Component
 private:
     static LineComponent* dragLine;
 
-    Line<float> line;
-    Point<float> p1, p2;
+    Line<int> line;
+    Point<int> p1, p2;
     ConnectionPort* port1;
     ValueTree dragLineTree;
 };

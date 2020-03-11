@@ -17,12 +17,13 @@ LineComponent* LineComponent::dragLine = nullptr;
  */
 void LineComponent::mouseDown(const MouseEvent &event) {
     std::cout << "Down" << newLine;
-    std::cout << event.getPosition().toString() << newLine;
     port1 = dynamic_cast<ConnectionPort*>(event.originalComponent);
-    std::cout << port1->getMainParentPos().toString() << newLine;
-    std::cout << port1->getMainCentrePos().toString() << newLine;
-    line.setStart(port1->getMainCentrePos().toFloat());
-    line.setEnd(event.getPosition().toFloat());
+    p1 = port1->getMainCentrePos();
+    p2 = event.getPosition();
+
+    line.setStart(p1);
+    line.setEnd(p2);
+    //setBounds(Rectangle<int>(p1, p2));
     setVisible(true);
     repaint();
     //p2 = event.getPosition().toFloat();
@@ -30,15 +31,23 @@ void LineComponent::mouseDown(const MouseEvent &event) {
 }
 
 void LineComponent::mouseDrag(const MouseEvent &event) {
-    std::cout << "Drag" << newLine;
-    line.setEnd(event.getPosition().toFloat());
-    //setBounds(Rectangle<int>(line.getStart().toInt(), line.getEnd().toInt()));
+    p2 = event.getPosition();
+
+    line.setEnd(p2);
     repaint();
+
+    if (getComponentAt(event.getPosition()) != 0)
+        std::cout << "Component at: " << getParentComponent()->getComponentAt(event.getPosition())->getName() << newLine;
+
 
 }
 
 void LineComponent::mouseUp(const MouseEvent &event) {
-    if (auto port = dynamic_cast<ConnectionPort*>(getComponentAt(event.getPosition()))){
+    setVisible(false);
+    auto c = getParentComponent()->getComponentAt(event.getPosition());
+    auto port = dynamic_cast<ConnectionPort*>(c);
+
+    if (port){
         // If mouseup is over port
         if (port->isInput ^ port1->isInput){
             lastConnectionLine = convert(port);
@@ -50,7 +59,7 @@ void LineComponent::mouseUp(const MouseEvent &event) {
     } else {
         std::cout << "No connection made" << newLine;
     }
-    setVisible(false);
+    //setVisible(false);
 }
 
 //==============================================================================
@@ -117,7 +126,7 @@ void ConnectionPort::mouseDrag(const MouseEvent &event) {
 
 void ConnectionPort::mouseUp(const MouseEvent &event) {
     auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
-    LineComponent::getDragLine()->mouseUp(event);
+    LineComponent::getDragLine()->mouseUp(newEvent);
 }
 
 

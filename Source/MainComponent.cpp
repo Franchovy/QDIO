@@ -92,6 +92,8 @@ void MainComponent::resized()
 }
 
 void MainComponent::mouseDown(const MouseEvent &event) {
+
+
     if (event.mods.isRightButtonDown()){
 
         // Right-click menu
@@ -271,6 +273,18 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
+/*
+
+void MainComponent::mouseUp(const MouseEvent &event) {
+    auto p = getComponentAt(event.getPosition());
+    if (p != 0){
+        std::cout << "Component: " << p->getName() << newLine;
+    } else {
+        std::cout << "No result" << newLine;
+    }
+}
+*/
+
 
 
 /*

@@ -52,6 +52,10 @@ private:
     //==============================================================================
     // Effect tree shit
     ValueTree effectsTree;
+/*public:
+    void mouseUp(const MouseEvent &event) override;
+
+private:*/
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded);
     UndoManager undoManager;
     Point<int> menuPos;
