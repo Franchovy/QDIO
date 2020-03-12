@@ -18,7 +18,26 @@
 struct ConnectionLine;
 struct LineComponent;
 
+/*template <class ComponentType*>
+class LassoSelector : LassoSource<ComponentType*>
+{
+public:
 
+    void LassoSelector::findLassoItemsInArea (Array<Component*>& itemsFound, const Rectangle<int>& area)
+    {
+        for (auto& element : components)
+        {
+            if (area.contains (element.getBounds()))
+            {
+                itemsFound.add (&element);
+            }
+        }
+    }
+
+    SelectedItemSet<Component *> &getLassoSelection() override {
+        return <#initializer#>;
+    }
+};*/
 
 class Resizer : public Component
 {
@@ -136,10 +155,12 @@ struct ConnectionPort : public Component
         return pos;
     }
 
+    void moved() override;
+
     bool isInput;
-    ConnectionLine* line;
+    ConnectionLine* line = nullptr;
     Rectangle<int> rectangle;
-    AudioChannelSet* bus;
+    AudioProcessor::Bus* bus;
 };
 
 struct ConnectionLine : public Component, public ReferenceCountedObject
@@ -154,12 +175,35 @@ struct ConnectionLine : public Component, public ReferenceCountedObject
             inPort = &p2;
             outPort = &p1;
         }
+        inPort->line = this;
+        outPort->line = this;
+
+        line = Line<float>(inPort->getMainCentrePos().toFloat(),outPort->getMainCentrePos().toFloat());
+        setBounds(0,0,getParentWidth(),getParentHeight());
+    }
+
+    void move(bool isInput, Point<float> newPoint){
+        std::cout << "Move" << newLine;
+        if (isInput)
+            line.setStart(inPort->getMainCentrePos().toFloat());
+        else
+            line.setEnd(outPort->getMainCentrePos().toFloat());
+        repaint();
     }
 
     void paint(Graphics &g) override
     {
-        Line<float> line(inPort->getPosition().toFloat(), outPort->getPosition().toFloat());
         g.drawLine(line,2);
+    }
+
+    void mouseDown(const MouseEvent &event) override {
+        std::cout << "Mouse down ConnectionLine" << newLine;
+        Component::mouseDown(event);
+    }
+
+    ~ConnectionLine() override {
+        inPort->line = nullptr;
+        outPort->line = nullptr;
     }
 
     ConnectionPort* inPort;
@@ -312,6 +356,13 @@ public:
         setSize(size.x, size.y);
     }
 
+    void moved() override {
+        for (auto i : childComponents){
+            i->moved();
+        }
+        Component::moved();
+    }
+
     TextButton closeButton;
 
 private:
@@ -455,6 +506,8 @@ public:
     void setParameters(AudioProcessorParameterGroup& group);
 
     void addPort(ConnectionPort* p){
+        if (p->bus->getNumberOfChannels() == 0)
+            return;
         if (p->isInput) {
             addAndMakeVisible(p);
             inputPorts.add(p);
@@ -469,7 +522,13 @@ public:
 
     void mouseDrag(const MouseEvent &event) override;
 
+    const EffectVT* getParent() const { return parentTree; }
+    void setParent(EffectVT* parentTree) { this->parentTree = parentTree; }
+
+    void moved() override;
+
 private:
+    EffectVT* parentTree;
     Array<ConnectionPort*> inputPorts;
     Array<ConnectionPort*> outputPorts;
     int portIncrement = 30;
@@ -533,14 +592,21 @@ public:
         effectTree.setProperty("Node", node.get(), nullptr);
 
         gui.addAndMakeVisible(guiEffect);
-        for (auto inB : processor->getBusesLayout().inputBuses){
+        guiEffect.setParent(this);
+        for (int i = 0; i < processor->getBusesLayout().inputBuses.size(); i++){
+            std::cout << "Bus index: " << i << newLine;
             auto p = addPort(true);
-            p->bus = &inB;
+            if (processor->getBus(true, i) == nullptr)
+                std::cout << "Null ptr bus" << newLine;
+            p->bus = processor->getBus(true, i);
             guiEffect.addPort(p);
         }
-        for (auto outB : processor->getBusesLayout().outputBuses){
+        for (int i = 0; i < processor->getBusesLayout().outputBuses.size(); i++){
+            std::cout << "Bus index: " << i << newLine;
             auto p = addPort(false);
-            p->bus = &outB;
+            if (processor->getBus(false, i) == nullptr)
+                std::cout << "Null ptr bus" << newLine;
+            p->bus = processor->getBus(false, i);
             guiEffect.addPort(p);
         }
 

@@ -35,11 +35,6 @@ void LineComponent::mouseDrag(const MouseEvent &event) {
 
     line.setEnd(p2);
     repaint();
-
-    if (getComponentAt(event.getPosition()) != 0)
-        std::cout << "Component at: " << getParentComponent()->getComponentAt(event.getPosition())->getName() << newLine;
-
-
 }
 
 void LineComponent::mouseUp(const MouseEvent &event) {
@@ -50,6 +45,9 @@ void LineComponent::mouseUp(const MouseEvent &event) {
     if (port){
         // If mouseup is over port
         if (port->isInput ^ port1->isInput){
+            std::cout << "Port1: " << port1->isInput << newLine;
+            std::cout << "Port2: " << port->isInput << newLine;
+
             lastConnectionLine = convert(port);
             // This calls the propertyChange update in MainComponent
             dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
@@ -105,6 +103,16 @@ void GUIEffect::mouseDrag(const MouseEvent &event) {
     getParentComponent()->mouseDrag(event);
 }
 
+void GUIEffect::moved() {
+    for (auto i : inputPorts){
+        i->moved();
+    }
+    for (auto i : outputPorts){
+        i->moved();
+    }
+    Component::moved();
+}
+
 void ConnectionPort::connect(ConnectionPort &otherPort) {
     if (otherPort.isInput ^ isInput){
         // Ports isInput are of different values
@@ -128,6 +136,15 @@ void ConnectionPort::mouseUp(const MouseEvent &event) {
     auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
     LineComponent::getDragLine()->mouseUp(newEvent);
 }
+
+void ConnectionPort::moved() {
+    if (line != nullptr){
+        line->move(isInput, getPosition().toFloat());
+    }
+    Component::moved();
+}
+
+
 
 
 //==============================================================================

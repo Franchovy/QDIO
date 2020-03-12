@@ -25,6 +25,7 @@ MainComponent::MainComponent() :
     addChildComponent(dragLine);
     dragLine.setAlwaysOnTop(true);
     effectsTree.appendChild(dragLine.getDragLineTree(), nullptr);
+    addChildComponent(lasso);
 
     //========================================================================================
     // Manage EffectsTree
@@ -50,6 +51,7 @@ MainComponent::MainComponent() :
 
     //player.setProcessor(e);
     //addAndMakeVisible(e->createEditor());
+    std::cout << "Test processor: " << player.getCurrentProcessor() << newLine;
     player.setProcessor (processorGraph.get());
 
     //==============================================================================
@@ -71,6 +73,8 @@ MainComponent::MainComponent() :
 
 MainComponent::~MainComponent()
 {
+    player.audioDeviceStopped();
+    processorGraph.release();
     //TODO add audio device stopper
 
     /*for (int i = 0; i < effectsTree.getNumChildren(); i++)
@@ -92,7 +96,7 @@ void MainComponent::resized()
 }
 
 void MainComponent::mouseDown(const MouseEvent &event) {
-
+    std::cout << "Mouse down on: " << event.originalComponent->getName() << newLine;
 
     if (event.mods.isRightButtonDown()){
 
@@ -114,22 +118,7 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         if (result == 0) {
             // Menu ignored
         } else if (result == -1) {
-            /*auto testEffect = static_cast<EffectVT*>(effectsTree.getChild(-1).getProperty("Effect"));
-
-            // Create Effect
-            std::cout << "Test result: " << (testEffect != nullptr) << newLine;
-            std::cout << testEffect->getName() << newLine;
-
-            // Check and use child effect if selected
-            if (auto g = dynamic_cast<GUIEffect*>(event.originalComponent)){
-                auto parentTree = getTreeFromComponent(g, "GUI");
-                if (parentTree.isValid())
-                    parentTree.appendChild(testEffect->getTree(), &undoManager);
-                else
-                    std::cout << "Error: unable to retrieve tree from component.";
-            } else {
-                effectsTree.appendChild(testEffect->getTree(), &undoManager);
-            }*/
+            // Effect generating code comes from the submenu.
         } else if (result == 2) {
             // Show settings
             deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
@@ -137,9 +126,22 @@ void MainComponent::mouseDown(const MouseEvent &event) {
             // Start audio
             initialiseGraph();
         }
+    } else if (event.mods.isLeftButtonDown()){
+        lasso.setVisible(true);
+        //lasso.beginLasso(event, &lassoSource);
     }
     Component::mouseDown(event);
 }
+
+void MainComponent::mouseDrag(const MouseEvent &event) {
+    Component::mouseDrag(event);
+}
+
+void MainComponent::mouseUp(const MouseEvent &event) {
+    Component::mouseUp(event);
+}
+
+
 
 //==============================================================================
 
@@ -200,13 +202,16 @@ void MainComponent::initialiseGraph()
 {
     for (auto i = 0; i < effectsTree.getNumChildren(); i++){
         std::cout << effectsTree.getChild(i).getProperty("Name").toString() << newLine;
-        auto node = static_cast<AudioProcessorGraph::Node*>(effectsTree.getChild(i).getProperty("Node").getObject());
-        // add the mothafucka to da graph, dawg
-        //TODO
-        node->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
-                                                processorGraph->getMainBusNumOutputChannels(),
-                                                processorGraph->getSampleRate(),
-                                                processorGraph->getBlockSize());
+        if (effectsTree.getChild(i).hasType("effectTree")){
+            auto node = static_cast<AudioProcessorGraph::Node*>(effectsTree.getChild(i).getProperty("Node").getObject());
+            // add the mothafucka to da graph, dawg
+            //TODO
+            node->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
+                                                    processorGraph->getMainBusNumOutputChannels(),
+                                                    processorGraph->getSampleRate(),
+                                                    processorGraph->getBlockSize());
+        } else
+            std::cout << "test" << newLine;
     }
 
     connectAudioNodes();
@@ -235,15 +240,15 @@ void MainComponent::connectAudioNodes()
             auto node = static_cast<AudioProcessorGraph::Node*>(e.getProperty("Node").getObject());
         }
 
-        auto source = effectsTree.getChild(0);
-        for (int i = 1; i < effectsTree.getNumChildren(); i++) {
+        /*auto source = effectsTree.getChild(1);
+        for (int i = 2; i < effectsTree.getNumChildren(); i++) {
             auto dest = effectsTree.getChild(i);
             processorGraph->addConnection({
                       {static_cast<AudioProcessorGraph::Node*>(source.getProperty("Node").getObject())->nodeID},
                       {static_cast<AudioProcessorGraph::Node*>(dest.getProperty("Node").getObject())->nodeID}});
 
             source = effectsTree.getChild(i);
-        }
+        }*/
 
         std::cout << "In/Out connections: " << newLine;
         for (auto i : processorGraph->getConnections()){
@@ -267,12 +272,51 @@ void MainComponent::createConnection(std::unique_ptr<ConnectionLine> newConnecti
 
 void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == dragLine.getDragLineTree() && property.toString() == "Connection"){
+        processorGraph->reset();
+
         // Add connection
         std::cout << "Add connection!!!!!!!" << newLine;
+        auto line = dynamic_cast<ConnectionLine*>(treeWhosePropertyHasChanged.getPropertyPointer(property)->getObject());
+        addAndMakeVisible(line);
+        line->setInterceptsMouseClicks(0,0);
+        auto outputPort = line->inPort;
+        auto inputPort = line->outPort;
+
+        // Remember that an inputPort is receiving, on the output effect
+        // and the outputPort is source on the input effect
+        auto output = dynamic_cast<GUIEffect*>(outputPort->getParentComponent())->getParent();
+        auto input = dynamic_cast<GUIEffect*>(inputPort->getParentComponent())->getParent();
+        //TODO Instead, connect EffectVTs and let connectAudioNodes() do the AudioGraph stuff
+
+        //TODO Do checks to make sure connection is alright
+        /*
+        if (processorGraph->addConnection({{e2->getNode()->nodeID},{e1->getNode()->nodeID}}))
+            std::cout << "Connection successful" << newLine;
+        else
+            std::cout << "Connection unsuccessful" << newLine;
+        */
+
+        // Add audiograph connection
+        std::cout << "Input bus channels: " << inputPort->bus->getNumberOfChannels() << newLine;
+        std::cout << "Output bus channels: " << outputPort->bus->getNumberOfChannels() << newLine;
+        for (int c = 0; c < jmin(inputPort->bus->getNumberOfChannels(), outputPort->bus->getNumberOfChannels()); c++) {
+            std::cout << "Input bus channel index to connect: " << inputPort->bus->getChannelIndexInProcessBlockBuffer(c)
+                      << newLine;
+            std::cout << "Input bus channel index to connect: " << outputPort->bus->getChannelIndexInProcessBlockBuffer(c)
+                      << newLine;
+
+            if (processorGraph->addConnection(
+                    {{input->getNode()->nodeID, inputPort->bus->getChannelIndexInProcessBlockBuffer(c)},
+                     {output->getNode()->nodeID, outputPort->bus->getChannelIndexInProcessBlockBuffer(c)}}))
+                std::cout << "Successful connection" << newLine;
+            else
+                std::cout << "Unsuccessful connection" << newLine;
+        }
     }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
+
 /*
 
 void MainComponent::mouseUp(const MouseEvent &event) {

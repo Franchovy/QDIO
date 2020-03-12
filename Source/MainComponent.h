@@ -31,6 +31,8 @@ public:
     void paint (Graphics&) override;
     void resized() override;
     void mouseDown(const MouseEvent &event) override;
+    void mouseDrag(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
 
     //==============================================================================
     // AudioSource overrides
@@ -52,10 +54,7 @@ private:
     //==============================================================================
     // Effect tree shit
     ValueTree effectsTree;
-/*public:
-    void mouseUp(const MouseEvent &event) override;
 
-private:*/
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded);
     UndoManager undoManager;
     Point<int> menuPos;
@@ -63,6 +62,10 @@ private:*/
 
     // GUI Helper class and callback for connections
     LineComponent dragLine;
+    LassoComponent<Component> lasso;
+    //LassoSelector lassoSource;
+
+    Array<Component*> selectionableComponents;
 
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
