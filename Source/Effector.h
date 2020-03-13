@@ -18,26 +18,7 @@
 struct ConnectionLine;
 struct LineComponent;
 
-/*template <class ComponentType*>
-class LassoSelector : LassoSource<ComponentType*>
-{
-public:
 
-    void LassoSelector::findLassoItemsInArea (Array<Component*>& itemsFound, const Rectangle<int>& area)
-    {
-        for (auto& element : components)
-        {
-            if (area.contains (element.getBounds()))
-            {
-                itemsFound.add (&element);
-            }
-        }
-    }
-
-    SelectedItemSet<Component *> &getLassoSelection() override {
-        return <#initializer#>;
-    }
-};*/
 
 class Resizer : public Component
 {
@@ -492,8 +473,7 @@ class EffectVT;
     v-- Is this necessary??
     ReferenceCountedObject for usage as part of ValueTree system
 */
-class GUIEffect  : public Component, public ReferenceCountedObject
-{
+class GUIEffect  : public ReferenceCountedObject, public Component {
 public:
     GUIEffect ();
     ~GUIEffect() override;
@@ -569,7 +549,7 @@ public:
     /**
      * Constructor for a set of EffectVTs
      */
-     EffectVT(Array<EffectVT> effectVTSet, AudioProcessorGraph* graph, String name = "") {
+     EffectVT(Array<EffectVT*> effectVTSet, AudioProcessorGraph* graph, String name = "") {
          // TODO
      }
 
@@ -591,7 +571,7 @@ public:
         // Set node property
         effectTree.setProperty("Node", node.get(), nullptr);
 
-        gui.addAndMakeVisible(guiEffect);
+        guiWrapper.addAndMakeVisible(guiEffect);
         guiEffect.setParent(this);
         for (int i = 0; i < processor->getBusesLayout().inputBuses.size(); i++){
             std::cout << "Bus index: " << i << newLine;
@@ -627,7 +607,8 @@ public:
             this->name = name;
         else name = "Default name";
 
-        gui.setTitle(name);
+        guiWrapper.setTitle(name);
+        guiWrapper.setName(name);
 
         // Set name property
         effectTree.setProperty("Name", name, nullptr);
@@ -637,6 +618,38 @@ public:
         //effectTree.setProperty("GUI", , nullptr);
     }
 
+    /**
+     * EffectVT group
+     */
+    EffectVT(Array<EffectVT*> effectVTSet)
+    {
+        // Set itself as parent of all given children
+        // Set size based on children
+    }
+
+    /**
+     * Node - Individual
+     */
+    EffectVT(AudioProcessorGraph::NodeID nodeID)
+    {
+        // Create from node:
+        // either processor editor or baseeffect
+        // individual
+    }
+
+    /**
+     * Empty
+     */
+    EffectVT() :
+        effectTree("effectTree"),
+        guiEffect(),
+        guiWrapper(&guiEffect)
+    {
+        // Create GUIWrapper
+        // Create GUIEffect
+        // setup anything else
+    }
+
     ~EffectVT()
     {
         effectTree.removeAllProperties(nullptr);
@@ -644,39 +657,39 @@ public:
         graph->removeNode(node->nodeID);
     }
 
+    ConnectionPort* addPort(bool isInput){
+        return ports.add(std::make_unique<ConnectionPort>(isInput));
+    }
+
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
+
+    // =================================================================================
+    // Setters and getter functions
+
+    // Individual data
+    const AudioProcessor* getProcessor() const {if (isIndividual) return processor;}
+    const AudioProcessorGraph::Node::Ptr getNode() const {if (isIndividual) return node;}
 
     const String& getName() const { return name; }
     void setName(const String &name) { this->name = name; }
     const ValueTree& getTree() const {return effectTree;}
-
-    GUIWrapper* getGUIWrapper() {return &gui;}
-
-    // =================================================================================
-    // Individual data
-    const AudioProcessor* getProcessor() const {return processor;}
-    const AudioProcessorGraph::Node::Ptr getNode() const {return node;}
-    const GUIEffect* getGUIEffect() {return &guiEffect;}
-
-    ConnectionPort* addPort(bool isInput){
-        return ports.add(std::make_unique<ConnectionPort>(isInput));
-    }
+    GUIWrapper* getGUIWrapper() {return &guiWrapper;}
+    GUIEffect* getGUIEffect() {return &guiEffect;}
 
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
     bool isIndividual = false;
     AudioProcessor* processor;
     AudioProcessorGraph::Node::Ptr node;
-    GUIEffect guiEffect;
 
     String name;
     ValueTree effectTree;
-    GUIWrapper gui;
+    GUIWrapper guiWrapper;
+    GUIEffect guiEffect;
 
     OwnedArray<ConnectionPort> ports;
-
     AudioProcessorParameterGroup parameters;
 
-    AudioProcessorGraph* graph;
+    static AudioProcessorGraph* graph;
 
 };

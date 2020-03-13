@@ -61,7 +61,7 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 }
 
 //==============================================================================
-GUIEffect::GUIEffect () : Component()
+GUIEffect::GUIEffect ()
 {
     setSize (100, 100);
 }

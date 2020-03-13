@@ -20,7 +20,7 @@ ApplicationCommandManager& getCommandManager();
  * Main component and shit
  */
 class MainComponent   :
-        public ValueTree::Listener, public Timer, public Component {
+        public ValueTree::Listener, public Timer, public Component,  public LassoSource<Component*>, public ChangeListener {
 public:
     //==============================================================================
     MainComponent();
@@ -62,10 +62,15 @@ private:
 
     // GUI Helper class and callback for connections
     LineComponent dragLine;
-    LassoComponent<Component> lasso;
-    //LassoSelector lassoSource;
+    LassoComponent<Component*> lasso;
 
-    Array<Component*> selectionableComponents;
+    void findLassoItemsInArea (Array <Component*>& results, const Rectangle<int>& area) override;
+    Array<Component*> componentsToSelect;
+    SelectedItemSet<Component*> selected;
+    SelectedItemSet<Component*>& getLassoSelection() override;
+
+    // Listener callback on SelectedItemSet "selected" change broadcast.
+    void changeListenerCallback (ChangeBroadcaster *source) override;
 
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
@@ -86,6 +91,7 @@ private:
         return m;
     }
 
+    // Temporary function
     template <class Processor>
     void createEffect(String name, AudioProcessorGraph::AudioGraphIOProcessor::IODeviceType deviceType){
         if (std::is_same<Processor, AudioProcessorGraph::AudioGraphIOProcessor>()){
@@ -98,19 +104,44 @@ private:
         }
     }
 
+
     template<class Processor>
     void createEffect(String name, AudioProcessor* processor){
          //else if (std::is_same<Processor, EffectProcessor) //TODO Base effect?
     }
 
+
     void createEffect(AudioProcessorGraph::Node::Ptr node, String name){
         EffectVT::Ptr e = new EffectVT(node->nodeID, processorGraph.get(), name);
-        effectsTree.appendChild(e->getTree(),nullptr); //TODO fix mem management
+        effectsTree.appendChild(e->getTree(),nullptr);
+        createEffect(name);
     }
+
 
     void createEffect(String name){
         EffectVT::Ptr e = new EffectVT(processorGraph.get(), name);
-        effectsTree.appendChild(e->getTree(),nullptr); //TODO fix mem management
+        effectsTree.appendChild(e->getTree(),nullptr);
+    }
+
+    /**
+     * EffectVT group
+    */
+    void createEffect(){
+
+    }
+
+    /**
+    * Node - Individual
+    */
+    void createEffect(){
+
+    }
+
+    /**
+     * Empty
+     */
+    void createEffect(){
+
     }
 
     //==============================================================================
@@ -157,3 +188,5 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
+
+
