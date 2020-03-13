@@ -18,26 +18,7 @@
 struct ConnectionLine;
 struct LineComponent;
 
-/*template <class ComponentType*>
-class LassoSelector : LassoSource<ComponentType*>
-{
-public:
 
-    void LassoSelector::findLassoItemsInArea (Array<Component*>& itemsFound, const Rectangle<int>& area)
-    {
-        for (auto& element : components)
-        {
-            if (area.contains (element.getBounds()))
-            {
-                itemsFound.add (&element);
-            }
-        }
-    }
-
-    SelectedItemSet<Component *> &getLassoSelection() override {
-        return <#initializer#>;
-    }
-};*/
 
 class Resizer : public Component
 {

@@ -20,7 +20,7 @@ ApplicationCommandManager& getCommandManager();
  * Main component and shit
  */
 class MainComponent   :
-        public ValueTree::Listener, public Timer, public Component {
+        public ValueTree::Listener, public Timer, public Component,  public LassoSource<Component*> {
 public:
     //==============================================================================
     MainComponent();
@@ -62,8 +62,13 @@ private:
 
     // GUI Helper class and callback for connections
     LineComponent dragLine;
-    LassoComponent<Component> lasso;
-    //LassoSelector lassoSource;
+    LassoComponent<Component*> lasso;
+
+    void findLassoItemsInArea (Array <Component*>& results, const Rectangle<int>& area) override;
+    Array<Component*> componentsToSelect;
+    SelectedItemSet<Component*> selected;
+    SelectedItemSet<Component*>& getLassoSelection() override;
+
 
     Array<Component*> selectionableComponents;
 
@@ -157,3 +162,5 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
+
+

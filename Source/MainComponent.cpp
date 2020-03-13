@@ -8,6 +8,7 @@
 
 #include "MainComponent.h"
 
+
 //==============================================================================
 MainComponent::MainComponent() :
         effectsTree("TreeTop"),
@@ -128,16 +129,18 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         }
     } else if (event.mods.isLeftButtonDown()){
         lasso.setVisible(true);
-        //lasso.beginLasso(event, &lassoSource);
+        lasso.beginLasso(event, this);
     }
     Component::mouseDown(event);
 }
 
 void MainComponent::mouseDrag(const MouseEvent &event) {
+    lasso.dragLasso(event);
     Component::mouseDrag(event);
 }
 
 void MainComponent::mouseUp(const MouseEvent &event) {
+    lasso.endLasso();
     Component::mouseUp(event);
 }
 
@@ -151,10 +154,8 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
 
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_TREE){
         auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_VT).getObject());
-
-        std::cout << "Test: " << effectVT->getName() << newLine;
-
         auto effectGui = effectVT->getGUIWrapper();
+        componentsToSelect.add(effectGui);
 
         if (parentTree.getType() == ID_EFFECT_TREE){
             auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EFFECT_VT).getObject());
@@ -315,6 +316,20 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
     }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
+}
+
+
+
+//============================================================================================
+// LassoSelector classes
+
+void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rectangle<int> &area) {
+    //for (auto c : componentsToSelect)
+}
+
+SelectedItemSet<Component *> &MainComponent::getLassoSelection() {
+    selected = SelectedItemSet<Component *>();
+    return selected;
 }
 
 /*
