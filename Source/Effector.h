@@ -609,6 +609,7 @@ public:
         else name = "Default name";
 
         gui.setTitle(name);
+        gui.setName(name);
 
         // Set name property
         effectTree.setProperty("Name", name, nullptr);

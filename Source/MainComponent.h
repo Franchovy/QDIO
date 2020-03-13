@@ -20,7 +20,7 @@ ApplicationCommandManager& getCommandManager();
  * Main component and shit
  */
 class MainComponent   :
-        public ValueTree::Listener, public Timer, public Component,  public LassoSource<Component*> {
+        public ValueTree::Listener, public Timer, public Component,  public LassoSource<Component*>, public ChangeListener {
 public:
     //==============================================================================
     MainComponent();
@@ -69,8 +69,8 @@ private:
     SelectedItemSet<Component*> selected;
     SelectedItemSet<Component*>& getLassoSelection() override;
 
-
-    Array<Component*> selectionableComponents;
+    // Listener callback on SelectedItemSet "selected" change broadcast.
+    void changeListenerCallback (ChangeBroadcaster *source) override;
 
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";

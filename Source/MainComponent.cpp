@@ -324,12 +324,25 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 // LassoSelector classes
 
 void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rectangle<int> &area) {
-    //for (auto c : componentsToSelect)
+    for (auto c : componentsToSelect) {
+        if (area.contains(c->getBoundsInParent())){
+            results.addIfNotAlreadyThere(c);
+        }
+    }
 }
 
 SelectedItemSet<Component *> &MainComponent::getLassoSelection() {
     selected = SelectedItemSet<Component *>();
+    selected.addChangeListener(this);
     return selected;
+}
+
+void MainComponent::changeListenerCallback(ChangeBroadcaster *source) {
+    std::cout << "Selected Items: " << newLine;
+    for (auto c : selected){
+        std::cout << c->getName() << newLine;
+    }
+
 }
 
 /*
