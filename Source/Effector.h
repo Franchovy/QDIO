@@ -239,11 +239,11 @@ private:
 };
 
 
-
+// TODO single child instead of children - wraps only around one thing
 class GUIWrapper : public Component {
 public:
-    GUIWrapper(Component* child){
-        GUIWrapper();
+    GUIWrapper(Component* child) : GUIWrapper()
+    {
         addAndMakeVisible(child);
     }
 
@@ -532,27 +532,6 @@ private:
 class EffectVT : public ReferenceCountedObject
 {
 public:
-/**
-     * EffectVT - encapsulator of individual AudioProcessor
-     * This is used to contain BaseEffects, imported Plugins, or AudioGraphIOProcessors
-     * Initialises all data to be used as an individual component, and for further up trees.
-     */
-    /*template <class ProcessorType>
-    static EffectVT create(AudioProcessorGraph* graph, String name = "") {
-        // Creates Processor of given type
-        auto node = graph->addNode(std::make_unique<ProcessorType>());
-        auto nodeID = node->nodeID;
-
-        return EffectVT(nodeID, graph, name);
-    }*/
-
-    /**
-     * Constructor for a set of EffectVTs
-     */
-     EffectVT(Array<EffectVT*> effectVTSet, AudioProcessorGraph* graph, String name = "") {
-         // TODO
-     }
-
     /**
      * INDIVIDUAL: Constructor for base effects, plugins, etc. Create, pass to the audio graph, and then pass nodeID
      * to this constructor.
@@ -563,15 +542,8 @@ public:
     EffectVT(AudioProcessorGraph::NodeID nodeID, AudioProcessorGraph* graph, String name = "") :
             EffectVT(graph, name)
 {
-        //std::cout << "Registering processor from node " << newLine;
-        // Register the processor and node
-        node = graph->getNodeForId(nodeID);
-        processor = node->getProcessor();
-        isIndividual = true;
-        // Set node property
-        effectTree.setProperty("Node", node.get(), nullptr);
 
-        guiWrapper.addAndMakeVisible(guiEffect);
+        // TODO move this shit to EffectGUI
         guiEffect.setParent(this);
         for (int i = 0; i < processor->getBusesLayout().inputBuses.size(); i++){
             std::cout << "Bus index: " << i << newLine;
@@ -589,37 +561,10 @@ public:
             p->bus = processor->getBus(false, i);
             guiEffect.addPort(p);
         }
-
-        // TODO Create Default Ports based on Processor Bus Layout
     }
 
     /**
-     * Constructor for an empty effect. It doesn't contain anything but can receive contents
-     * upon drag and drop into it.
-     * @param name
-     * @param graph
-     */
-    EffectVT(AudioProcessorGraph* graph, String name = "")
-            : effectTree("effectTree")
-    {
-        // Set name
-        if (name.isNotEmpty())
-            this->name = name;
-        else name = "Default name";
-
-        guiWrapper.setTitle(name);
-        guiWrapper.setName(name);
-
-        // Set name property
-        effectTree.setProperty("Name", name, nullptr);
-        // Set "self" property
-        effectTree.setProperty("Effect", this, nullptr);
-        // Set GUI property
-        //effectTree.setProperty("GUI", , nullptr);
-    }
-
-    /**
-     * EffectVT group
+     * EffectVT of group of EffectVTs
      */
     EffectVT(Array<EffectVT*> effectVTSet)
     {
@@ -628,26 +573,42 @@ public:
     }
 
     /**
-     * Node - Individual
+     * Node - Individual GUIEffect / effectVT
      */
-    EffectVT(AudioProcessorGraph::NodeID nodeID)
+    EffectVT(AudioProcessorGraph::NodeID nodeID) :
+        EffectVT()
     {
+        isIndividual = true;
+
         // Create from node:
-        // either processor editor or baseeffect
-        // individual
+        node = graph->getNodeForId(nodeID);
+        processor = node->getProcessor();
+        effectTree.setProperty("Node", node.get(), nullptr);
+
+        // Either processor has editor or it must create a baseeffect
+        //TODO these are maybe just one call, with EffectGUI differentiating between them?
+        if (processor->hasEditor()){
+            // Consider this a plugin to insert
+            // TODO EffectGUI should maybe take care of this stuff
+        } else {
+            // Create BaseEffect around node
+            // TODO I agree with Bob
+        }
+
     }
 
     /**
-     * Empty
+     * Empty effectVT
      */
     EffectVT() :
         effectTree("effectTree"),
         guiEffect(),
         guiWrapper(&guiEffect)
     {
-        // Create GUIWrapper
-        // Create GUIEffect
-        // setup anything else
+        // Setup effectTree properties
+        effectTree.setProperty("Name", name, nullptr);
+        effectTree.setProperty("Effect", this, nullptr);
+        effectTree.setProperty("Wrapper", &guiEffect, nullptr);
     }
 
     ~EffectVT()
@@ -679,8 +640,8 @@ public:
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
     bool isIndividual = false;
-    AudioProcessor* processor;
-    AudioProcessorGraph::Node::Ptr node;
+    AudioProcessor* processor = nullptr;
+    AudioProcessorGraph::Node::Ptr node = nullptr;
 
     String name;
     ValueTree effectTree;
@@ -688,7 +649,7 @@ private:
     GUIEffect guiEffect;
 
     OwnedArray<ConnectionPort> ports;
-    AudioProcessorParameterGroup parameters;
+    AudioProcessorParameterGroup parameters; // dum dum dum
 
     static AudioProcessorGraph* graph;
 
