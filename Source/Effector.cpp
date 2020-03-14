@@ -61,15 +61,53 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 }
 
 //==============================================================================
-GUIEffect::GUIEffect ()
+GUIEffect::GUIEffect (EffectVT* parentEVT, ) :
+    EVT(parentEVT)
 {
-    setSize (100, 100);
+    setSize (200, 200);
+    for (int i = 0; i < processor->getBusesLayout().inputBuses.size(); i++){
+        std::cout << "Bus index: " << i << newLine;
+        auto p = addPort(true);
+        if (processor->getBus(true, i) == nullptr)
+            std::cout << "Null ptr bus" << newLine;
+        p->bus = processor->getBus(true, i);
+        addPort(p);
+    }
+    for (int i = 0; i < processor->getBusesLayout().outputBuses.size(); i++){
+        std::cout << "Bus index: " << i << newLine;
+        auto p = addPort(false);
+        if (processor->getBus(false, i) == nullptr)
+            std::cout << "Null ptr bus" << newLine;
+        p->bus = processor->getBus(false, i);
+        addPort(p);
+    }
 }
 
 GUIEffect::~GUIEffect()
 {
 
 }
+
+void GUIEffect::insertEffectGroup() {
+
+}
+
+void GUIEffect::insertEffect() {
+
+}
+
+void GUIEffect::setProcessor(AudioProcessor *processor) {
+    // Set up ports
+    for (auto bus : processor->getBusesLayout().inputBuses, processor->getBusesLayout().outputBuses){
+        // Check channel number - if 0 ignore
+        // Create port - giving isInput and audiochannelset info
+
+    }
+
+    // Setup parameters
+}
+
+
 
 //==============================================================================
 void GUIEffect::paint (Graphics& g)
@@ -112,6 +150,7 @@ void GUIEffect::moved() {
     }
     Component::moved();
 }
+
 
 void ConnectionPort::connect(ConnectionPort &otherPort) {
     if (otherPort.isInput ^ isInput){

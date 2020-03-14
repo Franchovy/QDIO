@@ -14,11 +14,17 @@
 #include "JuceHeader.h"
 
 
+//======================================================================================
+// Names for referencing EffectValueTree
+const String ID_EFFECT_VT("effectTree");
+const String ID_EVT_OBJECT("Effect");
+const String ID_EFFECT_NAME("Name");
+const String ID_EFFECT_GUI("GUI");
+// Ref for dragline VT
+const String ID_DRAGLINE("DragLine");
 
 struct ConnectionLine;
 struct LineComponent;
-
-
 
 class Resizer : public Component
 {
@@ -177,11 +183,6 @@ struct ConnectionLine : public Component, public ReferenceCountedObject
         g.drawLine(line,2);
     }
 
-    void mouseDown(const MouseEvent &event) override {
-        std::cout << "Mouse down ConnectionLine" << newLine;
-        Component::mouseDown(event);
-    }
-
     ~ConnectionLine() override {
         inPort->line = nullptr;
         outPort->line = nullptr;
@@ -197,7 +198,7 @@ private:
 
 struct LineComponent : public Component
 {
-    LineComponent() : dragLineTree("DragLine")
+    LineComponent() : dragLineTree(ID_DRAGLINE)
     {
         setBounds(0,0,getParentWidth(), getParentHeight());
         LineComponent::dragLine = this;
@@ -356,114 +357,6 @@ private:
     Array<Component*> childComponents;
 };
 
-
-typedef AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
-typedef AudioProcessorValueTreeState::ButtonAttachment ButtonAttachment;
-
-class EffectProcessorEditor : public AudioProcessorEditor
-{
-public:
-    EffectProcessorEditor (AudioProcessor& parent, AudioProcessorValueTreeState& vts)
-    : AudioProcessorEditor (parent),
-    valueTreeState (vts)
-    {
-        gainLabel.setText ("Gain", dontSendNotification);
-        addAndMakeVisible (gainLabel);
-
-        addAndMakeVisible (gainSlider);
-        gainAttachment.reset (new SliderAttachment (valueTreeState, "gain", gainSlider));
-
-        this->setResizable(true,true);
-        setSize (300, 300);
-    }
-private:
-    AudioProcessorValueTreeState& valueTreeState;
-
-    Label gainLabel;
-    Slider gainSlider;
-    std::unique_ptr<SliderAttachment> gainAttachment;
-};
-
-class EffectProcessor : public AudioProcessor
-{
-public:
-
-
-    EffectProcessor() : parameters (*this, nullptr, Identifier ("APVTSTutorial"),
-                                    {std::make_unique<AudioParameterFloat> ("gain", "Gain", 0.0f, 1.0f, 0.9f)})
-    {
-        // Note: base class AudioProcessor takes ownership of parameters.
-        levelParameter = parameters.getRawParameterValue ("gain");
-    }
-/*
-
-    EffectProcessor(AudioProcessorValueTreeState& parameters)
-    {
-        this->parameters = parameters;
-        // Note: base class AudioProcessor takes ownership of parameters.
-        levelParameter = parameters.getRawParameterValue ("gain");
-    }
-*/
-
-    //===============================================================================
-    // Audio Processing
-    void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override {
-    /*    setPlayConfigDetails (getMainBusNumInputChannels(),
-                              getMainBusNumOutputChannels(),
-                              sampleRate,
-                              maximumExpectedSamplesPerBlock);*/
-    }
-    void releaseResources() override {
-
-    }
-    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override {
-        for (auto c = getMainBusNumInputChannels(); c < getMainBusNumOutputChannels(); c++){
-            buffer.clear(c, 0, buffer.getNumSamples());
-        }
-
-        buffer.applyGain(*levelParameter);
-    }
-
-    //===============================================================================
-    // Function overrides - all the default crap
-
-    const String getName() const override { return "haga baga chook chook"; }
-    double getTailLengthSeconds() const override { return 0; }
-    bool acceptsMidi() const override { return false; }
-    bool producesMidi() const override { return false; }
-    AudioProcessorEditor *createEditor() override { return new GenericAudioProcessorEditor(*this);}//new EffectProcessorEditor (*this, parameters); }
-    bool hasEditor() const override { return true; }
-    int getNumPrograms() override { return 0; }
-    int getCurrentProgram() override { return 0; }
-    void setCurrentProgram(int index) override {}
-    const String getProgramName(int index) override { return String(); }
-    void changeProgramName(int index, const String &newName) override {}
-
-    //===============================================================================
-    // Set and Load entire plugin state
-
-    void getStateInformation(juce::MemoryBlock &destData) override {
-        auto state = parameters.copyState();
-        std::unique_ptr<XmlElement> xml (state.createXml());
-        copyXmlToBinary (*xml, destData);
-    }
-
-    void setStateInformation(const void *data, int sizeInBytes) override {
-        std::unique_ptr<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
-
-        if (xmlState.get() != nullptr)
-            if (xmlState->hasTagName (parameters.state.getType()))
-                parameters.replaceState (ValueTree::fromXml (*xmlState));
-    }
-
-private:
-    // You can store the VT elsewhere but:
-    // - it can only be used for this one processor
-    // - it must have the same lifetime as this processor
-    AudioProcessorValueTreeState parameters;
-    std::atomic<float>* levelParameter  = nullptr;
-};
-
 class EffectVT;
 
 /**
@@ -475,8 +368,14 @@ class EffectVT;
 */
 class GUIEffect  : public ReferenceCountedObject, public Component {
 public:
-    GUIEffect ();
+    GUIEffect (EffectVT* parentEVT);
     ~GUIEffect() override;
+
+    void insertEffectGroup();
+    void insertEffect();
+    void setProcessor(AudioProcessor* processor);
+
+
 
     using Ptr = ReferenceCountedObjectPtr<GUIEffect>;
 
@@ -485,8 +384,10 @@ public:
 
     void setParameters(AudioProcessorParameterGroup& group);
 
-    void addPort(ConnectionPort* p){
-        if (p->bus->getNumberOfChannels() == 0)
+    void addPort(AudioChannelSet channelInfo){
+
+        inputPorts.add(std::make_unique<ConnectionPort>(isInput)
+        if (bus->getNumberOfChannels() == 0)
             return;
         if (p->isInput) {
             addAndMakeVisible(p);
@@ -499,16 +400,18 @@ public:
     }
 
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
-
-    const EffectVT* getParent() const { return parentTree; }
-    void setParent(EffectVT* parentTree) { this->parentTree = parentTree; }
-
     void moved() override;
 
+
+    // This reference is purely for the purpose of having a quick way to get the EVT from the component,
+    // say, on a mouse click. Seems a bit unnecessary but also seems like the most efficient way to proceed.
+    const EffectVT* EVT;
+
+
 private:
-    EffectVT* parentTree;
+    bool isIndividual = false;
+
     Array<ConnectionPort*> inputPorts;
     Array<ConnectionPort*> outputPorts;
     int portIncrement = 30;
@@ -525,46 +428,15 @@ private:
 
    This includes GUI, AudioProcessor, and the Effect's ValueTree itself.
 
-   It's a little confusing because the ValueTree owned by the object goes on to refer to this object - but the
-   destructor should take care of that.
+   The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
  */
 
 class EffectVT : public ReferenceCountedObject
 {
 public:
     /**
-     * INDIVIDUAL: Constructor for base effects, plugins, etc. Create, pass to the audio graph, and then pass nodeID
-     * to this constructor.
-     * @param nodeID
-     * @param graph
-     * @param name
-     */
-    EffectVT(AudioProcessorGraph::NodeID nodeID, AudioProcessorGraph* graph, String name = "") :
-            EffectVT(graph, name)
-{
-
-        // TODO move this shit to EffectGUI
-        guiEffect.setParent(this);
-        for (int i = 0; i < processor->getBusesLayout().inputBuses.size(); i++){
-            std::cout << "Bus index: " << i << newLine;
-            auto p = addPort(true);
-            if (processor->getBus(true, i) == nullptr)
-                std::cout << "Null ptr bus" << newLine;
-            p->bus = processor->getBus(true, i);
-            guiEffect.addPort(p);
-        }
-        for (int i = 0; i < processor->getBusesLayout().outputBuses.size(); i++){
-            std::cout << "Bus index: " << i << newLine;
-            auto p = addPort(false);
-            if (processor->getBus(false, i) == nullptr)
-                std::cout << "Null ptr bus" << newLine;
-            p->bus = processor->getBus(false, i);
-            guiEffect.addPort(p);
-        }
-    }
-
-    /**
-     * EffectVT of group of EffectVTs
+     * ENCAPSULATOR CONSTRUCTOR EffectVT of group of EffectVTs
+     * @param effectVTSet
      */
     EffectVT(Array<EffectVT*> effectVTSet)
     {
@@ -573,7 +445,9 @@ public:
     }
 
     /**
+     * INDIVIDUAL CONSTRUCTOR
      * Node - Individual GUIEffect / effectVT
+     * @param nodeID
      */
     EffectVT(AudioProcessorGraph::NodeID nodeID) :
         EffectVT()
@@ -602,13 +476,13 @@ public:
      */
     EffectVT() :
         effectTree("effectTree"),
-        guiEffect(),
+        guiEffect(this),
         guiWrapper(&guiEffect)
     {
         // Setup effectTree properties
         effectTree.setProperty("Name", name, nullptr);
         effectTree.setProperty("Effect", this, nullptr);
-        effectTree.setProperty("Wrapper", &guiEffect, nullptr);
+        effectTree.setProperty("GUI", &guiEffect, nullptr);
     }
 
     ~EffectVT()
@@ -619,7 +493,7 @@ public:
     }
 
     ConnectionPort* addPort(bool isInput){
-        return ports.add(std::make_unique<ConnectionPort>(isInput));
+        return );
     }
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
@@ -654,3 +528,4 @@ private:
     static AudioProcessorGraph* graph;
 
 };
+
