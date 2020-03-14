@@ -8,7 +8,6 @@
 
 #include "MainComponent.h"
 
-
 //==============================================================================
 MainComponent::MainComponent() :
         effectsTree("TreeTop"),
@@ -31,7 +30,9 @@ MainComponent::MainComponent() :
     //========================================================================================
     // Manage EffectsTree
 
+    EffectVT::setAudioProcessorGraph(processorGraph.get());
     effectsTree.addListener(this);
+
 
     //========================================================================================
     // Manage Audio
@@ -285,8 +286,8 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
         // Remember that an inputPort is receiving, on the output effect
         // and the outputPort is source on the input effect
-        auto output = dynamic_cast<GUIEffect*>(outputPort->getParentComponent())->getParent();
-        auto input = dynamic_cast<GUIEffect*>(inputPort->getParentComponent())->getParent();
+        auto output = dynamic_cast<GUIEffect*>(outputPort->getParentComponent())->EVT;
+        auto input = dynamic_cast<GUIEffect*>(inputPort->getParentComponent())->EVT;
         //TODO Instead, connect EffectVTs and let connectAudioNodes() do the AudioGraph stuff
 
         //TODO Do checks to make sure connection is alright
@@ -298,14 +299,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
         */
 
         // Add audiograph connection
-        std::cout << "Input bus channels: " << inputPort->bus->getNumberOfChannels() << newLine;
-        std::cout << "Output bus channels: " << outputPort->bus->getNumberOfChannels() << newLine;
         for (int c = 0; c < jmin(inputPort->bus->getNumberOfChannels(), outputPort->bus->getNumberOfChannels()); c++) {
-            std::cout << "Input bus channel index to connect: " << inputPort->bus->getChannelIndexInProcessBlockBuffer(c)
-                      << newLine;
-            std::cout << "Input bus channel index to connect: " << outputPort->bus->getChannelIndexInProcessBlockBuffer(c)
-                      << newLine;
-
             if (processorGraph->addConnection(
                     {{input->getNode()->nodeID, inputPort->bus->getChannelIndexInProcessBlockBuffer(c)},
                      {output->getNode()->nodeID, outputPort->bus->getChannelIndexInProcessBlockBuffer(c)}}))

@@ -61,26 +61,11 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 }
 
 //==============================================================================
-GUIEffect::GUIEffect (EffectVT* parentEVT, ) :
+GUIEffect::GUIEffect (EffectVT* parentEVT) :
     EVT(parentEVT)
 {
     setSize (200, 200);
-    for (int i = 0; i < processor->getBusesLayout().inputBuses.size(); i++){
-        std::cout << "Bus index: " << i << newLine;
-        auto p = addPort(true);
-        if (processor->getBus(true, i) == nullptr)
-            std::cout << "Null ptr bus" << newLine;
-        p->bus = processor->getBus(true, i);
-        addPort(p);
-    }
-    for (int i = 0; i < processor->getBusesLayout().outputBuses.size(); i++){
-        std::cout << "Bus index: " << i << newLine;
-        auto p = addPort(false);
-        if (processor->getBus(false, i) == nullptr)
-            std::cout << "Null ptr bus" << newLine;
-        p->bus = processor->getBus(false, i);
-        addPort(p);
-    }
+
 }
 
 GUIEffect::~GUIEffect()
@@ -96,15 +81,27 @@ void GUIEffect::insertEffect() {
 
 }
 
+// Processor hasEditor? What to do if processor is a predefined plugin
 void GUIEffect::setProcessor(AudioProcessor *processor) {
-    // Set up ports
-    for (auto bus : processor->getBusesLayout().inputBuses, processor->getBusesLayout().outputBuses){
+    // Set up ports based on processor buses
+    int numInputBuses = processor->getBusCount(true );
+    int numBuses = numInputBuses + processor->getBusCount(false);
+    for (int i = 0; i < numBuses; i++){
+        bool isInput = (i < numInputBuses) ? true : false;
+        // Get bus from processor
+        auto bus = isInput ? processor->getBus(true, i) :
+                processor->getBus(false, i - numInputBuses);
         // Check channel number - if 0 ignore
-        // Create port - giving isInput and audiochannelset info
-
+        if (bus->getNumberOfChannels() == 0)
+            break;
+        // Create port - giving audiochannelset info and isInput bool
+        addPort(bus, isInput);
     }
 
     // Setup parameters
+
+    // Update
+    repaint();
 }
 
 
@@ -184,7 +181,10 @@ void ConnectionPort::moved() {
 }
 
 
+//==============================================================================
+// EffectVT static member variable
 
+AudioProcessorGraph* EffectVT::graph = nullptr;
 
 //==============================================================================
 #if 0

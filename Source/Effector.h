@@ -375,8 +375,6 @@ public:
     void insertEffect();
     void setProcessor(AudioProcessor* processor);
 
-
-
     using Ptr = ReferenceCountedObjectPtr<GUIEffect>;
 
     void paint (Graphics& g) override;
@@ -384,19 +382,12 @@ public:
 
     void setParameters(AudioProcessorParameterGroup& group);
 
-    void addPort(AudioChannelSet channelInfo){
-
-        inputPorts.add(std::make_unique<ConnectionPort>(isInput)
-        if (bus->getNumberOfChannels() == 0)
-            return;
-        if (p->isInput) {
-            addAndMakeVisible(p);
-            inputPorts.add(p);
-        } else {
-            addAndMakeVisible(p);
-            outputPorts.add(p);
-        }
-        resized();
+    void addPort(AudioProcessor::Bus* bus, bool isInput){
+        auto p = isInput ?
+                inputPorts.add(std::make_unique<ConnectionPort>(isInput)) :
+                outputPorts.add(std::make_unique<ConnectionPort>(isInput));
+        p->bus = bus;
+        addAndMakeVisible(p);
     }
 
     void mouseDown(const MouseEvent &event) override;
@@ -412,8 +403,14 @@ public:
 private:
     bool isIndividual = false;
 
-    Array<ConnectionPort*> inputPorts;
-    Array<ConnectionPort*> outputPorts;
+    OwnedArray<ConnectionPort> inputPorts;
+    OwnedArray<ConnectionPort> outputPorts;
+
+    AudioProcessorParameterGroup parameters; // dum dum dum
+
+    //============================================================================
+    // GUI auto stuff
+
     int portIncrement = 30;
     int inputPortStartPos = 50;
     int inputPortPos = inputPortStartPos;
@@ -438,9 +435,14 @@ public:
      * ENCAPSULATOR CONSTRUCTOR EffectVT of group of EffectVTs
      * @param effectVTSet
      */
-    EffectVT(Array<EffectVT*> effectVTSet)
+    EffectVT(Array<const EffectVT*> effectVTSet) :
+        EffectVT()
     {
         // Set itself as parent of all given children
+        for (auto eVT : effectVTSet){
+            eVT->getTree().getParent().removeChild(eVT->getTree(), nullptr);
+            effectTree.appendChild(eVT->getTree(), nullptr);
+        }
         // Set size based on children
     }
 
@@ -459,16 +461,8 @@ public:
         processor = node->getProcessor();
         effectTree.setProperty("Node", node.get(), nullptr);
 
-        // Either processor has editor or it must create a baseeffect
-        //TODO these are maybe just one call, with EffectGUI differentiating between them?
-        if (processor->hasEditor()){
-            // Consider this a plugin to insert
-            // TODO EffectGUI should maybe take care of this stuff
-        } else {
-            // Create BaseEffect around node
-            // TODO I agree with Bob
-        }
-
+        // Initialise with processor
+        guiEffect.setProcessor(processor);
     }
 
     /**
@@ -492,10 +486,6 @@ public:
         graph->removeNode(node->nodeID);
     }
 
-    ConnectionPort* addPort(bool isInput){
-        return );
-    }
-
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
 
     // =================================================================================
@@ -505,11 +495,13 @@ public:
     const AudioProcessor* getProcessor() const {if (isIndividual) return processor;}
     const AudioProcessorGraph::Node::Ptr getNode() const {if (isIndividual) return node;}
 
+    // Data
     const String& getName() const { return name; }
     void setName(const String &name) { this->name = name; }
     const ValueTree& getTree() const {return effectTree;}
     GUIWrapper* getGUIWrapper() {return &guiWrapper;}
     GUIEffect* getGUIEffect() {return &guiEffect;}
+    static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
 
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
@@ -522,10 +514,7 @@ private:
     GUIWrapper guiWrapper;
     GUIEffect guiEffect;
 
-    OwnedArray<ConnectionPort> ports;
-    AudioProcessorParameterGroup parameters; // dum dum dum
 
     static AudioProcessorGraph* graph;
 
 };
-

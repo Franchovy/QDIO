@@ -80,67 +80,39 @@ private:
         PopupMenu m;
         m.addItem("Empty Effect", std::function<void()>(
                 [=]{
-                    createEffect("Effect");
+                    createEffect();
                 }));
         m.addItem("Input Effect", std::function<void()>(
                 [=]{
-                    createEffect<AudioGraphIOProcessor>("Input Device", AudioGraphIOProcessor::audioInputNode);}));
+                    auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
+                    createEffect(node);
+                }));
         m.addItem("Output Effect", std::function<void()>(
                 [=]{
-                    createEffect<AudioGraphIOProcessor>("Output Device", AudioGraphIOProcessor::audioOutputNode);}));
+                    auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
+                    createEffect(node);}));
         return m;
-    }
-
-    // Temporary function
-    template <class Processor>
-    void createEffect(String name, AudioProcessorGraph::AudioGraphIOProcessor::IODeviceType deviceType){
-        if (std::is_same<Processor, AudioProcessorGraph::AudioGraphIOProcessor>()){
-            auto node = processorGraph->addNode(
-                    std::make_unique<AudioGraphIOProcessor>(deviceType));
-            node->getProcessor()->getName();
-            createEffect(node, name);
-        } else {
-            std::cout << "Invalid AudioGraphIOProcessor Type";
-        }
-    }
-
-
-    template<class Processor>
-    void createEffect(String name, AudioProcessor* processor){
-         //else if (std::is_same<Processor, EffectProcessor) //TODO Base effect?
-    }
-
-
-    void createEffect(AudioProcessorGraph::Node::Ptr node, String name){
-        EffectVT::Ptr e = new EffectVT(node->nodeID, processorGraph.get(), name);
-        effectsTree.appendChild(e->getTree(),nullptr);
-        createEffect(name);
-    }
-
-
-    void createEffect(String name){
-        EffectVT::Ptr e = new EffectVT(processorGraph.get(), name);
-        effectsTree.appendChild(e->getTree(),nullptr);
-    }
-
-    /**
-     * EffectVT group
-    */
-    void createEffect(){
-
-    }
-
-    /**
-    * Node - Individual
-    */
-    void createEffect(){
-
     }
 
     /**
      * Empty
      */
-    void createEffect(){
+    EffectVT::Ptr createEffect(AudioProcessorGraph::Node::Ptr node = nullptr){
+        if (node != nullptr){
+            // Individual effect from processor
+            return new EffectVT(node->nodeID);
+        }
+        if (selected.getNumSelected() == 0){
+            // Empty effect
+            return new EffectVT();
+        } else if (selected.getNumSelected() > 0){
+            // Create Effect with selected Effects inside
+            Array<const EffectVT*> effectVTArray;
+            for (auto eGui : selected.getItemArray()){
+                effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
+            }
+            return new EffectVT(effectVTArray);
+        }
 
     }
 
