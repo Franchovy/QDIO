@@ -245,6 +245,7 @@ class GUIWrapper : public Component {
 public:
     GUIWrapper(Component* child) : GUIWrapper()
     {
+        std::cout << "Wrapper make with child: " << child->getName() << newLine;
         addAndMakeVisible(child);
     }
 
@@ -369,6 +370,9 @@ class EffectVT;
 class GUIEffect  : public ReferenceCountedObject, public Component {
 public:
     GUIEffect (EffectVT* parentEVT);
+
+    void visibilityChanged() override;
+
     ~GUIEffect() override;
 
     void insertEffectGroup();
@@ -392,12 +396,14 @@ public:
 
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
+
     void moved() override;
 
 
     // This reference is purely for the purpose of having a quick way to get the EVT from the component,
     // say, on a mouse click. Seems a bit unnecessary but also seems like the most efficient way to proceed.
-    const EffectVT* EVT;
+    EffectVT* EVT;
 
 
 private:
@@ -488,6 +494,14 @@ public:
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
 
+    /**
+     * Adds effect to this one as a child
+     * @param effect to add as child
+     */
+    void addEffect(const EffectVT::Ptr effect){
+        effectTree.appendChild(effect->getTree(), nullptr);
+    }
+
     // =================================================================================
     // Setters and getter functions
 
@@ -511,9 +525,8 @@ private:
 
     String name;
     ValueTree effectTree;
-    GUIWrapper guiWrapper;
     GUIEffect guiEffect;
-
+    GUIWrapper guiWrapper;
 
     static AudioProcessorGraph* graph;
 

@@ -93,7 +93,7 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
                 processor->getBus(false, i - numInputBuses);
         // Check channel number - if 0 ignore
         if (bus->getNumberOfChannels() == 0)
-            break;
+            continue;
         // Create port - giving audiochannelset info and isInput bool
         addPort(bus, isInput);
     }
@@ -138,6 +138,13 @@ void GUIEffect::mouseDrag(const MouseEvent &event) {
     getParentComponent()->mouseDrag(event);
 }
 
+void GUIEffect::mouseUp(const MouseEvent &event) {
+    if (auto c = getComponentAt(event.getPosition())){
+        c->setVisible(false);
+    }
+    Component::mouseUp(event);
+}
+
 void GUIEffect::moved() {
     for (auto i : inputPorts){
         i->moved();
@@ -146,6 +153,12 @@ void GUIEffect::moved() {
         i->moved();
     }
     Component::moved();
+}
+
+void GUIEffect::visibilityChanged() {
+    // Set parent (Wrapper) visibility
+    if (getParentComponent())
+        getParentComponent()->setVisible(this->isVisible());
 }
 
 

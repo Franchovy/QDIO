@@ -60,7 +60,7 @@ private:
     Point<int> menuPos;
     ValueTree getTreeFromComponent(Component* g, String name);
 
-    // GUI Helper class and callback for connections
+    // GUI Helper tools
     LineComponent dragLine;
     LassoComponent<Component*> lasso;
 
@@ -69,6 +69,11 @@ private:
     SelectedItemSet<Component*> selected;
     SelectedItemSet<Component*>& getLassoSelection() override;
 
+    // GUI Helper tools for effect navigation
+    /*Array<GUIEffect*> effectsAt(){
+
+    }*/
+
     // Listener callback on SelectedItemSet "selected" change broadcast.
     void changeListenerCallback (ChangeBroadcaster *source) override;
 
@@ -76,22 +81,35 @@ private:
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
     //
-    PopupMenu getEffectSelectMenu(){
+    PopupMenu getEffectSelectMenu(const MouseEvent &event){
         PopupMenu m;
         m.addItem("Empty Effect", std::function<void()>(
                 [=]{
-                    createEffect();
+                    auto e = createEffect();
+                    addEffect(event, e);
                 }));
         m.addItem("Input Effect", std::function<void()>(
                 [=]{
                     auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
-                    createEffect(node);
+                    auto e = createEffect(node);
+                    addEffect(event, e);
                 }));
         m.addItem("Output Effect", std::function<void()>(
                 [=]{
                     auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
-                    createEffect(node);}));
+                    auto e = createEffect(node);
+                    addEffect(event, e);
+                }));
         return m;
+    }
+
+    void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect){
+        if (auto e_gui = dynamic_cast<GUIEffect*>(event.originalComponent)){
+            auto parentEffect = e_gui->EVT;
+            parentEffect->addEffect(childEffect);
+        } else {
+            effectsTree.appendChild(childEffect->getTree(), nullptr);
+        }
     }
 
     /**

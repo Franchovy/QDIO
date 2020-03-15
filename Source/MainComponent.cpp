@@ -106,7 +106,7 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         PopupMenu m;
         menuPos = getMouseXYRelative();
 
-        PopupMenu test = getEffectSelectMenu();
+        PopupMenu test = getEffectSelectMenu(event);
         m.addSubMenu("Create Effect", test);
         //m.addItem(1, "Create Effect");
 
@@ -152,16 +152,18 @@ void MainComponent::mouseUp(const MouseEvent &event) {
 void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     // Add ParameterGroup
     // Add to AudioProcessorGraph
-
+    std::cout << "Added child" << newLine;
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_TREE){
         auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_VT).getObject());
         auto effectGui = effectVT->getGUIWrapper();
         componentsToSelect.add(effectGui);
 
         if (parentTree.getType() == ID_EFFECT_TREE){
+            std::cout << "Parent is effectTree" << newLine;
             auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EFFECT_VT).getObject());
             parentEffectVT->getGUIEffect()->addAndMakeVisible(effectGui);
         } else {
+            std::cout << "Parent is not effectTree" << newLine;
             addAndMakeVisible(effectGui);
         }
 
