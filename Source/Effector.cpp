@@ -131,7 +131,6 @@ void GUIEffect::resized()
 
 void GUIEffect::mouseDown(const MouseEvent &event) {
     getParentComponent()->mouseDown(event);
-    //Component::mouseDown(event);
 }
 
 void GUIEffect::mouseDrag(const MouseEvent &event) {
@@ -139,10 +138,8 @@ void GUIEffect::mouseDrag(const MouseEvent &event) {
 }
 
 void GUIEffect::mouseUp(const MouseEvent &event) {
-    if (auto c = getComponentAt(event.getPosition())){
-        c->setVisible(false);
-    }
-    Component::mouseUp(event);
+    event.withNewPosition(event.getPosition());
+    getParentComponent()->mouseUp(event);
 }
 
 void GUIEffect::moved() {

@@ -141,7 +141,15 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
 }
 
 void MainComponent::mouseUp(const MouseEvent &event) {
+    if (dynamic_cast<GUIEffect*>(event.originalComponent))
+        std::cout << "GUIEffect mouse up!" << newLine;
     lasso.endLasso();
+
+    std::cout << "Selected items: " << newLine;
+    for (auto i : selected){
+        std::cout << i->getName() << newLine;
+    }
+
     Component::mouseUp(event);
 }
 

@@ -295,6 +295,10 @@ public:
     void mouseDrag(const MouseEvent& event) override {
         dragger.dragComponent(this, event, nullptr);
     }
+    void mouseUp(const MouseEvent& event) override {
+        event.withNewPosition(event.getPosition() + getPosition());
+        getParentComponent()->mouseUp(event);
+    }
 
     PopupMenu& getMenu(){
         return menu;

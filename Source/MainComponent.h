@@ -70,9 +70,18 @@ private:
     SelectedItemSet<Component*>& getLassoSelection() override;
 
     // GUI Helper tools for effect navigation
-    /*Array<GUIEffect*> effectsAt(){
-
-    }*/
+    Array<GUIEffect*> effectsAt(Point<int> point){
+        Array<GUIEffect*> list;
+        for (int i = 0; i < effectsTree.getNumChildren(); i++){
+            if (effectsTree.getChild(i).getType() == ID_EFFECT_TREE){
+                // Check at location
+                auto e_gui = dynamic_cast<GUIEffect*>(effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+                if (e_gui->contains(point))
+                    list.add(e_gui);
+            }
+        }
+        return list;
+    }
 
     // Listener callback on SelectedItemSet "selected" change broadcast.
     void changeListenerCallback (ChangeBroadcaster *source) override;
@@ -127,6 +136,7 @@ private:
             // Create Effect with selected Effects inside
             Array<const EffectVT*> effectVTArray;
             for (auto eGui : selected.getItemArray()){
+                // Selected includes GUIWrapper....
                 effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
             }
             return new EffectVT(effectVTArray);
