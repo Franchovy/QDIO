@@ -22,6 +22,8 @@ ApplicationCommandManager& getCommandManager();
 class MainComponent   :
         public ValueTree::Listener, public Timer, public Component,  public LassoSource<Component*>, public ChangeListener {
 public:
+    bool keyPressed(const KeyPress &key) override;
+
     //==============================================================================
     MainComponent();
     ~MainComponent();
@@ -55,8 +57,10 @@ private:
     // Effect tree shit
     ValueTree effectsTree;
 
-    void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded);
-    UndoManager undoManager;
+    void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
+    void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
+                               int indexFromWhichChildWasRemoved) override;
+
     Point<int> menuPos;
     ValueTree getTreeFromComponent(Component* g, String name);
 
@@ -112,11 +116,21 @@ private:
         return m;
     }
 
-    void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect){
-        if (auto e_gui = dynamic_cast<GUIEffect*>(event.originalComponent)){
-            auto parentEffect = e_gui->EVT;
-            parentEffect->addEffect(childEffect);
-        } else {
+    //GUIEffect*
+
+    /**
+     * Adds existing effect as child to the effect under the mouse
+     * @param event for which the location will determine what effect to add to.
+     * @param childEffect effect to add
+     */
+    void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addAnyways = true) {
+        if (auto effectWrapper = dynamic_cast<GUIWrapper*>(event.originalComponent)){
+            if (auto effectGUI = dynamic_cast<GUIEffect*>(effectWrapper->getChild())){
+                auto parentEffect = effectGUI->EVT;
+                parentEffect->addEffect(childEffect);
+            }
+
+        } else if (addAnyways) {
             effectsTree.appendChild(childEffect->getTree(), nullptr);
         }
     }
@@ -124,7 +138,7 @@ private:
     /**
      * Empty
      */
-    EffectVT::Ptr createEffect(AudioProcessorGraph::Node::Ptr node = nullptr){
+    EffectVT::Ptr createEffect(AudioProcessorGraph::Node::Ptr node = nullptr) {
         if (node != nullptr){
             // Individual effect from processor
             return new EffectVT(node->nodeID);
@@ -160,9 +174,6 @@ private:
     int numInputChannels = 2;
     int numOutputChannels = 2;
 
-
-    MidiBuffer emptyMidiMessageBuffer;
-
     void initialiseGraph();
     void connectAudioNodes();
     void connectMidiNodes();
@@ -182,9 +193,6 @@ private:
     Identifier ID_EFFECT_TREE = "effectTree";
     Identifier ID_EFFECT_VT = "Effect"; // This is the class that has been defined - where ID_EFFECT_TREE point to
     //Identifier ID_EFFECT_GUI = "GUI";
-
-    //void createEffect(GUIEffect::Ptr parent = nullptr);
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

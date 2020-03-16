@@ -10,6 +10,28 @@
 
 #include "Effector.h"
 
+EffectPositioner::EffectPositioner(GUIEffect &component, MouseEvent &event)
+        : Component::Positioner(component),
+        guiEffect(component)
+{
+    if (auto e = dynamic_cast<GUIEffect*>(event.eventComponent)){
+        e->addChildComponent(component);
+        width = e->getWidth() / 2;
+        height = e->getHeight() / 2;
+        pos = event.getPosition();
+        applyNewBounds(Rectangle<int>(pos.x, pos.y, width, height));
+        //guiEffect = component;
+    }
+    component.setPositioner(this);
+
+
+}
+
+void EffectPositioner::applyNewBounds(const Rectangle<int> &newBounds) {
+    guiEffect.setBounds(newBounds);
+}
+
+
 LineComponent* LineComponent::dragLine = nullptr;
 
 /**
@@ -64,6 +86,7 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 GUIEffect::GUIEffect (EffectVT* parentEVT) :
     EVT(parentEVT)
 {
+    setPositioner(EffectPositioner(this, ))
     setSize (200, 200);
 
 }
@@ -215,3 +238,4 @@ BEGIN_JUCER_METADATA
 END_JUCER_METADATA
 */
 #endif
+

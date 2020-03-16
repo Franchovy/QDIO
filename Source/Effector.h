@@ -23,8 +23,33 @@ const String ID_EFFECT_GUI("GUI");
 // Ref for dragline VT
 const String ID_DRAGLINE("DragLine");
 
+struct GUIEffect;
 struct ConnectionLine;
 struct LineComponent;
+
+class EffectPositioner : public Component::Positioner, public ReferenceCountedObject
+{
+public:
+    EffectPositioner(GUIEffect &component, MouseEvent &event);
+
+    using Ptr = ReferenceCountedObjectPtr<EffectPositioner>;
+
+    void applyNewBounds(const Rectangle<int> &newBounds) override;
+
+    void moveBy(Point<int> d){
+        pos += d;
+        applyNewBounds(Rectangle<int>(pos.x, pos.y, width, height));
+    }
+
+    //TODO Resize method
+
+private:
+    GUIEffect& guiEffect;
+
+    Point<int> pos;
+    int width, height;
+};
+
 
 class Resizer : public Component
 {
@@ -350,6 +375,10 @@ public:
         Component::moved();
     }
 
+    Component* getChild(){
+        return childComponents.getFirst();
+    }
+
     TextButton closeButton;
 
 private:
@@ -503,6 +532,7 @@ public:
      * @param effect to add as child
      */
     void addEffect(const EffectVT::Ptr effect){
+        effect->getTree().getParent().removeChild(effect->getTree(), nullptr);
         effectTree.appendChild(effect->getTree(), nullptr);
     }
 
