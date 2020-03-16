@@ -98,19 +98,19 @@ private:
         PopupMenu m;
         m.addItem("Empty Effect", std::function<void()>(
                 [=]{
-                    auto e = createEffect();
+                    auto e = createEffect(event);
                     addEffect(event, e);
                 }));
         m.addItem("Input Effect", std::function<void()>(
                 [=]{
                     auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
-                    auto e = createEffect(node);
+                    auto e = createEffect(event, node);
                     addEffect(event, e);
                 }));
         m.addItem("Output Effect", std::function<void()>(
                 [=]{
                     auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
-                    auto e = createEffect(node);
+                    auto e = createEffect(event, node);
                     addEffect(event, e);
                 }));
         return m;
@@ -129,7 +129,6 @@ private:
                 auto parentEffect = effectGUI->EVT;
                 parentEffect->addEffect(childEffect);
             }
-
         } else if (addAnyways) {
             effectsTree.appendChild(childEffect->getTree(), nullptr);
         }
@@ -138,14 +137,14 @@ private:
     /**
      * Empty
      */
-    EffectVT::Ptr createEffect(AudioProcessorGraph::Node::Ptr node = nullptr) {
+    EffectVT::Ptr createEffect(const MouseEvent &event, AudioProcessorGraph::Node::Ptr node = nullptr) {
         if (node != nullptr){
             // Individual effect from processor
-            return new EffectVT(node->nodeID);
+            return new EffectVT(event, node->nodeID);
         }
         if (selected.getNumSelected() == 0){
             // Empty effect
-            return new EffectVT();
+            return new EffectVT(event);
         } else if (selected.getNumSelected() > 0){
             // Create Effect with selected Effects inside
             Array<const EffectVT*> effectVTArray;
@@ -153,7 +152,7 @@ private:
                 // Selected includes GUIWrapper....
                 effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
             }
-            return new EffectVT(effectVTArray);
+            return new EffectVT(event, effectVTArray);
         }
 
     }

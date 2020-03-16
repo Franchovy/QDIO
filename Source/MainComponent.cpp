@@ -106,6 +106,7 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         PopupMenu m;
         menuPos = getMouseXYRelative();
 
+        // TODO custom options depending on event component
         PopupMenu test = getEffectSelectMenu(event);
         m.addSubMenu("Create Effect", test);
         //m.addItem(1, "Create Effect");
@@ -141,7 +142,26 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
 }
 
 void MainComponent::mouseUp(const MouseEvent &event) {
-    //TODO make this available for all levels of transfer.
+    if (lasso.isVisible())
+        lasso.endLasso();
+
+    // Is the component an effect?
+    else if (auto effect = dynamic_cast<GUIEffect*>(event.originalComponent)) {
+        // Scan through effects at this point to see what to do
+        auto effects = effectsAt(event.getPosition());
+        for (auto parentEffect : effects) {
+            // If there is another effect
+            if (effect != parentEffect) {
+                addEffect(event.getEventRelativeTo(parentEffect), effect->EVT);
+            }
+            //
+
+        }
+    }
+
+
+    // operate based on the two
+
     if (auto effect = dynamic_cast<GUIEffect*>(event.originalComponent)){
         auto effects = effectsAt(event.getPosition());
         // Check for effect moved out of parent
@@ -155,7 +175,6 @@ void MainComponent::mouseUp(const MouseEvent &event) {
         }
     }
 
-    lasso.endLasso();
 
     std::cout << "Selected items: " << newLine;
     for (auto i : selected){

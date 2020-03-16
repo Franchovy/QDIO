@@ -10,7 +10,7 @@
 
 #include "Effector.h"
 
-EffectPositioner::EffectPositioner(GUIEffect &component, MouseEvent &event)
+EffectPositioner::EffectPositioner(GUIEffect &component, const MouseEvent &event)
         : Component::Positioner(component),
         guiEffect(component)
 {
@@ -83,10 +83,11 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 }
 
 //==============================================================================
-GUIEffect::GUIEffect (EffectVT* parentEVT) :
+GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
     EVT(parentEVT)
 {
-    setPositioner(EffectPositioner(this, ))
+    auto positioner = new EffectPositioner(*this, event);
+    setPositioner(positioner);
     setSize (200, 200);
 
 }

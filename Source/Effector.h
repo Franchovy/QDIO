@@ -30,7 +30,7 @@ struct LineComponent;
 class EffectPositioner : public Component::Positioner, public ReferenceCountedObject
 {
 public:
-    EffectPositioner(GUIEffect &component, MouseEvent &event);
+    EffectPositioner(GUIEffect &component, const MouseEvent &event);
 
     using Ptr = ReferenceCountedObjectPtr<EffectPositioner>;
 
@@ -402,7 +402,7 @@ class EffectVT;
 */
 class GUIEffect  : public ReferenceCountedObject, public Component {
 public:
-    GUIEffect (EffectVT* parentEVT);
+    GUIEffect (const MouseEvent &event, EffectVT* parentEVT);
 
     void visibilityChanged() override;
 
@@ -474,8 +474,8 @@ public:
      * ENCAPSULATOR CONSTRUCTOR EffectVT of group of EffectVTs
      * @param effectVTSet
      */
-    EffectVT(Array<const EffectVT*> effectVTSet) :
-        EffectVT()
+    EffectVT(const MouseEvent &event, Array<const EffectVT*> effectVTSet) :
+        EffectVT(event)
     {
         // Set itself as parent of all given children
         for (auto eVT : effectVTSet){
@@ -490,8 +490,8 @@ public:
      * Node - Individual GUIEffect / effectVT
      * @param nodeID
      */
-    EffectVT(AudioProcessorGraph::NodeID nodeID) :
-        EffectVT()
+    EffectVT(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) :
+        EffectVT(event)
     {
         isIndividual = true;
 
@@ -507,15 +507,17 @@ public:
     /**
      * Empty effectVT
      */
-    EffectVT() :
+    EffectVT(const MouseEvent &event) :
         effectTree("effectTree"),
-        guiEffect(this),
+        guiEffect(event, this),
         guiWrapper(&guiEffect)
     {
         // Setup effectTree properties
         effectTree.setProperty("Name", name, nullptr);
         effectTree.setProperty("Effect", this, nullptr);
         effectTree.setProperty("GUI", &guiEffect, nullptr);
+        effectTree.setProperty("Positioner",
+                dynamic_cast<EffectPositioner*>(guiEffect.getPositioner()), nullptr);
     }
 
     ~EffectVT()
