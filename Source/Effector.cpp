@@ -10,60 +10,6 @@
 
 #include "Effector.h"
 
-EffectPositioner::EffectPositioner(GUIEffect &component, const MouseEvent &event)
-        : Component::Positioner(component) //, guiEffect(component)
-{
-    guiEffect = dynamic_cast<GUIEffect*>(&component);
-    component.setPositioner(this);
-    if (auto e = dynamic_cast<GUIEffect*>(event.eventComponent)){
-        e->addChildComponent(component);
-        width = e->getWidth() / 2;
-        height = e->getHeight() / 2;
-        pos = event.getPosition();
-        parent = e->getPositioner();
-        applyNewBounds();
-        //guiEffect = component;
-    } else {
-        width = 200;
-        height = 200;
-        pos = event.getPosition();
-        applyNewBounds();
-    }
-}
-
-void EffectPositioner::applyNewBounds(const Rectangle<int> &newBounds) {
-    guiEffect->setBounds(newBounds);
-
-}
-
-void EffectPositioner::setParent(EffectPositioner *newParent) {
-    // Remove from old parent if there is one
-    if (parent != nullptr){
-        pos += parent->pos;
-    }
-    pos -= newParent->pos;
-    parent = newParent;
-    applyNewBounds();
-}
-
-
-void EffectPositioner::resize(int newWidth, int newHeight) {
-    width = newWidth;
-    height = newHeight;
-    applyNewBounds();
-}
-
-void EffectPositioner::startDraggingComponent(Component *componentToDrag, const MouseEvent &e) {
-    ComponentDragger::startDraggingComponent(componentToDrag, e);
-}
-
-void EffectPositioner::dragComponent(Component *componentToDrag, const MouseEvent &e,
-                                     ComponentBoundsConstrainer *constrainer) {
-    ComponentDragger::dragComponent(componentToDrag, e, constrainer);
-    pos = componentToDrag->getPosition();
-}
-
-
 LineComponent* LineComponent::dragLine = nullptr;
 
 /**
@@ -116,12 +62,17 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 
 //==============================================================================
 GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
-    EVT(parentEVT),
-    positioner(new EffectPositioner(*this, event))
+    EVT(parentEVT)
 {
     addAndMakeVisible(resizer);
-    resized();
-    repaint();
+    //TODO assign the tree before creation of GUIEffect for this to work
+    if (parentEVT->getTree().getParent().hasType(ID_EFFECT_VT)){
+        auto sizeDef = dynamic_cast<GUIEffect*>(parentEVT->getTree().getParent()
+                .getProperty(ID_EFFECT_GUI).getObject())->getWidth() / 3;
+        setBounds(event.getPosition().x, event.getPosition().y, sizeDef, sizeDef);
+    } else {
+        setBounds(event.getPosition().x, event.getPosition().y, 200,200);
+    }
 }
 
 GUIEffect::~GUIEffect()
@@ -189,12 +140,12 @@ void GUIEffect::resized()
 }
 
 void GUIEffect::mouseDown(const MouseEvent &event) {
-    positioner->startDraggingComponent(this, event);
+    dragger.startDraggingComponent(this, event);
     getParentComponent()->mouseDown(event);
 }
 
 void GUIEffect::mouseDrag(const MouseEvent &event) {
-    positioner->dragComponent(this, event, nullptr);
+    dragger.dragComponent(this, event, nullptr);
     getParentComponent()->mouseDrag(event);
 }
 
@@ -279,11 +230,8 @@ END_JUCER_METADATA
 
 void Resizer::mouseDrag(const MouseEvent &event) {
     dragger.dragComponent(this, event, nullptr);
-    if (EffectPositioner::Ptr positioner = dynamic_cast<GUIEffect*>(getParentComponent())->getPositioner()) {
-        positioner->resize(startPos.x + event.getDistanceFromDragStartX(),
-                startPos.y + event.getDistanceFromDragStartY());
-    } else
-        getParentComponent()->setSize(startPos.x + event.getDistanceFromDragStartX(),
+
+    getParentComponent()->setSize(startPos.x + event.getDistanceFromDragStartX(),
                                       startPos.y + event.getDistanceFromDragStartY());
     Component::mouseDrag(event);
 }

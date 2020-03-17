@@ -28,37 +28,6 @@ struct GUIEffect;
 struct ConnectionLine;
 struct LineComponent;
 
-class EffectPositioner : public Component::Positioner, public ComponentDragger, public ReferenceCountedObject
-{
-public:
-    EffectPositioner(GUIEffect &component, const MouseEvent &event);
-
-    using Ptr = ReferenceCountedObjectPtr<EffectPositioner>;
-
-    void startDraggingComponent(Component *componentToDrag, const MouseEvent &e);
-    void dragComponent(Component *componentToDrag, const MouseEvent &e, ComponentBoundsConstrainer *constrainer);
-
-    void applyNewBounds() { applyNewBounds(Rectangle<int>(pos.x, pos.y, width, height)); }
-    void applyNewBounds(const Rectangle<int> &newBounds) override;
-
-    void moveBy(Point<int> d){
-        pos += d;
-        applyNewBounds(Rectangle<int>(pos.x, pos.y, width, height));
-    }
-
-    void resize(int newWidth, int newHeight);
-
-    void setParent(EffectPositioner *newParent);
-
-private:
-    EffectPositioner::Ptr parent = nullptr;
-    GUIEffect* guiEffect;
-
-    Point<int> pos;
-    int width, height;
-};
-
-
 class Resizer : public Component
 {
 public:
@@ -435,17 +404,14 @@ public:
 
     void moved() override;
 
-    EffectPositioner::Ptr getPositioner() {return positioner;}
-
     EffectVT* EVT;
 private:
     bool isIndividual = false;
     OwnedArray<ConnectionPort> inputPorts;
     OwnedArray<ConnectionPort> outputPorts;
 
-    EffectPositioner::Ptr positioner;
     Resizer resizer;
-
+    ComponentDragger dragger;
 
     AudioProcessorParameterGroup parameters; // dum dum dum
 
@@ -518,8 +484,6 @@ public:
         effectTree.setProperty("Name", name, nullptr);
         effectTree.setProperty("Effect", this, nullptr);
         effectTree.setProperty("GUI", &guiEffect, nullptr);
-        effectTree.setProperty("Positioner",
-                dynamic_cast<EffectPositioner*>(guiEffect.getPositioner().get()), nullptr);
     }
 
     ~EffectVT()
@@ -539,9 +503,9 @@ public:
         effect->getTree().getParent().removeChild(effect->getTree(), nullptr);
         std::cout << "Add Effect: " << effect->getGUIEffect()->getPosition().toString() << newLine;
         std::cout << "To: " << guiEffect.getPosition().toString() << newLine;
-        effect->getPositioner()->setParent(getPositioner());
         std::cout << "New position: " << effect->getGUIEffect()->getPosition().toString() << newLine;
         effectTree.appendChild(effect->getTree(), nullptr);
+
     }
 
     // =================================================================================
@@ -558,7 +522,6 @@ public:
     const ValueTree& getTree() const {return effectTree;}
     GUIEffect* getGUIEffect() {return &guiEffect;}
     static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
-    EffectPositioner* getPositioner() { return dynamic_cast<EffectPositioner*>(guiEffect.getPositioner().get()); }
 
     // Convenience functions
     EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(

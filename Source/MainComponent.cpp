@@ -198,6 +198,11 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
         if (parentTree.getType() == ID_EFFECT_VT){
             auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EVT_OBJECT).getObject());
             parentEffectVT->getGUIEffect()->addAndMakeVisible(effectGui);
+
+            auto newPos = effectGui->getPosition() - parentEffectVT->getGUIEffect()->getPosition();
+            effectGui->setBounds(newPos.x, newPos.y, effectGui->getWidth(), effectGui->getHeight());
+
+            std::cout << "New position: " << effectGui->getPosition().toString() << newLine;
         } else {
             effectGui->setVisible(true);
             addAndMakeVisible(effectGui);
@@ -206,7 +211,7 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
         for (int i = 0; i < effectVT->getNumChildren(); i++)
             valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());
 
-        effectGui->setCentrePosition(menuPos - effectGui->getParentComponent()->getPosition());
+        //effectGui->setCentrePosition(menuPos - effectGui->getParentComponent()->getPosition());
     }
 }
 
