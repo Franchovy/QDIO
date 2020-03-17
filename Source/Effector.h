@@ -16,6 +16,7 @@
 
 //======================================================================================
 // Names for referencing EffectValueTree
+const Identifier ID_TREE_TOP("TreeTop");
 const Identifier ID_EFFECT_VT("effectTree");
 const Identifier ID_EVT_OBJECT("Effect");
 const Identifier ID_EFFECT_NAME("Name");
@@ -27,13 +28,17 @@ struct GUIEffect;
 struct ConnectionLine;
 struct LineComponent;
 
-class EffectPositioner : public Component::Positioner, public ReferenceCountedObject
+class EffectPositioner : public Component::Positioner, public ComponentDragger, public ReferenceCountedObject
 {
 public:
     EffectPositioner(GUIEffect &component, const MouseEvent &event);
 
     using Ptr = ReferenceCountedObjectPtr<EffectPositioner>;
 
+    void startDraggingComponent(Component *componentToDrag, const MouseEvent &e);
+    void dragComponent(Component *componentToDrag, const MouseEvent &e, ComponentBoundsConstrainer *constrainer);
+
+    void applyNewBounds() { applyNewBounds(Rectangle<int>(pos.x, pos.y, width, height)); }
     void applyNewBounds(const Rectangle<int> &newBounds) override;
 
     void moveBy(Point<int> d){
@@ -41,10 +46,13 @@ public:
         applyNewBounds(Rectangle<int>(pos.x, pos.y, width, height));
     }
 
-    //TODO Resize method
+    void resize(int newWidth, int newHeight);
+
+    void setParent(EffectPositioner *newParent);
 
 private:
-    GUIEffect& guiEffect;
+    EffectPositioner::Ptr parent = nullptr;
+    GUIEffect* guiEffect;
 
     Point<int> pos;
     int width, height;
@@ -71,13 +79,7 @@ public:
         setMouseCursor(MouseCursor::DraggingHandCursor);
         Component::mouseDown(event);
     }
-    void mouseDrag(const MouseEvent &event) override{
-        dragger.dragComponent(this, event, nullptr);
-
-        getParentComponent()->setSize(startPos.x + event.getDistanceFromDragStartX(),
-                                      startPos.y + event.getDistanceFromDragStartY());
-        Component::mouseDrag(event);
-    }
+    void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override{
         setMouseCursor(MouseCursor::ParentCursor);
         Component::mouseUp(event);
@@ -270,7 +272,6 @@ class GUIWrapper : public Component {
 public:
     GUIWrapper(Component* child) : GUIWrapper()
     {
-        std::cout << "Wrapper make with child: " << child->getName() << newLine;
         addAndMakeVisible(child);
     }
 
@@ -417,6 +418,7 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
 
+
     void setParameters(AudioProcessorParameterGroup& group);
 
     void addPort(AudioProcessor::Bus* bus, bool isInput){
@@ -433,17 +435,17 @@ public:
 
     void moved() override;
 
+    EffectPositioner::Ptr getPositioner() {return positioner;}
 
-    // This reference is purely for the purpose of having a quick way to get the EVT from the component,
-    // say, on a mouse click. Seems a bit unnecessary but also seems like the most efficient way to proceed.
     EffectVT* EVT;
-
-
 private:
     bool isIndividual = false;
-
     OwnedArray<ConnectionPort> inputPorts;
     OwnedArray<ConnectionPort> outputPorts;
+
+    EffectPositioner::Ptr positioner;
+    Resizer resizer;
+
 
     AudioProcessorParameterGroup parameters; // dum dum dum
 
@@ -510,15 +512,14 @@ public:
      */
     EffectVT(const MouseEvent &event) :
         effectTree("effectTree"),
-        guiEffect(event, this),
-        guiWrapper(&guiEffect)
+        guiEffect(event, this)
     {
         // Setup effectTree properties
         effectTree.setProperty("Name", name, nullptr);
         effectTree.setProperty("Effect", this, nullptr);
         effectTree.setProperty("GUI", &guiEffect, nullptr);
         effectTree.setProperty("Positioner",
-                dynamic_cast<EffectPositioner*>(guiEffect.getPositioner()), nullptr);
+                dynamic_cast<EffectPositioner*>(guiEffect.getPositioner().get()), nullptr);
     }
 
     ~EffectVT()
@@ -536,6 +537,10 @@ public:
      */
     void addEffect(const EffectVT::Ptr effect){
         effect->getTree().getParent().removeChild(effect->getTree(), nullptr);
+        std::cout << "Add Effect: " << effect->getGUIEffect()->getPosition().toString() << newLine;
+        std::cout << "To: " << guiEffect.getPosition().toString() << newLine;
+        effect->getPositioner()->setParent(getPositioner());
+        std::cout << "New position: " << effect->getGUIEffect()->getPosition().toString() << newLine;
         effectTree.appendChild(effect->getTree(), nullptr);
     }
 
@@ -549,17 +554,19 @@ public:
     // Data
     const String& getName() const { return name; }
     void setName(const String &name) { this->name = name; }
+    ValueTree& getTree() {return effectTree;}
     const ValueTree& getTree() const {return effectTree;}
-    GUIWrapper* getGUIWrapper() {return &guiWrapper;}
     GUIEffect* getGUIEffect() {return &guiEffect;}
     static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
+    EffectPositioner* getPositioner() { return dynamic_cast<EffectPositioner*>(guiEffect.getPositioner().get()); }
 
     // Convenience functions
     EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
-            effectTree.getParent().getProperty(ID_EFFECT_VT).getObject())->ptr(); }
+            effectTree.getParent().getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
     EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
-            effectTree.getChild(index).getProperty(ID_EFFECT_VT).getObject())->ptr(); }
+            effectTree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
     EffectVT::Ptr ptr(){ return this; }
+    int getNumChildren(){ return effectTree.getNumChildren(); }
 
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
@@ -570,7 +577,6 @@ private:
     String name;
     ValueTree effectTree;
     GUIEffect guiEffect;
-    GUIWrapper guiWrapper;
 
     static AudioProcessorGraph* graph;
 

@@ -11,24 +11,56 @@
 #include "Effector.h"
 
 EffectPositioner::EffectPositioner(GUIEffect &component, const MouseEvent &event)
-        : Component::Positioner(component),
-        guiEffect(component)
+        : Component::Positioner(component) //, guiEffect(component)
 {
+    guiEffect = dynamic_cast<GUIEffect*>(&component);
+    component.setPositioner(this);
     if (auto e = dynamic_cast<GUIEffect*>(event.eventComponent)){
         e->addChildComponent(component);
         width = e->getWidth() / 2;
         height = e->getHeight() / 2;
         pos = event.getPosition();
-        applyNewBounds(Rectangle<int>(pos.x, pos.y, width, height));
+        parent = e->getPositioner();
+        applyNewBounds();
         //guiEffect = component;
+    } else {
+        width = 200;
+        height = 200;
+        pos = event.getPosition();
+        applyNewBounds();
     }
-    component.setPositioner(this);
-
-
 }
 
 void EffectPositioner::applyNewBounds(const Rectangle<int> &newBounds) {
-    guiEffect.setBounds(newBounds);
+    guiEffect->setBounds(newBounds);
+
+}
+
+void EffectPositioner::setParent(EffectPositioner *newParent) {
+    // Remove from old parent if there is one
+    if (parent != nullptr){
+        pos += parent->pos;
+    }
+    pos -= newParent->pos;
+    parent = newParent;
+    applyNewBounds();
+}
+
+
+void EffectPositioner::resize(int newWidth, int newHeight) {
+    width = newWidth;
+    height = newHeight;
+    applyNewBounds();
+}
+
+void EffectPositioner::startDraggingComponent(Component *componentToDrag, const MouseEvent &e) {
+    ComponentDragger::startDraggingComponent(componentToDrag, e);
+}
+
+void EffectPositioner::dragComponent(Component *componentToDrag, const MouseEvent &e,
+                                     ComponentBoundsConstrainer *constrainer) {
+    ComponentDragger::dragComponent(componentToDrag, e, constrainer);
+    pos = componentToDrag->getPosition();
 }
 
 
@@ -84,12 +116,12 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 
 //==============================================================================
 GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
-    EVT(parentEVT)
+    EVT(parentEVT),
+    positioner(new EffectPositioner(*this, event))
 {
-    auto positioner = new EffectPositioner(*this, event);
-    setPositioner(positioner);
-    setSize (200, 200);
-
+    addAndMakeVisible(resizer);
+    resized();
+    repaint();
 }
 
 GUIEffect::~GUIEffect()
@@ -133,7 +165,10 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
 //==============================================================================
 void GUIEffect::paint (Graphics& g)
 {
-    //g.fillAll(Colours::purple);
+    g.fillAll(Colours::whitesmoke);
+
+    g.setColour(Colours::black);
+    g.drawRect(0,0,getWidth(),getHeight(), 2);
     //g.fillAll (Colour (200,200,200));
     //Component::paint(g);
     //g.drawRect(outline);
@@ -154,10 +189,12 @@ void GUIEffect::resized()
 }
 
 void GUIEffect::mouseDown(const MouseEvent &event) {
+    positioner->startDraggingComponent(this, event);
     getParentComponent()->mouseDown(event);
 }
 
 void GUIEffect::mouseDrag(const MouseEvent &event) {
+    positioner->dragComponent(this, event, nullptr);
     getParentComponent()->mouseDrag(event);
 }
 
@@ -240,3 +277,13 @@ END_JUCER_METADATA
 */
 #endif
 
+void Resizer::mouseDrag(const MouseEvent &event) {
+    dragger.dragComponent(this, event, nullptr);
+    if (EffectPositioner::Ptr positioner = dynamic_cast<GUIEffect*>(getParentComponent())->getPositioner()) {
+        positioner->resize(startPos.x + event.getDistanceFromDragStartX(),
+                startPos.y + event.getDistanceFromDragStartY());
+    } else
+        getParentComponent()->setSize(startPos.x + event.getDistanceFromDragStartX(),
+                                      startPos.y + event.getDistanceFromDragStartY());
+    Component::mouseDrag(event);
+}

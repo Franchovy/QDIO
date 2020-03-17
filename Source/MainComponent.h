@@ -65,17 +65,15 @@ private:
 /*        EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
                     effectTree.getParent().getProperty(ID_EFFECT_VT).getObject())->ptr(); }*/
         EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
-                    effectTree.getChild(index).getProperty(ID_EFFECT_VT).getObject())->ptr(); }
+                    effectTree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
         int getNumChildren() { return effectTree.getNumChildren(); }
         void appendChild(EffectVT::Ptr child) { effectTree.appendChild(child->getTree(), nullptr); }
+        const ValueTree &getTree() const { return effectTree; }
+        void addListener(ValueTree::Listener *listener){ effectTree.addListener(listener); }
+        const ValueTree &getDragLineTree() const { return dragLineTree; }
+        void setDragLineTree(ValueTree dragLineTree) { TreeTop::dragLineTree = dragLineTree; }
+        EffectVT* getParent(){ return nullptr; }
 
-        const ValueTree &getDragLineTree() const {
-            return dragLineTree;
-        }
-
-        void setDragLineTree(ValueTree dragLineTree) {
-            TreeTop::dragLineTree = dragLineTree;
-        }
 
     private:
         ValueTree effectTree;
@@ -92,6 +90,7 @@ private:
     // GUI Helper tools
     LineComponent dragLine;
     LassoComponent<Component*> lasso;
+    bool intersectMode = true;
 
     void findLassoItemsInArea (Array <Component*>& results, const Rectangle<int>& area) override;
     Array<Component*> componentsToSelect;
@@ -104,8 +103,8 @@ private:
         for (int i = 0; i < effectsTree.getNumChildren(); i++){
             // Check at location
             auto e_gui = effectsTree.getChild(i)->getGUIEffect();
-            if (e_gui->contains(point)) {
-                // Add recursive call for a match
+            if (e_gui->getBoundsInParent().contains(point)) {
+                //TODO Add recursive call for a match
                 std::cout << "Effect at point: " << e_gui->getName();
                 list.add(e_gui);
             }
@@ -149,11 +148,9 @@ private:
      */
     void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addAnyways = true) {
         std::cout << "Add effect to be removed" << newLine;
-        if (auto effectWrapper = dynamic_cast<GUIWrapper*>(event.originalComponent)){
-            if (auto effectGUI = dynamic_cast<GUIEffect*>(effectWrapper->getChild())){
-                auto parentEffect = effectGUI->EVT;
-                parentEffect->addEffect(childEffect);
-            }
+        if (auto effectGUI = dynamic_cast<GUIEffect*>(event.eventComponent)){
+            auto parentEffect = effectGUI->EVT;
+            parentEffect->addEffect(childEffect);
         } else if (addAnyways) {
             effectsTree.appendChild(childEffect);
         }
@@ -174,7 +171,6 @@ private:
             // Create Effect with selected Effects inside
             Array<const EffectVT*> effectVTArray;
             for (auto eGui : selected.getItemArray()){
-                // Selected includes GUIWrapper....
                 effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
             }
             return new EffectVT(event, effectVTArray);
@@ -190,14 +186,38 @@ private:
      * @param effect should be operated on.
      */
      void moveEffect(const MouseEvent &event, EffectVT::Ptr effect) {
-         if (event.eventComponent == this)
-             std::cout << "Main Component" << newLine;
-         auto effectTo = dynamic_cast<GUIEffect*>(event.eventComponent);
-         // Does effect parent have to change?
-         if (effect->getParent()->getGUIEffect() == effectTo){
-             std::cout << "supa poop" << newLine;
+         Component* targetEffect;
+         Component* parentEffect;
+         bool targetIsMainWindow;
+         bool parentIsMainWindow;
+
+         if (event.eventComponent == this) {
+             targetEffect = this;
+             targetIsMainWindow = true;
+         } else {
+             targetEffect = dynamic_cast<GUIEffect*>(event.eventComponent);
+             targetIsMainWindow = false;
          }
-         std::cout << "Move effect op" << newLine;
+
+         if (effect->getTree().getParent() == effectsTree.getTree()) {
+             parentEffect = this;
+             parentIsMainWindow = true;
+         } else {
+             parentEffect = effect->getParent()->getGUIEffect();
+             parentIsMainWindow = false;
+         }
+
+         // Nothing to do on a targetIsMainWindow && parentIsMainWindow case.
+         if (targetIsMainWindow && parentIsMainWindow){
+             return;
+         } else if (targetIsMainWindow && !parentIsMainWindow){
+             std::cout << "Target is Mainwindow" << newLine;
+         } else if (!targetIsMainWindow && parentIsMainWindow){
+             std::cout << "Parent is Mainwindow" << newLine;
+             dynamic_cast<GUIEffect*>(targetEffect)->EVT->addEffect(effect);
+         } else if (!targetIsMainWindow && !parentIsMainWindow) {
+             std::cout << "Neither are Mainwindow" << newLine;
+         }
      }
 
     //==============================================================================
@@ -219,7 +239,7 @@ private:
     void initialiseGraph();
     void connectAudioNodes();
     void connectMidiNodes();
-    void updateGraph();
+    static void updateGraph();
 
     // MIDI
     /*
@@ -230,13 +250,6 @@ private:
     void setMidiInput (int index);
 */
 
-/*
-    // StringRefs - move these to Includer file
-    Identifier ID_TREE_TOP = "Treetop";
-    Identifier ID_EFFECT_TREE = "effectTree";
-    static Identifier ID_EFFECT_VT; // This is the class that has been defined - where ID_EFFECT_TREE point to
-    //Identifier ID_EFFECT_GUI = "GUI";
-*/
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

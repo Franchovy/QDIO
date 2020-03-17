@@ -31,6 +31,7 @@ MainComponent::MainComponent() :
     //========================================================================================
     // Manage EffectsTree
 
+    effectsTree.addListener(this);
     EffectVT::setAudioProcessorGraph(processorGraph.get());
 
 
@@ -87,7 +88,6 @@ MainComponent::~MainComponent()
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 }
 
@@ -147,41 +147,32 @@ void MainComponent::mouseUp(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.endLasso();
 
-    // Is the component an effect?
-    else if (auto effect = dynamic_cast<GUIEffect*>(event.originalComponent)) {
-        // Scan through effects at this point to see what to do
-        auto effects = effectsAt(event.getPosition());
-        std::cout << "Effects found: " << effects.size() << newLine;
-        for (auto parentEffect : effects) {
-            // If there is only this effect
-            if (effects.size() == 1 && effects.getFirst() == effect)
-                moveEffect(event.getEventRelativeTo(this), effect->EVT);
-            // If there is another effect
-            else if (effect != parentEffect) {
-                std::cout << "Move effect on other: " << parentEffect->getName() << newLine;
-                moveEffect(event.getEventRelativeTo(parentEffect), effect->EVT);
+    if (event.mods.isLeftButtonDown()) {
+        // Is the component an effect?
+        if (auto effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
+            // Scan through effects at this point to see what to do
+
+            std::cout << "Event pos: " << event.getPosition().toString() << newLine;
+            std::cout << "Event component: " << event.eventComponent->getPosition().toString() << newLine;
+            std::cout << "Event pos relative to this: " << event.getEventRelativeTo(this).getPosition().toString() << newLine;
+
+
+            auto effects = effectsAt(event.getEventRelativeTo(this).getPosition());
+            std::cout << "Effects found: " << effects.size() << newLine;
+            for (auto parentEffect : effects) {
+                // If there is only this effect
+                if (effects.size() == 1 && effects.getFirst() == effect)
+                    moveEffect(event.getEventRelativeTo(this), effect->EVT);
+                    // If there is another effect
+                else if (effect != parentEffect) {
+                    std::cout << "Move effect on other: " << parentEffect->getName() << newLine;
+                    moveEffect(event.getEventRelativeTo(parentEffect), effect->EVT);
+                }
+                //
             }
-            //
-
         }
+        selected.deselectAll();
     }
-
-
-    // operate based on the two
-/*
-    if (auto effect = dynamic_cast<GUIEffect*>(event.originalComponent)){
-        auto effects = effectsAt(event.getPosition());
-        // Check for effect moved out of parent
-        if (effects.isEmpty() && !effect->EVT->getTree().isAChildOf(effectsTree)) {
-
-        }
-
-        for (auto parentEffect : effects){
-            if (effect != parentEffect)
-                parentEffect->EVT->addEffect(effect->EVT);
-        }
-    }*/
-
 
     std::cout << "Selected items: " << newLine;
     for (auto i : selected){
@@ -200,20 +191,23 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
     // Add to AudioProcessorGraph
     std::cout << "Added child" << newLine;
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_VT){
-        auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_VT).getObject());
-        auto effectGui = effectVT->getGUIWrapper();
+        auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EVT_OBJECT).getObject());
+        auto effectGui = effectVT->getGUIEffect();
         componentsToSelect.addIfNotAlreadyThere(effectGui);
-
+        //TODO make sure all these are ok!
         if (parentTree.getType() == ID_EFFECT_VT){
-            auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EFFECT_VT).getObject());
+            auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EVT_OBJECT).getObject());
             parentEffectVT->getGUIEffect()->addAndMakeVisible(effectGui);
         } else {
+            effectGui->setVisible(true);
             addAndMakeVisible(effectGui);
         }
 
+        for (int i = 0; i < effectVT->getNumChildren(); i++)
+            valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());
+
         effectGui->setCentrePosition(menuPos - effectGui->getParentComponent()->getPosition());
     }
-
 }
 
 void MainComponent::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
@@ -294,8 +288,20 @@ void MainComponent::updateGraph() {
 
 void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rectangle<int> &area) {
     for (auto c : componentsToSelect) {
-        if (area.contains(c->getBoundsInParent())){
-            results.addIfNotAlreadyThere(c);
+        if (!intersectMode) {
+            if (area.contains(c->getBoundsInParent())) {
+                std::cout << "Contains mode" << newLine;
+                std::cout << "Area: " << area.toString() << newLine;
+                std::cout << "Bounds: " << c->getBoundsInParent().toString() << newLine;
+                results.addIfNotAlreadyThere(c);
+            }
+        } else {
+            if (area.intersects(c->getBoundsInParent())) {
+                std::cout << "Intersect mode" << newLine;
+                std::cout << "Area: " << area.toString() << newLine;
+                std::cout << "Bounds: " << c->getBoundsInParent().toString() << newLine;
+                results.addIfNotAlreadyThere(c);
+            }
         }
     }
 }
