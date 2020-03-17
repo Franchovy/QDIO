@@ -55,14 +55,39 @@ public:
 private:
     //==============================================================================
     // Effect tree shit
-    ValueTree effectsTree;
+    struct TreeTop : public ReferenceCountedObject
+    {
+        // TODO merge this with EffectVT somehow
+
+        TreeTop(String name) : effectTree(name) { }
+
+        // Convenience functions
+/*        EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
+                    effectTree.getParent().getProperty(ID_EFFECT_VT).getObject())->ptr(); }*/
+        EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
+                    effectTree.getChild(index).getProperty(ID_EFFECT_VT).getObject())->ptr(); }
+        int getNumChildren() { return effectTree.getNumChildren(); }
+        void appendChild(EffectVT::Ptr child) { effectTree.appendChild(child->getTree(), nullptr); }
+
+        const ValueTree &getDragLineTree() const {
+            return dragLineTree;
+        }
+
+        void setDragLineTree(ValueTree &dragLineTree) {
+            TreeTop::dragLineTree = dragLineTree;
+        }
+
+    private:
+        ValueTree effectTree;
+        ValueTree dragLineTree;
+    };
+    TreeTop effectsTree;
 
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
 
     Point<int> menuPos;
-    ValueTree getTreeFromComponent(Component* g, String name);
 
     // GUI Helper tools
     LineComponent dragLine;
@@ -77,11 +102,12 @@ private:
     Array<GUIEffect*> effectsAt(Point<int> point){
         Array<GUIEffect*> list;
         for (int i = 0; i < effectsTree.getNumChildren(); i++){
-            if (effectsTree.getChild(i).getType() == ID_EFFECT_TREE){
-                // Check at location
-                auto e_gui = dynamic_cast<GUIEffect*>(effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
-                if (e_gui->contains(point))
-                    list.add(e_gui);
+            // Check at location
+            auto e_gui = effectsTree.getChild(i)->getGUIEffect();
+            if (e_gui->contains(point)) {
+                // Add recursive call for a match
+                std::cout << "Effect at point: " << e_gui->getName();
+                list.add(e_gui);
             }
         }
         return list;
@@ -116,21 +142,20 @@ private:
         return m;
     }
 
-    //GUIEffect*
-
     /**
      * Adds existing effect as child to the effect under the mouse
      * @param event for which the location will determine what effect to add to.
      * @param childEffect effect to add
      */
     void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addAnyways = true) {
+        std::cout << "Add effect to be removed" << newLine;
         if (auto effectWrapper = dynamic_cast<GUIWrapper*>(event.originalComponent)){
             if (auto effectGUI = dynamic_cast<GUIEffect*>(effectWrapper->getChild())){
                 auto parentEffect = effectGUI->EVT;
                 parentEffect->addEffect(childEffect);
             }
         } else if (addAnyways) {
-            effectsTree.appendChild(childEffect->getTree(), nullptr);
+            effectsTree.appendChild(childEffect);
         }
     }
 
@@ -154,8 +179,26 @@ private:
             }
             return new EffectVT(event, effectVTArray);
         }
-
     }
+
+    /**
+     * Generalised operation to run on an effect drag release.
+     * UNDOABLE ACTION
+     * @param event - Event to get information from - event.originalComponent should
+     * be = effect (or its corresponding GUIWrapper), while event.eventComponent is the
+     * "object" of the operation - the new parent effect, which
+     * @param effect should be operated on.
+     */
+     void moveEffect(const MouseEvent &event, EffectVT::Ptr effect) {
+         if (event.eventComponent == this)
+             std::cout << "Main Component" << newLine;
+         auto effectTo = dynamic_cast<GUIEffect*>(event.eventComponent);
+         // Does effect parent have to change?
+         if (effect->getParent()->getGUIEffect() == effectTo){
+             std::cout << "supa poop" << newLine;
+         }
+         std::cout << "Move effect op" << newLine;
+     }
 
     //==============================================================================
     // Audio shit
@@ -187,11 +230,13 @@ private:
     void setMidiInput (int index);
 */
 
+/*
     // StringRefs - move these to Includer file
     Identifier ID_TREE_TOP = "Treetop";
     Identifier ID_EFFECT_TREE = "effectTree";
-    Identifier ID_EFFECT_VT = "Effect"; // This is the class that has been defined - where ID_EFFECT_TREE point to
+    static Identifier ID_EFFECT_VT; // This is the class that has been defined - where ID_EFFECT_TREE point to
     //Identifier ID_EFFECT_GUI = "GUI";
+*/
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

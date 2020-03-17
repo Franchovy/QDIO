@@ -16,12 +16,12 @@
 
 //======================================================================================
 // Names for referencing EffectValueTree
-const String ID_EFFECT_VT("effectTree");
-const String ID_EVT_OBJECT("Effect");
-const String ID_EFFECT_NAME("Name");
-const String ID_EFFECT_GUI("GUI");
+const Identifier ID_EFFECT_VT("effectTree");
+const Identifier ID_EVT_OBJECT("Effect");
+const Identifier ID_EFFECT_NAME("Name");
+const Identifier ID_EFFECT_GUI("GUI");
 // Ref for dragline VT
-const String ID_DRAGLINE("DragLine");
+const Identifier ID_DRAGLINE("DragLine");
 
 struct GUIEffect;
 struct ConnectionLine;
@@ -459,12 +459,13 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIEffect)
 };
 
+
 /**
-   EffectVT (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
-
-   This includes GUI, AudioProcessor, and the Effect's ValueTree itself.
-
-   The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
+ * EffectVT (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
+ *
+ * This includes GUI, AudioProcessor, and the Effect's ValueTree itself.
+ *
+ * The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
  */
 
 class EffectVT : public ReferenceCountedObject
@@ -552,6 +553,13 @@ public:
     GUIWrapper* getGUIWrapper() {return &guiWrapper;}
     GUIEffect* getGUIEffect() {return &guiEffect;}
     static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
+
+    // Convenience functions
+    EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
+            effectTree.getParent().getProperty(ID_EFFECT_VT).getObject())->ptr(); }
+    EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
+            effectTree.getChild(index).getProperty(ID_EFFECT_VT).getObject())->ptr(); }
+    EffectVT::Ptr ptr(){ return this; }
 
 private:
     // Used for an individual processor EffectVT. - does not contain anything else

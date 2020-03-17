@@ -24,14 +24,15 @@ MainComponent::MainComponent() :
     // Drag Line GUI
     addChildComponent(dragLine);
     dragLine.setAlwaysOnTop(true);
-    effectsTree.appendChild(dragLine.getDragLineTree(), nullptr);
     addChildComponent(lasso);
+    dragLine.getDragLineTree().addListener(this);
+    effectsTree.setDragLineTree(dragLine);
 
     //========================================================================================
     // Manage EffectsTree
 
     EffectVT::setAudioProcessorGraph(processorGraph.get());
-    effectsTree.addListener(this);
+
 
 
     //========================================================================================
@@ -142,6 +143,7 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
 }
 
 void MainComponent::mouseUp(const MouseEvent &event) {
+    std::cout << "Mouse up" << newLine;
     if (lasso.isVisible())
         lasso.endLasso();
 
@@ -149,10 +151,15 @@ void MainComponent::mouseUp(const MouseEvent &event) {
     else if (auto effect = dynamic_cast<GUIEffect*>(event.originalComponent)) {
         // Scan through effects at this point to see what to do
         auto effects = effectsAt(event.getPosition());
+        std::cout << "Effects found: " << effects.size() << newLine;
         for (auto parentEffect : effects) {
+            // If there is only this effect
+            if (effects.size() == 1 && effects.getFirst() == effect)
+                moveEffect(event.getEventRelativeTo(this), effect->EVT);
             // If there is another effect
-            if (effect != parentEffect) {
-                addEffect(event.getEventRelativeTo(parentEffect), effect->EVT);
+            else if (effect != parentEffect) {
+                std::cout << "Move effect on other: " << parentEffect->getName() << newLine;
+                moveEffect(event.getEventRelativeTo(parentEffect), effect->EVT);
             }
             //
 
@@ -161,7 +168,7 @@ void MainComponent::mouseUp(const MouseEvent &event) {
 
 
     // operate based on the two
-
+/*
     if (auto effect = dynamic_cast<GUIEffect*>(event.originalComponent)){
         auto effects = effectsAt(event.getPosition());
         // Check for effect moved out of parent
@@ -173,7 +180,7 @@ void MainComponent::mouseUp(const MouseEvent &event) {
             if (effect != parentEffect)
                 parentEffect->EVT->addEffect(effect->EVT);
         }
-    }
+    }*/
 
 
     std::cout << "Selected items: " << newLine;
@@ -244,34 +251,6 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
     }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
-}
-
-
-/**
- * //TODO Create or find a "Property Component" type to replace GUIEffect* cast with for open-type usage
- * Function iterates upwards through component hierarchy, then down through matching tree hierarchy
- * @param g property of valuetree that is searched for
- * @param name name of property to search for (throughout the tree)
- * @return final valuetree match that contains property g
- */
-ValueTree MainComponent::getTreeFromComponent(Component *g, String name) {
-    // Iterate upwards through parents populating parentArray
-    Array<Component*> parentArray;
-    auto component = g;
-    do {
-        parentArray.add(component);
-        component = component->getParentComponent();
-    } while (component->getComponentID() != "MainWindow");
-
-    // Iterate down from TreeTop checking at every step for a match
-    ValueTree vt = effectsTree;
-    for (int i = parentArray.size()-1; i >= 0 ; i--)
-    {
-        if (auto p = dynamic_cast<GUIEffect*>(parentArray[i]))
-            vt = vt.getChildWithProperty(name, p);
-        else return ValueTree(); // return invalid valuetree on failure
-    }
-    return vt;
 }
 
 //==============================================================================
