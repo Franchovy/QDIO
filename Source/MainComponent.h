@@ -73,7 +73,7 @@ private:
             return dragLineTree;
         }
 
-        void setDragLineTree(ValueTree &dragLineTree) {
+        void setDragLineTree(ValueTree dragLineTree) {
             TreeTop::dragLineTree = dragLineTree;
         }
 

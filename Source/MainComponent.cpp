@@ -26,7 +26,7 @@ MainComponent::MainComponent() :
     dragLine.setAlwaysOnTop(true);
     addChildComponent(lasso);
     dragLine.getDragLineTree().addListener(this);
-    effectsTree.setDragLineTree(dragLine);
+    effectsTree.setDragLineTree(dragLine.getDragLineTree()); //This may be making a copy
 
     //========================================================================================
     // Manage EffectsTree
@@ -199,12 +199,12 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
     // Add ParameterGroup
     // Add to AudioProcessorGraph
     std::cout << "Added child" << newLine;
-    if (childWhichHasBeenAdded.getType() == ID_EFFECT_TREE){
+    if (childWhichHasBeenAdded.getType() == ID_EFFECT_VT){
         auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EFFECT_VT).getObject());
         auto effectGui = effectVT->getGUIWrapper();
         componentsToSelect.addIfNotAlreadyThere(effectGui);
 
-        if (parentTree.getType() == ID_EFFECT_TREE){
+        if (parentTree.getType() == ID_EFFECT_VT){
             auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EFFECT_VT).getObject());
             parentEffectVT->getGUIEffect()->addAndMakeVisible(effectGui);
         } else {
@@ -259,17 +259,14 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 void MainComponent::initialiseGraph()
 {
     for (auto i = 0; i < effectsTree.getNumChildren(); i++){
-        std::cout << effectsTree.getChild(i).getProperty("Name").toString() << newLine;
-        if (effectsTree.getChild(i).hasType("effectTree")){
-            auto node = static_cast<AudioProcessorGraph::Node*>(effectsTree.getChild(i).getProperty("Node").getObject());
-            // add the mothafucka to da graph, dawg
-            //TODO
-            node->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
-                                                    processorGraph->getMainBusNumOutputChannels(),
-                                                    processorGraph->getSampleRate(),
-                                                    processorGraph->getBlockSize());
-        } else
-            std::cout << "test" << newLine;
+        std::cout << effectsTree.getChild(i)->getName() << newLine;
+        auto node = effectsTree.getChild(i)->getNode();
+        // add the mothafucka to da graph, dawg
+
+        node->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
+                                                processorGraph->getMainBusNumOutputChannels(),
+                                                processorGraph->getSampleRate(),
+                                                processorGraph->getBlockSize());
     }
 
     connectAudioNodes();
