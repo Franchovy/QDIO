@@ -26,12 +26,13 @@ MainComponent::MainComponent() :
     dragLine.setAlwaysOnTop(true);
     addChildComponent(lasso);
     dragLine.getDragLineTree().addListener(this);
-    effectsTree.setDragLineTree(dragLine.getDragLineTree()); //This may be making a copy
+    effectsTree.appendChild(dragLine.getDragLineTree(), nullptr);
+
 
     //========================================================================================
     // Manage EffectsTree
 
-    effectsTree.effectTree.setProperty(ID_EFFECT_GUI, this, nullptr);
+    effectsTree.setProperty(ID_EFFECT_GUI, this, nullptr);
     //effectsTree.setProperty(ID_EFFECT_GUI, this);
     effectsTree.addListener(this);
     EffectVT::setAudioProcessorGraph(processorGraph.get());
@@ -269,7 +270,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
 void MainComponent::initialiseGraph()
 {
-    for (auto i = 0; i < effectsTree.getNumChildren(); i++){
+    /*for (auto i = 0; i < effectsTree.getNumChildren(); i++){
         std::cout << effectsTree.getChild(i)->getName() << newLine;
         auto node = effectsTree.getChild(i)->getNode();
         // add the mothafucka to da graph, dawg
@@ -278,7 +279,7 @@ void MainComponent::initialiseGraph()
                                                 processorGraph->getMainBusNumOutputChannels(),
                                                 processorGraph->getSampleRate(),
                                                 processorGraph->getBlockSize());
-    }
+    }*/
 
     connectAudioNodes();
 }

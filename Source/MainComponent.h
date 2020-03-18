@@ -56,37 +56,7 @@ public:
 private:
     //==============================================================================
     // Effect tree shit
-    using Ptr = ReferenceCountedObjectPtr<MainComponent>;
-
-    struct TreeTop : public ReferenceCountedObject
-    {
-        // TODO merge this with EffectVT somehow
-
-        TreeTop(String name) : effectTree(name) {  }
-
-        // Convenience functions
-/*        EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
-                    effectTree.getParent().getProperty(ID_EFFECT_VT).getObject())->ptr(); }*/
-        void setProperty(const Identifier ref, const var &property) { effectTree.setProperty(ID_EFFECT_GUI, property, nullptr); }
-        var getProperty(Identifier ref) { return effectTree.getProperty(ref); }
-
-        EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
-                    effectTree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
-        int getNumChildren() { return effectTree.getNumChildren(); }
-        void appendChild(EffectVT::Ptr child) { effectTree.appendChild(child->getTree(), nullptr); }
-        const ValueTree &getTree() const { return effectTree; }
-        void addListener(ValueTree::Listener *listener){ effectTree.addListener(listener); }
-        const ValueTree &getDragLineTree() const { return dragLineTree; }
-        void setDragLineTree(ValueTree dragLineTree) { TreeTop::dragLineTree = dragLineTree; }
-        EffectVT* getParent(){ return nullptr; }
-
-
-
-        ValueTree effectTree;
-    private:
-        ValueTree dragLineTree;
-    };
-    TreeTop effectsTree;
+    ValueTree effectsTree;
 
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
@@ -109,7 +79,8 @@ private:
         Array<GUIEffect*> list;
         for (int i = 0; i < effectsTree.getNumChildren(); i++){
             // Check at location
-            auto e_gui = effectsTree.getChild(i)->getGUIEffect();
+            //TODO double check this
+            auto e_gui = dynamic_cast<GUIEffect*>(effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
             if (e_gui->getBoundsInParent().contains(point)) {
                 //TODO Add recursive call for a match
                 std::cout << "Effect at point: " << e_gui->getName();
@@ -159,7 +130,7 @@ private:
             auto parentEffect = effectGUI->EVT;
             parentEffect->addEffect(childEffect);
         } else if (addAnyways) {
-            effectsTree.appendChild(childEffect);
+            effectsTree.appendChild(childEffect->getTree(), nullptr);
         }
     }
 
@@ -206,13 +177,13 @@ private:
              targetIsMainWindow = false;
          }
 
-         if (effect->getTree().getParent() == effectsTree.getTree()) {
+         /*if (effect->getTree().getParent() == effectsTree.getTree()) {
              parentEffect = this;
              parentIsMainWindow = true;
          } else {
              parentEffect = effect->getParent()->getGUIEffect();
              parentIsMainWindow = false;
-         }
+         }*/
 
          // Nothing to do on a targetIsMainWindow && parentIsMainWindow case.
          if (targetIsMainWindow && parentIsMainWindow){
