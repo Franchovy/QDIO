@@ -404,6 +404,8 @@ public:
 
     void moved() override;
 
+    Point<int> dragDetachFromParentComponent();
+
     EffectVT* EVT;
 private:
     bool isIndividual = false;
@@ -412,6 +414,7 @@ private:
 
     Resizer resizer;
     ComponentDragger dragger;
+    ComponentBoundsConstrainer constrainer;
 
     AudioProcessorParameterGroup parameters; // dum dum dum
 

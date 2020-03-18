@@ -65,6 +65,7 @@ GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
     EVT(parentEVT)
 {
     addAndMakeVisible(resizer);
+
     //TODO assign the tree before creation of GUIEffect for this to work
     if (parentEVT->getTree().getParent().hasType(ID_EFFECT_VT)){
         auto sizeDef = dynamic_cast<GUIEffect*>(parentEVT->getTree().getParent()
@@ -108,6 +109,7 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
     // Setup parameters
 
     // Update
+    resized();
     repaint();
 }
 
@@ -141,12 +143,32 @@ void GUIEffect::resized()
 
 void GUIEffect::mouseDown(const MouseEvent &event) {
     dragger.startDraggingComponent(this, event);
-    getParentComponent()->mouseDown(event);
+
+    if (event.mods.isRightButtonDown())
+        getParentComponent()->mouseDown(event);
 }
 
 void GUIEffect::mouseDrag(const MouseEvent &event) {
-    dragger.dragComponent(this, event, nullptr);
-    getParentComponent()->mouseDrag(event);
+
+/*    constrainer.setBoundsForComponent(this,
+            Rectangle<int>(newX, newY, getWidth(), getHeight()),
+                    false, false, false ,false);*/
+    dragger.dragComponent(this, event, &constrainer);
+
+    // Manual constraint
+    auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
+    auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
+
+    if (newX != getX() || newY != getY())
+        if (event.x < -(getWidth()/2) || event.y < -(getHeight()/2) ||
+                event.x > (getWidth()*3/2) || event.y > (getHeight()*3/2) ){
+            auto newPos = dragDetachFromParentComponent();
+            newX = newPos.x;
+            newY = newPos.y;
+        }
+
+    setTopLeftPosition(newX, newY);
+
 }
 
 void GUIEffect::mouseUp(const MouseEvent &event) {
@@ -168,6 +190,14 @@ void GUIEffect::visibilityChanged() {
     // Set parent (Wrapper) visibility
     if (getParentComponent())
         getParentComponent()->setVisible(this->isVisible());
+}
+
+Point<int> GUIEffect::dragDetachFromParentComponent() {
+    auto newPos = getPosition() + getParentComponent()->getPosition();
+    auto parentParent = getParentComponent()->getParentComponent();
+    getParentComponent()->removeChildComponent(this);
+    parentParent->addAndMakeVisible(this);
+    return newPos;
 }
 
 

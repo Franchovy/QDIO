@@ -130,16 +130,17 @@ void MainComponent::mouseDown(const MouseEvent &event) {
             // Start audio
             initialiseGraph();
         }
-    } else if (event.mods.isLeftButtonDown()){
+    } else if (event.mods.isLeftButtonDown() && event.originalComponent == this){
         lasso.setVisible(true);
         lasso.beginLasso(event, this);
     }
-    Component::mouseDown(event);
+    //Component::mouseDown(event);
 }
 
 void MainComponent::mouseDrag(const MouseEvent &event) {
-    lasso.dragLasso(event);
-    Component::mouseDrag(event);
+    if (lasso.isVisible())
+        lasso.dragLasso(event);
+    //Component::mouseDrag(event);
 }
 
 void MainComponent::mouseUp(const MouseEvent &event) {
