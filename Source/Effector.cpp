@@ -142,9 +142,11 @@ void GUIEffect::resized()
 }
 
 void GUIEffect::mouseDown(const MouseEvent &event) {
-    dragger.startDraggingComponent(this, event);
-
-    if (event.mods.isRightButtonDown())
+    if (event.mods.isLeftButtonDown()) {
+        dragData.previousParent = getParentComponent();
+        dragData.previousPos = getPosition();
+        dragger.startDraggingComponent(this, event);
+    } else if (event.mods.isRightButtonDown())
         getParentComponent()->mouseDown(event);
 }
 
@@ -198,6 +200,24 @@ Point<int> GUIEffect::dragDetachFromParentComponent() {
     getParentComponent()->removeChildComponent(this);
     parentParent->addAndMakeVisible(this);
     return newPos;
+}
+
+void GUIEffect::childrenChanged() {
+    Component::childrenChanged();
+}
+
+void GUIEffect::parentHierarchyChanged() {
+    std::cout << "Current Location before parent hierarchy change: " << getPosition().toString() << newLine;
+    if (getParentComponent() == nullptr){
+        setTopLeftPosition(getPosition() + currentParent->getPosition());
+        currentParent = nullptr;
+    } else {
+        if (hasBeenInitialised)
+            setTopLeftPosition(getPosition() - getParentComponent()->getPosition());
+        currentParent = getParentComponent();
+    }
+    //setTopLeftPosition(getPosition() - )
+    Component::parentHierarchyChanged();
 }
 
 

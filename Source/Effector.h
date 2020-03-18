@@ -364,6 +364,15 @@ private:
 class EffectVT;
 
 /**
+ * Used for drag operations - small amount of data for undoable action
+ */
+struct EffectDragData : ReferenceCountedObject
+{
+    Point<int> previousPos;
+    Component* previousParent;
+};
+
+/**
     GUIEffect Component
     GUI Representation of Effects / Container for plugins
 
@@ -376,7 +385,11 @@ public:
 
     void visibilityChanged() override;
 
+    void childrenChanged() override;
+
     ~GUIEffect() override;
+
+    void parentHierarchyChanged() override;
 
     void insertEffectGroup();
     void insertEffect();
@@ -406,6 +419,8 @@ public:
 
     Point<int> dragDetachFromParentComponent();
 
+    bool hasBeenInitialised = false;
+
     EffectVT* EVT;
 private:
     bool isIndividual = false;
@@ -415,6 +430,9 @@ private:
     Resizer resizer;
     ComponentDragger dragger;
     ComponentBoundsConstrainer constrainer;
+
+    Component* currentParent = nullptr;
+    EffectDragData dragData;
 
     AudioProcessorParameterGroup parameters; // dum dum dum
 

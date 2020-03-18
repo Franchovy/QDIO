@@ -188,31 +188,30 @@ void MainComponent::mouseUp(const MouseEvent &event) {
 //==============================================================================
 
 void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    // Add ParameterGroup
-    // Add to AudioProcessorGraph
     std::cout << "Added child" << newLine;
+
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_VT){
         auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EVT_OBJECT).getObject());
         auto effectGui = effectVT->getGUIEffect();
         componentsToSelect.addIfNotAlreadyThere(effectGui);
-        //TODO make sure all these are ok!
+
         if (parentTree.getType() == ID_EFFECT_VT){
             auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EVT_OBJECT).getObject());
+
+            // Add this gui to new parent
             parentEffectVT->getGUIEffect()->addAndMakeVisible(effectGui);
 
-            auto newPos = effectGui->getPosition() - parentEffectVT->getGUIEffect()->getPosition();
-            effectGui->setBounds(newPos.x, newPos.y, effectGui->getWidth(), effectGui->getHeight());
-
-            std::cout << "New position: " << effectGui->getPosition().toString() << newLine;
+            std::cout << "Effect final position: " << effectGui->getPosition().toString() << newLine;
         } else {
             effectGui->setVisible(true);
             addAndMakeVisible(effectGui);
         }
 
+        // Set initialised boolean in GUIEffect
+        effectGui->hasBeenInitialised = true;
+
         for (int i = 0; i < effectVT->getNumChildren(); i++)
             valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());
-
-        //effectGui->setCentrePosition(menuPos - effectGui->getParentComponent()->getPosition());
     }
 }
 
