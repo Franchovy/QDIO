@@ -20,7 +20,8 @@ ApplicationCommandManager& getCommandManager();
  * Main component and shit
  */
 class MainComponent   :
-        public ValueTree::Listener, public Timer, public Component,  public LassoSource<Component*>, public ChangeListener {
+        public ValueTree::Listener, public Timer, public Component,
+        public LassoSource<Component*>, public ChangeListener, private ReferenceCountedObject {
 public:
     bool keyPressed(const KeyPress &key) override;
 
@@ -55,15 +56,20 @@ public:
 private:
     //==============================================================================
     // Effect tree shit
+    using Ptr = ReferenceCountedObjectPtr<MainComponent>;
+
     struct TreeTop : public ReferenceCountedObject
     {
         // TODO merge this with EffectVT somehow
 
-        TreeTop(String name) : effectTree(name) { }
+        TreeTop(String name) : effectTree(name) {  }
 
         // Convenience functions
 /*        EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
                     effectTree.getParent().getProperty(ID_EFFECT_VT).getObject())->ptr(); }*/
+        void setProperty(const Identifier ref, const var &property) { effectTree.setProperty(ID_EFFECT_GUI, property, nullptr); }
+        var getProperty(Identifier ref) { return effectTree.getProperty(ref); }
+
         EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
                     effectTree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
         int getNumChildren() { return effectTree.getNumChildren(); }
@@ -75,8 +81,9 @@ private:
         EffectVT* getParent(){ return nullptr; }
 
 
-    private:
+
         ValueTree effectTree;
+    private:
         ValueTree dragLineTree;
     };
     TreeTop effectsTree;

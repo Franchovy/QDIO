@@ -31,8 +31,12 @@ MainComponent::MainComponent() :
     //========================================================================================
     // Manage EffectsTree
 
+    effectsTree.effectTree.setProperty(ID_EFFECT_GUI, this, nullptr);
+    //effectsTree.setProperty(ID_EFFECT_GUI, this);
     effectsTree.addListener(this);
     EffectVT::setAudioProcessorGraph(processorGraph.get());
+
+
 
 
 
@@ -150,14 +154,18 @@ void MainComponent::mouseUp(const MouseEvent &event) {
 
     if (event.mods.isLeftButtonDown()) {
         // Is the component an effect?
-        if (auto effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
+        if (GUIEffect* effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
+            // Is this effect component parent same as Tree Hierarchy?
+            std::cout << "Parent Tree: " << effect->EVT->getTree().getParent().getType().toString() << newLine;
+            std::cout << "Parent tree property: " << effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject() << newLine;
+            std::cout << "cast: " << dynamic_cast<Component*>(effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject());
+            if (effect->getParentComponent() !=
+            dynamic_cast<Component*>(effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject())){
+                std::cout << "Moving parent: " << newLine;
+
+            }
+
             // Scan through effects at this point to see what to do
-
-            std::cout << "Event pos: " << event.getPosition().toString() << newLine;
-            std::cout << "Event component: " << event.eventComponent->getPosition().toString() << newLine;
-            std::cout << "Event pos relative to this: " << event.getEventRelativeTo(this).getPosition().toString() << newLine;
-
-
             auto effects = effectsAt(event.getEventRelativeTo(this).getPosition());
             std::cout << "Effects found: " << effects.size() << newLine;
             for (auto parentEffect : effects) {
@@ -210,14 +218,18 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
         // Set initialised boolean in GUIEffect
         effectGui->hasBeenInitialised = true;
 
-        for (int i = 0; i < effectVT->getNumChildren(); i++)
-            valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());
+        //TODO check if recursive call for children is needed
+        /*for (int i = 0; i < effectVT->getNumChildren(); i++)
+            valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());*/
     }
 }
 
 void MainComponent::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                           int indexFromWhichChildWasRemoved) {
-    Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
+    if (childWhichHasBeenRemoved.hasType(ID_EFFECT_VT)){
+        // Remove this from its parent
+
+    }
 }
 
 void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
