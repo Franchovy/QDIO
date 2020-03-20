@@ -157,6 +157,8 @@ void MainComponent::mouseUp(const MouseEvent &event) {
         // Is the component an effect?
         if (GUIEffect* effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
 
+            //TODO BUG 1: use effectToMoveTo to identify the correct parent
+
             // Is this effect component parent same as Tree Hierarchy?
             auto treeParent = dynamic_cast<Component*>(
                     effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject());
@@ -216,16 +218,17 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
         effectGui->hasBeenInitialised = true;
 
         //TODO check if recursive call for children is needed
-        /*for (int i = 0; i < effectVT->getNumChildren(); i++)
-            valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());*/
+        for (int i = 0; i < effectVT->getNumChildren(); i++)
+            valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());
     }
+
 }
 
 void MainComponent::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                           int indexFromWhichChildWasRemoved) {
     if (childWhichHasBeenRemoved.hasType(ID_EFFECT_VT)){
         // Remove this from its parent
-
+        std::cout << "Remove from parent listener call" << newLine;
     }
 }
 

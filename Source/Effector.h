@@ -522,6 +522,7 @@ public:
      * @param effect to add as child
      */
     void addEffect(const EffectVT::Ptr effect){
+        std::cout << "Is this still being called?" << newLine;
         effect->getTree().getParent().removeChild(effect->getTree(), nullptr);
         effectTree.appendChild(effect->getTree(), nullptr);
 

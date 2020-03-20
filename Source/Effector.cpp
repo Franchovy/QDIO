@@ -170,7 +170,6 @@ void GUIEffect::mouseDrag(const MouseEvent &event) {
         }
 
     setTopLeftPosition(newX, newY);
-
 }
 
 void GUIEffect::mouseUp(const MouseEvent &event) {
@@ -178,12 +177,10 @@ void GUIEffect::mouseUp(const MouseEvent &event) {
 }
 
 void GUIEffect::moved() {
-    for (auto i : inputPorts){
+    for (auto i : inputPorts)
         i->moved();
-    }
-    for (auto i : outputPorts){
+    for (auto i : outputPorts)
         i->moved();
-    }
     Component::moved();
 }
 
@@ -198,6 +195,10 @@ Point<int> GUIEffect::dragDetachFromParentComponent() {
     auto parentParent = getParentComponent()->getParentComponent();
     getParentComponent()->removeChildComponent(this);
     parentParent->addAndMakeVisible(this);
+
+    for (auto c : getChildren())
+        std::cout << "Child position: " << c->getPosition().toString() << newLine;
+
     return newPos;
 }
 
@@ -206,11 +207,15 @@ void GUIEffect::childrenChanged() {
 }
 
 void GUIEffect::parentHierarchyChanged() {
-    std::cout << "Current Location before parent hierarchy change: " << getPosition().toString() << newLine;
+    // Children of parents who receive the change signal should ignore it.
+    if (currentParent == getParentComponent())
+        return;
+
     if (getParentComponent() == nullptr){
         setTopLeftPosition(getPosition() + currentParent->getPosition());
         currentParent = nullptr;
     } else {
+
         if (hasBeenInitialised)
             setTopLeftPosition(getPosition() - getParentComponent()->getPosition());
         currentParent = getParentComponent();
