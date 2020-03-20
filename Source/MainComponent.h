@@ -90,6 +90,8 @@ private:
         return list;
     }
 
+    Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
+
     // Listener callback on SelectedItemSet "selected" change broadcast.
     void changeListenerCallback (ChangeBroadcaster *source) override;
 
@@ -124,14 +126,25 @@ private:
      * @param event for which the location will determine what effect to add to.
      * @param childEffect effect to add
      */
-    void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addAnyways = true) {
-        std::cout << "Add effect to be removed" << newLine;
-        if (auto effectGUI = dynamic_cast<GUIEffect*>(event.eventComponent)){
+    void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain = true) {
+        auto parentTree = childEffect->getTree().getParent();
+        parentTree.removeChild(childEffect->getTree(), nullptr);
+
+        ValueTree newParent;
+        if (auto newGUIEffect = dynamic_cast<GUIEffect*>(event.eventComponent)){
+            newParent = newGUIEffect->EVT->getTree();
+        } else
+            newParent = effectsTree;
+
+        newParent.appendChild(childEffect->getTree(), nullptr);
+
+       /* if (auto effectGUI = dynamic_cast<GUIEffect*>(event.eventComponent)){
             auto parentEffect = effectGUI->EVT;
             parentEffect->addEffect(childEffect);
-        } else if (addAnyways) {
+        } else if (addToMain) {
+
             effectsTree.appendChild(childEffect->getTree(), nullptr);
-        }
+        }*/
     }
 
     /**

@@ -419,11 +419,12 @@ public:
 
     Point<int> dragDetachFromParentComponent();
 
+    bool isIndividual() { return individual; }
     bool hasBeenInitialised = false;
 
     EffectVT* EVT;
 private:
-    bool isIndividual = false;
+    bool individual = false;
     OwnedArray<ConnectionPort> inputPorts;
     OwnedArray<ConnectionPort> outputPorts;
 
@@ -522,9 +523,6 @@ public:
      */
     void addEffect(const EffectVT::Ptr effect){
         effect->getTree().getParent().removeChild(effect->getTree(), nullptr);
-        std::cout << "Add Effect: " << effect->getGUIEffect()->getPosition().toString() << newLine;
-        std::cout << "To: " << guiEffect.getPosition().toString() << newLine;
-        std::cout << "New position: " << effect->getGUIEffect()->getPosition().toString() << newLine;
         effectTree.appendChild(effect->getTree(), nullptr);
 
     }

@@ -156,29 +156,25 @@ void MainComponent::mouseUp(const MouseEvent &event) {
     if (event.mods.isLeftButtonDown()) {
         // Is the component an effect?
         if (GUIEffect* effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
+
             // Is this effect component parent same as Tree Hierarchy?
-            std::cout << "Parent Tree: " << effect->EVT->getTree().getParent().getType().toString() << newLine;
-            std::cout << "Parent tree property: " << effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject() << newLine;
-            std::cout << "cast: " << dynamic_cast<Component*>(effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject());
-            if (effect->getParentComponent() !=
-            dynamic_cast<Component*>(effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject())){
+            auto treeParent = dynamic_cast<Component*>(
+                    effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject());
+
+            if (effect->getParentComponent() != treeParent) {
                 std::cout << "Moving parent: " << newLine;
 
-            }
+                // Scan through effects at this point to see what to do
+                auto e = effectToMoveTo(effect,
+                                        event.getEventRelativeTo(this).getPosition(), effectsTree);
+                if (e == nullptr)
+                    e = this;
 
-            // Scan through effects at this point to see what to do
-            auto effects = effectsAt(event.getEventRelativeTo(this).getPosition());
-            std::cout << "Effects found: " << effects.size() << newLine;
-            for (auto parentEffect : effects) {
-                // If there is only this effect
-                if (effects.size() == 1 && effects.getFirst() == effect)
-                    moveEffect(event.getEventRelativeTo(this), effect->EVT);
-                    // If there is another effect
-                else if (effect != parentEffect) {
-                    std::cout << "Move effect on other: " << parentEffect->getName() << newLine;
-                    moveEffect(event.getEventRelativeTo(parentEffect), effect->EVT);
+                std::cout << "Effect to move to : " << e << newLine;
+
+                if (e != treeParent) {
+                    addEffect(event.getEventRelativeTo(e), effect->EVT);
                 }
-                //
             }
         }
         selected.deselectAll();
@@ -340,6 +336,30 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster *source) {
 
 bool MainComponent::keyPressed(const KeyPress &key) {
     return Component::keyPressed(key);
+}
+
+Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree) {
+    for (int i = 0; i < effectTree.getNumChildren(); i++) {
+        auto e_gui = dynamic_cast<GUIEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+
+        if (e_gui != nullptr
+                && e_gui->getBoundsInParent().contains(point)
+                && e_gui != componentToIgnore)
+        {
+            // Add any filters here
+            if (e_gui->isIndividual()){
+                continue;
+            }
+
+            // Check if there's a match in the children (sending child component coordinates)
+            if (auto e = effectToMoveTo(componentToIgnore,
+                    point - e_gui->getPosition(), effectTree.getChild(i)))
+                return e;
+            else
+                return e_gui;
+        }
+    }
+    return nullptr;
 }
 
 

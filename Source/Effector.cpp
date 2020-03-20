@@ -174,7 +174,6 @@ void GUIEffect::mouseDrag(const MouseEvent &event) {
 }
 
 void GUIEffect::mouseUp(const MouseEvent &event) {
-    event.withNewPosition(event.getPosition());
     getParentComponent()->mouseUp(event);
 }
 
