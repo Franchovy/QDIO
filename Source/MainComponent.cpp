@@ -157,26 +157,13 @@ void MainComponent::mouseUp(const MouseEvent &event) {
         // Is the component an effect?
         if (GUIEffect* effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
 
-            //TODO BUG 1: use effectToMoveTo to identify the correct parent
-
-            // Is this effect component parent same as Tree Hierarchy?
-            auto treeParent = dynamic_cast<Component*>(
-                    effect->EVT->getTree().getParent().getProperty(ID_EFFECT_GUI).getObject());
-
-            if (effect->getParentComponent() != treeParent) {
+            // Scan effect to apply move to
+            auto newParent = effectToMoveTo(effect,
+                                            event.getEventRelativeTo(this).getPosition(), effectsTree);
+            
+            if (effect->getParentComponent() != newParent) {
                 std::cout << "Moving parent: " << newLine;
-
-                // Scan through effects at this point to see what to do
-                auto e = effectToMoveTo(effect,
-                                        event.getEventRelativeTo(this).getPosition(), effectsTree);
-                if (e == nullptr)
-                    e = this;
-
-                std::cout << "Effect to move to : " << e << newLine;
-
-                if (e != treeParent) {
-                    addEffect(event.getEventRelativeTo(e), effect->EVT);
-                }
+                addEffect(event.getEventRelativeTo(newParent), effect->EVT);
             }
         }
         selected.deselectAll();
@@ -362,7 +349,10 @@ Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int
                 return e_gui;
         }
     }
-    return nullptr;
+    // If nothing is found (at topmost level) then return the maincomponent
+    if (effectTree == effectsTree)
+        return this;
+    else return nullptr;
 }
 
 
