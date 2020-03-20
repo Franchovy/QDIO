@@ -106,6 +106,7 @@ void MainComponent::resized()
 void MainComponent::mouseDown(const MouseEvent &event) {
     std::cout << "Mouse down on: " << event.originalComponent->getName() << newLine;
 
+
     if (event.mods.isRightButtonDown()){
 
         // Right-click menu
@@ -160,13 +161,12 @@ void MainComponent::mouseUp(const MouseEvent &event) {
             // Scan effect to apply move to
             auto newParent = effectToMoveTo(effect,
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
-            
+
             if (effect->getParentComponent() != newParent) {
                 std::cout << "Moving parent: " << newLine;
                 addEffect(event.getEventRelativeTo(newParent), effect->EVT);
             }
         }
-        selected.deselectAll();
     }
 
     std::cout << "Selected items: " << newLine;

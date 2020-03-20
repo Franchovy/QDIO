@@ -74,22 +74,6 @@ private:
     SelectedItemSet<Component*> selected;
     SelectedItemSet<Component*>& getLassoSelection() override;
 
-    // GUI Helper tools for effect navigation
-    Array<GUIEffect*> effectsAt(Point<int> point){
-        Array<GUIEffect*> list;
-        for (int i = 0; i < effectsTree.getNumChildren(); i++){
-            // Check at location
-            //TODO double check this
-            auto e_gui = dynamic_cast<GUIEffect*>(effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
-            if (e_gui->getBoundsInParent().contains(point)) {
-                //TODO Add recursive call for a match
-                std::cout << "Effect at point: " << e_gui->getName();
-                list.add(e_gui);
-            }
-        }
-        return list;
-    }
-
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
 
     // Listener callback on SelectedItemSet "selected" change broadcast.
@@ -164,52 +148,11 @@ private:
             for (auto eGui : selected.getItemArray()){
                 effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
             }
+            selected.deselectAll();
             return new EffectVT(event, effectVTArray);
         }
     }
 
-    /**
-     * Generalised operation to run on an effect drag release.
-     * UNDOABLE ACTION
-     * @param event - Event to get information from - event.originalComponent should
-     * be = effect (or its corresponding GUIWrapper), while event.eventComponent is the
-     * "object" of the operation - the new parent effect, which
-     * @param effect should be operated on.
-     */
-     void moveEffect(const MouseEvent &event, EffectVT::Ptr effect) {
-         Component* targetEffect;
-         Component* parentEffect;
-         bool targetIsMainWindow;
-         bool parentIsMainWindow;
-
-         if (event.eventComponent == this) {
-             targetEffect = this;
-             targetIsMainWindow = true;
-         } else {
-             targetEffect = dynamic_cast<GUIEffect*>(event.eventComponent);
-             targetIsMainWindow = false;
-         }
-
-         /*if (effect->getTree().getParent() == effectsTree.getTree()) {
-             parentEffect = this;
-             parentIsMainWindow = true;
-         } else {
-             parentEffect = effect->getParent()->getGUIEffect();
-             parentIsMainWindow = false;
-         }*/
-
-         // Nothing to do on a targetIsMainWindow && parentIsMainWindow case.
-         if (targetIsMainWindow && parentIsMainWindow){
-             return;
-         } else if (targetIsMainWindow && !parentIsMainWindow){
-             std::cout << "Target is Mainwindow" << newLine;
-         } else if (!targetIsMainWindow && parentIsMainWindow){
-             std::cout << "Parent is Mainwindow" << newLine;
-             dynamic_cast<GUIEffect*>(targetEffect)->EVT->addEffect(effect);
-         } else if (!targetIsMainWindow && !parentIsMainWindow) {
-             std::cout << "Neither are Mainwindow" << newLine;
-         }
-     }
 
     //==============================================================================
     // Audio shit

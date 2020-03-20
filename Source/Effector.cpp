@@ -216,8 +216,14 @@ void GUIEffect::parentHierarchyChanged() {
         currentParent = nullptr;
     } else {
 
-        if (hasBeenInitialised)
-            setTopLeftPosition(getPosition() - getParentComponent()->getPosition());
+        if (hasBeenInitialised) {
+            Component* parent = getParentComponent();
+            while (parent != getTopLevelComponent()) {
+                setTopLeftPosition(getPosition() - parent->getPosition());
+                parent = parent->getParentComponent();
+            }
+
+        }
         currentParent = getParentComponent();
     }
     Component::parentHierarchyChanged();

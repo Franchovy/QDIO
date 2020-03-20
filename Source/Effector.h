@@ -468,12 +468,23 @@ public:
     EffectVT(const MouseEvent &event, Array<const EffectVT*> effectVTSet) :
         EffectVT(event)
     {
-        // Set itself as parent of all given children
+        // Note top left and bottom right effects to have a size to set
+        Point<int> topLeft;
+        Point<int> bottomRight;
+        auto thisBounds = guiEffect.getBoundsInParent();
+
         for (auto eVT : effectVTSet){
+            // Set itself as parent of given children
             eVT->getTree().getParent().removeChild(eVT->getTree(), nullptr);
             effectTree.appendChild(eVT->getTree(), nullptr);
+
+            // Update position
+            auto bounds = eVT->getGUIEffect()->getBoundsInParent();
+            thisBounds = thisBounds.getUnion(bounds);
         }
-        // Set size based on children
+
+        thisBounds.expand(10,10);
+        guiEffect.setBounds(thisBounds);
     }
 
     /**
@@ -541,6 +552,7 @@ public:
     ValueTree& getTree() {return effectTree;}
     const ValueTree& getTree() const {return effectTree;}
     GUIEffect* getGUIEffect() {return &guiEffect;}
+    const GUIEffect* getGUIEffect() const {return &guiEffect;}
     static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
 
     // Convenience functions
