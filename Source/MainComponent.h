@@ -16,6 +16,10 @@ ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
 
 
+/**
+ * SelectedItemSet for Component* class, with
+ * itemSelected/itemDeselected overrides. That is all.
+ */
 class ComponentSelection : public SelectedItemSet<Component*>
 {
 public:
@@ -24,6 +28,8 @@ public:
     void itemSelected(Component *type) override;
     void itemDeselected(Component *type) override;
 };
+
+
 
 /**
  * Main component and shit
@@ -91,18 +97,26 @@ private:
         if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
             e->hoverMode = false;
             e->repaint();
+        } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+            p->hoverMode = false;
+            p->repaint();
         }
 
         hoverComponent = c;
+
         if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
             e->hoverMode = true;
             e->repaint();
+        } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+            p->hoverMode = true;
+            p->repaint();
         }
     };
 
     Component* hoverComponent = nullptr;
 
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
+    Component* portToConnectTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
 
 private:
 /*

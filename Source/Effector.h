@@ -87,10 +87,7 @@ private:
 
     PathStrokeType strokeType;
     float dashLengths[2] = {1.f, 1.f};
-
 };
-
-
 
 struct ConnectionPort : public Component
 {
@@ -422,6 +419,7 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
 
+    ConnectionPort* checkPort(Point<int> pos);
 
     void setParameters(AudioProcessorParameterGroup& group);
 

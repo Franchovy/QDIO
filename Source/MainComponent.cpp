@@ -1,11 +1,3 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-  ==============================================================================
-*/
-
 #include "MainComponent.h"
 
 //==============================================================================
@@ -28,7 +20,6 @@ MainComponent::MainComponent() :
     dragLine.getDragLineTree().addListener(this);
     effectsTree.appendChild(dragLine.getDragLineTree(), nullptr);
 
-
     //========================================================================================
     // Manage EffectsTree
 
@@ -36,10 +27,6 @@ MainComponent::MainComponent() :
     //effectsTree.setProperty(ID_EFFECT_GUI, this);
     effectsTree.addListener(this);
     EffectVT::setAudioProcessorGraph(processorGraph.get());
-
-
-
-
 
     //========================================================================================
     // Manage Audio
@@ -82,12 +69,7 @@ MainComponent::MainComponent() :
 
 MainComponent::~MainComponent()
 {
-/*    player.audioDeviceStopped();
-    processorGraph.release();*/
-    //TODO add audio device stopper
 
-    /*for (int i = 0; i < effectsTree.getNumChildren(); i++)
-        effectsTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject()->decReferenceCount();*/
 }
 
 //==============================================================================
@@ -144,14 +126,27 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.dragLasso(event);
     if (event.mods.isLeftButtonDown()) {
-        GUIEffect *effect = dynamic_cast<GUIEffect *>(event.eventComponent);
-        auto newParent = effectToMoveTo(effect,
-                                        event.getEventRelativeTo(this).getPosition(), effectsTree);
+        if (dynamic_cast<LineComponent*>(event.eventComponent)) {
 
-        if (newParent != this)
-            setHoverComponent(newParent);
-        else
-            setHoverComponent(nullptr);
+            // Get port to connect to if there is (passing original port parent as componentToIgnore
+            auto connectPort = portToConnectTo(event.originalComponent->getParentComponent(),
+                    event.getPosition(), effectsTree);
+
+            if (connectPort != nullptr) //TODO
+                setHoverComponent(connectPort);
+            else
+                setHoverComponent(nullptr);
+
+        } else if (auto *effect = dynamic_cast<GUIEffect *>(event.eventComponent)){
+            auto newParent = effectToMoveTo(effect,
+                                            event.getEventRelativeTo(this).getPosition(), effectsTree);
+
+            if (newParent != this)
+                setHoverComponent(newParent);
+            else
+                setHoverComponent(nullptr);
+        }
+
     }
 }
 
@@ -370,6 +365,31 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcesso
         selected.deselectAll();
         return new EffectVT(event, effectVTArray);
     }
+}
+
+Component *MainComponent::portToConnectTo(Component *componentToIgnore, Point<int> point, ValueTree effectTree) {
+    for (int i = 0; i < effectTree.getNumChildren(); i++) {
+        auto e_gui = dynamic_cast<GUIEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+
+        if (e_gui != nullptr
+            && e_gui->getBoundsInParent().contains(point)
+            && e_gui != componentToIgnore)
+        {
+            auto relativePos = point - e_gui->getPosition();
+
+            // Check if there's a match in the children (sending child component coordinates)
+            if (auto p = portToConnectTo(componentToIgnore,
+                                        relativePos, effectTree.getChild(i)))
+                // e != nullptr then the result is returned - corresponding to match in child effect.
+                return p;
+            else if (auto p = e_gui->checkPort(relativePos))
+                // Returns the match if found.
+                return p;
+        }
+    }
+
+    // If nothing is found return nullptr
+    return nullptr;
 }
 
 /*

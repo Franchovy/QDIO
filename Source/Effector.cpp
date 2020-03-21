@@ -35,6 +35,13 @@ void LineComponent::mouseDrag(const MouseEvent &event) {
 
     line.setEnd(p2);
     repaint();
+
+
+    // Pass hover detection to MainComponent
+    auto eventMain = event.getEventRelativeTo(this).withNewPosition(
+            event.getPosition() - getPosition()
+            );
+    getParentComponent()->mouseDrag(eventMain);
 }
 
 void LineComponent::mouseUp(const MouseEvent &event) {
@@ -264,7 +271,24 @@ void GUIEffect::parentHierarchyChanged() {
     Component::parentHierarchyChanged();
 }
 
+/**
+ * Get the port at the given location, if there is one
+ * @param pos relative to this component (no conversion needed here)
+ * @return nullptr if no match, ConnectionPort* if found
+ */
+ConnectionPort *GUIEffect::checkPort(Point<int> pos) {
+    for (auto p : inputPorts)
+        if (p->getBoundsInParent().contains(pos)) {
+            return p;
+        }
 
+    for (auto p : outputPorts)
+        if (p->getBoundsInParent().contains(pos)) {
+            return p;
+        }
+
+    return nullptr;
+}
 
 
 void ConnectionPort::connect(ConnectionPort &otherPort) {
