@@ -104,9 +104,6 @@ void MainComponent::resized()
 }
 
 void MainComponent::mouseDown(const MouseEvent &event) {
-    std::cout << "Mouse down on: " << event.originalComponent->getName() << newLine;
-
-
     if (event.mods.isRightButtonDown()){
 
         // Right-click menu
@@ -320,17 +317,10 @@ void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rect
 }
 
 SelectedItemSet<Component *> &MainComponent::getLassoSelection() {
-    selected = SelectedItemSet<Component *>();
-    selected.addChangeListener(this);
+    selected = ComponentSelection();
+    //selected.addChangeListener(this);
+
     return selected;
-}
-
-void MainComponent::changeListenerCallback(ChangeBroadcaster *source) {
-    std::cout << "Selected Items: " << newLine;
-    for (auto c : selected){
-        std::cout << c->getName() << newLine;
-    }
-
 }
 
 bool MainComponent::keyPressed(const KeyPress &key) {
@@ -364,6 +354,37 @@ Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int
     else return nullptr;
 }
 
+EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcessorGraph::Node::Ptr node)
+{
+    if (node != nullptr){
+        // Individual effect from processor
+        return new EffectVT(event, node->nodeID);
+    }
+    if (selected.getNumSelected() == 0){
+        // Empty effect
+        return new EffectVT(event);
+    } else if (selected.getNumSelected() > 0){
+        // Create Effect with selected Effects inside
+        Array<const EffectVT*> effectVTArray;
+        for (auto eGui : selected.getItemArray()){
+            effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
+        }
+        selected.deselectAll();
+        return new EffectVT(event, effectVTArray);
+    }
+}
+
+/*void MainComponent::itemSelected(Component *c) {
+    std::cout << "Item selected" << newLine;
+    if (auto e = dynamic_cast<GUIEffect*>(c))
+        e->selectMode = true;
+}
+
+void MainComponent::itemDeselected(Component *c) {
+    if (auto e = dynamic_cast<GUIEffect*>(c))
+        e->selectMode = false;
+}*/
+
 /*
 void MainComponent::setMidiInput(int index)
 {
@@ -383,3 +404,12 @@ void MainComponent::setMidiInput(int index)
 
 }
 */
+void ComponentSelection::itemSelected(Component *c) {
+    if (auto e = dynamic_cast<GUIEffect*>(c))
+        e->selectMode = true;
+}
+
+void ComponentSelection::itemDeselected(Component *c) {
+    if (auto e = dynamic_cast<GUIEffect*>(c))
+        e->selectMode = false;
+}

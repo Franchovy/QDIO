@@ -16,12 +16,21 @@ ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
 
 
+class ComponentSelection : public SelectedItemSet<Component*>
+{
+public:
+    ComponentSelection() : SelectedItemSet<Component*>() {};
+
+    void itemSelected(Component *type) override;
+    void itemDeselected(Component *type) override;
+};
+
 /**
  * Main component and shit
  */
 class MainComponent   :
         public ValueTree::Listener, public Timer, public Component,
-        public LassoSource<Component*>, public ChangeListener, private ReferenceCountedObject {
+        public LassoSource<Component*>, /*public ChangeListener, */private ReferenceCountedObject {
 public:
     bool keyPressed(const KeyPress &key) override;
 
@@ -75,7 +84,7 @@ private:
 
     void findLassoItemsInArea (Array <Component*>& results, const Rectangle<int>& area) override;
     Array<Component*> componentsToSelect;
-    SelectedItemSet<Component*> selected;
+    ComponentSelection selected;
     SelectedItemSet<Component*>& getLassoSelection() override;
 
     void setHoverComponent(Component* c) {
@@ -95,8 +104,11 @@ private:
 
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
 
-    // Listener callback on SelectedItemSet "selected" change broadcast.
-    void changeListenerCallback (ChangeBroadcaster *source) override;
+private:
+/*
+    void itemSelected(Component*) override;
+    void itemDeselected(Component*) override;
+*/
 
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
@@ -145,24 +157,7 @@ private:
     /**
      * Empty
      */
-    EffectVT::Ptr createEffect(const MouseEvent &event, AudioProcessorGraph::Node::Ptr node = nullptr) {
-        if (node != nullptr){
-            // Individual effect from processor
-            return new EffectVT(event, node->nodeID);
-        }
-        if (selected.getNumSelected() == 0){
-            // Empty effect
-            return new EffectVT(event);
-        } else if (selected.getNumSelected() > 0){
-            // Create Effect with selected Effects inside
-            Array<const EffectVT*> effectVTArray;
-            for (auto eGui : selected.getItemArray()){
-                effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
-            }
-            selected.deselectAll();
-            return new EffectVT(event, effectVTArray);
-        }
-    }
+    EffectVT::Ptr createEffect(const MouseEvent &event, AudioProcessorGraph::Node::Ptr node = nullptr);
 
     //==============================================================================
     // Audio shit
