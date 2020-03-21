@@ -33,9 +33,13 @@ public:
     // Component overrides
     void paint (Graphics&) override;
     void resized() override;
+
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
+
+    void mouseEnter(const MouseEvent &event) override;
+    void mouseExit(const MouseEvent &event) override;
 
     //==============================================================================
     // AudioSource overrides
@@ -73,6 +77,21 @@ private:
     Array<Component*> componentsToSelect;
     SelectedItemSet<Component*> selected;
     SelectedItemSet<Component*>& getLassoSelection() override;
+
+    void setHoverComponent(Component* c) {
+        if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
+            e->hoverMode = false;
+            e->repaint();
+        }
+
+        hoverComponent = c;
+        if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
+            e->hoverMode = true;
+            e->repaint();
+        }
+    };
+
+    Component* hoverComponent = nullptr;
 
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
 
@@ -121,14 +140,6 @@ private:
             newParent = effectsTree;
 
         newParent.appendChild(childEffect->getTree(), nullptr);
-
-       /* if (auto effectGUI = dynamic_cast<GUIEffect*>(event.eventComponent)){
-            auto parentEffect = effectGUI->EVT;
-            parentEffect->addEffect(childEffect);
-        } else if (addToMain) {
-
-            effectsTree.appendChild(childEffect->getTree(), nullptr);
-        }*/
     }
 
     /**
@@ -152,7 +163,6 @@ private:
             return new EffectVT(event, effectVTArray);
         }
     }
-
 
     //==============================================================================
     // Audio shit

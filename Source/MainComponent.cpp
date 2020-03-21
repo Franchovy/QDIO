@@ -93,7 +93,7 @@ MainComponent::~MainComponent()
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+    g.fillAll (Colour(30, 35, 40));
 }
 
 void MainComponent::resized()
@@ -146,7 +146,16 @@ void MainComponent::mouseDown(const MouseEvent &event) {
 void MainComponent::mouseDrag(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.dragLasso(event);
-    //Component::mouseDrag(event);
+    if (event.mods.isLeftButtonDown()) {
+        GUIEffect *effect = dynamic_cast<GUIEffect *>(event.eventComponent);
+        auto newParent = effectToMoveTo(effect,
+                                        event.getEventRelativeTo(this).getPosition(), effectsTree);
+
+        if (newParent != this)
+            setHoverComponent(newParent);
+        else
+            setHoverComponent(nullptr);
+    }
 }
 
 void MainComponent::mouseUp(const MouseEvent &event) {
@@ -177,7 +186,13 @@ void MainComponent::mouseUp(const MouseEvent &event) {
     Component::mouseUp(event);
 }
 
+void MainComponent::mouseEnter(const MouseEvent &event) {
+    Component::mouseEnter(event);
+}
 
+void MainComponent::mouseExit(const MouseEvent &event) {
+    Component::mouseExit(event);
+}
 
 //==============================================================================
 
@@ -294,16 +309,10 @@ void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rect
     for (auto c : componentsToSelect) {
         if (!intersectMode) {
             if (area.contains(c->getBoundsInParent())) {
-                std::cout << "Contains mode" << newLine;
-                std::cout << "Area: " << area.toString() << newLine;
-                std::cout << "Bounds: " << c->getBoundsInParent().toString() << newLine;
                 results.addIfNotAlreadyThere(c);
             }
         } else {
             if (area.intersects(c->getBoundsInParent())) {
-                std::cout << "Intersect mode" << newLine;
-                std::cout << "Area: " << area.toString() << newLine;
-                std::cout << "Bounds: " << c->getBoundsInParent().toString() << newLine;
                 results.addIfNotAlreadyThere(c);
             }
         }
@@ -354,21 +363,6 @@ Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int
         return this;
     else return nullptr;
 }
-
-
-/*
-
-void MainComponent::mouseUp(const MouseEvent &event) {
-    auto p = getComponentAt(event.getPosition());
-    if (p != 0){
-        std::cout << "Component: " << p->getName() << newLine;
-    } else {
-        std::cout << "No result" << newLine;
-    }
-}
-*/
-
-
 
 /*
 void MainComponent::setMidiInput(int index)

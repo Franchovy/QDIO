@@ -411,9 +411,12 @@ public:
         addAndMakeVisible(p);
     }
 
+
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
+    void mouseEnter(const MouseEvent &event) override;
+    void mouseExit(const MouseEvent &event) override;
 
     void moved() override;
 
@@ -423,6 +426,10 @@ public:
     bool hasBeenInitialised = false;
 
     EffectVT* EVT;
+
+    bool hoverMode = false;
+    bool selectMode = false;
+
 private:
     bool individual = false;
     OwnedArray<ConnectionPort> inputPorts;

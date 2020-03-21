@@ -107,6 +107,7 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
     }
 
     // Setup parameters
+    individual = true;
 
     // Update
     resized();
@@ -118,17 +119,31 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
 //==============================================================================
 void GUIEffect::paint (Graphics& g)
 {
-    g.fillAll(Colours::whitesmoke);
-
+    // Draw outline rectangle
     g.setColour(Colours::black);
-    g.drawRect(0,0,getWidth(),getHeight(), 2);
-    //g.fillAll (Colour (200,200,200));
-    //Component::paint(g);
-    //g.drawRect(outline);
+    g.drawRoundedRectangle(10,10,getWidth() - 20,getHeight() - 20, 10, 3);
+    g.setColour(Colours::whitesmoke);
+    g.fillRoundedRectangle(10,10,getWidth() - 20,getHeight() - 20, 10);
+
+    // Hover rectangle
+    g.setColour(Colours::blue);
+    Path hoverRectangle;
+    hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
+    PathStrokeType strokeType(3);
+
+    if (hoverMode) {
+        float thiccness[] = {5, 7};
+        strokeType.createDashedStroke(hoverRectangle, hoverRectangle, thiccness, 2);
+    }
+
+    if (selectMode || hoverMode)
+        g.strokePath(hoverRectangle, strokeType);
 }
 
 void GUIEffect::resized()
 {
+
+
     inputPortPos = inputPortStartPos;
     outputPortPos = outputPortStartPos;
     for (auto p : inputPorts){
@@ -155,25 +170,46 @@ void GUIEffect::mouseDrag(const MouseEvent &event) {
 /*    constrainer.setBoundsForComponent(this,
             Rectangle<int>(newX, newY, getWidth(), getHeight()),
                     false, false, false ,false);*/
-    dragger.dragComponent(this, event, &constrainer);
+    if (event.eventComponent == this) {
+        dragger.dragComponent(this, event, &constrainer);
 
-    // Manual constraint
-    auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
-    auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
+        // Manual constraint
+        auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
+        auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
 
-    if (newX != getX() || newY != getY())
-        if (event.x < -(getWidth()/2) || event.y < -(getHeight()/2) ||
-                event.x > (getWidth()*3/2) || event.y > (getHeight()*3/2) ){
-            auto newPos = dragDetachFromParentComponent();
-            newX = newPos.x;
-            newY = newPos.y;
-        }
+        if (newX != getX() || newY != getY())
+            if (event.x<-(getWidth() / 2) || event.y<-(getHeight() / 2) ||
+                                                     event.x>(getWidth() * 3 / 2) || event.y>(getHeight() * 3 / 2)) {
+                auto newPos = dragDetachFromParentComponent();
+                newX = newPos.x;
+                newY = newPos.y;
+            }
 
-    setTopLeftPosition(newX, newY);
+        setTopLeftPosition(newX, newY);
+    }
+    getParentComponent()->mouseDrag(event);
 }
 
 void GUIEffect::mouseUp(const MouseEvent &event) {
     getParentComponent()->mouseUp(event);
+}
+
+void GUIEffect::mouseEnter(const MouseEvent &event) {
+    if (!dynamic_cast<GUIEffect*>(event.eventComponent)->hoverMode)
+        hoverMode = true;
+    repaint();
+
+    getParentComponent()->mouseEnter(event);
+    Component::mouseEnter(event);
+}
+
+void GUIEffect::mouseExit(const MouseEvent &event) {
+    if (dynamic_cast<GUIEffect*>(event.eventComponent)->hoverMode)
+        hoverMode = false;
+    repaint();
+
+    getParentComponent()->mouseExit(event);
+    Component::mouseExit(event);
 }
 
 void GUIEffect::moved() {
@@ -228,6 +264,8 @@ void GUIEffect::parentHierarchyChanged() {
     }
     Component::parentHierarchyChanged();
 }
+
+
 
 
 void ConnectionPort::connect(ConnectionPort &otherPort) {
