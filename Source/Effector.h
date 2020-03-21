@@ -96,7 +96,7 @@ struct ConnectionPort : public Component
 {
     ConnectionPort(bool isInput) : rectangle(20,20)
     {
-        setBounds(rectangle);
+        setBounds(rectangle.expanded(20));
         this->isInput = isInput;
     }
 
@@ -104,7 +104,19 @@ struct ConnectionPort : public Component
     {
         g.setColour(Colours::black);
         //rectangle.setPosition(10,10);
-        g.drawRect(rectangle,2);
+        g.drawRect(rectangle.withPosition(20,20),2);
+
+        // Hover rectangle
+        g.setColour(Colours::blue);
+        Path hoverRectangle;
+        hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
+        PathStrokeType strokeType(3);
+
+        if (hoverMode) {
+            float thiccness[] = {5, 7};
+            strokeType.createDashedStroke(hoverRectangle, hoverRectangle, thiccness, 2);
+            g.strokePath(hoverRectangle, strokeType);
+        }
     }
 
     void connect(ConnectionPort& otherPort);
@@ -140,10 +152,21 @@ struct ConnectionPort : public Component
 
     void moved() override;
 
+    void mouseEnter(const MouseEvent &event) override {
+        hoverMode = true;
+        repaint();
+    }
+
+    void mouseExit(const MouseEvent &event) override {
+        hoverMode = false;
+        repaint();
+    }
+
     bool isInput;
     ConnectionLine* line = nullptr;
     Rectangle<int> rectangle;
     AudioProcessor::Bus* bus;
+    bool hoverMode = false;
 };
 
 struct ConnectionLine : public Component, public ReferenceCountedObject
@@ -166,7 +189,6 @@ struct ConnectionLine : public Component, public ReferenceCountedObject
     }
 
     void move(bool isInput, Point<float> newPoint){
-        std::cout << "Move" << newLine;
         if (isInput)
             line.setStart(inPort->getMainCentrePos().toFloat());
         else

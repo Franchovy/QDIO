@@ -143,8 +143,6 @@ void GUIEffect::paint (Graphics& g)
 
 void GUIEffect::resized()
 {
-
-
     inputPortPos = inputPortStartPos;
     outputPortPos = outputPortStartPos;
     for (auto p : inputPorts){

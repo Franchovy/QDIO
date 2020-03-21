@@ -82,8 +82,8 @@ MainComponent::MainComponent() :
 
 MainComponent::~MainComponent()
 {
-    player.audioDeviceStopped();
-    processorGraph.release();
+/*    player.audioDeviceStopped();
+    processorGraph.release();*/
     //TODO add audio device stopper
 
     /*for (int i = 0; i < effectsTree.getNumChildren(); i++)
@@ -156,7 +156,6 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
 }
 
 void MainComponent::mouseUp(const MouseEvent &event) {
-    std::cout << "Mouse up" << newLine;
     if (lasso.isVisible())
         lasso.endLasso();
 
@@ -164,18 +163,22 @@ void MainComponent::mouseUp(const MouseEvent &event) {
         // Is the component an effect?
         if (GUIEffect* effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
 
+            if (event.getDistanceFromDragStart() < 10) {
+                // Consider this a click and not a drag
+                selected.addToSelection(event.eventComponent);
+                event.eventComponent->repaint();
+            }
+
             // Scan effect to apply move to
             auto newParent = effectToMoveTo(effect,
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
 
             if (effect->getParentComponent() != newParent) {
-                std::cout << "Moving parent: " << newLine;
                 addEffect(event.getEventRelativeTo(newParent), effect->EVT);
             }
         }
     }
 
-    std::cout << "Selected items: " << newLine;
     for (auto i : selected){
         std::cout << i->getName() << newLine;
     }
@@ -194,8 +197,6 @@ void MainComponent::mouseExit(const MouseEvent &event) {
 //==============================================================================
 
 void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    std::cout << "Added child" << newLine;
-
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_VT){
         auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EVT_OBJECT).getObject());
         auto effectGui = effectVT->getGUIEffect();
@@ -206,8 +207,6 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
 
             // Add this gui to new parent
             parentEffectVT->getGUIEffect()->addAndMakeVisible(effectGui);
-
-            std::cout << "Effect final position: " << effectGui->getPosition().toString() << newLine;
         } else {
             effectGui->setVisible(true);
             addAndMakeVisible(effectGui);
@@ -236,7 +235,6 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
         processorGraph->reset();
 
         // Add connection
-        std::cout << "Add connection!!!!!!!" << newLine;
         auto line = dynamic_cast<ConnectionLine*>(treeWhosePropertyHasChanged.getPropertyPointer(property)->getObject());
         addAndMakeVisible(line);
         line->setInterceptsMouseClicks(0,0);
@@ -374,17 +372,6 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcesso
     }
 }
 
-/*void MainComponent::itemSelected(Component *c) {
-    std::cout << "Item selected" << newLine;
-    if (auto e = dynamic_cast<GUIEffect*>(c))
-        e->selectMode = true;
-}
-
-void MainComponent::itemDeselected(Component *c) {
-    if (auto e = dynamic_cast<GUIEffect*>(c))
-        e->selectMode = false;
-}*/
-
 /*
 void MainComponent::setMidiInput(int index)
 {
@@ -407,9 +394,11 @@ void MainComponent::setMidiInput(int index)
 void ComponentSelection::itemSelected(Component *c) {
     if (auto e = dynamic_cast<GUIEffect*>(c))
         e->selectMode = true;
+    c->repaint();
 }
 
 void ComponentSelection::itemDeselected(Component *c) {
     if (auto e = dynamic_cast<GUIEffect*>(c))
         e->selectMode = false;
+    c->repaint();
 }
