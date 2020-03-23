@@ -81,6 +81,7 @@ private:
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
 
+    CustomMenuItems mainMenu;
     Point<int> menuPos;
 
     // GUI Helper tools

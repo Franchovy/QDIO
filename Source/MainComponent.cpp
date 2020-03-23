@@ -64,6 +64,13 @@ MainComponent::MainComponent() :
         getAppProperties().getUserSettings()->saveIfNeeded();
     };
     addAndMakeVisible(deviceSelectorComponent);
+
+    //==============================================================================
+    // Main component popup menu
+    mainMenu.addItem("Toggle Settings", [=](){
+        deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
+    });
+
 }
 
 
@@ -87,25 +94,39 @@ void MainComponent::resized()
 
 void MainComponent::mouseDown(const MouseEvent &event) {
     if (event.mods.isRightButtonDown()){
+        menuPos = getMouseXYRelative();
 
         // Right-click menu
         PopupMenu m;
-        menuPos = getMouseXYRelative();
 
-        // TODO make the format of this more adaptable. Use a std::function array or smthing
+        // Populate menu
+        // Add submenus
         PopupMenu test = getEffectSelectMenu(event);
         m.addSubMenu("Create Effect", test);
-        //m.addItem(1, "Create Effect");
+        // Add CustomMenuItems
+        mainMenu.addToMenu(m);
+        if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
+            e->menu.addToMenu(m);
+        // Execute result
+        int result = m.show();
 
-        int itemID = 2;
+        if (mainMenu.inRange(result))
+            mainMenu.execute(result);
+        if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
+            e->menu.execute(result);
 
+        /*int itemID = 2;
 
-        if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent)) {
+        *//*if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent)) {
             if (!e->isIndividual())
                 m.addItem(itemID++, "Toggle Edit Mode");
             if (e->isInEditMode())
                 m.addItem(itemID++, "Change effect image...");
 
+        }*//*
+
+        if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent)) {
+            e->menu.addToMenu(m);
         }
 
         if (deviceSelectorComponent.isVisible())
@@ -127,7 +148,7 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         } else if (result == 3) {
             // Start audio
             initialiseGraph();
-        }
+        }*/
     } else if (event.mods.isLeftButtonDown() && event.originalComponent == this){
         lasso.setVisible(true);
         lasso.beginLasso(event, this);

@@ -89,6 +89,11 @@ GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
         setBounds(event.getPosition().x, event.getPosition().y, 200,200);
     }
 
+    menu.addItem("Toggle Edit Mode", [=]() {
+        toggleEditMode();
+    });
+
+
     Font titleFont(20, Font::FontStyleFlags::bold);
     title.setFont(titleFont);
     title.setText("New Empty Effect", dontSendNotification);

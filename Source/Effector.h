@@ -39,18 +39,23 @@ public:
 
     int addToMenu(PopupMenu &menu) {
         int numItems = menu.getNumItems();
+        thisRange.setStart(numItems);
         for (int i = 0; i < names.size(); i++)
             menu.addItem(numItems++, names[i]);
+        thisRange.setEnd(numItems);
+        return numItems;
     }
 
     int execute(int result) {
-        if (result < functions.size())
-            functions[result]();
+        if (thisRange.contains(result))
+            functions[result - thisRange.getStart()]();
     }
 
     int getSize() { return names.size(); }
+    bool inRange(int i) { return thisRange.contains(i); }
 
 private:
+    Range<int> thisRange;
     Array<String> names;
     Array<std::function<void()>> functions;
 };
@@ -480,6 +485,8 @@ public:
     void setEditMode(bool isEditMode);
     bool toggleEditMode() { setEditMode(!editMode); }
     bool isInEditMode() { return editMode; }
+
+    CustomMenuItems menu;
 
 private:
     bool individual = false;
