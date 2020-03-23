@@ -10,6 +10,10 @@
 
 #include "Effector.h"
 
+//==============================================================================
+// Line Component methods
+
+
 LineComponent* LineComponent::dragLine = nullptr;
 
 /**
@@ -68,6 +72,9 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 }
 
 //==============================================================================
+// GUIEffect methods
+
+
 GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
     EVT(parentEVT)
 {
@@ -81,6 +88,17 @@ GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
     } else {
         setBounds(event.getPosition().x, event.getPosition().y, 200,200);
     }
+
+    Font titleFont(20, Font::FontStyleFlags::bold);
+    title.setFont(titleFont);
+    title.setText("New Empty Effect", dontSendNotification);
+    title.setBounds(30,30,200, title.getFont().getHeight());
+    title.setColour(title.textColourId, Colours::black);
+    title.setEditable(true);
+    addAndMakeVisible(title);
+
+    // Make edit mode by default
+    setEditMode(true);
 }
 
 GUIEffect::~GUIEffect()
@@ -112,8 +130,10 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
         // Create port - giving audiochannelset info and isInput bool
         addPort(bus, isInput);
     }
+    title.setText(processor->getName(), dontSendNotification);
 
     // Setup parameters
+    setEditMode(false);
     individual = true;
 
     // Update
@@ -121,16 +141,11 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
     repaint();
 }
 
-
-
-//==============================================================================
 void GUIEffect::paint (Graphics& g)
 {
     // Draw outline rectangle
     g.setColour(Colours::black);
     g.drawRoundedRectangle(10,10,getWidth() - 20,getHeight() - 20, 10, 3);
-    g.setColour(Colours::whitesmoke);
-    g.fillRoundedRectangle(10,10,getWidth() - 20,getHeight() - 20, 10);
 
     // Hover rectangle
     g.setColour(Colours::blue);
@@ -146,6 +161,14 @@ void GUIEffect::paint (Graphics& g)
 
     if (selectMode || hoverMode)
         g.strokePath(hoverRectangle, strokeType);
+
+    g.setColour(Colours::whitesmoke);
+    if (!editMode) {
+        g.setOpacity(1.f);
+    } else {
+        g.setOpacity(0.3f);
+    }
+    g.fillRoundedRectangle(10,10,getWidth() - 20,getHeight() - 20, 10);
 }
 
 void GUIEffect::resized()
@@ -160,9 +183,12 @@ void GUIEffect::resized()
         p->setCentrePosition(getWidth() - portIncrement, outputPortPos);
         outputPortPos += portIncrement;
     }
+
+    title.setBounds(30,30,200, title.getFont().getHeight());
 }
 
 void GUIEffect::mouseDown(const MouseEvent &event) {
+    setAlwaysOnTop(true);
     if (event.mods.isLeftButtonDown()) {
         dragData.previousParent = getParentComponent();
         dragData.previousPos = getPosition();
@@ -197,6 +223,7 @@ void GUIEffect::mouseDrag(const MouseEvent &event) {
 }
 
 void GUIEffect::mouseUp(const MouseEvent &event) {
+    setAlwaysOnTop(false);
     getParentComponent()->mouseUp(event);
 }
 
@@ -290,6 +317,34 @@ ConnectionPort *GUIEffect::checkPort(Point<int> pos) {
     return nullptr;
 }
 
+void GUIEffect::setEditMode(bool isEditMode) {
+    if (isIndividual() || editMode == isEditMode)
+        return;
+    // Turn on edit mode
+    if (isEditMode) {
+        for (auto c : getChildren()) {
+            c->setAlwaysOnTop(true);
+        }
+        title.setMouseCursor(MouseCursor::IBeamCursor);
+        title.setInterceptsMouseClicks(true, true);
+    }
+    // Turn off edit mode
+    else if (!isEditMode) {
+        for (auto c : getChildren()) {
+            c->setAlwaysOnTop(false);
+            if (auto e = dynamic_cast<GUIEffect*>(c))
+                e->setInterceptsMouseClicks(false, false);
+        }
+        title.setMouseCursor(getMouseCursor());
+        title.setInterceptsMouseClicks(false,false);
+    }
+
+    editMode = isEditMode;
+    repaint();
+}
+
+//==============================================================================
+// ConnectionPort methods
 
 void ConnectionPort::connect(ConnectionPort &otherPort) {
     if (otherPort.isInput ^ isInput){
@@ -302,6 +357,7 @@ void ConnectionPort::connect(ConnectionPort &otherPort) {
 
 void ConnectionPort::mouseDown(const MouseEvent &event) {
     auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
+
     LineComponent::getDragLine()->mouseDown(newEvent);//->start(this, getMainCentrePos(), event.getPosition() - getPosition());
 }
 
@@ -320,6 +376,17 @@ void ConnectionPort::moved() {
         line->move(isInput, getPosition().toFloat());
     }
     Component::moved();
+}
+
+// ==============================================================================
+// Resizer methods
+
+void Resizer::mouseDrag(const MouseEvent &event) {
+    dragger.dragComponent(this, event, nullptr);
+
+    getParentComponent()->setSize(startPos.x + event.getDistanceFromDragStartX(),
+                                  startPos.y + event.getDistanceFromDragStartY());
+    Component::mouseDrag(event);
 }
 
 
@@ -347,11 +414,3 @@ BEGIN_JUCER_METADATA
 END_JUCER_METADATA
 */
 #endif
-
-void Resizer::mouseDrag(const MouseEvent &event) {
-    dragger.dragComponent(this, event, nullptr);
-
-    getParentComponent()->setSize(startPos.x + event.getDistanceFromDragStartX(),
-                                      startPos.y + event.getDistanceFromDragStartY());
-    Component::mouseDrag(event);
-}

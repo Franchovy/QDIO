@@ -28,6 +28,33 @@ struct GUIEffect;
 struct ConnectionLine;
 struct LineComponent;
 
+class CustomMenuItems
+{
+public:
+    int addItem(String name, std::function<void()> function) {
+        functions.add(function);
+        names.add(name);
+        return functions.size();
+    }
+
+    int addToMenu(PopupMenu &menu) {
+        int numItems = menu.getNumItems();
+        for (int i = 0; i < names.size(); i++)
+            menu.addItem(numItems++, names[i]);
+    }
+
+    int execute(int result) {
+        if (result < functions.size())
+            functions[result]();
+    }
+
+    int getSize() { return names.size(); }
+
+private:
+    Array<String> names;
+    Array<std::function<void()>> functions;
+};
+
 class Resizer : public Component
 {
 public:
@@ -450,10 +477,18 @@ public:
     bool hoverMode = false;
     bool selectMode = false;
 
+    void setEditMode(bool isEditMode);
+    bool toggleEditMode() { setEditMode(!editMode); }
+    bool isInEditMode() { return editMode; }
+
 private:
     bool individual = false;
     OwnedArray<ConnectionPort> inputPorts;
     OwnedArray<ConnectionPort> outputPorts;
+
+    bool editMode;
+
+    Label title;
 
     Resizer resizer;
     ComponentDragger dragger;

@@ -92,22 +92,35 @@ void MainComponent::mouseDown(const MouseEvent &event) {
         PopupMenu m;
         menuPos = getMouseXYRelative();
 
-        // TODO custom options depending on event component
+        // TODO make the format of this more adaptable. Use a std::function array or smthing
         PopupMenu test = getEffectSelectMenu(event);
         m.addSubMenu("Create Effect", test);
         //m.addItem(1, "Create Effect");
 
+        int itemID = 2;
+
+
+        if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent)) {
+            if (!e->isIndividual())
+                m.addItem(itemID++, "Toggle Edit Mode");
+            if (e->isInEditMode())
+                m.addItem(itemID++, "Change effect image...");
+
+        }
+
         if (deviceSelectorComponent.isVisible())
-            m.addItem(2, "Hide Settings");
+            m.addItem(itemID++, "Hide Settings");
         else
-            m.addItem(2, "Show Settings");
-        m.addItem(3, "Run audiograph");
+            m.addItem(itemID++, "Show Settings");
+        m.addItem(itemID++, "Run audiograph");
         int result = m.show();
 
         if (result == 0) {
             // Menu ignored
         } else if (result == -1) {
             // Effect generating code comes from the submenu.
+        } else if (result == 2 && dynamic_cast<GUIEffect *>(event.originalComponent)) {
+            dynamic_cast<GUIEffect *>(event.originalComponent)->toggleEditMode();
         } else if (result == 2) {
             // Show settings
             deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
@@ -168,6 +181,10 @@ void MainComponent::mouseUp(const MouseEvent &event) {
             auto newParent = effectToMoveTo(effect,
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
 
+            if (auto e = dynamic_cast<GUIEffect*>(newParent))
+                if (!e->isInEditMode())
+                    return;
+            // target is not in edit mode
             if (effect->getParentComponent() != newParent) {
                 addEffect(event.getEventRelativeTo(newParent), effect->EVT);
             }
