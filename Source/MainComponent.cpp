@@ -45,9 +45,6 @@ MainComponent::MainComponent() :
     //deviceManager.addMidiInputCallback (inputDevice, &player); // [3]
     //deviceManager.setDefaultMidiOutput (outputDevice);
 
-    //player.setProcessor(e);
-    //addAndMakeVisible(e->createEditor());
-    std::cout << "Test processor: " << player.getCurrentProcessor() << newLine;
     player.setProcessor (processorGraph.get());
 
     //==============================================================================
@@ -70,8 +67,6 @@ MainComponent::MainComponent() :
     mainMenu.addItem("Toggle Settings", [=](){
         deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
     });
-
-
 }
 
 
@@ -102,54 +97,20 @@ void MainComponent::mouseDown(const MouseEvent &event) {
 
         // Populate menu
         // Add submenus
-        PopupMenu test = getEffectSelectMenu(event);
-        m.addSubMenu("Create Effect", test);
+        PopupMenu createEffectSubmenu = getEffectSelectMenu(event);
+        m.addSubMenu("Create Effect", createEffectSubmenu);
         // Add CustomMenuItems
         mainMenu.addToMenu(m);
         if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
-            e->menu.addToMenu(m);
+            e->getMenu().addToMenu(m);
         // Execute result
         int result = m.show();
 
         if (mainMenu.inRange(result))
             mainMenu.execute(result);
         if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
-            e->menu.execute(result);
+            e->getMenu().execute(result);
 
-        /*int itemID = 2;
-
-        *//*if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent)) {
-            if (!e->isIndividual())
-                m.addItem(itemID++, "Toggle Edit Mode");
-            if (e->isInEditMode())
-                m.addItem(itemID++, "Change effect image...");
-
-        }*//*
-
-        if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent)) {
-            e->menu.addToMenu(m);
-        }
-
-        if (deviceSelectorComponent.isVisible())
-            m.addItem(itemID++, "Hide Settings");
-        else
-            m.addItem(itemID++, "Show Settings");
-        m.addItem(itemID++, "Run audiograph");
-        int result = m.show();
-
-        if (result == 0) {
-            // Menu ignored
-        } else if (result == -1) {
-            // Effect generating code comes from the submenu.
-        } else if (result == 2 && dynamic_cast<GUIEffect *>(event.originalComponent)) {
-            dynamic_cast<GUIEffect *>(event.originalComponent)->toggleEditMode();
-        } else if (result == 2) {
-            // Show settings
-            deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
-        } else if (result == 3) {
-            // Start audio
-            initialiseGraph();
-        }*/
     } else if (event.mods.isLeftButtonDown() && event.originalComponent == this){
         lasso.setVisible(true);
         lasso.beginLasso(event, this);
@@ -167,7 +128,7 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
             auto connectPort = portToConnectTo(event.originalComponent->getParentComponent(),
                     event.getPosition(), effectsTree);
 
-            if (connectPort != nullptr) //TODO
+            if (connectPort != nullptr)
                 setHoverComponent(connectPort);
             else
                 setHoverComponent(nullptr);

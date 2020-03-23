@@ -104,6 +104,12 @@ GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
         }
     });
 
+    //TODO Get default bus from system
+    editMenu.addItem("Add Input Port", [=](){addPort(EVT->getDefaultBus(), true); resized(); });
+    editMenu.addItem("Add Output Port", [=](){addPort(EVT->getDefaultBus(), false); resized(); });
+    editMenu.addItem("Toggle Edit Mode", [=]() {
+        toggleEditMode();
+    });
 
     Font titleFont(20, Font::FontStyleFlags::bold);
     title.setFont(titleFont);

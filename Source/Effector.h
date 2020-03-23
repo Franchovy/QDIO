@@ -486,7 +486,7 @@ public:
     bool toggleEditMode() { setEditMode(!editMode); }
     bool isInEditMode() { return editMode; }
 
-    CustomMenuItems menu;
+    CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
 
 private:
     bool individual = false;
@@ -499,6 +499,9 @@ private:
     Resizer resizer;
     ComponentDragger dragger;
     ComponentBoundsConstrainer constrainer;
+
+    CustomMenuItems menu;
+    CustomMenuItems editMenu;
 
     Component* currentParent = nullptr;
     EffectDragData dragData;
@@ -622,6 +625,8 @@ public:
     GUIEffect* getGUIEffect() {return &guiEffect;}
     const GUIEffect* getGUIEffect() const {return &guiEffect;}
     static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
+
+    AudioProcessor::Bus* getDefaultBus() { graph->getBus(true, 0); }
 
     // Convenience functions
     EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
