@@ -490,12 +490,11 @@ public:
 
 private:
     bool individual = false;
+    bool editMode;
     OwnedArray<ConnectionPort> inputPorts;
     OwnedArray<ConnectionPort> outputPorts;
-
-    bool editMode;
-
     Label title;
+    Image image;
 
     Resizer resizer;
     ComponentDragger dragger;

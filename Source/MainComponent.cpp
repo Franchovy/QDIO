@@ -71,6 +71,7 @@ MainComponent::MainComponent() :
         deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
     });
 
+
 }
 
 

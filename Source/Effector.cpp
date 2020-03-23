@@ -89,8 +89,19 @@ GUIEffect::GUIEffect (const MouseEvent &event, EffectVT* parentEVT) :
         setBounds(event.getPosition().x, event.getPosition().y, 200,200);
     }
 
+
     menu.addItem("Toggle Edit Mode", [=]() {
         toggleEditMode();
+    });
+    menu.addItem("Change Effect Image..", [=]() {
+        FileChooser imgChooser ("Select Effect Image..",
+                               File::getSpecialLocation (File::userHomeDirectory),
+                               "*.jpg;*.png;*.gif");
+
+        if (imgChooser.browseForFileToOpen())
+        {
+            image = ImageFileFormat::loadFrom(imgChooser.getResult());
+        }
     });
 
 
@@ -150,7 +161,8 @@ void GUIEffect::paint (Graphics& g)
 {
     // Draw outline rectangle
     g.setColour(Colours::black);
-    g.drawRoundedRectangle(10,10,getWidth() - 20,getHeight() - 20, 10, 3);
+    Rectangle<float> outline(10,10,getWidth()-20, getHeight()-20);
+    g.drawRoundedRectangle(outline, 10, 3);
 
     // Hover rectangle
     g.setColour(Colours::blue);
@@ -173,7 +185,10 @@ void GUIEffect::paint (Graphics& g)
     } else {
         g.setOpacity(0.3f);
     }
-    g.fillRoundedRectangle(10,10,getWidth() - 20,getHeight() - 20, 10);
+    if (image.isNull())
+        g.fillRoundedRectangle(outline, 10);
+    else
+        g.drawImage(image, outline);
 }
 
 void GUIEffect::resized()
