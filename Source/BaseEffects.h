@@ -12,6 +12,24 @@
 
 #include <JuceHeader.h>
 
+class ParameterListener : public AudioProcessorParameter::Listener
+{
+public:
+    ParameterListener() : AudioProcessorParameter::Listener() {
+
+    }
+
+    void parameterValueChanged(int parameterIndex, float newValue) override {
+        *parameters[parameterIndex] = newValue;
+    }
+
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
+
+    }
+
+    Array<std::atomic<float>*> parameters;
+};
+
 /**
  * Slightly more specialised (but still abstract) AudioProcessor. Avoids having all the same
  * overrides taking up so much space.
@@ -90,10 +108,11 @@ public:
 
 protected:
     String name;
+    ParameterListener parameterListener;
 };
 
 
-class DelayEffect : public BaseEffect
+class DelayEffect : public BaseEffect, public Timer
 {
 public:
     DelayEffect() : BaseEffect(),
@@ -102,20 +121,50 @@ public:
     {
         name = "Delay Effect";
         addParameter(&delay);
+        delay.addListener(&parameterListener);
+        parameterListener.parameters.add(&newDelayBufferSize);
+        startTimer(1000);
+    }
+
+
+    /**
+     * Use this to asynchronously update the buffer size
+     */
+    void timerCallback() override {
+
+
+        std::cout << "Timer callback" << newLine;
+        newDelayBufferSize = delay.get() * currentSampleRate;
+        if (newDelayBufferSize != delayBufferSize){
+            std::cout << "Updating buffer size!" << newLine;
+
+            delayBuffer.setSize(jmin(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
+                                newDelayBufferSize, true, true, true);
+            if (delayBufferPt > newDelayBufferSize){
+                delayBufferPt = newDelayBufferSize;
+            }
+
+            delayBuffer.clear();
+            delayBufferSize = newDelayBufferSize;
+        }
+        startTimer(500);
     }
 
 
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override {
+        currentSampleRate = sampleRate;
         delayBufferSize = delay.get() * sampleRate;
         delayBufferPt = 0;
 
         delayBuffer.setSize(jmin(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
                 delayBufferSize, true, false, true);
         delayBuffer.clear();
+
+        std::cout << getName() << ": prepare to play" << newLine;
     }
 
     void releaseResources() override {
-
+        std::cout << getName() << ": release resources" << newLine;
     }
 
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override {
@@ -159,6 +208,8 @@ private:
     //std::atomic<float> delayVal;
     AudioBuffer<float> delayBuffer;
 
-    int delayBufferSize;
+    double currentSampleRate;
+    float delayBufferSize;
+    std::atomic<float> newDelayBufferSize;
     int delayBufferPt;
 };

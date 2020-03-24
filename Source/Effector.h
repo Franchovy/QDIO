@@ -421,6 +421,7 @@ public:
 
     void sliderValueChanged(Slider *slider) override {
         linkedParameter->setValue(slider->getValueObject().getValue());
+        std::cout << "New value: " << linkedParameter->getValue() << newLine;
     }
 
     void sliderDragStarted(Slider *slider) override {
@@ -528,7 +529,7 @@ private:
     Component* currentParent = nullptr;
     EffectDragData dragData;
 
-    const AudioProcessorParameterGroup* parameters; // dum dum dum
+    const AudioProcessorParameterGroup* parameters;
 
     //============================================================================
     // GUI auto stuff

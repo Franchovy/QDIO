@@ -384,12 +384,19 @@ void GUIEffect::setParameters(const AudioProcessorParameterGroup *group) {
         } else {
             // add float parameter
             std::cout << "Adding slider for float param" << newLine;
-            Slider slider;
-            SliderListener listener(param);
-            slider.addListener(&listener);
+            Slider* slider = new Slider();
+            SliderListener* listener = new SliderListener(param);
+            slider->addListener(listener);
+            slider->setName("Slider");
+            slider->setBounds(20, 50, 200, 40);
+
+            addAndMakeVisible(slider);
             std::cout << "done" << newLine;
         }
     }
+    std::cout << "Does slider still exist?" << newLine;
+    for (auto c : getChildren())
+        std::cout << c->getName() << newLine;
 }
 
 //==============================================================================
