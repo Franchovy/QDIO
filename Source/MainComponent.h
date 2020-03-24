@@ -12,6 +12,7 @@
 
 #include "Effector.h"
 #include "IOEffects.h"
+#include "BaseEffects.h"
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
