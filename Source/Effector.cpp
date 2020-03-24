@@ -154,6 +154,9 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
     title.setText(processor->getName(), dontSendNotification);
 
     // Setup parameters
+    parameters = &processor->getParameterTree();
+    setParameters(parameters);
+
     setEditMode(false);
     individual = true;
 
@@ -366,6 +369,27 @@ void GUIEffect::setEditMode(bool isEditMode) {
 
     editMode = isEditMode;
     repaint();
+}
+
+void GUIEffect::setParameters(const AudioProcessorParameterGroup *group) {
+    // Individual
+    for (auto param : group->getParameters(false)) {
+        std::cout << "Adding param" << newLine;
+        if (param->isBoolean()) {
+            // add bool parameter
+        } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
+            // add combo parameter
+        } else if (param->isDiscrete()) {
+            // add int parameter
+        } else {
+            // add float parameter
+            std::cout << "Adding slider for float param" << newLine;
+            Slider slider;
+            SliderListener listener(param);
+            slider.addListener(&listener);
+            std::cout << "done" << newLine;
+        }
+    }
 }
 
 //==============================================================================

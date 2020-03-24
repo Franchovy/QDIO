@@ -67,6 +67,7 @@ MainComponent::MainComponent() :
     mainMenu.addItem("Toggle Settings", [=](){
         deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
     });
+
 }
 
 

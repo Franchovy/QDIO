@@ -412,6 +412,28 @@ private:
     Array<Component*> childComponents;
 };
 
+class SliderListener : public Slider::Listener
+{
+public:
+    SliderListener(AudioProcessorParameter* parameter) : Slider::Listener(){
+        linkedParameter = parameter;
+    }
+
+    void sliderValueChanged(Slider *slider) override {
+        linkedParameter->setValue(slider->getValueObject().getValue());
+    }
+
+    void sliderDragStarted(Slider *slider) override {
+        linkedParameter->beginChangeGesture();
+    }
+
+    void sliderDragEnded(Slider *slider) override {
+        linkedParameter->endChangeGesture();
+    }
+private:
+    AudioProcessorParameter* linkedParameter;
+};
+
 class EffectVT;
 
 /**
@@ -453,7 +475,7 @@ public:
 
     ConnectionPort* checkPort(Point<int> pos);
 
-    void setParameters(AudioProcessorParameterGroup& group);
+    void setParameters(const AudioProcessorParameterGroup* group);
 
     void addPort(AudioProcessor::Bus* bus, bool isInput){
         auto p = isInput ?
@@ -506,7 +528,7 @@ private:
     Component* currentParent = nullptr;
     EffectDragData dragData;
 
-    AudioProcessorParameterGroup parameters; // dum dum dum
+    const AudioProcessorParameterGroup* parameters; // dum dum dum
 
     //============================================================================
     // GUI auto stuff

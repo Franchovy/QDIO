@@ -150,6 +150,19 @@ private:
                     auto e = createEffect(event, node);
                     addEffect(event, e);
                 }));
+        m.addItem("Delay Effect", std::function<void()>(
+                [=](){
+                    auto node = processorGraph->addNode(std::make_unique<DelayEffect>());
+                    node->getProcessor()->setPlayConfigDetails(
+                                processorGraph->getMainBusNumInputChannels(),
+                                processorGraph->getMainBusNumOutputChannels(),
+                                processorGraph->getSampleRate(),
+                                processorGraph->getBlockSize()
+                            );
+                    auto e = createEffect(event, node);
+                    addEffect(event, e);
+                }
+                ));
         return m;
     }
 
