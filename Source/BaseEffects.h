@@ -117,50 +117,45 @@ class DelayEffect : public BaseEffect, public Timer
 public:
     DelayEffect() : BaseEffect(),
                     delay("delay", "Delay",
-                          NormalisableRange<float>(0, 2.f, 0.05, 0.5f), 0.1f)
+                          NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f)
     {
         name = "Delay Effect";
         addParameter(&delay);
         delay.addListener(&parameterListener);
-        parameterListener.parameters.add(&newDelayBufferSize);
+        //parameterListener.parameters.add(&delayVal);
         startTimer(1000);
     }
-
 
     /**
      * Use this to asynchronously update the buffer size
      */
     void timerCallback() override {
-
-
-        std::cout << "Timer callback" << newLine;
-        newDelayBufferSize = delay.get() * currentSampleRate;
+        newDelayBufferSize = ceil(delay.get() * currentSampleRate );
         if (newDelayBufferSize != delayBufferSize){
-            std::cout << "Updating buffer size!" << newLine;
+            std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
+
 
             delayBuffer.setSize(jmin(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
                                 newDelayBufferSize, true, true, true);
             if (delayBufferPt > newDelayBufferSize){
-                delayBufferPt = newDelayBufferSize;
+                delayBufferPt = 1;
             }
-
             delayBuffer.clear();
+
             delayBufferSize = newDelayBufferSize;
         }
         startTimer(500);
     }
 
-
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override {
         currentSampleRate = sampleRate;
-        delayBufferSize = delay.get() * sampleRate;
-        delayBufferPt = 0;
 
-        delayBuffer.setSize(jmin(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
+        delayBufferSize = ceil( delay.get() * sampleRate );
+        delayBufferPt = 1;
+
+        delayBuffer.setSize(jmax(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
                 delayBufferSize, true, false, true);
         delayBuffer.clear();
-
-        std::cout << getName() << ": prepare to play" << newLine;
     }
 
     void releaseResources() override {
@@ -168,6 +163,9 @@ public:
     }
 
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override {
+        if (delayBufferSize == 0)
+            return;
+
         auto totalNumInputChannels  = getTotalNumInputChannels();
         auto totalNumOutputChannels = getTotalNumOutputChannels();
         auto numSamples = buffer.getNumSamples();
@@ -178,7 +176,7 @@ public:
             if (channel == totalNumInputChannels - 1) {
                 resetState = true;
             }
-            //TODO change this into delay instead of echo.
+
             if (delayBufferPt + numSamples > delayBufferSize) {
                 auto firstHalfSize = delayBufferSize - delayBufferPt;
                 auto secondHalfSize = numSamples - firstHalfSize;
@@ -188,6 +186,9 @@ public:
                 // Copy over to delayBuffer
                 delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, firstHalfSize);
                 delayBuffer.copyFrom(channel, 0, buffer, channel, firstHalfSize, secondHalfSize);
+                // Apply gain to echo buffer
+                delayBuffer.applyGain(delayBufferPt, firstHalfSize, 0.9);
+                delayBuffer.applyGain(channel, 0, secondHalfSize, 0.9);
                 // Set new delayBufferPt if this is the last channel
                 if (resetState)
                     delayBufferPt = numSamples - firstHalfSize;
@@ -196,6 +197,8 @@ public:
                 buffer.addFrom(channel, 0, delayBuffer, channel, delayBufferPt, numSamples);
                 // Copy to echo buffer
                 delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, numSamples);
+                // Apply gain to echo buffer
+                delayBuffer.applyGain(channel, delayBufferPt, numSamples, 0.9);
                 // Set new delayBufferPt if this is the last channel
                 if (resetState)
                     delayBufferPt += numSamples;
@@ -209,7 +212,9 @@ private:
     AudioBuffer<float> delayBuffer;
 
     double currentSampleRate;
-    float delayBufferSize;
-    std::atomic<float> newDelayBufferSize;
+    int delayBufferSize;
+    int newDelayBufferSize;
     int delayBufferPt;
+
+    std::atomic<float> delayVal;
 };

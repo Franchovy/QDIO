@@ -421,7 +421,6 @@ public:
 
     void sliderValueChanged(Slider *slider) override {
         linkedParameter->setValue(slider->getValueObject().getValue());
-        std::cout << "New value: " << linkedParameter->getValue() << newLine;
     }
 
     void sliderDragStarted(Slider *slider) override {

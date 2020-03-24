@@ -385,6 +385,11 @@ void GUIEffect::setParameters(const AudioProcessorParameterGroup *group) {
             // add float parameter
             std::cout << "Adding slider for float param" << newLine;
             Slider* slider = new Slider();
+
+            auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
+
+            slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
+                    paramRange.interval, paramRange.skew));
             SliderListener* listener = new SliderListener(param);
             slider->addListener(listener);
             slider->setName("Slider");
