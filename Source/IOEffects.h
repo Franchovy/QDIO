@@ -9,3 +9,30 @@
 */
 
 #pragma once
+#include <JuceHeader.h>
+
+class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
+{
+public:
+    InputDeviceEffect() : AudioGraphIOProcessor(AudioGraphIOProcessor::audioInputNode){
+
+    }
+
+    const String getName() const override { return name; }
+
+private:
+    const String name = "Audio Device Input";
+};
+
+class OutputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
+{
+public:
+    OutputDeviceEffect() : AudioGraphIOProcessor(AudioGraphIOProcessor::audioOutputNode){
+
+    }
+
+    const String getName() const override { return name; }
+private:
+    const String name = "Audio Device Output";
+};
+

@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 
 #include "Effector.h"
+#include "IOEffects.h"
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
@@ -138,13 +139,13 @@ private:
                 }));
         m.addItem("Input Effect", std::function<void()>(
                 [=]{
-                    auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
+                    auto node = processorGraph->addNode(std::make_unique<InputDeviceEffect>());
                     auto e = createEffect(event, node);
                     addEffect(event, e);
                 }));
         m.addItem("Output Effect", std::function<void()>(
                 [=]{
-                    auto node = processorGraph->addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
+                    auto node = processorGraph->addNode(std::make_unique<OutputDeviceEffect>());
                     auto e = createEffect(event, node);
                     addEffect(event, e);
                 }));
