@@ -412,6 +412,36 @@ private:
     Array<Component*> childComponents;
 };
 
+class ButtonListener : public Button::Listener
+{
+public:
+    ButtonListener(AudioProcessorParameter* parameter) : Button::Listener() {
+        linkedParameter = parameter;
+    }
+
+    void buttonClicked(Button *button) override {
+        linkedParameter->setValue(button->getToggleState());
+    }
+
+private:
+    AudioProcessorParameter* linkedParameter;
+};
+
+class ComboListener : public ComboBox::Listener
+{
+public:
+    ComboListener(AudioProcessorParameter* parameter) : ComboBox::Listener(){
+        linkedParameter = parameter;
+    }
+
+    void comboBoxChanged(ComboBox *comboBoxThatHasChanged) override {
+        linkedParameter->setValue(comboBoxThatHasChanged->getSelectedItemIndex());
+    }
+
+private:
+    AudioProcessorParameter* linkedParameter;
+};
+
 class SliderListener : public Slider::Listener
 {
 public:
@@ -476,6 +506,7 @@ public:
     ConnectionPort* checkPort(Point<int> pos);
 
     void setParameters(const AudioProcessorParameterGroup* group);
+    void addParameter(AudioProcessorParameter* param);
 
     void addPort(AudioProcessor::Bus* bus, bool isInput){
         auto p = isInput ?

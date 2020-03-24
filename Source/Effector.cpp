@@ -374,34 +374,62 @@ void GUIEffect::setEditMode(bool isEditMode) {
 void GUIEffect::setParameters(const AudioProcessorParameterGroup *group) {
     // Individual
     for (auto param : group->getParameters(false)) {
-        std::cout << "Adding param" << newLine;
-        if (param->isBoolean()) {
-            // add bool parameter
-        } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
-            // add combo parameter
-        } else if (param->isDiscrete()) {
-            // add int parameter
-        } else {
-            // add float parameter
-            std::cout << "Adding slider for float param" << newLine;
-            Slider* slider = new Slider();
-
-            auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
-
-            slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                    paramRange.interval, paramRange.skew));
-            SliderListener* listener = new SliderListener(param);
-            slider->addListener(listener);
-            slider->setName("Slider");
-            slider->setBounds(20, 50, 200, 40);
-
-            addAndMakeVisible(slider);
-            std::cout << "done" << newLine;
-        }
+        addParameter(param);
     }
-    std::cout << "Does slider still exist?" << newLine;
     for (auto c : getChildren())
         std::cout << c->getName() << newLine;
+}
+
+void GUIEffect::addParameter(AudioProcessorParameter *param) {
+    if (param->isBoolean()) {
+        // add bool parameter
+        ToggleButton* button = new ToggleButton();
+
+        ButtonListener* listener = new ButtonListener(param);
+        button->addListener(listener);
+        button->setName("Button");
+        button->setBounds(20,50, 100, 40);
+    } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
+        // add combo parameter
+        ComboBox* comboBox = new ComboBox();
+
+        for (auto s : param->getAllValueStrings())
+            comboBox->addItem(s, param->getAllValueStrings().indexOf(s));
+
+        ComboListener* listener = new ComboListener(param);
+
+        comboBox->addListener(listener);
+        comboBox->setName("ComboBox");
+        comboBox->setBounds(20, 50, 100, 40);
+
+        addAndMakeVisible(comboBox);
+    } else if (param->isDiscrete()) {
+        // add int parameter
+        Slider* slider = new Slider();
+        auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
+
+        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
+                                                               1, paramRange.skew));
+        SliderListener* listener = new SliderListener(param);
+        slider->addListener(listener);
+        slider->setName("Slider");
+        slider->setBounds(20, 50, 100, 40);
+
+        addAndMakeVisible(slider);
+    } else {
+        // add float parameter
+        Slider* slider = new Slider();
+        auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
+
+        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
+                                                               paramRange.interval, paramRange.skew));
+        SliderListener* listener = new SliderListener(param);
+        slider->addListener(listener);
+        slider->setName("Slider");
+        slider->setBounds(20, 50, 200, 40);
+
+        addAndMakeVisible(slider);
+    }
 }
 
 //==============================================================================
@@ -475,3 +503,5 @@ BEGIN_JUCER_METADATA
 END_JUCER_METADATA
 */
 #endif
+
+
