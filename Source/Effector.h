@@ -300,10 +300,10 @@ struct LineComponent : public Component
     void paint(Graphics &g) override {
         g.setColour(Colours::navajowhite);
         Path p;
-        p.addLineSegment(line.toFloat(),2);
-        PathStrokeType strokeType(2);
+        p.addLineSegment(line.toFloat(),1);
+        PathStrokeType strokeType(1);
 
-        float thiccness[] = {3, 5};
+        float thiccness[] = {5, 5};
         strokeType.createDashedStroke(p, p, thiccness, 2);
 
         g.strokePath(p, strokeType);
@@ -314,6 +314,7 @@ struct LineComponent : public Component
      * @param port2
      */
     void convert(ConnectionPort* port2);
+    void convert(InternalConnectionPort* iPort2);
 
     ConnectionLine::Ptr lastConnectionLine;
 
@@ -335,6 +336,7 @@ private:
     Line<int> line;
     Point<int> p1, p2;
     ConnectionPort* port1;
+    InternalConnectionPort* iPort1;
     ValueTree dragLineTree;
 };
 
@@ -596,7 +598,7 @@ public:
 
 private:
     bool individual = false;
-    bool editMode;
+    bool editMode = false;
     OwnedArray<ConnectionPort> inputPorts;
     OwnedArray<ConnectionPort> outputPorts;
     Label title;

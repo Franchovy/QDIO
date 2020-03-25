@@ -20,37 +20,32 @@ LineComponent* LineComponent::dragLine = nullptr;
  * @param event modified mouseEvent to use mainComponent coords.
  */
 void LineComponent::mouseDown(const MouseEvent &event) {
-    std::cout << "Down" << newLine;
+    auto thisEvent = event.getEventRelativeTo(this);
+
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)){
-        p1 = event.getEventRelativeTo(this).getPosition();
+        port1 = p;
+        p1 = getLocalPoint(p, p->centrePoint);
     } else if (auto p = dynamic_cast<InternalConnectionPort*>(event.originalComponent)){
-
-        p1 = event.getEventRelativeTo(this).getPosition();
+        p1 = getLocalPoint(p, p->centrePoint);
     }
-
-    p2 = event.getEventRelativeTo(this).getPosition();
+    p2 = thisEvent.getPosition();
 
     line.setStart(p1);
     line.setEnd(p2);
-    //setBounds(Rectangle<int>(p1, p2));
+
     setVisible(true);
     repaint();
-    //p2 = event.getPosition().toFloat();
-    //Component::mouseDown(event);
 }
 
 void LineComponent::mouseDrag(const MouseEvent &event) {
-    p2 = event.getEventRelativeTo(this).getPosition();
+    auto thisEvent = event.getEventRelativeTo(this);
+    p2 = thisEvent.getPosition();
 
     line.setEnd(p2);
     repaint();
 
-
     // Pass hover detection to MainComponent
-    auto eventMain = event.getEventRelativeTo(this).withNewPosition(
-            event.getPosition() - getPosition()
-            );
-    getParentComponent()->mouseDrag(eventMain);
+    getParentComponent()->mouseDrag(thisEvent);
 }
 
 void LineComponent::mouseUp(const MouseEvent &event) {
@@ -62,20 +57,27 @@ void LineComponent::mouseUp(const MouseEvent &event) {
     );
     getParentComponent()->mouseUp(eventMain);
 
-
-    //setVisible(false);
 }
 
 void LineComponent::convert(ConnectionPort *port2) {
-    if (port2->isInput ^ port1->isInput
-            || dynamic_cast<GUIEffect*>(port1->getParentComponent())->isInEditMode()
-            || dynamic_cast<GUIEffect*>(port2->getParentComponent())->isInEditMode())
-    {
-        lastConnectionLine = new ConnectionLine(*port1, *port2);
+    if (port1 != nullptr) {
+        // Connect port1 to port2
+        if (port2->isInput ^ port1->isInput)
+        {
+            lastConnectionLine = new ConnectionLine(*port1, *port2);
 
-        // This calls the propertyChange update in MainComponent
-        dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
+            // This calls the propertyChange update in MainComponent
+            dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
+        }
+    } else if (iPort1 != nullptr) {
+        // Connect internal port1 to port2
+
     }
+
+}
+
+void LineComponent::convert(InternalConnectionPort *iPort2) {
+
 }
 
 //==============================================================================
@@ -341,11 +343,15 @@ void GUIEffect::parentHierarchyChanged() {
 ConnectionPort *GUIEffect::checkPort(Point<int> pos) {
     for (auto p : inputPorts)
         if (p->getBoundsInParent().contains(pos)) {
+            if (p->internalPort.contains(getLocalPoint(this, pos)))
+                std::cout << "Internal port connect" << newLine;
             return p;
         }
 
     for (auto p : outputPorts)
         if (p->getBoundsInParent().contains(pos)) {
+            if (p->internalPort.contains(getLocalPoint(this, pos)))
+                std::cout << "Internal port connect" << newLine;
             return p;
         }
 
@@ -443,19 +449,15 @@ void GUIEffect::addParameter(AudioProcessorParameter *param) {
 // InternalConnectionPort methods
 
 void InternalConnectionPort::mouseDown(const MouseEvent &event) {
-    auto newEvent = event.getEventRelativeTo(getParentComponent()->getParentComponent());
-
-    LineComponent::getDragLine()->mouseDown(newEvent);//->start(this, getMainCentrePos(), event.getPosition() - getPosition());
+    LineComponent::getDragLine()->mouseDown(event);
 }
 
 void InternalConnectionPort::mouseDrag(const MouseEvent &event) {
-    auto newEvent = event.getEventRelativeTo(getParentComponent()->getParentComponent());
-    LineComponent::getDragLine()->mouseDrag(newEvent);//->drag(event.getPosition());
+    LineComponent::getDragLine()->mouseDrag(event);
 }
 
 void InternalConnectionPort::mouseUp(const MouseEvent &event) {
-    auto newEvent = event.getEventRelativeTo(getParentComponent()->getParentComponent());
-    LineComponent::getDragLine()->mouseUp(newEvent);
+    LineComponent::getDragLine()->mouseUp(event);
 }
 
 
@@ -471,19 +473,14 @@ void ConnectionPort::connect(ConnectionPort &otherPort) {
 }
 
 void ConnectionPort::mouseDown(const MouseEvent &event) {
-    //auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
-
-    LineComponent::getDragLine()->mouseDown(event);//->start(this, getMainCentrePos(), event.getPosition() - getPosition());
+    LineComponent::getDragLine()->mouseDown(event);
 }
 
 void ConnectionPort::mouseDrag(const MouseEvent &event) {
-    //auto newEvent = event.getEventRelativeTo(getTopLevelComponent());
-    //.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
-    LineComponent::getDragLine()->mouseDrag(event);//->drag(event.getPosition());
+    LineComponent::getDragLine()->mouseDrag(event);
 }
 
 void ConnectionPort::mouseUp(const MouseEvent &event) {
-    //auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
     LineComponent::getDragLine()->mouseUp(event);
 }
 
@@ -514,7 +511,7 @@ ConnectionPort::ConnectionPort(bool isInput) {
     } else {
         hoverBox = Rectangle<int>(30,0,60,60);
         outline = Rectangle<int>(50, 20, 20, 20);
-        centrePoint = Point<int>(50,30);
+        centrePoint = Point<int>(60,30);
         setBounds(0,0,90, 60);
     }
 

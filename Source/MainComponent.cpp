@@ -123,18 +123,21 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.dragLasso(event);
     if (event.mods.isLeftButtonDown()) {
+        // Line drag
         if (dynamic_cast<LineComponent*>(event.eventComponent)) {
 
             // Get port to connect to if there is (passing original port parent as componentToIgnore
             auto connectPort = portToConnectTo(event.originalComponent->getParentComponent(),
-                    event.getPosition(), effectsTree);
+                    event.getEventRelativeTo(this).getPosition(), effectsTree);
 
             if (connectPort != nullptr)
                 setHoverComponent(connectPort);
             else
                 setHoverComponent(nullptr);
 
-        } else if (auto *effect = dynamic_cast<GUIEffect *>(event.eventComponent)){
+        }
+        // Effect drag
+        else if (auto *effect = dynamic_cast<GUIEffect *>(event.eventComponent)){
             auto newParent = effectToMoveTo(effect,
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
 
@@ -143,7 +146,6 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
             else
                 setHoverComponent(nullptr);
         }
-
     }
 }
 
@@ -412,16 +414,17 @@ Component *MainComponent::portToConnectTo(Component *componentToIgnore, Point<in
             && e_gui->getBoundsInParent().contains(point)
             && e_gui != componentToIgnore)
         {
-            auto relativePos = point - e_gui->getPosition();
+            auto relativePos = point - e_gui->getPosition(); //TODO what compontent to what??
 
             // Check if there's a match in the children (sending child component coordinates)
             if (auto p = portToConnectTo(componentToIgnore,
                                         relativePos, effectTree.getChild(i)))
                 // e != nullptr then the result is returned - corresponding to match in child effect.
                 return p;
-            else if (auto p = e_gui->checkPort(relativePos))
+            else if (auto p = e_gui->checkPort(relativePos)) {
                 // Returns the match if found.
                 return p;
+            }
         }
     }
 
