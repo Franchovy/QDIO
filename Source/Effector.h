@@ -121,33 +121,62 @@ private:
     float dashLengths[2] = {1.f, 1.f};
 };
 
-struct ConnectionPort : public Component
+class InternalConnectionPort : public Component
 {
-    ConnectionPort(bool isInput) : rectangle(20,20)
-    {
-        setBounds(rectangle.expanded(20));
-        centrePoint = Point<int>(getWidth()/2, getHeight()/2);
-        this->isInput = isInput;
+public:
+    InternalConnectionPort() : Component(){
+
+        hoverBox = Rectangle<int>(0,0,30,30);
+        outline = Rectangle<int>(10,10,10,10);
+        centrePoint = Point<int>(15,15);
+        setBounds(0,0,30, 30);
     }
 
-    void paint(Graphics &g) override
-    {
+    void paint(Graphics &g) override {
         g.setColour(Colours::black);
         //rectangle.setPosition(10,10);
-        g.drawRect(rectangle.withPosition(20,20),2);
+        g.drawRect(outline,2);
 
         // Hover rectangle
         g.setColour(Colours::blue);
-        Path hoverRectangle;
-        hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
+        Path path;
+        path.addRoundedRectangle(hoverBox, 10, 10);
         PathStrokeType strokeType(3);
 
         if (hoverMode) {
-            float thiccness[] = {5, 7};
-            strokeType.createDashedStroke(hoverRectangle, hoverRectangle, thiccness, 2);
-            g.strokePath(hoverRectangle, strokeType);
+            float thiccness[] = {2, 3};
+            strokeType.createDashedStroke(path, path, thiccness, 2);
+            g.strokePath(path, strokeType);
         }
     }
+
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
+
+    void mouseEnter(const MouseEvent &event) override {
+        hoverMode = true;
+        repaint();
+    }
+
+    void mouseExit(const MouseEvent &event) override {
+        hoverMode = false;
+        repaint();
+    }
+    Point<int> centrePoint;
+
+    bool hoverMode = false;
+    Rectangle<int> hoverBox;
+    Rectangle<int> outline;
+};
+
+struct ConnectionPort : public Component
+{
+    ConnectionPort(bool isInput);
+
+    void paint(Graphics &g) override;
 
     void connect(ConnectionPort& otherPort);
 
@@ -156,6 +185,10 @@ struct ConnectionPort : public Component
     void mouseDrag(const MouseEvent &event) override;
 
     void mouseUp(const MouseEvent &event) override;
+
+    void setEditMode(bool editMode) {
+        internalPort.setVisible(editMode);
+    }
 
 /**
      * @return Position of parent relative to maincomponent
@@ -184,21 +217,28 @@ struct ConnectionPort : public Component
     }
 
     void mouseEnter(const MouseEvent &event) override {
-        hoverMode = true;
+        if (hoverBox.contains(event.getPosition()))
+            hoverMode = true;
         repaint();
     }
 
     void mouseExit(const MouseEvent &event) override {
-        hoverMode = false;
+        if (!hoverBox.contains(event.getPosition()))
+            hoverMode = false;
         repaint();
     }
+
+    Rectangle<int> outline;
+    Rectangle<int> hoverBox;
 
     bool isInput;
     ConnectionLine* line = nullptr;
     Point<int> centrePoint;
-    Rectangle<int> rectangle;
     AudioProcessor::Bus* bus;
     bool hoverMode = false;
+
+    InternalConnectionPort internalPort;
+
 };
 
 struct ConnectionLine : public Component, public ComponentListener, public ReferenceCountedObject
@@ -258,7 +298,15 @@ struct LineComponent : public Component
     }
 
     void paint(Graphics &g) override {
-        g.drawLine(line.toFloat());
+        g.setColour(Colours::navajowhite);
+        Path p;
+        p.addLineSegment(line.toFloat(),2);
+        PathStrokeType strokeType(2);
+
+        float thiccness[] = {3, 5};
+        strokeType.createDashedStroke(p, p, thiccness, 2);
+
+        g.strokePath(p, strokeType);
     }
 
     /**
@@ -517,6 +565,7 @@ public:
                 inputPorts.add(std::make_unique<ConnectionPort>(isInput)) :
                 outputPorts.add(std::make_unique<ConnectionPort>(isInput));
         p->bus = bus;
+        p->setEditMode(editMode);
         addAndMakeVisible(p);
     }
 

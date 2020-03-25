@@ -21,9 +21,14 @@ LineComponent* LineComponent::dragLine = nullptr;
  */
 void LineComponent::mouseDown(const MouseEvent &event) {
     std::cout << "Down" << newLine;
-    port1 = dynamic_cast<ConnectionPort*>(event.originalComponent);
-    p1 = port1->getMainCentrePos();
-    p2 = event.getPosition();
+    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)){
+        p1 = event.getEventRelativeTo(this).getPosition();
+    } else if (auto p = dynamic_cast<InternalConnectionPort*>(event.originalComponent)){
+
+        p1 = event.getEventRelativeTo(this).getPosition();
+    }
+
+    p2 = event.getEventRelativeTo(this).getPosition();
 
     line.setStart(p1);
     line.setEnd(p2);
@@ -35,7 +40,7 @@ void LineComponent::mouseDown(const MouseEvent &event) {
 }
 
 void LineComponent::mouseDrag(const MouseEvent &event) {
-    p2 = event.getPosition();
+    p2 = event.getEventRelativeTo(this).getPosition();
 
     line.setEnd(p2);
     repaint();
@@ -435,6 +440,25 @@ void GUIEffect::addParameter(AudioProcessorParameter *param) {
 }
 
 //==============================================================================
+// InternalConnectionPort methods
+
+void InternalConnectionPort::mouseDown(const MouseEvent &event) {
+    auto newEvent = event.getEventRelativeTo(getParentComponent()->getParentComponent());
+
+    LineComponent::getDragLine()->mouseDown(newEvent);//->start(this, getMainCentrePos(), event.getPosition() - getPosition());
+}
+
+void InternalConnectionPort::mouseDrag(const MouseEvent &event) {
+    auto newEvent = event.getEventRelativeTo(getParentComponent()->getParentComponent());
+    LineComponent::getDragLine()->mouseDrag(newEvent);//->drag(event.getPosition());
+}
+
+void InternalConnectionPort::mouseUp(const MouseEvent &event) {
+    auto newEvent = event.getEventRelativeTo(getParentComponent()->getParentComponent());
+    LineComponent::getDragLine()->mouseUp(newEvent);
+}
+
+
 // ConnectionPort methods
 
 void ConnectionPort::connect(ConnectionPort &otherPort) {
@@ -447,19 +471,60 @@ void ConnectionPort::connect(ConnectionPort &otherPort) {
 }
 
 void ConnectionPort::mouseDown(const MouseEvent &event) {
-    auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
+    //auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
 
-    LineComponent::getDragLine()->mouseDown(newEvent);//->start(this, getMainCentrePos(), event.getPosition() - getPosition());
+    LineComponent::getDragLine()->mouseDown(event);//->start(this, getMainCentrePos(), event.getPosition() - getPosition());
 }
 
 void ConnectionPort::mouseDrag(const MouseEvent &event) {
-    auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
-    LineComponent::getDragLine()->mouseDrag(newEvent);//->drag(event.getPosition());
+    //auto newEvent = event.getEventRelativeTo(getTopLevelComponent());
+    //.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
+    LineComponent::getDragLine()->mouseDrag(event);//->drag(event.getPosition());
 }
 
 void ConnectionPort::mouseUp(const MouseEvent &event) {
-    auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
-    LineComponent::getDragLine()->mouseUp(newEvent);
+    //auto newEvent = event.withNewPosition(event.getPosition() + getMainParentPos() + getPosition());
+    LineComponent::getDragLine()->mouseUp(event);
+}
+
+void ConnectionPort::paint(Graphics &g) {
+    g.setColour(Colours::black);
+    //rectangle.setPosition(10,10);
+    g.drawRect(outline,2);
+
+    // Hover rectangle
+    g.setColour(Colours::blue);
+    Path drawPath;
+    drawPath.addRoundedRectangle(hoverBox, 10, 10);
+    PathStrokeType strokeType(3);
+
+    if (hoverMode) {
+        float thiccness[] = {5, 7};
+        strokeType.createDashedStroke(drawPath, drawPath, thiccness, 2);
+        g.strokePath(drawPath, strokeType);
+    }
+}
+
+ConnectionPort::ConnectionPort(bool isInput) {
+    if (isInput){
+        hoverBox = Rectangle<int>(0,0,60,60);
+        outline = Rectangle<int>(20, 20, 20, 20);
+        centrePoint = Point<int>(30,30);
+        setBounds(0,0,90, 60);
+    } else {
+        hoverBox = Rectangle<int>(30,0,60,60);
+        outline = Rectangle<int>(50, 20, 20, 20);
+        centrePoint = Point<int>(50,30);
+        setBounds(0,0,90, 60);
+    }
+
+    addChildComponent(internalPort);
+    if (isInput)
+        internalPort.setCentrePosition(centrePoint + Point<int>(40,0));
+    else
+        internalPort.setCentrePosition(centrePoint + Point<int>(-40,0));
+
+    this->isInput = isInput;
 }
 
 
