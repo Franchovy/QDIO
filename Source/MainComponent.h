@@ -122,11 +122,6 @@ private:
     Component* portToConnectTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
 
 private:
-/*
-    void itemSelected(Component*) override;
-    void itemDeselected(Component*) override;
-*/
-
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
@@ -184,10 +179,11 @@ private:
         newParent.appendChild(childEffect->getTree(), nullptr);
     }
 
-    /**
-     * Empty
-     */
     EffectVT::Ptr createEffect(const MouseEvent &event, AudioProcessorGraph::Node::Ptr node = nullptr);
+
+    //==============================================================================
+    // Connections
+    ReferenceCountedArray<ConnectionLine> connections;
 
     //==============================================================================
     // Audio shit

@@ -126,6 +126,7 @@ struct ConnectionPort : public Component
     ConnectionPort(bool isInput) : rectangle(20,20)
     {
         setBounds(rectangle.expanded(20));
+        centrePoint = Point<int>(getWidth()/2, getHeight()/2);
         this->isInput = isInput;
     }
 
@@ -156,7 +157,7 @@ struct ConnectionPort : public Component
 
     void mouseUp(const MouseEvent &event) override;
 
-    /**
+/**
      * @return Position of parent relative to maincomponent
      */
     Point<int> getMainParentPos(){
@@ -169,17 +170,18 @@ struct ConnectionPort : public Component
         return pos;
     }
 
-    /**
+
+
+/**
      * @return centre position relative to maincomponent
      */
+
     Point<int> getMainCentrePos(){
         auto pos = getMainParentPos();
         pos += getPosition();
         pos += Point<int>(getWidth()/2, getHeight()/2);
         return pos;
     }
-
-    void moved() override;
 
     void mouseEnter(const MouseEvent &event) override {
         hoverMode = true;
@@ -193,14 +195,17 @@ struct ConnectionPort : public Component
 
     bool isInput;
     ConnectionLine* line = nullptr;
+    Point<int> centrePoint;
     Rectangle<int> rectangle;
     AudioProcessor::Bus* bus;
     bool hoverMode = false;
 };
 
-struct ConnectionLine : public Component, public ReferenceCountedObject
+struct ConnectionLine : public Component, public ComponentListener, public ReferenceCountedObject
 {
     using Ptr = ReferenceCountedObjectPtr<ConnectionLine>;
+
+    void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
     ConnectionLine(ConnectionPort& p1, ConnectionPort& p2){
         if (p1.isInput) {
@@ -213,21 +218,18 @@ struct ConnectionLine : public Component, public ReferenceCountedObject
         inPort->line = this;
         outPort->line = this;
 
-        line = Line<float>(inPort->getMainCentrePos().toFloat(),outPort->getMainCentrePos().toFloat());
-        setBounds(0,0,getParentWidth(),getParentHeight());
-    }
+        line = Line<int>(inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint,
+                outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint);
 
-    void move(bool isInput, Point<float> newPoint){
-        if (isInput)
-            line.setStart(inPort->getMainCentrePos().toFloat());
-        else
-            line.setEnd(outPort->getMainCentrePos().toFloat());
-        repaint();
+        inPort->getParentComponent()->addComponentListener(this);
+        outPort->getParentComponent()->addComponentListener(this);
+
+        setBounds(0,0,getParentWidth(),getParentHeight());
     }
 
     void paint(Graphics &g) override
     {
-        g.drawLine(line,2);
+        g.drawLine(line.toFloat(),2);
     }
 
     ~ConnectionLine() override {
@@ -239,7 +241,7 @@ struct ConnectionLine : public Component, public ReferenceCountedObject
     ConnectionPort* outPort;
 
 private:
-    Line<float> line;
+    Line<int> line;
 };
 
 
@@ -259,9 +261,11 @@ struct LineComponent : public Component
         g.drawLine(line.toFloat());
     }
 
-    ConnectionLine::Ptr convert(ConnectionPort* p2){
-        return new ConnectionLine(*port1, *p2);
-    }
+    /**
+     * Updates dragLineTree connection property if connection is successful
+     * @param port2
+     */
+    void convert(ConnectionPort* port2);
 
     ConnectionLine::Ptr lastConnectionLine;
 
@@ -660,7 +664,11 @@ public:
         std::cout << "Is this still being called?" << newLine;
         effect->getTree().getParent().removeChild(effect->getTree(), nullptr);
         effectTree.appendChild(effect->getTree(), nullptr);
+    }
 
+    void addConnection(ConnectionLine* connection) {
+        connections.add(connection);
+        guiEffect.addAndMakeVisible(connection);
     }
 
     // =================================================================================
@@ -694,6 +702,8 @@ private:
     bool isIndividual = false;
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
+
+    ReferenceCountedArray<ConnectionLine> connections;
 
     String name;
     ValueTree effectTree;

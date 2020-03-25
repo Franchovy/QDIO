@@ -152,9 +152,8 @@ void MainComponent::mouseUp(const MouseEvent &event) {
         lasso.endLasso();
 
     if (event.mods.isLeftButtonDown()) {
-        // Is the component an effect?
+        // If the component is an effect, respond to move effect event
         if (GUIEffect* effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
-
             if (event.getDistanceFromDragStart() < 10) {
                 // Consider this a click and not a drag
                 selected.addToSelection(event.eventComponent);
@@ -171,6 +170,14 @@ void MainComponent::mouseUp(const MouseEvent &event) {
             // target is not in edit mode
             if (effect->getParentComponent() != newParent) {
                 addEffect(event.getEventRelativeTo(newParent), effect->EVT);
+            }
+        }
+        // If component is LineComponent, respond to line drag event
+        else if (auto l = dynamic_cast<LineComponent*>(event.eventComponent)){
+            auto port = dynamic_cast<ConnectionPort*>(hoverComponent);
+
+            if (port) {
+                l->convert(port);
             }
         }
     }
@@ -232,7 +239,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
         // Add connection
         auto line = dynamic_cast<ConnectionLine*>(treeWhosePropertyHasChanged.getPropertyPointer(property)->getObject());
-        addAndMakeVisible(line);
+        std::cout << line << newLine;
         line->setInterceptsMouseClicks(0,0);
         auto outputPort = line->inPort;
         auto inputPort = line->outPort;
@@ -242,15 +249,44 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
         auto output = dynamic_cast<GUIEffect*>(outputPort->getParentComponent())->EVT;
         auto input = dynamic_cast<GUIEffect*>(inputPort->getParentComponent())->EVT;
 
-        //TODO Instead, connect EffectVTs and let connectAudioNodes() do the AudioGraph stuff
+        // Check if this is an internal connection (in edit mode)
+        if (input->getGUIEffect()->isInEditMode() || output->getGUIEffect()->isInEditMode()) {
+            // Set edit mode effect as parent of line
+            if (output->getTree().isAChildOf(input->getTree()))
+                input->addConnection(line);
+            else if (input->getTree().isAChildOf(output->getTree()))
+                output->addConnection(line);
+
+            // Leave audio alone
+            return;
+        }
+
+        // Check for common parent
+        auto parentToCheck = input->getTree();
+        while (!parentToCheck.hasType(ID_TREE_TOP)) {
+            if (output->getTree().isAChildOf(parentToCheck)) {
+                // assign connection to this parent
+                auto evt = dynamic_cast<EffectVT *>(parentToCheck.getProperty(ID_EVT_OBJECT).getObject());
+                evt->addConnection(line);
+                break;
+            } else {
+                parentToCheck = parentToCheck.getParent();
+            }
+        }
+        if (parentToCheck.hasType(ID_TREE_TOP)) {
+            // Assign connection to main component
+            connections.add(line);
+            addAndMakeVisible(line);
+        }
+
+        // Call audiograph update
+
+        //TODO move dis to audiograph update
         // Add audiograph connection
         for (int c = 0; c < jmin(inputPort->bus->getNumberOfChannels(), outputPort->bus->getNumberOfChannels()); c++) {
-            if (processorGraph->addConnection(
+            processorGraph->addConnection(
                     {{input->getNode()->nodeID, inputPort->bus->getChannelIndexInProcessBlockBuffer(c)},
-                     {output->getNode()->nodeID, outputPort->bus->getChannelIndexInProcessBlockBuffer(c)}}))
-                std::cout << "Successful connection" << newLine;
-            else
-                std::cout << "Unsuccessful connection" << newLine;
+                     {output->getNode()->nodeID, outputPort->bus->getChannelIndexInProcessBlockBuffer(c)}});
         }
     }
 

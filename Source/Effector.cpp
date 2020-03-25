@@ -50,25 +50,27 @@ void LineComponent::mouseDrag(const MouseEvent &event) {
 
 void LineComponent::mouseUp(const MouseEvent &event) {
     setVisible(false);
-    auto c = getParentComponent()->getComponentAt(event.getPosition());
-    auto port = dynamic_cast<ConnectionPort*>(c);
 
-    if (port){
-        // If mouseup is over port
-        if (port->isInput ^ port1->isInput){
-            std::cout << "Port1: " << port1->isInput << newLine;
-            std::cout << "Port2: " << port->isInput << newLine;
+    // Pass this event to MainComponent
+    auto eventMain = event.getEventRelativeTo(this).withNewPosition(
+            event.getPosition() - getPosition()
+    );
+    getParentComponent()->mouseUp(eventMain);
 
-            lastConnectionLine = convert(port);
-            // This calls the propertyChange update in MainComponent
-            dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
-        } else {
-            std::cout << "Connected wrong port types" << newLine;
-        }
-    } else {
-        std::cout << "No connection made" << newLine;
-    }
+
     //setVisible(false);
+}
+
+void LineComponent::convert(ConnectionPort *port2) {
+    if (port2->isInput ^ port1->isInput
+            || dynamic_cast<GUIEffect*>(port1->getParentComponent())->isInEditMode()
+            || dynamic_cast<GUIEffect*>(port2->getParentComponent())->isInEditMode())
+    {
+        lastConnectionLine = new ConnectionLine(*port1, *port2);
+
+        // This calls the propertyChange update in MainComponent
+        dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
+    }
 }
 
 //==============================================================================
@@ -460,12 +462,6 @@ void ConnectionPort::mouseUp(const MouseEvent &event) {
     LineComponent::getDragLine()->mouseUp(newEvent);
 }
 
-void ConnectionPort::moved() {
-    if (line != nullptr){
-        line->move(isInput, getPosition().toFloat());
-    }
-    Component::moved();
-}
 
 // ==============================================================================
 // Resizer methods
@@ -505,3 +501,11 @@ END_JUCER_METADATA
 #endif
 
 
+void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
+    if (inPort->getParentComponent() == &component){
+        line.setStart(component.getPosition() + inPort->getPosition() + inPort->centrePoint);
+    } else if (outPort->getParentComponent() == &component) {
+        line.setEnd(component.getPosition() + outPort->getPosition() + outPort->centrePoint);
+    }
+    repaint();
+}
