@@ -130,42 +130,7 @@ public:
     Point<int> centrePoint;
     bool hoverMode = false;
 
-
-protected:
-    ConnectionPort() : Component() {}
-
-    Rectangle<int> hoverBox;
-    Rectangle<int> outline;
-};
-
-class InternalConnectionPort : public ConnectionPort
-{
-public:
-    InternalConnectionPort() : ConnectionPort(){
-
-        hoverBox = Rectangle<int>(0,0,30,30);
-        outline = Rectangle<int>(10,10,10,10);
-        centrePoint = Point<int>(15,15);
-        setBounds(0,0,30, 30);
-    }
-
-    void paint(Graphics &g) override {
-        g.setColour(Colours::black);
-        //rectangle.setPosition(10,10);
-        g.drawRect(outline,2);
-
-        // Hover rectangle
-        g.setColour(Colours::blue);
-        Path path;
-        path.addRoundedRectangle(hoverBox, 10, 10);
-        PathStrokeType strokeType(3);
-
-        if (hoverMode) {
-            float thiccness[] = {2, 3};
-            strokeType.createDashedStroke(path, path, thiccness, 2);
-            g.strokePath(path, strokeType);
-        }
-    }
+    void paint(Graphics &g) override;
 
     void mouseDown(const MouseEvent &event) override;
 
@@ -183,6 +148,23 @@ public:
         repaint();
     }
 
+protected:
+    ConnectionPort() : Component() {}
+
+    Rectangle<int> hoverBox;
+    Rectangle<int> outline;
+};
+
+class InternalConnectionPort : public ConnectionPort
+{
+public:
+    InternalConnectionPort() : ConnectionPort(){
+        hoverBox = Rectangle<int>(0,0,30,30);
+        outline = Rectangle<int>(10,10,10,10);
+        centrePoint = Point<int>(15,15);
+        setBounds(0,0,30, 30);
+    }
+
 };
 
 class AudioPort : public ConnectionPort
@@ -190,30 +172,18 @@ class AudioPort : public ConnectionPort
 public:
     AudioPort(bool isInput);
 
-    void paint(Graphics &g) override;
-
-    void connect(AudioPort& otherPort);
-
-    void mouseDown(const MouseEvent &event) override;
-
-    void mouseDrag(const MouseEvent &event) override;
-
-    void mouseUp(const MouseEvent &event) override;
-
     void setEditMode(bool editMode) {
         internalPort.setVisible(editMode);
     }
 
     void mouseEnter(const MouseEvent &event) override {
         if (hoverBox.contains(event.getPosition()))
-            hoverMode = true;
-        repaint();
+            ConnectionPort::mouseEnter(event);
     }
 
     void mouseExit(const MouseEvent &event) override {
         if (!hoverBox.contains(event.getPosition()))
-            hoverMode = false;
-        repaint();
+            ConnectionPort::mouseExit(event);
     }
 
     bool isInput;

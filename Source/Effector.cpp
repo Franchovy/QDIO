@@ -448,59 +448,10 @@ void GUIEffect::addParameter(AudioProcessorParameter *param) {
 //==============================================================================
 // InternalConnectionPort methods
 
-void InternalConnectionPort::mouseDown(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseDown(event);
-}
 
-void InternalConnectionPort::mouseDrag(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseDrag(event);
-}
-
-void InternalConnectionPort::mouseUp(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseUp(event);
-}
 
 
 // AudioPort methods
-
-void AudioPort::connect(AudioPort &otherPort) {
-    if (otherPort.isInput ^ isInput){
-        // Ports isInput are of different values
-        new ConnectionLine(*this, otherPort);
-    } else {
-
-    }
-}
-
-void AudioPort::mouseDown(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseDown(event);
-}
-
-void AudioPort::mouseDrag(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseDrag(event);
-}
-
-void AudioPort::mouseUp(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseUp(event);
-}
-
-void AudioPort::paint(Graphics &g) {
-    g.setColour(Colours::black);
-    //rectangle.setPosition(10,10);
-    g.drawRect(outline,2);
-
-    // Hover rectangle
-    g.setColour(Colours::blue);
-    Path drawPath;
-    drawPath.addRoundedRectangle(hoverBox, 10, 10);
-    PathStrokeType strokeType(3);
-
-    if (hoverMode) {
-        float thiccness[] = {5, 7};
-        strokeType.createDashedStroke(drawPath, drawPath, thiccness, 2);
-        g.strokePath(drawPath, strokeType);
-    }
-}
 
 AudioPort::AudioPort(bool isInput) : ConnectionPort() {
     if (isInput){
@@ -570,4 +521,35 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
         line.setEnd(component.getPosition() + outPort->getPosition() + outPort->centrePoint);
     }
     repaint();
+}
+
+void ConnectionPort::mouseDown(const MouseEvent &event) {
+    LineComponent::getDragLine()->mouseDown(event);
+
+}
+
+void ConnectionPort::mouseDrag(const MouseEvent &event) {
+    LineComponent::getDragLine()->mouseDrag(event);
+}
+
+void ConnectionPort::mouseUp(const MouseEvent &event) {
+    LineComponent::getDragLine()->mouseUp(event);
+}
+
+void ConnectionPort::paint(Graphics &g) {
+    g.setColour(Colours::black);
+    //rectangle.setPosition(10,10);
+    g.drawRect(outline,2);
+
+    // Hover rectangle
+    g.setColour(Colours::blue);
+    Path drawPath;
+    drawPath.addRoundedRectangle(hoverBox, 10, 10);
+    PathStrokeType strokeType(3);
+
+    if (hoverMode) {
+        float thiccness[] = {2, 3};
+        strokeType.createDashedStroke(drawPath, drawPath, thiccness, 2);
+        g.strokePath(drawPath, strokeType);
+    }
 }
