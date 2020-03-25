@@ -100,7 +100,7 @@ private:
         if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
             e->hoverMode = false;
             e->repaint();
-        } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+        } else if (auto p = dynamic_cast<AudioPort*>(hoverComponent)) {
             p->hoverMode = false;
             p->repaint();
         }
@@ -110,7 +110,7 @@ private:
         if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
             e->hoverMode = true;
             e->repaint();
-        } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+        } else if (auto p = dynamic_cast<AudioPort*>(hoverComponent)) {
             p->hoverMode = true;
             p->repaint();
         }

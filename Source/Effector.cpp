@@ -22,7 +22,7 @@ LineComponent* LineComponent::dragLine = nullptr;
 void LineComponent::mouseDown(const MouseEvent &event) {
     auto thisEvent = event.getEventRelativeTo(this);
 
-    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)){
+    if (auto p = dynamic_cast<AudioPort*>(event.originalComponent)){
         port1 = p;
         p1 = getLocalPoint(p, p->centrePoint);
     } else if (auto p = dynamic_cast<InternalConnectionPort*>(event.originalComponent)){
@@ -59,7 +59,7 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 
 }
 
-void LineComponent::convert(ConnectionPort *port2) {
+void LineComponent::convert(AudioPort *port2) {
     if (port1 != nullptr) {
         // Connect port1 to port2
         if (port2->isInput ^ port1->isInput)
@@ -338,9 +338,9 @@ void GUIEffect::parentHierarchyChanged() {
 /**
  * Get the port at the given location, if there is one
  * @param pos relative to this component (no conversion needed here)
- * @return nullptr if no match, ConnectionPort* if found
+ * @return nullptr if no match, AudioPort* if found
  */
-ConnectionPort *GUIEffect::checkPort(Point<int> pos) {
+AudioPort *GUIEffect::checkPort(Point<int> pos) {
     for (auto p : inputPorts)
         if (p->getBoundsInParent().contains(pos)) {
             if (p->internalPort.contains(getLocalPoint(this, pos)))
@@ -461,9 +461,9 @@ void InternalConnectionPort::mouseUp(const MouseEvent &event) {
 }
 
 
-// ConnectionPort methods
+// AudioPort methods
 
-void ConnectionPort::connect(ConnectionPort &otherPort) {
+void AudioPort::connect(AudioPort &otherPort) {
     if (otherPort.isInput ^ isInput){
         // Ports isInput are of different values
         new ConnectionLine(*this, otherPort);
@@ -472,19 +472,19 @@ void ConnectionPort::connect(ConnectionPort &otherPort) {
     }
 }
 
-void ConnectionPort::mouseDown(const MouseEvent &event) {
+void AudioPort::mouseDown(const MouseEvent &event) {
     LineComponent::getDragLine()->mouseDown(event);
 }
 
-void ConnectionPort::mouseDrag(const MouseEvent &event) {
+void AudioPort::mouseDrag(const MouseEvent &event) {
     LineComponent::getDragLine()->mouseDrag(event);
 }
 
-void ConnectionPort::mouseUp(const MouseEvent &event) {
+void AudioPort::mouseUp(const MouseEvent &event) {
     LineComponent::getDragLine()->mouseUp(event);
 }
 
-void ConnectionPort::paint(Graphics &g) {
+void AudioPort::paint(Graphics &g) {
     g.setColour(Colours::black);
     //rectangle.setPosition(10,10);
     g.drawRect(outline,2);
@@ -502,7 +502,7 @@ void ConnectionPort::paint(Graphics &g) {
     }
 }
 
-ConnectionPort::ConnectionPort(bool isInput) {
+AudioPort::AudioPort(bool isInput) : ConnectionPort() {
     if (isInput){
         hoverBox = Rectangle<int>(0,0,60,60);
         outline = Rectangle<int>(20, 20, 20, 20);

@@ -121,10 +121,27 @@ private:
     float dashLengths[2] = {1.f, 1.f};
 };
 
-class InternalConnectionPort : public Component
+/**
+ * Base class - port to connect to other ports
+ */
+class ConnectionPort : public Component
 {
 public:
-    InternalConnectionPort() : Component(){
+    Point<int> centrePoint;
+    bool hoverMode = false;
+
+
+protected:
+    ConnectionPort() : Component() {}
+
+    Rectangle<int> hoverBox;
+    Rectangle<int> outline;
+};
+
+class InternalConnectionPort : public ConnectionPort
+{
+public:
+    InternalConnectionPort() : ConnectionPort(){
 
         hoverBox = Rectangle<int>(0,0,30,30);
         outline = Rectangle<int>(10,10,10,10);
@@ -165,20 +182,17 @@ public:
         hoverMode = false;
         repaint();
     }
-    Point<int> centrePoint;
 
-    bool hoverMode = false;
-    Rectangle<int> hoverBox;
-    Rectangle<int> outline;
 };
 
-struct ConnectionPort : public Component
+class AudioPort : public ConnectionPort
 {
-    ConnectionPort(bool isInput);
+public:
+    AudioPort(bool isInput);
 
     void paint(Graphics &g) override;
 
-    void connect(ConnectionPort& otherPort);
+    void connect(AudioPort& otherPort);
 
     void mouseDown(const MouseEvent &event) override;
 
@@ -188,32 +202,6 @@ struct ConnectionPort : public Component
 
     void setEditMode(bool editMode) {
         internalPort.setVisible(editMode);
-    }
-
-/**
-     * @return Position of parent relative to maincomponent
-     */
-    Point<int> getMainParentPos(){
-        auto p = getParentComponent();
-        auto pos = Point<int>(0,0);
-        while (p->getName() != "QDIO"){
-            pos += p->getPosition();
-            p = p->getParentComponent();
-        }
-        return pos;
-    }
-
-
-
-/**
-     * @return centre position relative to maincomponent
-     */
-
-    Point<int> getMainCentrePos(){
-        auto pos = getMainParentPos();
-        pos += getPosition();
-        pos += Point<int>(getWidth()/2, getHeight()/2);
-        return pos;
     }
 
     void mouseEnter(const MouseEvent &event) override {
@@ -228,15 +216,8 @@ struct ConnectionPort : public Component
         repaint();
     }
 
-    Rectangle<int> outline;
-    Rectangle<int> hoverBox;
-
     bool isInput;
-    ConnectionLine* line = nullptr;
-    Point<int> centrePoint;
     AudioProcessor::Bus* bus;
-    bool hoverMode = false;
-
     InternalConnectionPort internalPort;
 
 };
@@ -247,7 +228,7 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
-    ConnectionLine(ConnectionPort& p1, ConnectionPort& p2){
+    ConnectionLine(AudioPort& p1, AudioPort& p2){
         if (p1.isInput) {
             inPort = &p1;
             outPort = &p2;
@@ -255,8 +236,6 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
             inPort = &p2;
             outPort = &p1;
         }
-        inPort->line = this;
-        outPort->line = this;
 
         line = Line<int>(inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint,
                 outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint);
@@ -272,13 +251,8 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
         g.drawLine(line.toFloat(),2);
     }
 
-    ~ConnectionLine() override {
-        inPort->line = nullptr;
-        outPort->line = nullptr;
-    }
-
-    ConnectionPort* inPort;
-    ConnectionPort* outPort;
+    AudioPort* inPort;
+    AudioPort* outPort;
 
 private:
     Line<int> line;
@@ -313,7 +287,7 @@ struct LineComponent : public Component
      * Updates dragLineTree connection property if connection is successful
      * @param port2
      */
-    void convert(ConnectionPort* port2);
+    void convert(AudioPort* port2);
     void convert(InternalConnectionPort* iPort2);
 
     ConnectionLine::Ptr lastConnectionLine;
@@ -335,7 +309,7 @@ private:
 
     Line<int> line;
     Point<int> p1, p2;
-    ConnectionPort* port1;
+    AudioPort* port1;
     InternalConnectionPort* iPort1;
     ValueTree dragLineTree;
 };
@@ -557,15 +531,15 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
 
-    ConnectionPort* checkPort(Point<int> pos);
+    AudioPort* checkPort(Point<int> pos);
 
     void setParameters(const AudioProcessorParameterGroup* group);
     void addParameter(AudioProcessorParameter* param);
 
     void addPort(AudioProcessor::Bus* bus, bool isInput){
         auto p = isInput ?
-                inputPorts.add(std::make_unique<ConnectionPort>(isInput)) :
-                outputPorts.add(std::make_unique<ConnectionPort>(isInput));
+                inputPorts.add(std::make_unique<AudioPort>(isInput)) :
+                outputPorts.add(std::make_unique<AudioPort>(isInput));
         p->bus = bus;
         p->setEditMode(editMode);
         addAndMakeVisible(p);
@@ -599,8 +573,8 @@ public:
 private:
     bool individual = false;
     bool editMode = false;
-    OwnedArray<ConnectionPort> inputPorts;
-    OwnedArray<ConnectionPort> outputPorts;
+    OwnedArray<AudioPort> inputPorts;
+    OwnedArray<AudioPort> outputPorts;
     Label title;
     Image image;
 
