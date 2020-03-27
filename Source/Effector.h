@@ -133,20 +133,21 @@ public:
     void paint(Graphics &g) override;
 
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
 
     void mouseEnter(const MouseEvent &event) override {
         hoverMode = true;
         repaint();
     }
-
     void mouseExit(const MouseEvent &event) override {
         hoverMode = false;
         repaint();
     }
+
+    virtual GUIEffect* getParent() = 0;
+
+    bool isInput;
 
 protected:
     ConnectionPort() : Component() {}
@@ -158,6 +159,8 @@ protected:
 class InternalConnectionPort : public ConnectionPort
 {
 public:
+    GUIEffect *getParent() override;
+
     InternalConnectionPort() : ConnectionPort(){
         hoverBox = Rectangle<int>(0,0,30,30);
         outline = Rectangle<int>(10,10,10,10);
@@ -171,6 +174,8 @@ class AudioPort : public ConnectionPort
 {
 public:
     AudioPort(bool isInput);
+
+    GUIEffect *getParent() override;
 
     void setEditMode(bool editMode) {
         internalPort.setVisible(editMode);
@@ -186,7 +191,6 @@ public:
             ConnectionPort::mouseExit(event);
     }
 
-    bool isInput;
     AudioProcessor::Bus* bus;
     InternalConnectionPort internalPort;
 
@@ -245,8 +249,8 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
 
     bool hoverMode = false;
 
-    AudioPort* inPort;
-    AudioPort* outPort;
+    ConnectionPort* inPort;
+    ConnectionPort* outPort;
 
 private:
     Line<int> line;

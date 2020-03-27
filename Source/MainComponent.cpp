@@ -265,8 +265,31 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
         // Remember that an inputPort is receiving, on the output effect
         // and the outputPort is source on the input effect
-        auto output = dynamic_cast<GUIEffect*>(outputPort->getParentComponent())->EVT;
-        auto input = dynamic_cast<GUIEffect*>(inputPort->getParentComponent())->EVT;
+        auto output = dynamic_cast<GUIEffect*>(outputPort->getParent())->EVT;
+        auto input = dynamic_cast<GUIEffect*>(inputPort->getParent())->EVT;
+
+        // Check port if ports are the same type
+        if ((dynamic_cast<AudioPort*>(inputPort) && dynamic_cast<AudioPort*>(outputPort))
+            || (dynamic_cast<InternalConnectionPort*>(inputPort) && dynamic_cast<InternalConnectionPort*>(outputPort))) {
+            // Check if in/out is ok
+            if (inputPort->isInput ^ outputPort->isInput) {
+                // connect
+                //TODO
+                std::cout << "Connecting of same type" << newLine;
+            }
+        }
+        // Check if ports are different types
+        else if ((dynamic_cast<AudioPort*>(inputPort) && dynamic_cast<InternalConnectionPort*>(outputPort))
+        || (dynamic_cast<InternalConnectionPort*>(inputPort) && dynamic_cast<AudioPort*>(outputPort))) {
+            // Check if they are the same type (in <-> in / out <-> out)
+            if (inputPort->isInput && outputPort->isInput) {
+                // connect
+                // TODO
+                std::cout << "Connecting of different types" << newLine;
+            }
+        }
+        if (inputPort->isInput ^ outputPort->isInput)
+
 
         // Check if this is an internal connection (in edit mode)
         if (input->getGUIEffect()->isInEditMode() || output->getGUIEffect()->isInEditMode()) {
@@ -302,10 +325,13 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
         //TODO move dis to audiograph update
         // Add audiograph connection
-        for (int c = 0; c < jmin(inputPort->bus->getNumberOfChannels(), outputPort->bus->getNumberOfChannels()); c++) {
+        auto inputAudioPort = dynamic_cast<AudioPort*>(inputPort);
+        auto outputAudioPort = dynamic_cast<AudioPort*>(outputPort);
+
+        for (int c = 0; c < jmin(inputAudioPort->bus->getNumberOfChannels(), outputAudioPort->bus->getNumberOfChannels()); c++) {
             processorGraph->addConnection(
-                    {{input->getNode()->nodeID, inputPort->bus->getChannelIndexInProcessBlockBuffer(c)},
-                     {output->getNode()->nodeID, outputPort->bus->getChannelIndexInProcessBlockBuffer(c)}});
+                    {{input->getNode()->nodeID, inputAudioPort->bus->getChannelIndexInProcessBlockBuffer(c)},
+                     {output->getNode()->nodeID, outputAudioPort->bus->getChannelIndexInProcessBlockBuffer(c)}});
         }
     }
 

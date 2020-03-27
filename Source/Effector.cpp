@@ -478,6 +478,10 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort() {
     this->isInput = isInput;
 }
 
+GUIEffect *AudioPort::getParent() {
+    return dynamic_cast<GUIEffect*>(getParentComponent());
+}
+
 
 // ==============================================================================
 // Resizer methods
@@ -569,4 +573,8 @@ void ConnectionPort::paint(Graphics &g) {
         strokeType.createDashedStroke(drawPath, drawPath, thiccness, 2);
         g.strokePath(drawPath, strokeType);
     }
+}
+
+GUIEffect *InternalConnectionPort::getParent() {
+    return dynamic_cast<GUIEffect*>(getParentComponent()->getParentComponent());
 }
