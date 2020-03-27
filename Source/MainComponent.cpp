@@ -10,9 +10,7 @@ MainComponent::MainComponent() :
 {
     setComponentID("MainWindow");
     setName("MainWindow");
-    setSize (1500, 800);
-    
-    
+    setSize (1920, 1080);
 
     //========================================================================================
     // Drag Line GUI
@@ -62,7 +60,11 @@ MainComponent::MainComponent() :
         getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
         getAppProperties().getUserSettings()->saveIfNeeded();
     };
+<<<<<<< HEAD
     addChildComponent(deviceSelectorComponent);
+=======
+    addAndMakeVisible(deviceSelectorComponent);
+>>>>>>> 5345a0bafa8b0c3578ec4127c69955e17e503c1b
 
     //==============================================================================
     // Main component popup menu
@@ -202,8 +204,6 @@ void MainComponent::mouseUp(const MouseEvent &event) {
             
         }
     }
-    
-
 
     for (auto i : selected){
         std::cout << i->getName() << newLine;
