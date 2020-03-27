@@ -60,11 +60,7 @@ MainComponent::MainComponent() :
         getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
         getAppProperties().getUserSettings()->saveIfNeeded();
     };
-<<<<<<< HEAD
     addChildComponent(deviceSelectorComponent);
-=======
-    addAndMakeVisible(deviceSelectorComponent);
->>>>>>> 5345a0bafa8b0c3578ec4127c69955e17e503c1b
 
     //==============================================================================
     // Main component popup menu
@@ -147,7 +143,7 @@ void MainComponent::mouseUp(const MouseEvent &event) {
 
     if (event.mods.isLeftButtonDown()) {
         // If the component is an effect, respond to move effect event
-        if (GUIEffect* effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
+        if (GUIEffect *effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
             if (event.getDistanceFromDragStart() < 10) {
                 // Consider this a click and not a drag
                 selected.addToSelection(event.eventComponent);
@@ -158,7 +154,7 @@ void MainComponent::mouseUp(const MouseEvent &event) {
             auto newParent = effectToMoveTo(effect,
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
 
-            if (auto e = dynamic_cast<GUIEffect*>(newParent))
+            if (auto e = dynamic_cast<GUIEffect *>(newParent))
                 if (!e->isInEditMode())
                     return;
             // target is not in edit mode
@@ -166,44 +162,45 @@ void MainComponent::mouseUp(const MouseEvent &event) {
                 addEffect(event.getEventRelativeTo(newParent), effect->EVT);
             }
         }
-        // If component is LineComponent, respond to line drag event
-        else if (auto l = dynamic_cast<LineComponent*>(event.eventComponent)){
-            auto port = dynamic_cast<AudioPort*>(hoverComponent);
+            // If component is LineComponent, respond to line drag event
+        else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
+            auto port = dynamic_cast<AudioPort *>(hoverComponent);
 
             if (port) {
                 l->convert(port);
             }
         }
-        
-        
-        // Open menu - either right click or left click (for mac)
-        if (event.mods.isRightButtonDown() ||
-                   (event.getDistanceFromDragStart() < 10 &&
-                    event.mods.isCtrlDown())) {
-                menuPos = getMouseXYRelative();
-
-                // Right-click menu
-                PopupMenu m;
-
-                // Populate menu
-                // Add submenus
-                PopupMenu createEffectSubmenu = getEffectSelectMenu(event);
-                m.addSubMenu("Create Effect", createEffectSubmenu);
-                // Add CustomMenuItems
-                mainMenu.addToMenu(m);
-                if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
-                    e->getMenu().addToMenu(m);
-                // Execute result
-                int result = m.show();
-
-                if (mainMenu.inRange(result))
-                    mainMenu.execute(result);
-                if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
-                    e->getMenu().execute(result);
-
-            
-        }
     }
+        
+    // Open menu - either right click or left click (for mac)
+    if (event.mods.isRightButtonDown() ||
+               (event.getDistanceFromDragStart() < 10 &&
+                event.mods.isLeftButtonDown() &&
+                event.mods.isCtrlDown())) {
+            menuPos = getMouseXYRelative();
+
+            // Right-click menu
+            PopupMenu m;
+
+            // Populate menu
+            // Add submenus
+            PopupMenu createEffectSubmenu = getEffectSelectMenu(event);
+            m.addSubMenu("Create Effect", createEffectSubmenu);
+            // Add CustomMenuItems
+            mainMenu.addToMenu(m);
+            if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
+                e->getMenu().addToMenu(m);
+            // Execute result
+            int result = m.show();
+
+            if (mainMenu.inRange(result))
+                mainMenu.execute(result);
+            if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
+                e->getMenu().execute(result);
+
+
+    }
+
 
     for (auto i : selected){
         std::cout << i->getName() << newLine;
