@@ -259,8 +259,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
         // Add connection
         auto line = dynamic_cast<ConnectionLine*>(treeWhosePropertyHasChanged.getPropertyPointer(property)->getObject());
-        std::cout << line << newLine;
-        line->setInterceptsMouseClicks(0,0);
+
         auto outputPort = line->inPort;
         auto inputPort = line->outPort;
 

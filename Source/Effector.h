@@ -218,8 +218,32 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
 
     void paint(Graphics &g) override
     {
-        g.drawLine(line.toFloat(),2);
+        int thiccness;
+        if (hoverMode) {
+            g.setColour(Colours::blue);
+            thiccness = 3;
+        } else {
+            g.setColour(Colours::black);
+            thiccness = 2;
+        }
+
+        g.drawLine(line.toFloat(),thiccness);
     }
+
+    bool hitTest(int x, int y) override;
+
+    void mouseEnter(const MouseEvent &event) override {
+        hoverMode = true;
+        repaint();
+    }
+
+    void mouseExit(const MouseEvent &event) override {
+        hoverMode = false;
+        repaint();
+    }
+
+
+    bool hoverMode = false;
 
     AudioPort* inPort;
     AudioPort* outPort;

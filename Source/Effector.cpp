@@ -365,6 +365,9 @@ void GUIEffect::setEditMode(bool isEditMode) {
     if (isEditMode) {
         for (auto c : getChildren()) {
             c->setAlwaysOnTop(true);
+            if (!dynamic_cast<AudioPort*>(c))
+                c->setInterceptsMouseClicks(true, true);
+
         }
         title.setMouseCursor(MouseCursor::IBeamCursor);
         title.setInterceptsMouseClicks(true, true);
@@ -373,8 +376,8 @@ void GUIEffect::setEditMode(bool isEditMode) {
     else if (!isEditMode) {
         for (auto c : getChildren()) {
             c->setAlwaysOnTop(false);
-            if (auto e = dynamic_cast<GUIEffect*>(c))
-                e->setInterceptsMouseClicks(false, false);
+            if (!dynamic_cast<AudioPort*>(c))
+                c->setInterceptsMouseClicks(false, false);
         }
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
@@ -522,6 +525,20 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
     }
     repaint();
 }
+
+bool ConnectionLine::hitTest(int x, int y) {
+    auto d1 = line.getStart().getDistanceFrom(Point<int>(x,y));
+    auto d2 = line.getEnd().getDistanceFrom(Point<int>(x,y));
+    auto d = d1 + d2 - line.getLength();
+
+    if (d < 7) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 
 void ConnectionPort::mouseDown(const MouseEvent &event) {
     LineComponent::getDragLine()->mouseDown(event);
