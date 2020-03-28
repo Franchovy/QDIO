@@ -457,8 +457,8 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort() {
 
 
 bool AudioPort::canConnect(ConnectionPort *other) {
-    // Cannot connect to AudioPort of mutual parent
-    return !(dynamic_cast<AudioPort *>(other)
+    // Can only connect to AudioPort of mutual parent
+    return (dynamic_cast<AudioPort *>(other)
              && other->getParent()->getParentComponent() == this->getParent()->getParentComponent());
 }
 

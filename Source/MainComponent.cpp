@@ -133,9 +133,10 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
                 treeToCheck = effectsTree;
             connectPort = portToConnectTo(newEvent, treeToCheck);
 
-            if (connectPort != nullptr)
+            if (connectPort != nullptr) {
+                std::cout << connectPort << newLine;
                 setHoverComponent(connectPort);
-            else
+            } else
                 setHoverComponent(nullptr);
 
         }
@@ -212,10 +213,7 @@ void MainComponent::mouseUp(const MouseEvent &event) {
                 mainMenu.execute(result);
             if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
                 e->getMenu().execute(result);
-
-
     }
-
 
     for (auto i : selected){
         std::cout << i->getName() << newLine;
@@ -482,9 +480,13 @@ ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, ValueTree effe
         // Filter self effect if AudioPort
         if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
             if (p->getParent() == e_gui)
-                return nullptr;
+                continue;
 
         auto localPos = e_gui->getLocalPoint(event.eventComponent, event.getPosition());
+
+        std::cout << "Local event: " <<  e_gui->getLocalPoint(event.eventComponent, event.getPosition()).toString() << newLine;
+        std::cout << "event pos: " << event.getPosition().toString() << newLine;
+
         if (e_gui->contains(localPos))
         {
             if (auto p = e_gui->checkPort(localPos))
