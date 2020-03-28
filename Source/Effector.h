@@ -145,7 +145,9 @@ public:
         repaint();
     }
 
-    virtual GUIEffect* getParent() = 0;
+    GUIEffect* getParent();
+
+    virtual bool canConnect(ConnectionPort* other) = 0;
 
     bool isInput;
 
@@ -159,8 +161,6 @@ protected:
 class InternalConnectionPort : public ConnectionPort
 {
 public:
-    GUIEffect *getParent() override;
-
     InternalConnectionPort() : ConnectionPort(){
         hoverBox = Rectangle<int>(0,0,30,30);
         outline = Rectangle<int>(10,10,10,10);
@@ -168,24 +168,22 @@ public:
         setBounds(0,0,30, 30);
     }
 
+    bool canConnect(ConnectionPort *other) override;
 };
 
 class AudioPort : public ConnectionPort
 {
 public:
-    AudioPort(bool isInput);
-
-    GUIEffect *getParent() override;
+    explicit AudioPort(bool isInput);
 
     bool hitTest(int x, int y) override {
-        if (hoverBox.contains(x,y))
-            return true;
-        else
-            return false;
+        return hoverBox.contains(x,y);
     }
 
     AudioProcessor::Bus* bus;
     InternalConnectionPort internalPort;
+
+    bool canConnect(ConnectionPort *other) override;
 
 };
 
@@ -300,8 +298,8 @@ private:
 
     Line<int> line;
     Point<int> p1, p2;
-    AudioPort* port1;
-    InternalConnectionPort* iPort1;
+    AudioPort* port1 = nullptr;
+    InternalConnectionPort* iPort1 = nullptr;
     ValueTree dragLineTree;
 };
 
@@ -369,6 +367,7 @@ public:
         return menu;
     }
 
+    //TODO do as clang says
     void addToMenu(String item){
         menu.addItem(item);
     }

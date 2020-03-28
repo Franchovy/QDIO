@@ -113,10 +113,25 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
     if (event.mods.isLeftButtonDown()) {
         // Line drag
         if (dynamic_cast<LineComponent*>(event.eventComponent)) {
+            // ParentToCheck is the container of possible things to connect to.
+            Component* parentToCheck;
+            if (dynamic_cast<AudioPort*>(event.originalComponent))
+                parentToCheck = event.originalComponent->getParentComponent()->getParentComponent();
+            else if (dynamic_cast<InternalConnectionPort*>(event.originalComponent))
+                parentToCheck = event.originalComponent->getParentComponent();
 
-            // Get port to connect to if there is (passing original port parent as componentToIgnore
-            auto connectPort = portToConnectTo(event.originalComponent->getParentComponent(),
-                    event.getEventRelativeTo(this).getPosition(), effectsTree);
+            //auto connectPort = portToConnectTo(newEvent, parentToCheck)
+            ConnectionPort* connectPort;
+            // Get port to connect to (if there is one)
+            auto newEvent = event.getEventRelativeTo(parentToCheck);
+
+            //TODO MainComponent and EffectTree parent under one subclass
+            ValueTree treeToCheck;
+            if (parentToCheck != this)
+                treeToCheck = dynamic_cast<GUIEffect*>(parentToCheck)->EVT->getTree();
+            else
+                treeToCheck = effectsTree;
+            connectPort = portToConnectTo(newEvent, treeToCheck);
 
             if (connectPort != nullptr)
                 setHoverComponent(connectPort);
@@ -449,19 +464,38 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcesso
     }
 }
 
-ConnectionPort *MainComponent::portToConnectTo(Component *componentToIgnore, Point<int> point, ValueTree effectTree) {
+ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, ValueTree effectTree) {
+
+    // Check for self ports if ICP
+    if (auto p = dynamic_cast<InternalConnectionPort*>(event.originalComponent))
+        if (auto returnPort = p->getParent()->checkPort(event.getPosition()))
+            if (p->canConnect(returnPort))
+                return returnPort;
+
+    // Check children for a match
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
         auto e_gui = dynamic_cast<GUIEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
 
-        if (e_gui != nullptr
-            && e_gui->getBoundsInParent().contains(point)
-            && e_gui != componentToIgnore)
-        {
-            auto relativePos = point - e_gui->getPosition();
+        if (e_gui == nullptr)
+            continue;
 
+        // Filter self effect if AudioPort
+        if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
+            if (p->getParent() == e_gui)
+                return nullptr;
+
+        auto localPos = e_gui->getLocalPoint(event.eventComponent, event.getPosition());
+        if (e_gui->contains(localPos))
+        {
+            if (auto p = e_gui->checkPort(localPos))
+                if (dynamic_cast<ConnectionPort*>(event.originalComponent)->canConnect(p))
+                    return p;
+
+            // Recursive code (deprecated)
+
+/*          auto childEvent = event.getEventRelativeTo(e_gui);
             // Check if there's a match in the children (sending child component coordinates)
-            if (auto p = portToConnectTo(componentToIgnore,
-                                        relativePos, effectTree.getChild(i)))
+            if (auto p = portToConnectTo(childEvent, e_gui->EVT->getTree()))
                 // e != nullptr then the result is returned - corresponding to match in child effect.
                 return p;
             else if (auto p = e_gui->checkPort(relativePos)) {
@@ -469,6 +503,7 @@ ConnectionPort *MainComponent::portToConnectTo(Component *componentToIgnore, Poi
                 // Returns the match if found.
                 return p;
             }
+*/
         }
     }
 

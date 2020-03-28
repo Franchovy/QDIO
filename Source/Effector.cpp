@@ -334,18 +334,16 @@ void GUIEffect::parentHierarchyChanged() {
  */
 ConnectionPort *GUIEffect::checkPort(Point<int> pos) {
     for (auto p : inputPorts) {
-        if (p->contains(p->getLocalPoint(this, pos))) {
-            if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
-                return &p->internalPort;
+        if (p->contains(p->getLocalPoint(this, pos)))
             return p;
-        }
+        else if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
+            return &p->internalPort;
     }
     for (auto p : outputPorts) {
-        if (p->contains(p->getLocalPoint(this, pos))) {
-            if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
-                return &p->internalPort;
+        if (p->contains(p->getLocalPoint(this, pos)))
             return p;
-        }
+        else if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
+            return &p->internalPort;
     }
     return nullptr;
 }
@@ -457,8 +455,11 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort() {
     this->isInput = isInput;
 }
 
-GUIEffect *AudioPort::getParent() {
-    return dynamic_cast<GUIEffect*>(getParentComponent());
+
+bool AudioPort::canConnect(ConnectionPort *other) {
+    // Cannot connect to AudioPort of mutual parent
+    return !(dynamic_cast<AudioPort *>(other)
+             && other->getParent()->getParentComponent() == this->getParent()->getParentComponent());
 }
 
 
@@ -554,6 +555,13 @@ void ConnectionPort::paint(Graphics &g) {
     }
 }
 
-GUIEffect *InternalConnectionPort::getParent() {
-    return dynamic_cast<GUIEffect*>(getParentComponent()->getParentComponent());
+GUIEffect *ConnectionPort::getParent() {
+    return dynamic_cast<GUIEffect*>(getParentComponent());
+}
+
+
+bool InternalConnectionPort::canConnect(ConnectionPort *other) {
+    // Return false if the port is AP and belongs to the same parent
+    return !(dynamic_cast<AudioPort *>(other)
+             && this->getParent() == other->getParent());
 }

@@ -119,7 +119,7 @@ private:
     Component* hoverComponent = nullptr;
 
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
-    ConnectionPort* portToConnectTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
+    ConnectionPort* portToConnectTo(MouseEvent& event, ValueTree effectTree);
 
 private:
     //==============================================================================
