@@ -177,18 +177,11 @@ public:
 
     GUIEffect *getParent() override;
 
-    void setEditMode(bool editMode) {
-        internalPort.setVisible(editMode);
-    }
-
-    void mouseEnter(const MouseEvent &event) override {
-        if (hoverBox.contains(event.getPosition()))
-            ConnectionPort::mouseEnter(event);
-    }
-
-    void mouseExit(const MouseEvent &event) override {
-        if (!hoverBox.contains(event.getPosition()))
-            ConnectionPort::mouseExit(event);
+    bool hitTest(int x, int y) override {
+        if (hoverBox.contains(x,y))
+            return true;
+        else
+            return false;
     }
 
     AudioProcessor::Bus* bus;
@@ -529,7 +522,7 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
 
-    AudioPort* checkPort(Point<int> pos);
+    ConnectionPort* checkPort(Point<int> pos);
 
     void setParameters(const AudioProcessorParameterGroup* group);
     void addParameter(AudioProcessorParameter* param);
@@ -539,8 +532,19 @@ public:
                 inputPorts.add(std::make_unique<AudioPort>(isInput)) :
                 outputPorts.add(std::make_unique<AudioPort>(isInput));
         p->bus = bus;
-        p->setEditMode(editMode);
         addAndMakeVisible(p);
+
+        if (!individual) {
+            addChildComponent(p->internalPort);
+            p->internalPort.setCentrePosition(getLocalPoint(p, Point<int>(0,0)));
+            /*
+            if (isInput)
+                p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint)*//* + Point<int>(40, 0)*//*);
+            else
+                p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint)*//* + Point<int>(-40, 0)*//*);*/
+            if (editMode)
+                p->internalPort.setVisible(true);
+        }
     }
 
 

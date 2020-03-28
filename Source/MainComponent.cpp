@@ -288,7 +288,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
                 std::cout << "Connecting of different types" << newLine;
             }
         }
-        if (inputPort->isInput ^ outputPort->isInput)
+        //if (inputPort->isInput ^ outputPort->isInput)
 
 
         // Check if this is an internal connection (in edit mode)
@@ -449,7 +449,7 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcesso
     }
 }
 
-Component *MainComponent::portToConnectTo(Component *componentToIgnore, Point<int> point, ValueTree effectTree) {
+ConnectionPort *MainComponent::portToConnectTo(Component *componentToIgnore, Point<int> point, ValueTree effectTree) {
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
         auto e_gui = dynamic_cast<GUIEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
 
@@ -465,6 +465,7 @@ Component *MainComponent::portToConnectTo(Component *componentToIgnore, Point<in
                 // e != nullptr then the result is returned - corresponding to match in child effect.
                 return p;
             else if (auto p = e_gui->checkPort(relativePos)) {
+                std::cout << "Returning: " << p << newLine;
                 // Returns the match if found.
                 return p;
             }

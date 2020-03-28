@@ -338,23 +338,23 @@ void GUIEffect::parentHierarchyChanged() {
 /**
  * Get the port at the given location, if there is one
  * @param pos relative to this component (no conversion needed here)
- * @return nullptr if no match, AudioPort* if found
+ * @return nullptr if no match, ConnectionPort* if found
  */
-AudioPort *GUIEffect::checkPort(Point<int> pos) {
-    for (auto p : inputPorts)
-        if (p->getBoundsInParent().contains(pos)) {
-            if (p->internalPort.contains(getLocalPoint(this, pos)))
-                std::cout << "Internal port connect" << newLine;
+ConnectionPort *GUIEffect::checkPort(Point<int> pos) {
+    for (auto p : inputPorts) {
+        if (p->contains(p->getLocalPoint(this, pos))) {
+            if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
+                return &p->internalPort;
             return p;
         }
-
-    for (auto p : outputPorts)
-        if (p->getBoundsInParent().contains(pos)) {
-            if (p->internalPort.contains(getLocalPoint(this, pos)))
-                std::cout << "Internal port connect" << newLine;
+    }
+    for (auto p : outputPorts) {
+        if (p->contains(p->getLocalPoint(this, pos))) {
+            if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
+                return &p->internalPort;
             return p;
         }
-
+    }
     return nullptr;
 }
 
@@ -457,23 +457,10 @@ void GUIEffect::addParameter(AudioProcessorParameter *param) {
 // AudioPort methods
 
 AudioPort::AudioPort(bool isInput) : ConnectionPort() {
-    if (isInput){
-        hoverBox = Rectangle<int>(0,0,60,60);
-        outline = Rectangle<int>(20, 20, 20, 20);
-        centrePoint = Point<int>(30,30);
-        setBounds(0,0,90, 60);
-    } else {
-        hoverBox = Rectangle<int>(30,0,60,60);
-        outline = Rectangle<int>(50, 20, 20, 20);
-        centrePoint = Point<int>(60,30);
-        setBounds(0,0,90, 60);
-    }
-
-    addChildComponent(internalPort);
-    if (isInput)
-        internalPort.setCentrePosition(centrePoint + Point<int>(40,0));
-    else
-        internalPort.setCentrePosition(centrePoint + Point<int>(-40,0));
+    hoverBox = Rectangle<int>(0,0,60,60);
+    outline = Rectangle<int>(20, 20, 20, 20);
+    centrePoint = Point<int>(30,30);
+    setBounds(0,0,60, 60);
 
     this->isInput = isInput;
 }
