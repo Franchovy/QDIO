@@ -282,14 +282,6 @@ void GUIEffect::mouseExit(const MouseEvent &event) {
     Component::mouseExit(event);
 }
 
-void GUIEffect::moved() {
-    for (auto i : inputPorts)
-        i->moved();
-    for (auto i : outputPorts)
-        i->moved();
-    Component::moved();
-}
-
 void GUIEffect::visibilityChanged() {
     // Set parent (Wrapper) visibility
     if (getParentComponent())

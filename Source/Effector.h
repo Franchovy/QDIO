@@ -534,9 +534,14 @@ public:
         p->bus = bus;
         addAndMakeVisible(p);
 
+        resized();
+
         if (!individual) {
             addChildComponent(p->internalPort);
-            p->internalPort.setCentrePosition(getLocalPoint(p, Point<int>(0,0)));
+            Point<int> d;
+            d = isInput ? Point<int>(50, 0) : Point<int>(-50, 0);
+
+            p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint + d));
             /*
             if (isInput)
                 p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint)*//* + Point<int>(40, 0)*//*);
@@ -553,8 +558,6 @@ public:
     void mouseUp(const MouseEvent &event) override;
     void mouseEnter(const MouseEvent &event) override;
     void mouseExit(const MouseEvent &event) override;
-
-    void moved() override;
 
     Point<int> dragDetachFromParentComponent();
 
@@ -595,10 +598,10 @@ private:
     //============================================================================
     // GUI auto stuff
 
-    int portIncrement = 30;
-    int inputPortStartPos = 50;
+    int portIncrement = 50;
+    int inputPortStartPos = 100;
     int inputPortPos = inputPortStartPos;
-    int outputPortStartPos = 50;
+    int outputPortStartPos = 100;
     int outputPortPos = outputPortStartPos;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIEffect)

@@ -457,7 +457,7 @@ ConnectionPort *MainComponent::portToConnectTo(Component *componentToIgnore, Poi
             && e_gui->getBoundsInParent().contains(point)
             && e_gui != componentToIgnore)
         {
-            auto relativePos = point - e_gui->getPosition(); //TODO what compontent to what??
+            auto relativePos = point - e_gui->getPosition();
 
             // Check if there's a match in the children (sending child component coordinates)
             if (auto p = portToConnectTo(componentToIgnore,
