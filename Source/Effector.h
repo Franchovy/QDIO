@@ -161,7 +161,9 @@ protected:
 class InternalConnectionPort : public ConnectionPort
 {
 public:
-    InternalConnectionPort() : ConnectionPort(){
+    InternalConnectionPort(bool isInput) : ConnectionPort() {
+        this->isInput = isInput;
+
         hoverBox = Rectangle<int>(0,0,30,30);
         outline = Rectangle<int>(10,10,10,10);
         centrePoint = Point<int>(15,15);
@@ -184,7 +186,6 @@ public:
     InternalConnectionPort internalPort;
 
     bool canConnect(ConnectionPort *other) override;
-
 };
 
 struct ConnectionLine : public Component, public ComponentListener, public ReferenceCountedObject
@@ -193,23 +194,7 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
-    ConnectionLine(AudioPort& p1, AudioPort& p2){
-        if (p1.isInput) {
-            inPort = &p1;
-            outPort = &p2;
-        } else {
-            inPort = &p2;
-            outPort = &p1;
-        }
-
-        line = Line<int>(inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint,
-                outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint);
-
-        inPort->getParentComponent()->addComponentListener(this);
-        outPort->getParentComponent()->addComponentListener(this);
-
-        setBounds(0,0,getParentWidth(),getParentHeight());
-    }
+    ConnectionLine(ConnectionPort& p1, ConnectionPort& p2);
 
     void paint(Graphics &g) override
     {
@@ -237,12 +222,10 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
         repaint();
     }
 
-
     bool hoverMode = false;
 
     ConnectionPort* inPort;
     ConnectionPort* outPort;
-
 private:
     Line<int> line;
 };
@@ -276,8 +259,7 @@ struct LineComponent : public Component
      * Updates dragLineTree connection property if connection is successful
      * @param port2
      */
-    void convert(AudioPort* port2);
-    void convert(InternalConnectionPort* iPort2);
+    void convert(ConnectionPort* port2);
 
     ConnectionLine::Ptr lastConnectionLine;
 
@@ -298,8 +280,7 @@ private:
 
     Line<int> line;
     Point<int> p1, p2;
-    AudioPort* port1 = nullptr;
-    InternalConnectionPort* iPort1 = nullptr;
+    ConnectionPort* port1 = nullptr;
     ValueTree dragLineTree;
 };
 
@@ -504,7 +485,6 @@ class GUIEffect  : public ReferenceCountedObject, public Component {
 public:
     GUIEffect (const MouseEvent &event, EffectVT* parentEVT);
 
-    void visibilityChanged() override;
 
     void childrenChanged() override;
 
@@ -535,19 +515,16 @@ public:
 
         resized();
 
+
         if (!individual) {
             addChildComponent(p->internalPort);
             Point<int> d;
             d = isInput ? Point<int>(50, 0) : Point<int>(-50, 0);
 
             p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint + d));
-            /*
-            if (isInput)
-                p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint)*//* + Point<int>(40, 0)*//*);
-            else
-                p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint)*//* + Point<int>(-40, 0)*//*);*/
-            if (editMode)
-                p->internalPort.setVisible(true);
+            p->internalPort.setVisible(editMode);
+        } else {
+            p->internalPort.setVisible(false);
         }
     }
 

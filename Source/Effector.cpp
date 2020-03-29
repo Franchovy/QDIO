@@ -59,25 +59,14 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 
 }
 
-void LineComponent::convert(AudioPort *port2) {
+void LineComponent::convert(ConnectionPort *port2) {
     if (port1 != nullptr) {
         // Connect port1 to port2
-        if (port2->isInput ^ port1->isInput)
-        {
-            lastConnectionLine = new ConnectionLine(*port1, *port2);
+        lastConnectionLine = new ConnectionLine(*port1, *port2);
 
-            // This calls the propertyChange update in MainComponent
-            dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
-        }
-    } else if (iPort1 != nullptr) {
-        // Connect internal port1 to port2
-
+        // This calls the propertyChange update in MainComponent
+        dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
     }
-
-}
-
-void LineComponent::convert(InternalConnectionPort *iPort2) {
-
 }
 
 //==============================================================================
@@ -146,6 +135,9 @@ void GUIEffect::insertEffect() {
 
 // Processor hasEditor? What to do if processor is a predefined plugin
 void GUIEffect::setProcessor(AudioProcessor *processor) {
+    setEditMode(false);
+    individual = true;
+
     // Set up ports based on processor buses
     int numInputBuses = processor->getBusCount(true );
     int numBuses = numInputBuses + processor->getBusCount(false);
@@ -165,9 +157,6 @@ void GUIEffect::setProcessor(AudioProcessor *processor) {
     // Setup parameters
     parameters = &processor->getParameterTree();
     setParameters(parameters);
-
-    setEditMode(false);
-    individual = true;
 
     // Update
     resized();
@@ -235,10 +224,6 @@ void GUIEffect::mouseDown(const MouseEvent &event) {
 }
 
 void GUIEffect::mouseDrag(const MouseEvent &event) {
-
-/*    constrainer.setBoundsForComponent(this,
-            Rectangle<int>(newX, newY, getWidth(), getHeight()),
-                    false, false, false ,false);*/
     if (event.eventComponent == this) {
         dragger.dragComponent(this, event, &constrainer);
 
@@ -282,12 +267,6 @@ void GUIEffect::mouseExit(const MouseEvent &event) {
     Component::mouseExit(event);
 }
 
-void GUIEffect::visibilityChanged() {
-    // Set parent (Wrapper) visibility
-    if (getParentComponent())
-        getParentComponent()->setVisible(this->isVisible());
-}
-
 Point<int> GUIEffect::dragDetachFromParentComponent() {
     auto newPos = getPosition() + getParentComponent()->getPosition();
     auto parentParent = getParentComponent()->getParentComponent();
@@ -301,6 +280,9 @@ Point<int> GUIEffect::dragDetachFromParentComponent() {
 }
 
 void GUIEffect::childrenChanged() {
+    //TODO this function is probably useless
+    std::cout << "Children changed, call move" << newLine;
+    moved();
     Component::childrenChanged();
 }
 
@@ -313,14 +295,12 @@ void GUIEffect::parentHierarchyChanged() {
         setTopLeftPosition(getPosition() + currentParent->getPosition());
         currentParent = nullptr;
     } else {
-
         if (hasBeenInitialised) {
             Component* parent = getParentComponent();
             while (parent != getTopLevelComponent()) {
                 setTopLeftPosition(getPosition() - parent->getPosition());
                 parent = parent->getParentComponent();
             }
-
         }
         currentParent = getParentComponent();
     }
@@ -438,15 +418,10 @@ void GUIEffect::addParameter(AudioProcessorParameter *param) {
     }
 }
 
-//==============================================================================
-// InternalConnectionPort methods
-
-
-
-
+//=================================================================================
 // AudioPort methods
 
-AudioPort::AudioPort(bool isInput) : ConnectionPort() {
+AudioPort::AudioPort(bool isInput) : ConnectionPort(), internalPort(!isInput) {
     hoverBox = Rectangle<int>(0,0,60,60);
     outline = Rectangle<int>(20, 20, 20, 20);
     centrePoint = Point<int>(30,30);
@@ -455,8 +430,10 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort() {
     this->isInput = isInput;
 }
 
-
 bool AudioPort::canConnect(ConnectionPort *other) {
+    if (this->isInput == other->isInput)
+        return false;
+
     // Connect to AudioPort of mutual parent
     return (dynamic_cast<AudioPort *>(other)
             && other->getParent()->getParentComponent() == this->getParent()->getParentComponent())
@@ -464,7 +441,6 @@ bool AudioPort::canConnect(ConnectionPort *other) {
            || (dynamic_cast<InternalConnectionPort *>(other)
     && other->getParent() == this->getParent()->getParentComponent());
 }
-
 
 // ==============================================================================
 // Resizer methods
@@ -476,7 +452,6 @@ void Resizer::mouseDrag(const MouseEvent &event) {
                                   startPos.y + event.getDistanceFromDragStartY());
     Component::mouseDrag(event);
 }
-
 
 //==============================================================================
 // EffectVT static member variable
@@ -503,12 +478,11 @@ END_JUCER_METADATA
 */
 #endif
 
-
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
     if (inPort->getParentComponent() == &component){
-        line.setStart(component.getPosition() + inPort->getPosition() + inPort->centrePoint);
+        line.setStart(getLocalPoint(inPort, inPort->centrePoint));
     } else if (outPort->getParentComponent() == &component) {
-        line.setEnd(component.getPosition() + outPort->getPosition() + outPort->centrePoint);
+        line.setEnd(getLocalPoint(outPort, outPort->centrePoint));
     }
     repaint();
 }
@@ -525,11 +499,26 @@ bool ConnectionLine::hitTest(int x, int y) {
     }
 }
 
+ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
+    if (p1.isInput) {
+        inPort = &p1;
+        outPort = &p2;
+    } else {
+        inPort = &p2;
+        outPort = &p1;
+    }
 
+    line = Line<int>(inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint,
+                     outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint);
+
+    inPort->getParent()->addComponentListener(this);
+    outPort->getParent()->addComponentListener(this);
+
+    setBounds(0,0,getParentWidth(),getParentHeight());
+}
 
 void ConnectionPort::mouseDown(const MouseEvent &event) {
     LineComponent::getDragLine()->mouseDown(event);
-
 }
 
 void ConnectionPort::mouseDrag(const MouseEvent &event) {
@@ -561,7 +550,6 @@ void ConnectionPort::paint(Graphics &g) {
 GUIEffect *ConnectionPort::getParent() {
     return dynamic_cast<GUIEffect*>(getParentComponent());
 }
-
 
 bool InternalConnectionPort::canConnect(ConnectionPort *other) {
     // Return false if the port is AP and belongs to the same parent

@@ -178,11 +178,9 @@ void MainComponent::mouseUp(const MouseEvent &event) {
                 addEffect(event.getEventRelativeTo(newParent), effect->EVT);
             }
         }
-            // If component is LineComponent, respond to line drag event
+        // If component is LineComponent, respond to line drag event
         else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            auto port = dynamic_cast<AudioPort *>(hoverComponent);
-
-            if (port) {
+            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
                 l->convert(port);
             }
         }
