@@ -499,7 +499,9 @@ public:
     using Ptr = ReferenceCountedObjectPtr<GUIEffect>;
 
     void paint (Graphics& g) override;
+
     void resized() override;
+    void moved() override;
 
     ConnectionPort* checkPort(Point<int> pos);
 

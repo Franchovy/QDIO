@@ -276,74 +276,39 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
         // Remember that an inputPort is receiving, on the output effect
         // and the outputPort is source on the input effect
-        auto output = dynamic_cast<GUIEffect*>(outputPort->getParent())->EVT;
-        auto input = dynamic_cast<GUIEffect*>(inputPort->getParent())->EVT;
-
-        // Check port if ports are the same type
-        if ((dynamic_cast<AudioPort*>(inputPort) && dynamic_cast<AudioPort*>(outputPort))
-            || (dynamic_cast<InternalConnectionPort*>(inputPort) && dynamic_cast<InternalConnectionPort*>(outputPort))) {
-            // Check if in/out is ok
-            if (inputPort->isInput ^ outputPort->isInput) {
-                // connect
-                //TODO
-                std::cout << "Connecting of same type" << newLine;
-            }
-        }
-        // Check if ports are different types
-        else if ((dynamic_cast<AudioPort*>(inputPort) && dynamic_cast<InternalConnectionPort*>(outputPort))
-        || (dynamic_cast<InternalConnectionPort*>(inputPort) && dynamic_cast<AudioPort*>(outputPort))) {
-            // Check if they are the same type (in <-> in / out <-> out)
-            if (inputPort->isInput && outputPort->isInput) {
-                // connect
-                // TODO
-                std::cout << "Connecting of different types" << newLine;
-            }
-        }
-        //if (inputPort->isInput ^ outputPort->isInput)
-
-
-        // Check if this is an internal connection (in edit mode)
-        if (input->getGUIEffect()->isInEditMode() || output->getGUIEffect()->isInEditMode()) {
-            // Set edit mode effect as parent of line
-            if (output->getTree().isAChildOf(input->getTree()))
-                input->addConnection(line);
-            else if (input->getTree().isAChildOf(output->getTree()))
-                output->addConnection(line);
-
-            // Leave audio alone
-            return;
-        }
+        auto output = dynamic_cast<GUIEffect*>(outputPort->getParent());
+        auto input = dynamic_cast<GUIEffect*>(inputPort->getParent());
 
         // Check for common parent
-        auto parentToCheck = input->getTree();
-        while (!parentToCheck.hasType(ID_TREE_TOP)) {
-            if (output->getTree().isAChildOf(parentToCheck)) {
-                // assign connection to this parent
-                auto evt = dynamic_cast<EffectVT *>(parentToCheck.getProperty(ID_EVT_OBJECT).getObject());
-                evt->addConnection(line);
-                break;
+        // Find common parent
+        if (input->getParentComponent() == output->getParentComponent()) {
+            std::cout << "Common parent" << newLine;
+            if (input->getParentComponent() == this) { //todo u must change dis shit brugh
+                connections.add(line);
+                addAndMakeVisible(line);
             } else {
-                parentToCheck = parentToCheck.getParent();
+                dynamic_cast<GUIEffect*>(input->getParentComponent())->EVT->addConnection(line);
             }
-        }
-        if (parentToCheck.hasType(ID_TREE_TOP)) {
-            // Assign connection to main component
-            connections.add(line);
-            addAndMakeVisible(line);
+        } else if (input->getParentComponent() == output) {
+            std::cout << "Output parent" << newLine;
+            if (output->getParentComponent() == this) { //todo u must change dis shit brugh
+                connections.add(line);
+                addAndMakeVisible(line);
+            } else {
+                dynamic_cast<GUIEffect*>(output->getParentComponent())->EVT->addConnection(line);
+            }
+        } else if (output->getParentComponent() == input) {
+            std::cout << "Input parent" << newLine;
+            if (input->getParentComponent() == this) { //todo u must change dis shit brugh
+                connections.add(line);
+                addAndMakeVisible(line);
+            } else {
+                dynamic_cast<GUIEffect*>(input->getParentComponent())->EVT->addConnection(line);
+            }
         }
 
         // Call audiograph update
 
-        //TODO move dis to audiograph update
-        // Add audiograph connection
-        auto inputAudioPort = dynamic_cast<AudioPort*>(inputPort);
-        auto outputAudioPort = dynamic_cast<AudioPort*>(outputPort);
-
-        for (int c = 0; c < jmin(inputAudioPort->bus->getNumberOfChannels(), outputAudioPort->bus->getNumberOfChannels()); c++) {
-            processorGraph->addConnection(
-                    {{input->getNode()->nodeID, inputAudioPort->bus->getChannelIndexInProcessBlockBuffer(c)},
-                     {output->getNode()->nodeID, outputAudioPort->bus->getChannelIndexInProcessBlockBuffer(c)}});
-        }
     }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
@@ -352,7 +317,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 //==============================================================================
 
 
-void MainComponent::initialiseGraph()
+void MainComponent::updateAudioGraph()
 {
     /*for (auto i = 0; i < effectsTree.getNumChildren(); i++){
         std::cout << effectsTree.getChild(i)->getName() << newLine;
@@ -365,23 +330,6 @@ void MainComponent::initialiseGraph()
                                                 processorGraph->getBlockSize());
     }*/
 
-    connectAudioNodes();
-}
-
-void MainComponent::connectAudioNodes()
-{
-    // TODO Check/Compiler algorithm
-    if (effectsTree.getNumChildren() == 0){
-
-        return;
-    } else {
-
-    }
-}
-
-void MainComponent::updateGraph() {
-    // What's the difference between here and connectAudioNodes?
-    // TODO refresh graph (?)
 }
 
 
@@ -491,20 +439,6 @@ ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, ValueTree effe
             if (auto p = e_gui->checkPort(localPos))
                 if (dynamic_cast<ConnectionPort*>(event.originalComponent)->canConnect(p))
                     return p;
-
-            // Recursive code (deprecated)
-
-/*          auto childEvent = event.getEventRelativeTo(e_gui);
-            // Check if there's a match in the children (sending child component coordinates)
-            if (auto p = portToConnectTo(childEvent, e_gui->EVT->getTree()))
-                // e != nullptr then the result is returned - corresponding to match in child effect.
-                return p;
-            else if (auto p = e_gui->checkPort(relativePos)) {
-                std::cout << "Returning: " << p << newLine;
-                // Returns the match if found.
-                return p;
-            }
-*/
         }
     }
 
@@ -512,25 +446,6 @@ ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, ValueTree effe
     return nullptr;
 }
 
-/*
-void MainComponent::setMidiInput(int index)
-{
-    auto list = MidiInput::getDevices();
-
-    deviceManager.removeMidiInputCallback (list[lastInputIndex], synthAudioSource.getMidiCollector()); // [13]
-
-    auto newInput = list[index];
-
-    if (! deviceManager.isMidiInputEnabled (newInput))
-        deviceManager.setMidiInputEnabled (newInput, true);
-
-    deviceManager.addMidiInputCallback (newInput, synthAudioSource.getMidiCollector()); // [12]
-    midiInputList.setSelectedId (index + 1, dontSendNotification);
-
-    lastInputIndex = index;
-
-}
-*/
 void ComponentSelection::itemSelected(Component *c) {
     if (auto e = dynamic_cast<GUIEffect*>(c))
         e->selectMode = true;

@@ -22,12 +22,10 @@ LineComponent* LineComponent::dragLine = nullptr;
 void LineComponent::mouseDown(const MouseEvent &event) {
     auto thisEvent = event.getEventRelativeTo(this);
 
-    if (auto p = dynamic_cast<AudioPort*>(event.originalComponent)){
-        port1 = p;
-        p1 = getLocalPoint(p, p->centrePoint);
-    } else if (auto p = dynamic_cast<InternalConnectionPort*>(event.originalComponent)){
-        p1 = getLocalPoint(p, p->centrePoint);
+    if (port1 = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        p1 = getLocalPoint(port1, port1->centrePoint);
     }
+
     p2 = thisEvent.getPosition();
 
     line.setStart(p1);
@@ -56,7 +54,6 @@ void LineComponent::mouseUp(const MouseEvent &event) {
             event.getPosition() - getPosition()
     );
     getParentComponent()->mouseUp(eventMain);
-
 }
 
 void LineComponent::convert(ConnectionPort *port2) {
@@ -418,6 +415,10 @@ void GUIEffect::addParameter(AudioProcessorParameter *param) {
     }
 }
 
+void GUIEffect::moved() {
+    Component::moved();
+}
+
 //=================================================================================
 // AudioPort methods
 
@@ -479,11 +480,9 @@ END_JUCER_METADATA
 #endif
 
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    if (inPort->getParentComponent() == &component){
-        line.setStart(getLocalPoint(inPort, inPort->centrePoint));
-    } else if (outPort->getParentComponent() == &component) {
-        line.setEnd(getLocalPoint(outPort, outPort->centrePoint));
-    }
+    line.setStart(getLocalPoint(inPort, inPort->centrePoint));
+    line.setEnd(getLocalPoint(outPort, outPort->centrePoint));
+
     repaint();
 }
 

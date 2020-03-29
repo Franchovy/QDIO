@@ -201,10 +201,7 @@ private:
     int numInputChannels = 2;
     int numOutputChannels = 2;
 
-    void initialiseGraph();
-    void connectAudioNodes();
-    void connectMidiNodes();
-    static void updateGraph();
+    void updateAudioGraph();
 
     // MIDI
     /*
