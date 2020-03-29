@@ -464,11 +464,12 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcesso
 
 ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, ValueTree effectTree) {
 
-    // Check for self ports if ICP
-    if (auto p = dynamic_cast<InternalConnectionPort*>(event.originalComponent))
-        if (auto returnPort = p->getParent()->checkPort(event.getPosition()))
-            if (p->canConnect(returnPort))
-                return returnPort;
+    // Check for self ports
+    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
+        if (auto e = dynamic_cast<GUIEffect*>(event.eventComponent))
+            if (auto returnPort = e->checkPort(event.getPosition()))
+                if (p->canConnect(returnPort))
+                    return returnPort;
 
     // Check children for a match
     for (int i = 0; i < effectTree.getNumChildren(); i++) {

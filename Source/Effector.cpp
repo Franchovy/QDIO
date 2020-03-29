@@ -457,9 +457,12 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort() {
 
 
 bool AudioPort::canConnect(ConnectionPort *other) {
-    // Can only connect to AudioPort of mutual parent
+    // Connect to AudioPort of mutual parent
     return (dynamic_cast<AudioPort *>(other)
-             && other->getParent()->getParentComponent() == this->getParent()->getParentComponent());
+            && other->getParent()->getParentComponent() == this->getParent()->getParentComponent())
+    // Connect to ICP of containing parent effect
+           || (dynamic_cast<InternalConnectionPort *>(other)
+    && other->getParent() == this->getParent()->getParentComponent());
 }
 
 
