@@ -539,7 +539,7 @@ public:
 
     Point<int> dragDetachFromParentComponent();
 
-    bool isIndividual() { return individual; }
+    bool isIndividual() const { return individual; }
     bool hasBeenInitialised = false;
 
     EffectVT* EVT;
@@ -631,8 +631,6 @@ public:
     EffectVT(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) :
         EffectVT(event)
     {
-        isIndividual = true;
-
         // Create from node:
         node = graph->getNodeForId(nodeID);
         processor = node->getProcessor();
@@ -683,8 +681,8 @@ public:
     // Setters and getter functions
 
     // Individual data
-    const AudioProcessor* getProcessor() const {if (isIndividual) return processor;}
-    const AudioProcessorGraph::Node::Ptr getNode() const {if (isIndividual) return node;}
+    const AudioProcessor* getProcessor() const {if (isIndividual()) return processor;}
+    const AudioProcessorGraph::Node::Ptr getNode() const {if (isIndividual()) return node;}
 
     // Data
     const String& getName() const { return name; }
@@ -702,12 +700,20 @@ public:
             effectTree.getParent().getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
     EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
             effectTree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
+    Array<EffectVT::Ptr> getChildren() {
+        Array<EffectVT::Ptr> array;
+        for (int i = 0; effectTree.getNumChildren(); i++)
+            if (auto e = dynamic_cast<EffectVT*>(effectTree.getChild(i).getProperty(ID_EVT_OBJECT).getObject()))
+                array.add(e);
+        return array;
+    }
     EffectVT::Ptr ptr(){ return this; }
     int getNumChildren(){ return effectTree.getNumChildren(); }
 
+    bool isIndividual() const { return guiEffect.isIndividual(); }
+
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
-    bool isIndividual = false;
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
 

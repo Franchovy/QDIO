@@ -66,7 +66,7 @@ public:
 
     //void addEffect(GUIEffect::Ptr effectPtr);
 
-    void timerCallback() override { updateGraph(); }
+    void timerCallback() override { updateAudioGraph(); }
 
     // Create Connection - called from LineComponent (lineDrag)
     void createConnection(std::unique_ptr<ConnectionLine> newConnection);
@@ -121,7 +121,6 @@ private:
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
     ConnectionPort* portToConnectTo(MouseEvent& event, ValueTree effectTree);
 
-private:
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
@@ -202,8 +201,10 @@ private:
     int numOutputChannels = 2;
 
     void updateAudioGraph();
+    void addConnectionsToGraph(EffectVT* effect);
 
-    // MIDI
+
+        // MIDI
     /*
     ComboBox midiInputList;
     Label midiInputListLabel;

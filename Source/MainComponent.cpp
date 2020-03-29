@@ -319,19 +319,22 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
 void MainComponent::updateAudioGraph()
 {
-    /*for (auto i = 0; i < effectsTree.getNumChildren(); i++){
-        std::cout << effectsTree.getChild(i)->getName() << newLine;
-        auto node = effectsTree.getChild(i)->getNode();
-        // add the mothafucka to da graph, dawg
+    // Add top level connections
 
-        node->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
-                                                processorGraph->getMainBusNumOutputChannels(),
-                                                processorGraph->getSampleRate(),
-                                                processorGraph->getBlockSize());
-    }*/
 
+    for (int i = 0; i < effectsTree.getNumChildren(); i++) {
+        if (auto evt = dynamic_cast<EffectVT*>(effectsTree.getChild(i).getProperty(ID_EVT_OBJECT).getObject())) {
+            if (!evt->isIndividual()) addConnectionsToGraph(evt);
+        }
+    }
 }
 
+// Move this to parent effectVT class
+void MainComponent::addConnectionsToGraph(EffectVT* effect) {
+    for (int i = 0; i < effect->getTree().getNumChildren(); i++) {
+
+    }
+}
 
 //============================================================================================
 // LassoSelector classes
