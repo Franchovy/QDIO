@@ -201,7 +201,7 @@ private:
     int numOutputChannels = 2;
 
     void updateAudioGraph();
-    void addConnectionsToGraph(EffectVT* effect);
+    void addConnectionsToGraph(EffectVT::Ptr effect);
 
 
         // MIDI

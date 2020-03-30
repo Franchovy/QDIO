@@ -182,6 +182,8 @@ public:
         return hoverBox.contains(x,y);
     }
 
+    const InternalConnectionPort* getInternalConnectionPort() const { return &internalPort; }
+
     AudioProcessor::Bus* bus;
     InternalConnectionPort internalPort;
 
@@ -680,9 +682,35 @@ public:
     // =================================================================================
     // Setters and getter functions
 
-    // Individual data
-    const AudioProcessor* getProcessor() const {if (isIndividual()) return processor;}
-    const AudioProcessorGraph::Node::Ptr getNode() const {if (isIndividual()) return node;}
+    struct NodeAndPort {
+        AudioProcessorGraph::Node::Ptr node;
+        AudioPort* port;
+    };
+
+    NodeAndPort getNodeAndPort(ConnectionPort* port = nullptr) const {
+        NodeAndPort nodeAndPort;
+        // Return
+        if (isIndividual()) {
+            nodeAndPort.node = node;
+            nodeAndPort.port = dynamic_cast<AudioPort*>(port);
+        }
+
+        // Recurse for children
+        if (auto p = dynamic_cast<AudioPort*>(port)) {
+            for (auto c : connections) { //TODO port reference to connected line
+                if (c->inPort == p->getInternalConnectionPort()) {
+                    nodeAndPort = c->outPort->getParent()->EVT->getNodeAndPort(c->outPort);
+                } else if (c->outPort == p->getInternalConnectionPort()) {
+                    nodeAndPort = c->inPort->getParent()->EVT->getNodeAndPort(c->inPort);
+                }
+            }
+        }
+        return nodeAndPort;
+    }
+
+    AudioProcessorGraph::Node::Ptr getNode() const {
+        return node;
+    }
 
     // Data
     const String& getName() const { return name; }
@@ -692,6 +720,13 @@ public:
     GUIEffect* getGUIEffect() {return &guiEffect;}
     const GUIEffect* getGUIEffect() const {return &guiEffect;}
     static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
+    Array<ConnectionLine*> getConnections() const {
+        Array<ConnectionLine*> array;
+        for (auto c : connections){
+            array.add(c);
+        }
+        return array;
+    }
 
     AudioProcessor::Bus* getDefaultBus() { graph->getBus(true, 0); }
 
