@@ -307,22 +307,10 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
             }
         }
 
-        // Call audiograph update
-/*
-        auto inputEffect = input->EVT;
-        auto outputEffect = output->EVT;
+        // Update audiograph
+        addAudioConnection(line);
 
-        auto inNode = inputEffect->getNodeAndPort();
-        auto outNode = outputEffect->getNodeAndPort();
-
-        for (int i = 0; i < jmin(numInputChannels, numOutputChannels); i++) {
-            processorGraph->addConnection({
-                      {inNode->nodeID, dynamic_cast<AudioPort*>(inputPort)->bus->getChannelIndexInProcessBlockBuffer(i)},
-                      {outNode->nodeID, dynamic_cast<AudioPort*>(outputPort)->bus->getChannelIndexInProcessBlockBuffer(i)}
-                });
-        }*/
-
-        timerCallback();
+        //timerCallback();
 
     }
 
@@ -331,98 +319,6 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 
 //==============================================================================
 
-
-void MainComponent::updateAudioGraph()
-{
-    // Add top level connections - to be added to top-level recursive call
-    for (auto c : connections) {
-        
-        EffectVT::NodeAndPort nodeAndPort1, nodeAndPort2;
-
-        if (!c->inPort->isInput) {
-            nodeAndPort1 = c->inPort->getParent()->EVT->getNodeAndPort(c->inPort);
-            nodeAndPort2 = c->outPort->getParent()->EVT->getNodeAndPort(c->outPort);
-        } else {
-            nodeAndPort2 = c->inPort->getParent()->EVT->getNodeAndPort(c->inPort);
-            nodeAndPort1 = c->outPort->getParent()->EVT->getNodeAndPort(c->outPort);
-        }
-        auto node1 = nodeAndPort1.node;
-        auto port1 = nodeAndPort1.port;
-        auto node2 = nodeAndPort2.node;
-        auto port2 = nodeAndPort2.port;
-
-        // xxx
-
-        for (int i = 0; i < jmin(numInputChannels, numOutputChannels); i++) {
-            processorGraph->addConnection({
-                                                  {node1->nodeID, port1->bus->getChannelIndexInProcessBlockBuffer(i)},
-                                                  {node2->nodeID, port2->bus->getChannelIndexInProcessBlockBuffer(i)}
-                                          });
-        }
-
-        AudioProcessorGraph::Connection connection({{node1->nodeID, 0},{node2->nodeID, 0}});
-        node1->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
-                processorGraph->getMainBusNumOutputChannels(), processorGraph->getSampleRate(), processorGraph->getBlockSize());
-
-        // xxx
-        if (processorGraph->isConnectionLegal(connection) && !processorGraph->isConnected(connection))
-            processorGraph->addConnection(connection);
-    }
-
-    for (int i = 0; i < effectsTree.getNumChildren(); i++) {
-        if (auto evt = dynamic_cast<EffectVT*>(effectsTree.getChild(i).getProperty(ID_EVT_OBJECT).getObject())) {
-            if (!evt->isIndividual()) addConnectionsToGraph(evt);
-        }
-    }
-
-    bool allConnectionsLegal = true;
-    if (allConnectionsLegal) {
-
-    }
-}
-
-// Move this to parent effectVT class
-void MainComponent::addConnectionsToGraph(EffectVT::Ptr effect) {
-    // Add connections
-    //TODO loops through c twice
-    for (auto c : effect->getConnections()) {
-        EffectVT::NodeAndPort nodeAndPort1, nodeAndPort2;
-
-        if (!c->inPort->isInput) {
-            nodeAndPort1 = c->inPort->getParent()->EVT->getNodeAndPort(c->inPort);
-            nodeAndPort2 = c->outPort->getParent()->EVT->getNodeAndPort(c->outPort);
-        } else {
-            nodeAndPort2 = c->inPort->getParent()->EVT->getNodeAndPort(c->inPort);
-            nodeAndPort1 = c->outPort->getParent()->EVT->getNodeAndPort(c->outPort);
-        }
-        auto node1 = nodeAndPort1.node;
-        auto port1 = nodeAndPort1.port;
-        auto node2 = nodeAndPort2.node;
-        auto port2 = nodeAndPort2.port;
-
-        // xxx
-
-        for (int i = 0; i < jmin(numInputChannels, numOutputChannels); i++) {
-            processorGraph->addConnection({
-                                                  {node1->nodeID, port1->bus->getChannelIndexInProcessBlockBuffer(i)},
-                                                  {node2->nodeID, port2->bus->getChannelIndexInProcessBlockBuffer(i)}
-                                          });
-        }
-
-        AudioProcessorGraph::Connection connection({{node1->nodeID, 0},{node2->nodeID, 0}});
-        node1->getProcessor()->setPlayConfigDetails(processorGraph->getMainBusNumInputChannels(),
-                                                    processorGraph->getMainBusNumOutputChannels(), processorGraph->getSampleRate(), processorGraph->getBlockSize());
-
-        // xxx
-        if (processorGraph->isConnectionLegal(connection) && !processorGraph->isConnected(connection))
-            processorGraph->addConnection(connection);
-    }
-
-    // Recurse for children
-    for (auto e : effect->getChildren()) {
-        if (!e->isIndividual()) addConnectionsToGraph(e);
-    }
-}
 
 //============================================================================================
 // LassoSelector classes
@@ -535,6 +431,26 @@ ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, ValueTree effe
 
     // If nothing is found return nullptr
     return nullptr;
+}
+
+void MainComponent::addAudioConnection(ConnectionLine *connectionLine) {
+    EffectVT::NodeAndPort in;
+    EffectVT::NodeAndPort out;
+    auto inEVT = connectionLine->inPort->getParent()->EVT;
+    auto outEVT = connectionLine->outPort->getParent()->EVT;
+
+    in = inEVT->getNode(connectionLine->inPort);
+    out = outEVT->getNode(connectionLine->outPort);
+
+    if (in.isValid && out.isValid) {
+        for (int c = 0; c < jmin(numInputChannels, numOutputChannels); c++) {
+            AudioProcessorGraph::Connection connection = {{in.node->nodeID, in.port->bus->getChannelIndexInProcessBlockBuffer(c)},
+                                               {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(c)}};
+            if (!processorGraph->isConnected(connection) && processorGraph->isConnectionLegal(connection)) {
+                processorGraph->addConnection(connection);
+            }
+        }
+    }
 }
 
 void ComponentSelection::itemSelected(Component *c) {

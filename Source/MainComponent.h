@@ -66,7 +66,9 @@ public:
 
     //void addEffect(GUIEffect::Ptr effectPtr);
 
-    void timerCallback() override { updateAudioGraph(); }
+    void timerCallback() override {
+        // do something interesting here
+    }
 
     // Create Connection - called from LineComponent (lineDrag)
     void createConnection(std::unique_ptr<ConnectionLine> newConnection);
@@ -200,8 +202,7 @@ private:
     int numInputChannels = 2;
     int numOutputChannels = 2;
 
-    void updateAudioGraph();
-    void addConnectionsToGraph(EffectVT::Ptr effect);
+    void addAudioConnection(ConnectionLine* connectionLine);
 
 
         // MIDI

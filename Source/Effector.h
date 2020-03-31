@@ -150,6 +150,7 @@ public:
     virtual bool canConnect(ConnectionPort* other) = 0;
 
     bool isInput;
+    ConnectionLine* connectionLine = nullptr;
 
 protected:
     ConnectionPort() : Component() {}
@@ -158,10 +159,12 @@ protected:
     Rectangle<int> outline;
 };
 
+class AudioPort;
 class InternalConnectionPort : public ConnectionPort
 {
 public:
-    InternalConnectionPort(bool isInput) : ConnectionPort() {
+    InternalConnectionPort(AudioPort* parent, bool isInput) : ConnectionPort() {
+        audioPort = parent;
         this->isInput = isInput;
 
         hoverBox = Rectangle<int>(0,0,30,30);
@@ -171,6 +174,7 @@ public:
     }
 
     bool canConnect(ConnectionPort *other) override;
+    AudioPort* audioPort;
 };
 
 class AudioPort : public ConnectionPort
@@ -197,6 +201,12 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
     ConnectionLine(ConnectionPort& p1, ConnectionPort& p2);
+    ~ConnectionLine(){
+        inPort->connectionLine = nullptr;
+        outPort->connectionLine = nullptr;
+        inPort->removeComponentListener(this);
+        outPort->removeComponentListener(this);
+    }
 
     void paint(Graphics &g) override
     {
@@ -222,6 +232,10 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
     void mouseExit(const MouseEvent &event) override {
         hoverMode = false;
         repaint();
+    }
+
+    ConnectionPort* getOtherPort(ConnectionPort* port) {
+        return inPort == port ? outPort : inPort;
     }
 
     bool hoverMode = false;
@@ -683,33 +697,39 @@ public:
     // Setters and getter functions
 
     struct NodeAndPort {
-        AudioProcessorGraph::Node::Ptr node;
-        AudioPort* port;
+        AudioProcessorGraph::Node::Ptr node = nullptr;
+        AudioPort* port = nullptr;
+        bool isValid = false;
     };
 
-    NodeAndPort getNodeAndPort(ConnectionPort* port = nullptr) const {
+    NodeAndPort getNode(ConnectionPort* port) {
         NodeAndPort nodeAndPort;
-        // Return
-        if (isIndividual()) {
-            nodeAndPort.node = node;
-            nodeAndPort.port = dynamic_cast<AudioPort*>(port);
-        }
 
-        // Recurse for children
-        if (auto p = dynamic_cast<AudioPort*>(port)) {
-            for (auto c : connections) { //TODO port reference to connected line
-                if (c->inPort == p->getInternalConnectionPort()) {
-                    nodeAndPort = c->outPort->getParent()->EVT->getNodeAndPort(c->outPort);
-                } else if (c->outPort == p->getInternalConnectionPort()) {
-                    nodeAndPort = c->inPort->getParent()->EVT->getNodeAndPort(c->inPort);
-                }
-            }
+        if (port->connectionLine == nullptr)
+            return nodeAndPort;
+        else if (isIndividual()) {
+            nodeAndPort.node = node;
+            nodeAndPort.port = dynamic_cast<AudioPort *>(port);
+            nodeAndPort.isValid = true;
+            return nodeAndPort;
+        } else {
+            ConnectionPort* portToCheck = nullptr;
+            if (auto p = dynamic_cast<AudioPort*>(port))
+                portToCheck = &p->internalPort;
+            else if (auto p = dynamic_cast<InternalConnectionPort*>(port))
+                portToCheck = p->audioPort;
+
+            if (portToCheck->connectionLine != nullptr) {
+                 auto otherPort = portToCheck->connectionLine->getOtherPort(portToCheck);
+                 nodeAndPort = otherPort->getParent()->EVT->getNode(
+                        otherPort);
+                return nodeAndPort;
+            } else return nodeAndPort;
         }
-        return nodeAndPort;
     }
 
-    AudioProcessorGraph::Node::Ptr getNode() const {
-        return node;
+    AudioProcessorGraph::NodeID getNodeID() const {
+        return node->nodeID;
     }
 
     // Data

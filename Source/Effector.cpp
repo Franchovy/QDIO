@@ -422,7 +422,7 @@ void GUIEffect::moved() {
 //=================================================================================
 // AudioPort methods
 
-AudioPort::AudioPort(bool isInput) : ConnectionPort(), internalPort(!isInput) {
+AudioPort::AudioPort(bool isInput) : ConnectionPort(), internalPort(this, !isInput) {
     hoverBox = Rectangle<int>(0,0,60,60);
     outline = Rectangle<int>(20, 20, 20, 20);
     centrePoint = Point<int>(30,30);
@@ -499,7 +499,8 @@ bool ConnectionLine::hitTest(int x, int y) {
 }
 
 ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
-    if (p1.isInput) {
+    // Remember that input ports are the line output and vice versa
+    if (!p1.isInput) {
         inPort = &p1;
         outPort = &p2;
     } else {
@@ -512,6 +513,9 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
 
     inPort->getParent()->addComponentListener(this);
     outPort->getParent()->addComponentListener(this);
+
+    inPort->connectionLine = this;
+    outPort->connectionLine = this;
 
     setBounds(0,0,getParentWidth(),getParentHeight());
 }
