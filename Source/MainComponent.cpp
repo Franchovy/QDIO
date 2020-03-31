@@ -11,6 +11,7 @@ MainComponent::MainComponent() :
     setComponentID("MainWindow");
     setName("MainWindow");
     setSize (1920, 1080);
+    
 
     //========================================================================================
     // Drag Line GUI
@@ -73,7 +74,7 @@ MainComponent::MainComponent() :
 
 MainComponent::~MainComponent()
 {
-
+    
 }
 
 //==============================================================================

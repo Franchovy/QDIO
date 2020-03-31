@@ -59,12 +59,6 @@ public:
     void mouseExit(const MouseEvent &event) override;
 
     //==============================================================================
-    // AudioSource overrides
-    /*void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void releaseResources() override;
-    void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;*/
-
-    //void addEffect(GUIEffect::Ptr effectPtr);
 
     void timerCallback() override {
         // do something interesting here
@@ -77,13 +71,33 @@ public:
 
 
 private:
-    //==============================================================================
     // Effect tree shit
     ValueTree effectsTree;
 
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
+
+//==============================================================================
+    // Audio shit
+    using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
+    using Node = AudioProcessorGraph::Node;
+
+    AudioDeviceManager deviceManager;
+    AudioProcessorPlayer player;
+
+    AudioDeviceSelectorComponent deviceSelector;
+
+    std::unique_ptr<AudioProcessorGraph> processorGraph;
+
+    GUIWrapper deviceSelectorComponent;
+    ToggleButton hideDeviceSelector;
+
+    int numInputChannels = 2;
+    int numOutputChannels = 2;
+
+    void addAudioConnection(ConnectionLine* connectionLine);
+    //==============================================================================
 
     CustomMenuItems mainMenu;
     Point<int> menuPos;
@@ -199,23 +213,7 @@ private:
     // Connections
     ReferenceCountedArray<ConnectionLine> connections;
 
-    //==============================================================================
-    // Audio shit
-    using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
-    using Node = AudioProcessorGraph::Node;
-
-    AudioDeviceManager deviceManager;
-    AudioProcessorPlayer player;
-    std::unique_ptr<AudioProcessorGraph> processorGraph;
-
-    GUIWrapper deviceSelectorComponent;
-    AudioDeviceSelectorComponent deviceSelector;
-    ToggleButton hideDeviceSelector;
-
-    int numInputChannels = 2;
-    int numOutputChannels = 2;
-
-    void addAudioConnection(ConnectionLine* connectionLine);
+    
 
 
         // MIDI

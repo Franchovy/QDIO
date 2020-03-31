@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="XyrfN6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7">
+<JUCERPROJECT id="XyrfN6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7"
+              compilerFlagSchemes="NewScheme">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{7BA62652-E431-98B6-D8CC-8F9CF98F34BB}" name="Source">
-      <FILE id="hXFxn1" name="BaseEffects.cpp" compile="1" resource="0" file="Source/BaseEffects.cpp"
+      <FILE id="hXFxn1" name="BaseEffects.cpp" compile="1" resource="1" file="Source/BaseEffects.cpp"
             xcodeResource="1"/>
-      <FILE id="md9GHI" name="BaseEffects.h" compile="1" resource="0" file="Source/BaseEffects.h"
+      <FILE id="md9GHI" name="BaseEffects.h" compile="1" resource="1" file="Source/BaseEffects.h"
             xcodeResource="1"/>
-      <FILE id="c1dZJ3" name="Effect.h" compile="1" resource="0" file="Source/Effect.h"
+      <FILE id="c1dZJ3" name="Effect.h" compile="1" resource="1" file="Source/Effect.h"
             xcodeResource="1"/>
-      <FILE id="zLmarI" name="Effector.cpp" compile="1" resource="0" file="Source/Effector.cpp"
+      <FILE id="zLmarI" name="Effector.cpp" compile="1" resource="1" file="Source/Effector.cpp"
             xcodeResource="1"/>
-      <FILE id="aUBkgB" name="Effector.h" compile="1" resource="0" file="Source/Effector.h"
+      <FILE id="aUBkgB" name="Effector.h" compile="1" resource="1" file="Source/Effector.h"
             xcodeResource="1"/>
-      <FILE id="NYg3gQ" name="IOEffects.cpp" compile="1" resource="0" file="Source/IOEffects.cpp"
+      <FILE id="NYg3gQ" name="IOEffects.cpp" compile="1" resource="1" file="Source/IOEffects.cpp"
             xcodeResource="1"/>
-      <FILE id="QX8rPO" name="IOEffects.h" compile="1" resource="0" file="Source/IOEffects.h"
+      <FILE id="QX8rPO" name="IOEffects.h" compile="1" resource="1" file="Source/IOEffects.h"
             xcodeResource="1"/>
-      <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"
+      <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="1" file="Source/Main.cpp"
             xcodeResource="1"/>
-      <FILE id="FcM0xP" name="MainComponent.cpp" compile="1" resource="0"
+      <FILE id="FcM0xP" name="MainComponent.cpp" compile="1" resource="1"
             file="Source/MainComponent.cpp" xcodeResource="1"/>
-      <FILE id="kR0kwB" name="MainComponent.h" compile="1" resource="0" file="Source/MainComponent.h"
+      <FILE id="kR0kwB" name="MainComponent.h" compile="1" resource="1" file="Source/MainComponent.h"
             xcodeResource="1"/>
     </GROUP>
   </MAINGROUP>
@@ -47,7 +48,7 @@
         <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <XCODE_MAC targetFolder="Builds/MacOSX">
+    <XCODE_MAC targetFolder="Builds/MacOSX" microphonePermissionNeeded="1" microphonePermissionsText="Please let me listen to you (&#3232;_&#3232;)">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug"/>
         <CONFIGURATION isDebug="0" name="Release"/>
@@ -103,6 +104,7 @@
   </MODULES>
   <LIVE_SETTINGS>
     <LINUX/>
+    <OSX/>
   </LIVE_SETTINGS>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
 </JUCERPROJECT>
