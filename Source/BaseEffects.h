@@ -130,6 +130,8 @@ public:
      * Use this to asynchronously update the buffer size
      */
     void timerCallback() override {
+        // TODO fix crashing
+
         newDelayBufferSize = ceil(delay.get() * currentSampleRate );
         if (newDelayBufferSize != delayBufferSize){
             std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
@@ -217,4 +219,34 @@ private:
     int delayBufferPt;
 
     std::atomic<float> delayVal;
+};
+
+class DistortionEffect : public BaseEffect {
+public:
+    DistortionEffect() : BaseEffect(),
+                         gain("gain", "Gain",
+                              NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f) {
+        name = "Gain Effect";
+        addParameter(&gain);
+        gain.addListener(&parameterListener);
+    }
+
+
+    void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override {
+        gainVal = gain;
+    }
+
+    void releaseResources() override {
+
+    }
+
+    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override
+    {
+        buffer.applyGain(gain);
+    }
+
+private:
+    AudioParameterFloat gain;
+    std::atomic<float> gainVal;
+
 };
