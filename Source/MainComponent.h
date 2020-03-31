@@ -17,7 +17,6 @@
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
 
-
 /**
  * SelectedItemSet for Component* class, with
  * itemSelected/itemDeselected overrides. That is all.
@@ -30,6 +29,8 @@ public:
     void itemSelected(Component *type) override;
     void itemDeselected(Component *type) override;
 };
+
+/*class EffectsScene : public Component, */
 
 
 
