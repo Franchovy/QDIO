@@ -41,16 +41,16 @@ public:
 
 
 /**
- * Main component and shit
+ *
  */
-class MainComponent   :
+class EffectScene   :
         public ValueTree::Listener, public Component,
         public LassoSource<GuiObject::Ptr>, private ReferenceCountedObject {
 public:
 
     //==============================================================================
-    MainComponent();
-    ~MainComponent();
+    EffectScene();
+    ~EffectScene();
 
     //==============================================================================
     // Component overrides
@@ -142,8 +142,23 @@ private:
 */
 
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)
 
 };
 
 
+/**
+ * This is the class that contains the main / static stuff. The EffectScene is part of the effect tree,
+ * as the tree-top, and the MainComponent/Viewport acts as its manager.
+ */
+class MainComponent : public Viewport
+{
+public:
+    MainComponent() {
+        setViewedComponent(&main);
+    }
+
+private:
+
+    EffectScene main;
+};

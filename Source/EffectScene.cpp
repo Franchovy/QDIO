@@ -1,7 +1,7 @@
-#include "MainComponent.h"
+#include "EffectScene.h"
 
 //==============================================================================
-MainComponent::MainComponent() :
+EffectScene::EffectScene() :
         effectsTree("TreeTop"),
         deviceSelector(deviceManager, 0,2,0,2,false,false,true,false),
         processorGraph(new AudioProcessorGraph()),
@@ -74,7 +74,7 @@ MainComponent::MainComponent() :
 }
 
 
-MainComponent::~MainComponent()
+EffectScene::~EffectScene()
 {
     //processorGraph->releaseResources();
     player.setProcessor(nullptr);
@@ -82,7 +82,7 @@ MainComponent::~MainComponent()
 }
 
 //==============================================================================
-void MainComponent::paint (Graphics& g)
+void EffectScene::paint (Graphics& g)
 {
     g.fillAll (Colour(30, 35, 40));
     
@@ -97,14 +97,14 @@ void MainComponent::paint (Graphics& g)
     g.drawText("QDIO",getWidth()/2-50, getHeight()/2-50, 100, 100, Justification::centred);
 }
 
-void MainComponent::resized()
+void EffectScene::resized()
 {
     //deviceSelectorGroup.setBounds(10,10,getWidth()-10, getHeight()-10);
     deviceSelector.setBounds(50,50,500,500);
     deviceSelectorComponent.setBounds(50,50,600,600);
 }
 
-void MainComponent::mouseDown(const MouseEvent &event) {
+void EffectScene::mouseDown(const MouseEvent &event) {
     if (event.mods.isLeftButtonDown() && event.originalComponent == this){
         lasso.setVisible(true);
         lasso.beginLasso(event, this);
@@ -112,7 +112,7 @@ void MainComponent::mouseDown(const MouseEvent &event) {
     //Component::mouseDown(event);
 }
 
-void MainComponent::mouseDrag(const MouseEvent &event) {
+void EffectScene::mouseDrag(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.dragLasso(event);
     if (event.mods.isLeftButtonDown()) {
@@ -130,7 +130,7 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
             // Get port to connect to (if there is one)
             auto newEvent = event.getEventRelativeTo(parentToCheck);
 
-            //TODO MainComponent and EffectTree parent under one subclass
+            //TODO EffectScene and EffectTree parent under one subclass
             ValueTree treeToCheck;
             if (parentToCheck != this)
                 treeToCheck = dynamic_cast<GUIEffect*>(parentToCheck)->EVT->getTree();
@@ -158,7 +158,7 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
     }
 }
 
-void MainComponent::mouseUp(const MouseEvent &event) {
+void EffectScene::mouseUp(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.endLasso();
 
@@ -224,15 +224,15 @@ void MainComponent::mouseUp(const MouseEvent &event) {
     Component::mouseUp(event);
 }
 
-void MainComponent::mouseEnter(const MouseEvent &event) {
+void EffectScene::mouseEnter(const MouseEvent &event) {
     Component::mouseEnter(event);
 }
 
-void MainComponent::mouseExit(const MouseEvent &event) {
+void EffectScene::mouseExit(const MouseEvent &event) {
     Component::mouseExit(event);
 }
 
-bool MainComponent::keyPressed(const KeyPress &key) {
+bool EffectScene::keyPressed(const KeyPress &key) {
     if (key == KeyPress::deleteKey) {
         if (!selected.getItemArray().isEmpty()) {
             // Delete selected
@@ -247,13 +247,13 @@ bool MainComponent::keyPressed(const KeyPress &key) {
     return Component::keyPressed(key);
 }
 
-void MainComponent::deleteEffect(GUIEffect* e) {
+void EffectScene::deleteEffect(GUIEffect* e) {
     delete e;
 }
 
 //==============================================================================
 
-void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
+void EffectScene::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_VT){
         auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EVT_OBJECT).getObject());
         auto effectGui = effectVT->getGUIEffect();
@@ -279,15 +279,15 @@ void MainComponent::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childW
 
 }
 
-void MainComponent::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
-                                          int indexFromWhichChildWasRemoved) {
+void EffectScene::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
+                                        int indexFromWhichChildWasRemoved) {
     if (childWhichHasBeenRemoved.hasType(ID_EFFECT_VT)){
         // Remove this from its parent
         std::cout << "Remove from parent listener call" << newLine;
     }
 }
 
-void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == dragLine.getDragLineTree() && property.toString() == "Connection"){
         processorGraph->reset();
 
@@ -346,7 +346,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 //============================================================================================
 // LassoSelector classes
 
-void MainComponent::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
+void EffectScene::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
     for (auto c : componentsToSelect) {
         if (!intersectMode) {
             if (area.contains(c->getBoundsInParent())) {
@@ -360,14 +360,14 @@ void MainComponent::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const R
     }
 }
 
-SelectedItemSet<GuiObject::Ptr> &MainComponent::getLassoSelection() {
+SelectedItemSet<GuiObject::Ptr> &EffectScene::getLassoSelection() {
     selected.clear();
     //selected.addChangeListener(this);
 
     return selected;
 }
 
-void MainComponent::setHoverComponent(GuiObject::Ptr c) {
+void EffectScene::setHoverComponent(GuiObject::Ptr c) {
     if (auto e = dynamic_cast<GUIEffect*>(hoverComponent.get())) {
         e->hoverMode = false;
         e->repaint();
@@ -389,7 +389,7 @@ void MainComponent::setHoverComponent(GuiObject::Ptr c) {
 
 
 
-Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree) {
+Component* EffectScene::effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree) {
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
         auto e_gui = dynamic_cast<GUIEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
 
@@ -416,7 +416,7 @@ Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int
     else return nullptr;
 }
 
-EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node)
+EffectVT::Ptr EffectScene::createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node)
 {
     if (node != nullptr){
         // Individual effect from processor
@@ -443,7 +443,7 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, const AudioPr
  * @param event for which the location will determine what effect to add to.
  * @param childEffect effect to add
  */
-void MainComponent::addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain) {
+void EffectScene::addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain) {
     auto parentTree = childEffect->getTree().getParent();
     parentTree.removeChild(childEffect->getTree(), nullptr);
 
@@ -456,7 +456,7 @@ void MainComponent::addEffect(const MouseEvent& event, EffectVT::Ptr childEffect
     newParent.appendChild(childEffect->getTree(), nullptr);
 }
 
-PopupMenu MainComponent::getEffectSelectMenu(const MouseEvent &event) {
+PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
     PopupMenu m;
     m.addItem("Empty Effect", std::function<void()>(
             [=]{
@@ -504,7 +504,7 @@ PopupMenu MainComponent::getEffectSelectMenu(const MouseEvent &event) {
     return m;
 }
 
-ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
+ConnectionPort *EffectScene::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
 
     // Check for self ports
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
@@ -542,7 +542,7 @@ ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, const ValueTre
     return nullptr;
 }
 
-void MainComponent::addAudioConnection(ConnectionLine *connectionLine) {
+void EffectScene::addAudioConnection(ConnectionLine *connectionLine) {
     EffectVT::NodeAndPort in;
     EffectVT::NodeAndPort out;
     auto inEVT = connectionLine->inPort->getParent()->EVT;

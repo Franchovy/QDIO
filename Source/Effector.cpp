@@ -42,14 +42,14 @@ void LineComponent::mouseDrag(const MouseEvent &event) {
     line.setEnd(p2);
     repaint();
 
-    // Pass hover detection to MainComponent
+    // Pass hover detection to EffectScene
     getParentComponent()->mouseDrag(thisEvent);
 }
 
 void LineComponent::mouseUp(const MouseEvent &event) {
     setVisible(false);
 
-    // Pass this event to MainComponent
+    // Pass this event to EffectScene
     auto eventMain = event.getEventRelativeTo(this).withNewPosition(
             event.getPosition() - getPosition()
     );
@@ -61,7 +61,7 @@ void LineComponent::convert(ConnectionPort *port2) {
         // Connect port1 to port2
         lastConnectionLine = new ConnectionLine(*port1, *port2);
 
-        // This calls the propertyChange update in MainComponent
+        // This calls the propertyChange update in EffectScene
         dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
     }
 }
