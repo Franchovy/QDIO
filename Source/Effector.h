@@ -28,10 +28,17 @@ struct GUIEffect;
 struct ConnectionLine;
 struct LineComponent;
 
+
+
 class CustomMenuItems
 {
 public:
     CustomMenuItems() = default;
+    ~CustomMenuItems() {
+        // TODO smart pointer to manage - deallocate here
+        /*names.clear();
+        functions.clear();*/
+    }
 
     int addItem(String name, std::function<void()> function) {
         functions.add(function);

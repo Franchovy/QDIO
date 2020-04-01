@@ -65,7 +65,9 @@ MainComponent::MainComponent() :
 
     //==============================================================================
     // Main component popup menu
-    mainMenu.addItem("Toggle Settings", [=](){
+    mainMenu = std::make_unique<CustomMenuItems>();
+
+    mainMenu->addItem("Toggle Settings", [=](){
         deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
     });
 
@@ -203,14 +205,14 @@ void MainComponent::mouseUp(const MouseEvent &event) {
             PopupMenu createEffectSubmenu = getEffectSelectMenu(event);
             m.addSubMenu("Create Effect", createEffectSubmenu);
             // Add CustomMenuItems
-            mainMenu.addToMenu(m);
+            mainMenu->addToMenu(m);
             if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
                 e->getMenu().addToMenu(m);
             // Execute result
             int result = m.show();
 
-            if (mainMenu.inRange(result))
-                mainMenu.execute(result);
+            if (mainMenu->inRange(result))
+                mainMenu->execute(result);
             if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
                 e->getMenu().execute(result);
     }
@@ -359,7 +361,7 @@ void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rect
 }
 
 SelectedItemSet<Component *> &MainComponent::getLassoSelection() {
-    selected = ComponentSelection();
+    selected.clear();
     //selected.addChangeListener(this);
 
     return selected;

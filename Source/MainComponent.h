@@ -24,10 +24,16 @@ ApplicationCommandManager& getCommandManager();
 class ComponentSelection : public SelectedItemSet<Component*>
 {
 public:
-    ComponentSelection() : SelectedItemSet<Component*>() {};
+    ComponentSelection() = default;
+
+    void clear() {
+        SelectedItemSet<Component*>::deselectAll();
+    }
 
     void itemSelected(Component *type) override;
     void itemDeselected(Component *type) override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
 };
 
 /*class EffectsScene : public Component, */
@@ -92,7 +98,7 @@ private:
     void addAudioConnection(ConnectionLine* connectionLine);
     //==============================================================================
 
-    CustomMenuItems mainMenu;
+    std::unique_ptr<CustomMenuItems> mainMenu;
 
     // GUI Helper tools
     LineComponent dragLine;
