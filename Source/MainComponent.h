@@ -60,6 +60,7 @@ public:
 
     bool keyPressed(const KeyPress &key) override;
 
+    void deleteEffect(GUIEffect* e);
     //==============================================================================
 
 private:
@@ -98,6 +99,7 @@ private:
     LassoComponent<Component*> lasso;
     bool intersectMode = true;
 
+    // TODO LassoComponent change to a different pointer type/
     void findLassoItemsInArea (Array <Component*>& results, const Rectangle<int>& area) override;
     Array<Component*> componentsToSelect;
     ComponentSelection selected;

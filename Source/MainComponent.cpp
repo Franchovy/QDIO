@@ -74,7 +74,9 @@ MainComponent::MainComponent() :
 
 MainComponent::~MainComponent()
 {
-    
+    //processorGraph->releaseResources();
+    player.setProcessor(nullptr);
+    deviceManager.closeAudioDevice();
 }
 
 //==============================================================================
@@ -229,7 +231,22 @@ void MainComponent::mouseExit(const MouseEvent &event) {
 }
 
 bool MainComponent::keyPressed(const KeyPress &key) {
+    if (key == KeyPress::deleteKey) {
+        if (!selected.getItemArray().isEmpty()) {
+            // Delete selected
+            for (auto i : selected.getItemArray()) {
+                if (auto e = dynamic_cast<GUIEffect*>(i))
+                    deleteEffect(e);
+            }
+        }
+    }
+
+
     return Component::keyPressed(key);
+}
+
+void MainComponent::deleteEffect(GUIEffect* e) {
+    delete e;
 }
 
 //==============================================================================

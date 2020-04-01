@@ -31,6 +31,8 @@ struct LineComponent;
 class CustomMenuItems
 {
 public:
+    CustomMenuItems() = default;
+
     int addItem(String name, std::function<void()> function) {
         functions.add(function);
         names.add(name);
@@ -58,6 +60,8 @@ private:
     Range<int> thisRange;
     Array<String> names;
     Array<std::function<void()>> functions;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomMenuItems)
 };
 
 class Resizer : public Component
@@ -119,6 +123,8 @@ private:
 
     PathStrokeType strokeType;
     float dashLengths[2] = {1.f, 1.f};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Resizer)
 };
 
 /**
@@ -157,6 +163,8 @@ protected:
 
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionPort)
 };
 
 class AudioPort;
@@ -175,6 +183,8 @@ public:
 
     bool canConnect(ConnectionPort *other) override;
     AudioPort* audioPort;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InternalConnectionPort)
 };
 
 class AudioPort : public ConnectionPort
@@ -192,6 +202,8 @@ public:
     InternalConnectionPort internalPort;
 
     bool canConnect(ConnectionPort *other) override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)
 };
 
 struct ConnectionLine : public Component, public ComponentListener, public ReferenceCountedObject
@@ -244,6 +256,8 @@ struct ConnectionLine : public Component, public ComponentListener, public Refer
     ConnectionPort* outPort;
 private:
     Line<int> line;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionLine)
 };
 
 
@@ -298,6 +312,8 @@ private:
     Point<int> p1, p2;
     ConnectionPort* port1 = nullptr;
     ValueTree dragLineTree;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LineComponent)
 };
 
 
@@ -425,6 +441,8 @@ private:
     PopupMenu menu;
     Resizer resizer;
     Array<Component*> childComponents;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIWrapper)
 };
 
 class ButtonListener : public Button::Listener
@@ -440,6 +458,7 @@ public:
 
 private:
     AudioProcessorParameter* linkedParameter;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ButtonListener)
 };
 
 class ComboListener : public ComboBox::Listener
@@ -455,6 +474,7 @@ public:
 
 private:
     AudioProcessorParameter* linkedParameter;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComboListener)
 };
 
 class SliderListener : public Slider::Listener
@@ -477,6 +497,8 @@ public:
     }
 private:
     AudioProcessorParameter* linkedParameter;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SliderListener)
 };
 
 class EffectVT;
@@ -497,10 +519,9 @@ struct EffectDragData : ReferenceCountedObject
     v-- Is this necessary??
     ReferenceCountedObject for usage as part of ValueTree system
 */
-class GUIEffect  : public ReferenceCountedObject, public Component {
+class GUIEffect : public ReferenceCountedObject, public Component {
 public:
     GUIEffect (const MouseEvent &event, EffectVT* parentEVT);
-
 
     void childrenChanged() override;
 
@@ -779,5 +800,7 @@ private:
     GUIEffect guiEffect;
 
     static AudioProcessorGraph* graph;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectVT)
 
 };
