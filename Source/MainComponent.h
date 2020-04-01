@@ -21,17 +21,17 @@ ApplicationCommandManager& getCommandManager();
  * SelectedItemSet for Component* class, with
  * itemSelected/itemDeselected overrides. That is all.
  */
-class ComponentSelection : public SelectedItemSet<Component*>
+class ComponentSelection : public SelectedItemSet<GuiObject::Ptr>
 {
 public:
     ComponentSelection() = default;
 
     void clear() {
-        SelectedItemSet<Component*>::deselectAll();
+        SelectedItemSet<GuiObject::Ptr>::deselectAll();
     }
 
-    void itemSelected(Component *type) override;
-    void itemDeselected(Component *type) override;
+    void itemSelected(GuiObject::Ptr type) override;
+    void itemDeselected(GuiObject::Ptr type) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
 };
@@ -45,7 +45,7 @@ public:
  */
 class MainComponent   :
         public ValueTree::Listener, public Component,
-        public LassoSource<Component*>, private ReferenceCountedObject {
+        public LassoSource<GuiObject::Ptr>, private ReferenceCountedObject {
 public:
 
     //==============================================================================
@@ -102,17 +102,17 @@ private:
 
     // GUI Helper tools
     LineComponent dragLine;
-    LassoComponent<Component*> lasso;
+    LassoComponent<GuiObject::Ptr> lasso;
     bool intersectMode = true;
 
     // TODO LassoComponent change to a different pointer type/
-    void findLassoItemsInArea (Array <Component*>& results, const Rectangle<int>& area) override;
-    Array<Component*> componentsToSelect;
+    void findLassoItemsInArea (Array <GuiObject::Ptr>& results, const Rectangle<int>& area) override;
+    ReferenceCountedArray<GuiObject> componentsToSelect;
     ComponentSelection selected;
-    SelectedItemSet<Component*>& getLassoSelection() override;
+    SelectedItemSet<GuiObject::Ptr>& getLassoSelection() override;
 
-    void setHoverComponent(Component *c);
-    Component* hoverComponent = nullptr;
+    void setHoverComponent(GuiObject::Ptr c);
+    GuiObject::Ptr hoverComponent = nullptr;
 
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
     static ConnectionPort* portToConnectTo(MouseEvent& event, const ValueTree& effectTree);

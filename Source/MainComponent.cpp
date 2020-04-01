@@ -151,7 +151,7 @@ void MainComponent::mouseDrag(const MouseEvent &event) {
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
 
             if (newParent != this)
-                setHoverComponent(newParent);
+                setHoverComponent(dynamic_cast<GuiObject*>(newParent));
             else
                 setHoverComponent(nullptr);
         }
@@ -167,7 +167,7 @@ void MainComponent::mouseUp(const MouseEvent &event) {
         if (GUIEffect *effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
             if (event.getDistanceFromDragStart() < 10) {
                 // Consider this a click and not a drag
-                selected.addToSelection(event.eventComponent);
+                selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
                 event.eventComponent->repaint();
             }
 
@@ -185,7 +185,7 @@ void MainComponent::mouseUp(const MouseEvent &event) {
         }
         // If component is LineComponent, respond to line drag event
         else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
+            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
                 l->convert(port);
             }
         }
@@ -237,7 +237,7 @@ bool MainComponent::keyPressed(const KeyPress &key) {
         if (!selected.getItemArray().isEmpty()) {
             // Delete selected
             for (auto i : selected.getItemArray()) {
-                if (auto e = dynamic_cast<GUIEffect*>(i))
+                if (auto e = dynamic_cast<GUIEffect*>(i.get()))
                     deleteEffect(e);
             }
         }
@@ -346,7 +346,7 @@ void MainComponent::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChan
 //============================================================================================
 // LassoSelector classes
 
-void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rectangle<int> &area) {
+void MainComponent::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
     for (auto c : componentsToSelect) {
         if (!intersectMode) {
             if (area.contains(c->getBoundsInParent())) {
@@ -360,28 +360,28 @@ void MainComponent::findLassoItemsInArea(Array<Component *> &results, const Rect
     }
 }
 
-SelectedItemSet<Component *> &MainComponent::getLassoSelection() {
+SelectedItemSet<GuiObject::Ptr> &MainComponent::getLassoSelection() {
     selected.clear();
     //selected.addChangeListener(this);
 
     return selected;
 }
 
-void MainComponent::setHoverComponent(Component* c) {
-    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
+void MainComponent::setHoverComponent(GuiObject::Ptr c) {
+    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent.get())) {
         e->hoverMode = false;
         e->repaint();
-    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
         p->hoverMode = false;
         p->repaint();
     }
 
     hoverComponent = c;
 
-    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
+    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent.get())) {
         e->hoverMode = true;
         e->repaint();
-    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
         p->hoverMode = true;
         p->repaint();
     }
@@ -429,7 +429,7 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, const AudioPr
         // Create Effect with selected Effects inside
         Array<const EffectVT*> effectVTArray;
         for (auto item : selected.getItemArray()){
-            if (auto eGui = dynamic_cast<GUIEffect*>(item))
+            if (auto eGui = dynamic_cast<GUIEffect*>(item.get()))
                 effectVTArray.add(eGui->EVT);
         }
         selected.deselectAll();
@@ -562,14 +562,14 @@ void MainComponent::addAudioConnection(ConnectionLine *connectionLine) {
     }
 }
 
-void ComponentSelection::itemSelected(Component *c) {
-    if (auto e = dynamic_cast<GUIEffect*>(c))
+void ComponentSelection::itemSelected(GuiObject::Ptr c) {
+    if (auto e = dynamic_cast<GUIEffect*>(c.get()))
         e->selectMode = true;
     c->repaint();
 }
 
-void ComponentSelection::itemDeselected(Component *c) {
-    if (auto e = dynamic_cast<GUIEffect*>(c))
+void ComponentSelection::itemDeselected(GuiObject::Ptr c) {
+    if (auto e = dynamic_cast<GUIEffect*>(c.get()))
         e->selectMode = false;
     c->repaint();
 }

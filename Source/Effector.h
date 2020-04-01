@@ -28,7 +28,11 @@ struct GUIEffect;
 struct ConnectionLine;
 struct LineComponent;
 
-
+class GuiObject : public ReferenceCountedObject, public Component
+{
+public:
+    using Ptr = ReferenceCountedObjectPtr<GuiObject>;
+};
 
 class CustomMenuItems
 {
@@ -71,7 +75,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomMenuItems)
 };
 
-class Resizer : public Component
+class Resizer : public GuiObject
 {
 public:
     Resizer() :
@@ -137,7 +141,7 @@ private:
 /**
  * Base class - port to connect to other ports
  */
-class ConnectionPort : public Component
+class ConnectionPort : public GuiObject
 {
 public:
     Point<int> centrePoint;
@@ -166,7 +170,7 @@ public:
     ConnectionLine* connectionLine = nullptr;
 
 protected:
-    ConnectionPort() : Component() {}
+    ConnectionPort() : GuiObject() {}
 
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
@@ -213,7 +217,7 @@ public:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)
 };
 
-struct ConnectionLine : public Component, public ComponentListener, public ReferenceCountedObject
+struct ConnectionLine : public GuiObject, public ComponentListener
 {
     using Ptr = ReferenceCountedObjectPtr<ConnectionLine>;
 
@@ -268,7 +272,7 @@ private:
 };
 
 
-struct LineComponent : public Component
+struct LineComponent : public GuiObject
 {
     LineComponent() : dragLineTree(ID_DRAGLINE)
     {
@@ -325,7 +329,7 @@ private:
 
 
 // TODO single child instead of children - wraps only around one thing
-class GUIWrapper : public Component {
+class GUIWrapper : public GuiObject {
 public:
     GUIWrapper(Component* child) : GUIWrapper()
     {
@@ -526,7 +530,8 @@ struct EffectDragData : ReferenceCountedObject
     v-- Is this necessary??
     ReferenceCountedObject for usage as part of ValueTree system
 */
-class GUIEffect : public ReferenceCountedObject, public Component {
+class GUIEffect : public GuiObject
+{
 public:
     GUIEffect (const MouseEvent &event, EffectVT* parentEVT);
 
