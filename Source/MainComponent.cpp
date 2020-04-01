@@ -192,7 +192,6 @@ void MainComponent::mouseUp(const MouseEvent &event) {
                (event.getDistanceFromDragStart() < 10 &&
                 event.mods.isLeftButtonDown() &&
                 event.mods.isCtrlDown())) {
-            menuPos = getMouseXYRelative();
 
             // Right-click menu
             PopupMenu m;
@@ -227,6 +226,10 @@ void MainComponent::mouseEnter(const MouseEvent &event) {
 
 void MainComponent::mouseExit(const MouseEvent &event) {
     Component::mouseExit(event);
+}
+
+bool MainComponent::keyPressed(const KeyPress &key) {
+    return Component::keyPressed(key);
 }
 
 //==============================================================================
@@ -345,9 +348,27 @@ SelectedItemSet<Component *> &MainComponent::getLassoSelection() {
     return selected;
 }
 
-bool MainComponent::keyPressed(const KeyPress &key) {
-    return Component::keyPressed(key);
-}
+void MainComponent::setHoverComponent(Component* c) {
+    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
+        e->hoverMode = false;
+        e->repaint();
+    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+        p->hoverMode = false;
+        p->repaint();
+    }
+
+    hoverComponent = c;
+
+    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent)) {
+        e->hoverMode = true;
+        e->repaint();
+    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent)) {
+        p->hoverMode = true;
+        p->repaint();
+    }
+};
+
+
 
 Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree) {
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
@@ -376,7 +397,7 @@ Component* MainComponent::effectToMoveTo(Component* componentToIgnore, Point<int
     else return nullptr;
 }
 
-EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcessorGraph::Node::Ptr node)
+EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node)
 {
     if (node != nullptr){
         // Individual effect from processor
@@ -388,15 +409,83 @@ EffectVT::Ptr MainComponent::createEffect(const MouseEvent &event, AudioProcesso
     } else if (selected.getNumSelected() > 0){
         // Create Effect with selected Effects inside
         Array<const EffectVT*> effectVTArray;
-        for (auto eGui : selected.getItemArray()){
-            effectVTArray.add(dynamic_cast<GUIEffect*>(eGui)->EVT);
+        for (auto item : selected.getItemArray()){
+            if (auto eGui = dynamic_cast<GUIEffect*>(item))
+                effectVTArray.add(eGui->EVT);
         }
         selected.deselectAll();
         return new EffectVT(event, effectVTArray);
     }
 }
 
-ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, ValueTree effectTree) {
+
+/**
+ * Adds existing effect as child to the effect under the mouse
+ * @param event for which the location will determine what effect to add to.
+ * @param childEffect effect to add
+ */
+void MainComponent::addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain) {
+    auto parentTree = childEffect->getTree().getParent();
+    parentTree.removeChild(childEffect->getTree(), nullptr);
+
+    ValueTree newParent;
+    if (auto newGUIEffect = dynamic_cast<GUIEffect*>(event.eventComponent)){
+        newParent = newGUIEffect->EVT->getTree();
+    } else
+        newParent = effectsTree;
+
+    newParent.appendChild(childEffect->getTree(), nullptr);
+}
+
+PopupMenu MainComponent::getEffectSelectMenu(const MouseEvent &event) {
+    PopupMenu m;
+    m.addItem("Empty Effect", std::function<void()>(
+            [=]{
+                auto e = createEffect(event);
+                addEffect(event, e);
+            }));
+    m.addItem("Input Effect", std::function<void()>(
+            [=]{
+                auto node = processorGraph->addNode(std::make_unique<InputDeviceEffect>());
+                auto e = createEffect(event, node);
+                addEffect(event, e);
+            }));
+    m.addItem("Output Effect", std::function<void()>(
+            [=]{
+                auto node = processorGraph->addNode(std::make_unique<OutputDeviceEffect>());
+                auto e = createEffect(event, node);
+                addEffect(event, e);
+            }));
+    m.addItem("Delay Effect", std::function<void()>(
+            [=](){
+                auto node = processorGraph->addNode(std::make_unique<DelayEffect>());
+                node->getProcessor()->setPlayConfigDetails(
+                        processorGraph->getMainBusNumInputChannels(),
+                        processorGraph->getMainBusNumOutputChannels(),
+                        processorGraph->getSampleRate(),
+                        processorGraph->getBlockSize()
+                );
+                auto e = createEffect(event, node);
+                addEffect(event, e);
+            }
+    ));
+    m.addItem("Distortion Effect", std::function<void()>(
+            [=]{
+                auto node = processorGraph->addNode(std::make_unique<DistortionEffect>());
+                node->getProcessor()->setPlayConfigDetails(
+                        processorGraph->getMainBusNumInputChannels(),
+                        processorGraph->getMainBusNumOutputChannels(),
+                        processorGraph->getSampleRate(),
+                        processorGraph->getBlockSize()
+                );
+                auto e = createEffect(event, node);
+                addEffect(event, e);
+            }
+    ));
+    return m;
+}
+
+ConnectionPort *MainComponent::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
 
     // Check for self ports
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))

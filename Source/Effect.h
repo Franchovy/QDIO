@@ -8,6 +8,11 @@
   ==============================================================================
 */
 
+#include <JuceHeader.h>
+
 #pragma once
 
-class EffectTree :
+class EffectTree : public ReferenceCountedObject
+{
+
+};
