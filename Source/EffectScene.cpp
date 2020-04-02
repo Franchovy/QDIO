@@ -142,7 +142,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
             //TODO EffectScene and EffectTree parent under one subclass
             ValueTree treeToCheck;
             if (parentToCheck != this)
-                treeToCheck = dynamic_cast<GUIEffect*>(parentToCheck)->EVT->getTree();
+                treeToCheck = dynamic_cast<GuiEffect*>(parentToCheck)->EVT->getTree();
             else
                 treeToCheck = effectsTree;
             connectPort = portToConnectTo(newEvent, treeToCheck);
@@ -154,7 +154,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
 
         }
         // Effect drag
-        else if (auto *effect = dynamic_cast<GUIEffect *>(event.eventComponent)){
+        else if (auto *effect = dynamic_cast<GuiEffect *>(event.eventComponent)){
             auto newParent = effectToMoveTo(effect,
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
 
@@ -172,7 +172,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
 
     if (event.mods.isLeftButtonDown()) {
         // If the component is an effect, respond to move effect event
-        if (GUIEffect *effect = dynamic_cast<GUIEffect *>(event.originalComponent)) {
+        if (GuiEffect *effect = dynamic_cast<GuiEffect *>(event.originalComponent)) {
             if (event.getDistanceFromDragStart() < 10) {
                 // Consider this a click and not a drag
                 selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
@@ -183,7 +183,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             auto newParent = effectToMoveTo(effect,
                                             event.getEventRelativeTo(this).getPosition(), effectsTree);
 
-            if (auto e = dynamic_cast<GUIEffect *>(newParent))
+            if (auto e = dynamic_cast<GuiEffect *>(newParent))
                 if (!e->isInEditMode())
                     return;
             // target is not in edit mode
@@ -214,14 +214,14 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             m.addSubMenu("Create Effect", createEffectSubmenu);
             // Add CustomMenuItems
             mainMenu->addToMenu(m);
-            if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
+            if (auto e = dynamic_cast<GuiEffect*>(event.originalComponent))
                 e->getMenu().addToMenu(m);
             // Execute result
             int result = m.show();
 
             if (mainMenu->inRange(result))
                 mainMenu->execute(result);
-            if (auto e = dynamic_cast<GUIEffect*>(event.originalComponent))
+            if (auto e = dynamic_cast<GuiEffect*>(event.originalComponent))
                 e->getMenu().execute(result);
     }
 
@@ -232,20 +232,12 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     Component::mouseUp(event);
 }
 
-void EffectScene::mouseEnter(const MouseEvent &event) {
-    Component::mouseEnter(event);
-}
-
-void EffectScene::mouseExit(const MouseEvent &event) {
-    Component::mouseExit(event);
-}
-
 bool EffectScene::keyPressed(const KeyPress &key) {
     if (key == KeyPress::deleteKey) {
         if (!selected.getItemArray().isEmpty()) {
             // Delete selected
             for (auto i : selected.getItemArray()) {
-                if (auto e = dynamic_cast<GUIEffect*>(i.get()))
+                if (auto e = dynamic_cast<GuiEffect*>(i.get()))
                     deleteEffect(e);
             }
         }
@@ -255,7 +247,7 @@ bool EffectScene::keyPressed(const KeyPress &key) {
     return Component::keyPressed(key);
 }
 
-void EffectScene::deleteEffect(GUIEffect* e) {
+void EffectScene::deleteEffect(GuiEffect* e) {
     delete e;
 }
 
@@ -277,7 +269,7 @@ void EffectScene::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhi
             addAndMakeVisible(effectGui);
         }
 
-        // Set initialised boolean in GUIEffect
+        // Set initialised boolean in GuiEffect
         effectGui->hasBeenInitialised = true;
 
         //TODO check if recursive call for children is needed
@@ -307,8 +299,8 @@ void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChange
 
         // Remember that an inputPort is receiving, on the output effect
         // and the outputPort is source on the input effect
-        auto output = dynamic_cast<GUIEffect*>(outputPort->getParent());
-        auto input = dynamic_cast<GUIEffect*>(inputPort->getParent());
+        auto output = dynamic_cast<GuiEffect*>(outputPort->getParent());
+        auto input = dynamic_cast<GuiEffect*>(inputPort->getParent());
 
         // Check for common parent
         // Find common parent
@@ -318,7 +310,7 @@ void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChange
                 connections.add(line);
                 addAndMakeVisible(line);
             } else {
-                dynamic_cast<GUIEffect*>(input->getParentComponent())->EVT->addConnection(line);
+                dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line);
             }
         } else if (input->getParentComponent() == output) {
             std::cout << "Output parent" << newLine;
@@ -326,7 +318,7 @@ void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChange
                 connections.add(line);
                 addAndMakeVisible(line);
             } else {
-                dynamic_cast<GUIEffect*>(output->getParentComponent())->EVT->addConnection(line);
+                dynamic_cast<GuiEffect*>(output->getParentComponent())->EVT->addConnection(line);
             }
         } else if (output->getParentComponent() == input) {
             std::cout << "Input parent" << newLine;
@@ -334,7 +326,7 @@ void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChange
                 connections.add(line);
                 addAndMakeVisible(line);
             } else {
-                dynamic_cast<GUIEffect*>(input->getParentComponent())->EVT->addConnection(line);
+                dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line);
             }
         }
 
@@ -376,7 +368,7 @@ SelectedItemSet<GuiObject::Ptr> &EffectScene::getLassoSelection() {
 }
 
 void EffectScene::setHoverComponent(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent.get())) {
+    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
         e->hoverMode = false;
         e->repaint();
     } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
@@ -386,7 +378,7 @@ void EffectScene::setHoverComponent(GuiObject::Ptr c) {
 
     hoverComponent = c;
 
-    if (auto e = dynamic_cast<GUIEffect*>(hoverComponent.get())) {
+    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
         e->hoverMode = true;
         e->repaint();
     } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
@@ -399,7 +391,7 @@ void EffectScene::setHoverComponent(GuiObject::Ptr c) {
 
 Component* EffectScene::effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree) {
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<GUIEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
 
         if (e_gui != nullptr
                 && e_gui->getBoundsInParent().contains(point)
@@ -437,7 +429,7 @@ EffectVT::Ptr EffectScene::createEffect(const MouseEvent &event, const AudioProc
         // Create Effect with selected Effects inside
         Array<const EffectVT*> effectVTArray;
         for (auto item : selected.getItemArray()){
-            if (auto eGui = dynamic_cast<GUIEffect*>(item.get()))
+            if (auto eGui = dynamic_cast<GuiEffect*>(item.get()))
                 effectVTArray.add(eGui->EVT);
         }
         selected.deselectAll();
@@ -456,7 +448,7 @@ void EffectScene::addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, 
     parentTree.removeChild(childEffect->getTree(), nullptr);
 
     ValueTree newParent;
-    if (auto newGUIEffect = dynamic_cast<GUIEffect*>(event.eventComponent)){
+    if (auto newGUIEffect = dynamic_cast<GuiEffect*>(event.eventComponent)){
         newParent = newGUIEffect->EVT->getTree();
     } else
         newParent = effectsTree;
@@ -516,14 +508,14 @@ ConnectionPort::Ptr EffectScene::portToConnectTo(MouseEvent& event, const ValueT
 
     // Check for self ports
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
-        if (auto e = dynamic_cast<GUIEffect*>(event.eventComponent))
+        if (auto e = dynamic_cast<GuiEffect*>(event.eventComponent))
             if (auto returnPort = e->checkPort(event.getPosition()))
                 if (p->canConnect(returnPort))
                     return returnPort;
 
     // Check children for a match
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<GUIEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
 
         if (e_gui == nullptr)
             continue;
@@ -570,18 +562,15 @@ void EffectScene::addAudioConnection(ConnectionLine *connectionLine) {
     }
 }
 
-void EffectScene::mouseMove(const MouseEvent &event) {
-}
-
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<GUIEffect*>(c.get()))
+    if (auto e = dynamic_cast<GuiEffect*>(c.get()))
         e->selectMode = true;
     c->repaint();
 }
 
 void ComponentSelection::itemDeselected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<GUIEffect*>(c.get()))
+    if (auto e = dynamic_cast<GuiEffect*>(c.get()))
         e->selectMode = false;
     c->repaint();
 }

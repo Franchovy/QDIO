@@ -24,7 +24,7 @@ const Identifier ID_EFFECT_GUI("GUI");
 // Ref for dragline VT
 const Identifier ID_DRAGLINE("DragLine");
 
-struct GUIEffect;
+struct GuiEffect;
 struct ConnectionLine;
 struct LineComponent;
 
@@ -168,7 +168,7 @@ public:
         repaint();
     }
 
-    GUIEffect* getParent();
+    GuiEffect* getParent();
 
     virtual bool canConnect(ConnectionPort::Ptr& other) = 0;
 
@@ -462,6 +462,11 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIWrapper)
 };
 
+class GuiParameter : public GuiObject
+{
+
+};
+
 class ButtonListener : public Button::Listener
 {
 public:
@@ -530,33 +535,34 @@ struct EffectDragData : ReferenceCountedObject
 };
 
 /**
-    GUIEffect Component
+    GuiEffect Component
     GUI Representation of Effects / Container for plugins
 
     v-- Is this necessary??
     ReferenceCountedObject for usage as part of ValueTree system
 */
-class GUIEffect : public GuiObject
+class GuiEffect : public GuiObject
 {
 public:
-    GUIEffect (const MouseEvent &event, EffectVT* parentEVT);
+    using Ptr = ReferenceCountedObjectPtr<GuiEffect>;
 
-    void childrenChanged() override;
+    GuiEffect (const MouseEvent &event, EffectVT* parentEVT);
+    ~GuiEffect() override;
 
-    ~GUIEffect() override;
-
-    void parentHierarchyChanged() override;
-
-    void insertEffectGroup();
-    void insertEffect();
     void setProcessor(AudioProcessor* processor);
 
-    using Ptr = ReferenceCountedObjectPtr<GUIEffect>;
-
     void paint (Graphics& g) override;
-
     void resized() override;
     void moved() override;
+
+    void mouseDown(const MouseEvent &event) override;
+    void mouseDrag(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
+    void mouseEnter(const MouseEvent &event) override;
+    void mouseExit(const MouseEvent &event) override;
+
+    void childrenChanged() override;
+    void parentHierarchyChanged() override;
 
     ConnectionPort::Ptr checkPort(Point<int> pos);
 
@@ -565,15 +571,7 @@ public:
 
     void addPort(AudioProcessor::Bus* bus, bool isInput);
 
-
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
-    void mouseEnter(const MouseEvent &event) override;
-    void mouseExit(const MouseEvent &event) override;
-
     Point<int> dragDetachFromParentComponent();
-
     bool isIndividual() const { return individual; }
     bool hasBeenInitialised = false;
 
@@ -617,9 +615,23 @@ private:
     int outputPortStartPos = 100;
     int outputPortPos = outputPortStartPos;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIEffect)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuiEffect)
 };
 
+/**
+ * Base class for Effects and EffectScene
+ * Contains all functionality common to both:
+ * Convenience functions for tree navigation,
+ * Data for saving and loading state,
+ * TODO Undoable action
+ */
+class EffectTreeBase : public ReferenceCountedObject
+{
+public:
+
+private:
+
+};
 
 /**
  * EffectVT (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
@@ -629,88 +641,19 @@ private:
  * The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
  */
 
-class EffectVT : public ReferenceCountedObject
+class EffectVT : public EffectTreeBase
 {
 public:
-    /**
-     * ENCAPSULATOR CONSTRUCTOR EffectVT of group of EffectVTs
-     * @param effectVTSet
-     */
-    EffectVT(const MouseEvent &event, Array<const EffectVT*> effectVTSet) :
-        EffectVT(event)
-    {
-        // Note top left and bottom right effects to have a size to set
-        Point<int> topLeft;
-        Point<int> bottomRight;
-        auto thisBounds = guiEffect.getBoundsInParent();
 
-        for (auto eVT : effectVTSet){
-            // Set itself as parent of given children
-            eVT->getTree().getParent().removeChild(eVT->getTree(), nullptr);
-            effectTree.appendChild(eVT->getTree(), nullptr);
+    EffectVT(const MouseEvent &event, Array<const EffectVT*> effectVTSet);
+    EffectVT(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID);
+    explicit EffectVT(const MouseEvent &event);
 
-            // Update position
-            auto bounds = eVT->getGUIEffect()->getBoundsInParent();
-            thisBounds = thisBounds.getUnion(bounds);
-        }
-
-        thisBounds.expand(10,10);
-        guiEffect.setBounds(thisBounds);
-    }
-
-    /**
-     * INDIVIDUAL CONSTRUCTOR
-     * Node - Individual GUIEffect / effectVT
-     * @param nodeID
-     */
-    EffectVT(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) :
-        EffectVT(event)
-    {
-        // Create from node:
-        node = graph->getNodeForId(nodeID);
-        processor = node->getProcessor();
-        effectTree.setProperty("Node", node.get(), nullptr);
-
-        // Initialise with processor
-        guiEffect.setProcessor(processor);
-    }
-
-    /**
-     * Empty effectVT
-     */
-    EffectVT(const MouseEvent &event) :
-        effectTree("effectTree"),
-        guiEffect(event, this)
-    {
-        // Setup effectTree properties
-        effectTree.setProperty("Name", name, nullptr);
-        effectTree.setProperty("Effect", this, nullptr);
-        effectTree.setProperty("GUI", &guiEffect, nullptr);
-    }
-
-    ~EffectVT()
-    {
-        effectTree.removeAllProperties(nullptr);
-        // Delete processor from graph
-        graph->removeNode(node->nodeID);
-    }
+    ~EffectVT();
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
 
-    /**
-     * Adds effect to this one as a child
-     * @param effect to add as child
-     */
-    void addEffect(const EffectVT::Ptr effect){
-        std::cout << "Is this still being called?" << newLine;
-        effect->getTree().getParent().removeChild(effect->getTree(), nullptr);
-        effectTree.appendChild(effect->getTree(), nullptr);
-    }
-
-    void addConnection(ConnectionLine* connection) {
-        connections.add(connection);
-        guiEffect.addAndMakeVisible(connection);
-    }
+    void addConnection(ConnectionLine* connection);
 
     // =================================================================================
     // Setters and getter functions
@@ -720,58 +663,17 @@ public:
         AudioPort* port = nullptr;
         bool isValid = false;
     };
-
-    NodeAndPort getNode(ConnectionPort::Ptr& port) {
-        NodeAndPort nodeAndPort;
-
-        if (port->connectionLine == nullptr)
-            return nodeAndPort;
-        else if (isIndividual()) {
-            nodeAndPort.node = node;
-            nodeAndPort.port = dynamic_cast<AudioPort*>(port.get());
-            nodeAndPort.isValid = true;
-            return nodeAndPort;
-        } else {
-            ConnectionPort::Ptr portToCheck = nullptr;
-            if (auto p = dynamic_cast<AudioPort*>(port.get())) {
-                portToCheck = p->internalPort;
-                portToCheck->incReferenceCount();
-            }
-
-            else if (auto p = dynamic_cast<InternalConnectionPort*>(port.get())) {
-                portToCheck = p->audioPort;
-                portToCheck->incReferenceCount();
-            }
-
-
-            if (portToCheck->connectionLine != nullptr) {
-                 auto otherPort = portToCheck->connectionLine->getOtherPort(portToCheck);
-                 nodeAndPort = otherPort->getParent()->EVT->getNode(
-                        otherPort);
-                return nodeAndPort;
-            } else return nodeAndPort;
-        }
-    }
-
-    AudioProcessorGraph::NodeID getNodeID() const {
-        return node->nodeID;
-    }
+    NodeAndPort getNode(ConnectionPort::Ptr& port);
+    AudioProcessorGraph::NodeID getNodeID() const;
 
     // Data
     const String& getName() const { return name; }
     void setName(const String &name) { this->name = name; }
     ValueTree& getTree() {return effectTree;}
     const ValueTree& getTree() const {return effectTree;}
-    GUIEffect* getGUIEffect() {return &guiEffect;}
-    const GUIEffect* getGUIEffect() const {return &guiEffect;}
+    GuiEffect* getGUIEffect() {return &guiEffect;}
+    const GuiEffect* getGUIEffect() const {return &guiEffect;}
     static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
-    Array<ConnectionLine*> getConnections() const {
-        Array<ConnectionLine*> array;
-        for (auto c : connections){
-            array.add(c);
-        }
-        return array;
-    }
 
     AudioProcessor::Bus* getDefaultBus() { graph->getBus(true, 0); }
 
@@ -780,16 +682,8 @@ public:
             effectTree.getParent().getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
     EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
             effectTree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
-    Array<EffectVT::Ptr> getChildren() {
-        Array<EffectVT::Ptr> array;
-        for (int i = 0; effectTree.getNumChildren(); i++)
-            if (auto e = dynamic_cast<EffectVT*>(effectTree.getChild(i).getProperty(ID_EVT_OBJECT).getObject()))
-                array.add(e);
-        return array;
-    }
     EffectVT::Ptr ptr(){ return this; }
     int getNumChildren(){ return effectTree.getNumChildren(); }
-
     bool isIndividual() const { return guiEffect.isIndividual(); }
 
 private:
@@ -801,7 +695,7 @@ private:
 
     String name;
     ValueTree effectTree;
-    GUIEffect guiEffect;
+    GuiEffect guiEffect;
 
     static AudioProcessorGraph* graph;
 

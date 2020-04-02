@@ -20,8 +20,8 @@
             xcodeResource="1"/>
       <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="1" file="Source/Main.cpp"
             xcodeResource="1"/>
-      <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1"
-            file="Source/EffectScene.cpp" xcodeResource="1"/>
+      <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1" file="Source/EffectScene.cpp"
+            xcodeResource="1"/>
       <FILE id="kR0kwB" name="EffectScene.h" compile="1" resource="1" file="Source/EffectScene.h"
             xcodeResource="1"/>
     </GROUP>

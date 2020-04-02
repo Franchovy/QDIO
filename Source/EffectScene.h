@@ -42,7 +42,7 @@ public:
  */
 class EffectScene   :
         public ValueTree::Listener, public Component,
-        public LassoSource<GuiObject::Ptr>, private ReferenceCountedObject {
+        public LassoSource<GuiObject::Ptr>, public EffectTreeBase {
 public:
 
     //==============================================================================
@@ -57,13 +57,10 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
-    void mouseMove(const MouseEvent &event) override;
-    void mouseEnter(const MouseEvent &event) override;
-    void mouseExit(const MouseEvent &event) override;
 
     bool keyPressed(const KeyPress &key) override;
 
-    void deleteEffect(GUIEffect* e);
+    void deleteEffect(GuiEffect* e);
     //==============================================================================
 
 private:
