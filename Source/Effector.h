@@ -144,6 +144,12 @@ private:
 class ConnectionPort : public GuiObject
 {
 public:
+    using Ptr = ReferenceCountedObjectPtr<ConnectionPort>;
+
+    ~ConnectionPort(){
+
+    }
+
     Point<int> centrePoint;
     bool hoverMode = false;
 
@@ -164,7 +170,7 @@ public:
 
     GUIEffect* getParent();
 
-    virtual bool canConnect(ConnectionPort* other) = 0;
+    virtual bool canConnect(ConnectionPort::Ptr& other) = 0;
 
     bool isInput;
     ConnectionLine* connectionLine = nullptr;
@@ -192,7 +198,7 @@ public:
         setBounds(0,0,30, 30);
     }
 
-    bool canConnect(ConnectionPort *other) override;
+    bool canConnect(ConnectionPort::Ptr& other) override;
     AudioPort* audioPort;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InternalConnectionPort)
@@ -207,12 +213,12 @@ public:
         return hoverBox.contains(x,y);
     }
 
-    const InternalConnectionPort* getInternalConnectionPort() const { return &internalPort; }
+    const InternalConnectionPort::Ptr getInternalConnectionPort() const { return internalPort; }
 
     AudioProcessor::Bus* bus;
-    InternalConnectionPort internalPort;
+    InternalConnectionPort::Ptr internalPort;
 
-    bool canConnect(ConnectionPort *other) override;
+    bool canConnect(ConnectionPort::Ptr& other) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)
 };
@@ -257,14 +263,14 @@ struct ConnectionLine : public GuiObject, public ComponentListener
         repaint();
     }
 
-    ConnectionPort* getOtherPort(ConnectionPort* port) {
+    ConnectionPort::Ptr getOtherPort(ConnectionPort::Ptr& port) {
         return inPort == port ? outPort : inPort;
     }
 
     bool hoverMode = false;
 
-    ConnectionPort* inPort;
-    ConnectionPort* outPort;
+    ConnectionPort::Ptr inPort;
+    ConnectionPort::Ptr outPort;
 private:
     Line<int> line;
 
@@ -552,32 +558,12 @@ public:
     void resized() override;
     void moved() override;
 
-    ConnectionPort* checkPort(Point<int> pos);
+    ConnectionPort::Ptr checkPort(Point<int> pos);
 
     void setParameters(const AudioProcessorParameterGroup* group);
     void addParameter(AudioProcessorParameter* param);
 
-    void addPort(AudioProcessor::Bus* bus, bool isInput){
-        auto p = isInput ?
-                inputPorts.add(std::make_unique<AudioPort>(isInput)) :
-                outputPorts.add(std::make_unique<AudioPort>(isInput));
-        p->bus = bus;
-        addAndMakeVisible(p);
-
-        resized();
-
-
-        if (!individual) {
-            addChildComponent(p->internalPort);
-            Point<int> d;
-            d = isInput ? Point<int>(50, 0) : Point<int>(-50, 0);
-
-            p->internalPort.setCentrePosition(getLocalPoint(p, p->centrePoint + d));
-            p->internalPort.setVisible(editMode);
-        } else {
-            p->internalPort.setVisible(false);
-        }
-    }
+    void addPort(AudioProcessor::Bus* bus, bool isInput);
 
 
     void mouseDown(const MouseEvent &event) override;
@@ -735,22 +721,28 @@ public:
         bool isValid = false;
     };
 
-    NodeAndPort getNode(ConnectionPort* port) {
+    NodeAndPort getNode(ConnectionPort::Ptr& port) {
         NodeAndPort nodeAndPort;
 
         if (port->connectionLine == nullptr)
             return nodeAndPort;
         else if (isIndividual()) {
             nodeAndPort.node = node;
-            nodeAndPort.port = dynamic_cast<AudioPort *>(port);
+            nodeAndPort.port = dynamic_cast<AudioPort*>(port.get());
             nodeAndPort.isValid = true;
             return nodeAndPort;
         } else {
-            ConnectionPort* portToCheck = nullptr;
-            if (auto p = dynamic_cast<AudioPort*>(port))
-                portToCheck = &p->internalPort;
-            else if (auto p = dynamic_cast<InternalConnectionPort*>(port))
+            ConnectionPort::Ptr portToCheck = nullptr;
+            if (auto p = dynamic_cast<AudioPort*>(port.get())) {
+                portToCheck = p->internalPort;
+                portToCheck->incReferenceCount();
+            }
+
+            else if (auto p = dynamic_cast<InternalConnectionPort*>(port.get())) {
                 portToCheck = p->audioPort;
+                portToCheck->incReferenceCount();
+            }
+
 
             if (portToCheck->connectionLine != nullptr) {
                  auto otherPort = portToCheck->connectionLine->getOtherPort(portToCheck);

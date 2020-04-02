@@ -11,7 +11,7 @@ EffectScene::EffectScene() :
     setComponentID("MainWindow");
     setName("MainWindow");
     setSize (1920, 1080);
-    
+
 
     //========================================================================================
     // Drag Line GUI
@@ -99,6 +99,8 @@ void EffectScene::paint (Graphics& g)
 
 void EffectScene::resized()
 {
+    if (getParentComponent() != nullptr)
+        setBounds(getParentComponent()->getBounds());
     //deviceSelectorGroup.setBounds(10,10,getWidth()-10, getHeight()-10);
     deviceSelector.setBounds(50,50,500,500);
     deviceSelectorComponent.setBounds(50,50,600,600);
@@ -126,7 +128,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
                 parentToCheck = event.originalComponent->getParentComponent();
 
             //auto connectPort = portToConnectTo(newEvent, parentToCheck)
-            ConnectionPort* connectPort;
+            ConnectionPort::Ptr connectPort;
             // Get port to connect to (if there is one)
             auto newEvent = event.getEventRelativeTo(parentToCheck);
 
@@ -139,7 +141,6 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
             connectPort = portToConnectTo(newEvent, treeToCheck);
 
             if (connectPort != nullptr) {
-                std::cout << connectPort << newLine;
                 setHoverComponent(connectPort);
             } else
                 setHoverComponent(nullptr);
@@ -504,7 +505,7 @@ PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
     return m;
 }
 
-ConnectionPort *EffectScene::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
+ConnectionPort::Ptr EffectScene::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
 
     // Check for self ports
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
@@ -561,6 +562,10 @@ void EffectScene::addAudioConnection(ConnectionLine *connectionLine) {
         }
     }
 }
+
+void EffectScene::mouseMove(const MouseEvent &event) {
+}
+
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
     if (auto e = dynamic_cast<GUIEffect*>(c.get()))

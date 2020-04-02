@@ -36,9 +36,6 @@ public:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
 };
 
-/*class EffectsScene : public Component, */
-
-
 
 /**
  *
@@ -60,7 +57,7 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
-
+    void mouseMove(const MouseEvent &event) override;
     void mouseEnter(const MouseEvent &event) override;
     void mouseExit(const MouseEvent &event) override;
 
@@ -115,7 +112,7 @@ private:
     GuiObject::Ptr hoverComponent = nullptr;
 
     Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
-    static ConnectionPort* portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
+    static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
 
     //==============================================================================
     String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
@@ -124,26 +121,11 @@ private:
     void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain = true);
     PopupMenu getEffectSelectMenu(const MouseEvent &event);
 
-
     //==============================================================================
     // Connections
     ReferenceCountedArray<ConnectionLine> connections;
 
-    
-
-
-        // MIDI
-    /*
-    ComboBox midiInputList;
-    Label midiInputListLabel;
-    int lastInputIndex = 0;
-
-    void setMidiInput (int index);
-*/
-
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)
-
 };
 
 
@@ -151,14 +133,47 @@ private:
  * This is the class that contains the main / static stuff. The EffectScene is part of the effect tree,
  * as the tree-top, and the MainComponent/Viewport acts as its manager.
  */
-class MainComponent : public Viewport
+class MainComponent : public Viewport, private Timer
 {
 public:
     MainComponent() {
         setViewedComponent(&main);
+        addAndMakeVisible(main);
+        setBounds(main.getBoundsInParent().expanded(-100));
+
+        startTimer(10);
+    }
+
+    void resized() override {
+        main.resized();
     }
 
 private:
+
+    void timerCallback() override {
+        // scrolling
+        auto pos = getMouseXYRelative();
+        if (! getBounds().contains(pos))
+            return;
+
+        int deltaX = 0;
+        int deltaY = 0;
+        if (pos.x < 150)
+            deltaX = (150 - pos.x) / 2;
+        else if (pos.x > getWidth() - 150)
+            deltaX = (getWidth() - 150 - pos.x) / 2;
+
+        if (pos.y < 150)
+            deltaY = (150 - pos.y) / 2;
+        else if (pos.y > getHeight() - 150)
+            deltaY = (getHeight() - 150 - pos.y) / 2;
+
+        if (deltaX != 0  || deltaY != 0) {
+            setViewPosition(getViewPositionX() - deltaX, getViewPositionY() - deltaY);
+        }
+
+        startTimer(10);
+    }
 
     EffectScene main;
 };

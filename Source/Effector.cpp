@@ -309,18 +309,18 @@ void GUIEffect::parentHierarchyChanged() {
  * @param pos relative to this component (no conversion needed here)
  * @return nullptr if no match, ConnectionPort* if found
  */
-ConnectionPort *GUIEffect::checkPort(Point<int> pos) {
+ConnectionPort::Ptr GUIEffect::checkPort(Point<int> pos) {
     for (auto p : inputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
             return p;
-        else if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
-            return &p->internalPort;
+        else if (p->internalPort->contains(p->internalPort->getLocalPoint(this, pos)))
+            return p->internalPort;
     }
     for (auto p : outputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
             return p;
-        else if (p->internalPort.contains(p->internalPort.getLocalPoint(this, pos)))
-            return &p->internalPort;
+        else if (p->internalPort->contains(p->internalPort->getLocalPoint(this, pos)))
+            return p->internalPort;
     }
     return nullptr;
 }
@@ -419,10 +419,35 @@ void GUIEffect::moved() {
     Component::moved();
 }
 
+void GUIEffect::addPort(AudioProcessor::Bus *bus, bool isInput) {
+    auto p = isInput ?
+             inputPorts.add(std::make_unique<AudioPort>(isInput)) :
+             outputPorts.add(std::make_unique<AudioPort>(isInput));
+    p->bus = bus;
+    addAndMakeVisible(p);
+
+    resized();
+
+
+    if (!individual) {
+        addChildComponent(p->internalPort.get());
+        Point<int> d;
+        d = isInput ? Point<int>(50, 0) : Point<int>(-50, 0);
+
+        p->internalPort->setCentrePosition(getLocalPoint(p, p->centrePoint + d));
+        p->internalPort->setVisible(editMode);
+    } else {
+        p->internalPort->setVisible(false);
+    }
+}
+
 //=================================================================================
 // AudioPort methods
 
-AudioPort::AudioPort(bool isInput) : ConnectionPort(), internalPort(this, !isInput) {
+AudioPort::AudioPort(bool isInput) : ConnectionPort()
+    , internalPort(new InternalConnectionPort(this, !isInput))
+{
+
     hoverBox = Rectangle<int>(0,0,60,60);
     outline = Rectangle<int>(20, 20, 20, 20);
     centrePoint = Point<int>(30,30);
@@ -431,15 +456,15 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort(), internalPort(this, !isInp
     this->isInput = isInput;
 }
 
-bool AudioPort::canConnect(ConnectionPort *other) {
+bool AudioPort::canConnect(ConnectionPort::Ptr& other) {
     if (this->isInput == other->isInput)
         return false;
 
     // Connect to AudioPort of mutual parent
-    return (dynamic_cast<AudioPort *>(other)
+    return (dynamic_cast<AudioPort *>(other.get())
             && other->getParent()->getParentComponent() == this->getParent()->getParentComponent())
     // Connect to ICP of containing parent effect
-           || (dynamic_cast<InternalConnectionPort *>(other)
+           || (dynamic_cast<InternalConnectionPort *>(other.get())
     && other->getParent() == this->getParent()->getParentComponent());
 }
 
@@ -480,8 +505,8 @@ END_JUCER_METADATA
 #endif
 
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    line.setStart(getLocalPoint(inPort, inPort->centrePoint));
-    line.setEnd(getLocalPoint(outPort, outPort->centrePoint));
+    line.setStart(getLocalPoint(inPort.get(), inPort->centrePoint));
+    line.setEnd(getLocalPoint(outPort.get(), outPort->centrePoint));
 
     repaint();
 }
@@ -554,8 +579,8 @@ GUIEffect *ConnectionPort::getParent() {
     return dynamic_cast<GUIEffect*>(getParentComponent());
 }
 
-bool InternalConnectionPort::canConnect(ConnectionPort *other) {
+bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
     // Return false if the port is AP and belongs to the same parent
-    return !(dynamic_cast<AudioPort *>(other)
+    return !(dynamic_cast<AudioPort *>(other.get())
              && this->getParent() == other->getParent());
 }
