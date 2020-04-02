@@ -122,14 +122,6 @@ GuiEffect::~GuiEffect()
 
 }
 
-void GuiEffect::insertEffectGroup() {
-
-}
-
-void GuiEffect::insertEffect() {
-
-}
-
 // Processor hasEditor? What to do if processor is a predefined plugin
 void GuiEffect::setProcessor(AudioProcessor *processor) {
     setEditMode(false);
