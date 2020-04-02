@@ -225,10 +225,15 @@ class DistortionEffect : public BaseEffect {
 public:
     DistortionEffect() : BaseEffect(),
                          gain("gain", "Gain",
-                              NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f) {
-        name = "Gain Effect";
+                              NormalisableRange<float>(0, 20.f, 0.001, 5.0f), 5.0f),
+                         cutoff("cutoff", "Cutoff",
+                              NormalisableRange<float>(0.0f, 1.0f, 0.001f, 0.5f), 0.8f)
+              {
+        name = "Distortion Effect";
         addParameter(&gain);
         gain.addListener(&parameterListener);
+        addParameter(&cutoff);
+        cutoff.addListener(&parameterListener);
     }
 
 
@@ -243,10 +248,21 @@ public:
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override
     {
         buffer.applyGain(gain);
+        for (int c = 0; c < buffer.getNumChannels(); c++) {
+            for (int s = 0; s < buffer.getNumSamples(); s++){
+                float sample = buffer.getSample(c, s);
+                if (sample > cutoff) {
+                    buffer.setSample(c,s,cutoff);
+                } else if (sample < -cutoff) {
+                    buffer.setSample(c, s, -cutoff);
+                }
+            }
+        }
     }
 
 private:
     AudioParameterFloat gain;
+    AudioParameterFloat cutoff;
     std::atomic<float> gainVal;
 
 };

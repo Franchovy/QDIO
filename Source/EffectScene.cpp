@@ -10,7 +10,7 @@ EffectScene::EffectScene() :
 {
     setComponentID("MainWindow");
     setName("MainWindow");
-    setSize (1920, 1080);
+    setSize (4000, 4000);
 
 
     //========================================================================================
@@ -77,6 +77,13 @@ EffectScene::EffectScene() :
 EffectScene::~EffectScene()
 {
     //processorGraph->releaseResources();
+
+    // kinda messy managing one's own ReferenceCountedObject property.
+    jassert(getReferenceCount() == 1);
+    incReferenceCount();
+    effectsTree.removeProperty(ID_EFFECT_GUI, nullptr);
+    decReferenceCountWithoutDeleting();
+
     player.setProcessor(nullptr);
     deviceManager.closeAudioDevice();
 }

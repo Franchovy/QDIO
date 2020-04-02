@@ -139,16 +139,32 @@ public:
     MainComponent() {
         setViewedComponent(&main);
         addAndMakeVisible(main);
-        setBounds(main.getBoundsInParent().expanded(-100));
+        setBounds(0,0,2000,2000);
 
-        startTimer(10);
+
+        startTimer(3);
     }
 
-    void resized() override {
+    // Mouse wheel should zoom in and out - but how about touchpad functionality?
+
+    /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &details) override {
+        move(details.deltaX, details.deltaY);
+
+        //Viewport::mouseWheelMove(event, details);
+    }*/
+    /*void resized() override {
         main.resized();
-    }
+    }*/
+
+
 
 private:
+
+    void move(int deltaX, int deltaY) {
+        if (deltaX != 0  || deltaY != 0) {
+            setViewPosition(getViewPositionX() - deltaX, getViewPositionY() - deltaY);
+        }
+    }
 
     void timerCallback() override {
         // scrolling
@@ -168,11 +184,9 @@ private:
         else if (pos.y > getHeight() - 150)
             deltaY = (getHeight() - 150 - pos.y) / 2;
 
-        if (deltaX != 0  || deltaY != 0) {
-            setViewPosition(getViewPositionX() - deltaX, getViewPositionY() - deltaY);
-        }
+        move(deltaX, deltaY);
 
-        startTimer(10);
+        startTimer(3);
     }
 
     EffectScene main;
