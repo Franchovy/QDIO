@@ -1,12 +1,9 @@
 #include "EffectScene.h"
 
+
 //==============================================================================
 EffectScene::EffectScene() :
-        effectsTree("TreeTop"),
-        deviceSelector(deviceManager, 0,2,0,2,false,false,true,false),
-        processorGraph(new AudioProcessorGraph()),
-        deviceSelectorComponent(true),
-        dragLine()
+        effectsTree("TreeTop")
 {
     setComponentID("MainWindow");
     setName("MainWindow");
@@ -16,10 +13,9 @@ EffectScene::EffectScene() :
     //========================================================================================
     // Drag Line GUI
     addChildComponent(dragLine);
+    dragLine.addComponentListener(this);
     dragLine.setAlwaysOnTop(true);
     addChildComponent(lasso);
-    dragLine.getDragLineTree().addListener(this);
-    effectsTree.appendChild(dragLine.getDragLineTree(), nullptr);
 
     //========================================================================================
     // Manage EffectsTree
@@ -27,7 +23,6 @@ EffectScene::EffectScene() :
     effectsTree.setProperty(ID_EFFECT_GUI, this, nullptr);
     //effectsTree.setProperty(ID_EFFECT_GUI, this);
     effectsTree.addListener(this);
-    EffectVT::setAudioProcessorGraph(processorGraph.get());
 
     //========================================================================================
     // Manage Audio
@@ -35,40 +30,42 @@ EffectScene::EffectScene() :
     //auto inputDevice  = MidiInput::getDevices()  [MidiInput::getDefaultDeviceIndex()];
     //auto outputDevice = MidiOutput::getDevices() [MidiOutput::getDefaultDeviceIndex()];
 
-    processorGraph->enableAllBuses();
 
-    auto savedState = getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS);
-    deviceManager.initialise (256, 256, savedState.get(), true);
 
-    deviceManager.addAudioCallback (&player);                  // [2]
+
+
 
     //deviceManager.setMidiInputEnabled (inputDevice, true);
-    //deviceManager.addMidiInputCallback (inputDevice, &player); // [3]
+    //deviceManager.addMidiInputCallback (inputDevice, &processorPlayer); // [3]
     //deviceManager.setDefaultMidiOutput (outputDevice);
 
-    player.setProcessor (processorGraph.get());
 
     //==============================================================================
     // DeviceSelector GUI
 
-    deviceSelectorComponent.addAndMakeVisible(deviceSelector);
+    //TODO custom Device selector (without GUIWrapper)
+    /*deviceSelector(*deviceManager, 0,2,0,2,false,false,true,false);
+            deviceSelectorComponent(true);
+
+    deviceSelectorComponent->addAndMakeVisible(deviceSelector);
     deviceSelectorComponent.setTitle("Device Settings");
     deviceSelectorComponent.setSize(deviceSelector.getWidth(), deviceSelector.getHeight()+150);
     deviceSelectorComponent.closeButton.onClick = [=]{
         deviceSelectorComponent.setVisible(false);
-        auto audioState = deviceManager.createStateXml();
+        auto audioState = deviceManager->createStateXml();
 
         getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
         getAppProperties().getUserSettings()->saveIfNeeded();
     };
     addChildComponent(deviceSelectorComponent);
+*/
 
     //==============================================================================
     // Main component popup menu
     mainMenu = std::make_unique<CustomMenuItems>();
 
     mainMenu->addItem("Toggle Settings", [=](){
-        deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
+        //deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
     });
 
 }
@@ -76,7 +73,7 @@ EffectScene::EffectScene() :
 
 EffectScene::~EffectScene()
 {
-    //processorGraph->releaseResources();
+    //audioGraph->releaseResources();
 
     // kinda messy managing one's own ReferenceCountedObject property.
     jassert(getReferenceCount() == 1);
@@ -84,8 +81,8 @@ EffectScene::~EffectScene()
     effectsTree.removeProperty(ID_EFFECT_GUI, nullptr);
     decReferenceCountWithoutDeleting();
 
-    player.setProcessor(nullptr);
-    deviceManager.closeAudioDevice();
+    processorPlayer->setProcessor(nullptr);
+    deviceManager->closeAudioDevice();
 }
 
 //==============================================================================
@@ -106,11 +103,10 @@ void EffectScene::paint (Graphics& g)
 
 void EffectScene::resized()
 {
-    if (getParentComponent() != nullptr)
-        setBounds(getParentComponent()->getBounds());
-    //deviceSelectorGroup.setBounds(10,10,getWidth()-10, getHeight()-10);
-    deviceSelector.setBounds(50,50,500,500);
-    deviceSelectorComponent.setBounds(50,50,600,600);
+
+    setBounds(0, 0, 1920, 1080);
+
+
 }
 
 void EffectScene::mouseDown(const MouseEvent &event) {
@@ -288,54 +284,7 @@ void EffectScene::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childW
 }
 
 void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    if (treeWhosePropertyHasChanged == dragLine.getDragLineTree() && property.toString() == "Connection"){
-        processorGraph->reset();
 
-        // Add connection
-        auto line = dynamic_cast<ConnectionLine*>(treeWhosePropertyHasChanged.getPropertyPointer(property)->getObject());
-
-        auto outputPort = line->inPort;
-        auto inputPort = line->outPort;
-
-        // Remember that an inputPort is receiving, on the output effect
-        // and the outputPort is source on the input effect
-        auto output = dynamic_cast<GuiEffect*>(outputPort->getParent());
-        auto input = dynamic_cast<GuiEffect*>(inputPort->getParent());
-
-        // Check for common parent
-        // Find common parent
-        if (input->getParentComponent() == output->getParentComponent()) {
-            std::cout << "Common parent" << newLine;
-            if (input->getParentComponent() == this) { //todo u must change dis shit brugh
-                connections.add(line);
-                addAndMakeVisible(line);
-            } else {
-                dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line);
-            }
-        } else if (input->getParentComponent() == output) {
-            std::cout << "Output parent" << newLine;
-            if (output->getParentComponent() == this) { //todo u must change dis shit brugh
-                connections.add(line);
-                addAndMakeVisible(line);
-            } else {
-                dynamic_cast<GuiEffect*>(output->getParentComponent())->EVT->addConnection(line);
-            }
-        } else if (output->getParentComponent() == input) {
-            std::cout << "Input parent" << newLine;
-            if (input->getParentComponent() == this) { //todo u must change dis shit brugh
-                connections.add(line);
-                addAndMakeVisible(line);
-            } else {
-                dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line);
-            }
-        }
-
-        // Update audiograph
-        addAudioConnection(line);
-
-        //timerCallback();
-
-    }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
@@ -465,24 +414,24 @@ PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
             }));
     m.addItem("Input Effect", std::function<void()>(
             [=]{
-                auto node = processorGraph->addNode(std::make_unique<InputDeviceEffect>());
+                auto node = audioGraph->addNode(std::make_unique<InputDeviceEffect>());
                 auto e = createEffect(event, node);
                 addEffect(event, e);
             }));
     m.addItem("Output Effect", std::function<void()>(
             [=]{
-                auto node = processorGraph->addNode(std::make_unique<OutputDeviceEffect>());
+                auto node = audioGraph->addNode(std::make_unique<OutputDeviceEffect>());
                 auto e = createEffect(event, node);
                 addEffect(event, e);
             }));
     m.addItem("Delay Effect", std::function<void()>(
             [=](){
-                auto node = processorGraph->addNode(std::make_unique<DelayEffect>());
+                auto node = audioGraph->addNode(std::make_unique<DelayEffect>());
                 node->getProcessor()->setPlayConfigDetails(
-                        processorGraph->getMainBusNumInputChannels(),
-                        processorGraph->getMainBusNumOutputChannels(),
-                        processorGraph->getSampleRate(),
-                        processorGraph->getBlockSize()
+                        audioGraph->getMainBusNumInputChannels(),
+                        audioGraph->getMainBusNumOutputChannels(),
+                        audioGraph->getSampleRate(),
+                        audioGraph->getBlockSize()
                 );
                 auto e = createEffect(event, node);
                 addEffect(event, e);
@@ -490,12 +439,12 @@ PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
     ));
     m.addItem("Distortion Effect", std::function<void()>(
             [=]{
-                auto node = processorGraph->addNode(std::make_unique<DistortionEffect>());
+                auto node = audioGraph->addNode(std::make_unique<DistortionEffect>());
                 node->getProcessor()->setPlayConfigDetails(
-                        processorGraph->getMainBusNumInputChannels(),
-                        processorGraph->getMainBusNumOutputChannels(),
-                        processorGraph->getSampleRate(),
-                        processorGraph->getBlockSize()
+                        audioGraph->getMainBusNumInputChannels(),
+                        audioGraph->getMainBusNumOutputChannels(),
+                        audioGraph->getSampleRate(),
+                        audioGraph->getBlockSize()
                 );
                 auto e = createEffect(event, node);
                 addEffect(event, e);
@@ -540,26 +489,6 @@ ConnectionPort::Ptr EffectScene::portToConnectTo(MouseEvent& event, const ValueT
 
     // If nothing is found return nullptr
     return nullptr;
-}
-
-void EffectScene::addAudioConnection(ConnectionLine *connectionLine) {
-    EffectVT::NodeAndPort in;
-    EffectVT::NodeAndPort out;
-    auto inEVT = connectionLine->inPort->getParent()->EVT;
-    auto outEVT = connectionLine->outPort->getParent()->EVT;
-
-    in = inEVT->getNode(connectionLine->inPort);
-    out = outEVT->getNode(connectionLine->outPort);
-
-    if (in.isValid && out.isValid) {
-        for (int c = 0; c < jmin(numInputChannels, numOutputChannels); c++) {
-            AudioProcessorGraph::Connection connection = {{in.node->nodeID, in.port->bus->getChannelIndexInProcessBlockBuffer(c)},
-                                               {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(c)}};
-            if (!processorGraph->isConnected(connection) && processorGraph->isConnectionLegal(connection)) {
-                processorGraph->addConnection(connection);
-            }
-        }
-    }
 }
 
 

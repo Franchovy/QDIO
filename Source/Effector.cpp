@@ -10,11 +10,15 @@
 
 #include "Effector.h"
 
-//==============================================================================
-// Line Component methods
-
+// Static members
+std::unique_ptr<AudioProcessorGraph> EffectTreeBase::audioGraph = nullptr;
+std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
+std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
 
 LineComponent* LineComponent::dragLine = nullptr;
+
+//==============================================================================
+// Line Component methods
 
 /**
  * @param event modified mouseEvent to use mainComponent coords.
@@ -59,10 +63,7 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 void LineComponent::convert(ConnectionPort *port2) {
     if (port1 != nullptr) {
         // Connect port1 to port2
-        lastConnectionLine = new ConnectionLine(*port1, *port2);
-
-        // This calls the propertyChange update in EffectScene
-        dragLineTree.setProperty("Connection", lastConnectionLine.get(), nullptr);
+        dynamic_cast<EffectTreeBase*>(getParentComponent())->createConnection(std::make_unique<ConnectionLine>(*port1, *port2));
     }
 }
 
@@ -477,9 +478,6 @@ void Resizer::mouseDrag(const MouseEvent &event) {
 }
 
 //==============================================================================
-// EffectVT static member variable
-
-AudioProcessorGraph* EffectVT::graph = nullptr;
 
 /**
  * ENCAPSULATOR CONSTRUCTOR EffectVT of group of EffectVTs
@@ -516,7 +514,7 @@ EffectVT::EffectVT(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) 
         EffectVT(event)
 {
     // Create from node:
-    node = graph->getNodeForId(nodeID);
+    node = EffectVT::audioGraph->getNodeForId(nodeID);
     processor = node->getProcessor();
     effectTree.setProperty("Node", node.get(), nullptr);
 
@@ -541,7 +539,7 @@ EffectVT::~EffectVT()
 {
     effectTree.removeAllProperties(nullptr);
     // Delete processor from graph
-    graph->removeNode(node->nodeID);
+    EffectVT::audioGraph->removeNode(node->nodeID);
 }
 
 void EffectVT::addConnection(ConnectionLine *connection) {
@@ -684,4 +682,85 @@ bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
     // Return false if the port is AP and belongs to the same parent
     return !(dynamic_cast<AudioPort *>(other.get())
              && this->getParent() == other->getParent());
+}
+
+
+void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
+    // Add connection to this object
+    connections.add(move(line));
+
+    auto outputPort = line->inPort;
+    auto inputPort = line->outPort;
+
+    // Remember that an inputPort is receiving, on the output effect
+    // and the outputPort is source on the input effect
+    auto output = dynamic_cast<GuiEffect*>(outputPort->getParent());
+    auto input = dynamic_cast<GuiEffect*>(inputPort->getParent());
+
+
+    //TODO Must replace all this with in-subclass check and set methods!
+
+    // Check for common parent
+    // Find common parent
+    if (input->getParentComponent() == output->getParentComponent()) {
+        std::cout << "Common parent" << newLine;
+        if (input->getParentComponent() == this) {
+            addAndMakeVisible(line.get());
+        } else {
+            dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line.get());
+        }
+    } else if (input->getParentComponent() == output) {
+        std::cout << "Output parent" << newLine;
+        if (output->getParentComponent() == this) {
+            addAndMakeVisible(line.get());
+        } else {
+            dynamic_cast<GuiEffect*>(output->getParentComponent())->EVT->addConnection(line.get());
+        }
+    } else if (output->getParentComponent() == input) {
+        std::cout << "Input parent" << newLine;
+        if (input->getParentComponent() == this) {
+            addAndMakeVisible(line.get());
+        } else {
+            dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line.get());
+        }
+    }
+
+    // Update audiograph
+    addAudioConnection(*line);
+}
+
+void EffectTreeBase::addAudioConnection(ConnectionLine& connectionLine) {
+    EffectVT::NodeAndPort in;
+    EffectVT::NodeAndPort out;
+    auto inEVT = connectionLine.inPort->getParent()->EVT;
+    auto outEVT = connectionLine.outPort->getParent()->EVT;
+
+    in = inEVT->getNode(connectionLine.inPort);
+    out = outEVT->getNode(connectionLine.outPort);
+
+    if (in.isValid && out.isValid) {
+        for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(), EffectTreeBase::audioGraph->getTotalNumOutputChannels()); c++) {
+            AudioProcessorGraph::Connection connection = {{in.node->nodeID, in.port->bus->getChannelIndexInProcessBlockBuffer(c)},
+                                                          {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(c)}};
+            if (!EffectTreeBase::audioGraph->isConnected(connection) && EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
+                EffectTreeBase::audioGraph->addConnection(connection);
+            }
+        }
+    }
+}
+
+
+void EffectTreeBase::initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
+                                     std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> savedState)
+{
+    audioGraph = move(graph);
+    audioGraph->enableAllBuses();
+
+    EffectTreeBase::deviceManager = move(dm);
+    deviceManager->initialise (256, 256, savedState.get(), true);
+
+    EffectTreeBase::processorPlayer = move(pp);
+    deviceManager->addAudioCallback (processorPlayer.get());
+    processorPlayer->setProcessor (audioGraph.get());
+
 }

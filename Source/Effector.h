@@ -280,10 +280,9 @@ private:
 
 struct LineComponent : public GuiObject
 {
-    LineComponent() : dragLineTree(ID_DRAGLINE)
+    LineComponent()
     {
         setBounds(0,0,getParentWidth(), getParentHeight());
-        LineComponent::dragLine = this;
     }
 
     void resized() override {
@@ -308,10 +307,6 @@ struct LineComponent : public GuiObject
      */
     void convert(ConnectionPort* port2);
 
-    ConnectionLine::Ptr lastConnectionLine;
-
-    ValueTree getDragLineTree() {return dragLineTree;}
-
     static LineComponent* getDragLine(){
         return dragLine;
     }
@@ -328,138 +323,8 @@ private:
     Line<int> line;
     Point<int> p1, p2;
     ConnectionPort* port1 = nullptr;
-    ValueTree dragLineTree;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LineComponent)
-};
-
-
-// TODO single child instead of children - wraps only around one thing
-class GUIWrapper : public GuiObject {
-public:
-    GUIWrapper(Component* child) : GUIWrapper()
-    {
-        addAndMakeVisible(child);
-    }
-
-    GUIWrapper(bool closeButtonEnabled = false) {
-        setSize(100,100);
-
-        size.setXY(getWidth(), getHeight());
-        outline.setBounds(0,0,getWidth(),getHeight());
-        setBounds(outline);
-
-        addAndMakeVisible(resizer);
-        resizer.setAlwaysOnTop(true);
-
-        if (closeButtonEnabled) {
-            closeButton.setButtonText("Close");
-            addAndMakeVisible(closeButton);
-            closeButton.onClick = [=] {
-                setVisible(false);
-            };
-            closeButton.setAlwaysOnTop(true);
-        }
-    }
-
-    void paint (Graphics& g) override {
-        g.fillAll(Colours::white);
-        g.setColour(Colours::black);
-        g.drawRect(outline);
-        g.drawText(title, 10,10,100,40,Justification::left);
-        //Component::paint(g);
-    }
-    void resized() override {
-        size.setXY(getWidth(),getHeight());
-        closeButton.setBounds(size.x - 80, 10, 70, 30);
-        outline.setBounds(0,0,size.x,size.y);
-        for (auto c : childComponents)
-            c->setBounds(10,10,getWidth()-10,getHeight()-10);
-
-        repaint();
-    }
-
-    void mouseDown(const MouseEvent& event) override {
-        dragger.startDraggingComponent(this, event);
-        if (event.mods.isRightButtonDown())
-            getParentComponent()->mouseDown(event);
-        Component::mouseDown(event);
-    }
-    void mouseDrag(const MouseEvent& event) override {
-        dragger.dragComponent(this, event, nullptr);
-    }
-    void mouseUp(const MouseEvent& event) override {
-        event.withNewPosition(event.getPosition() + getPosition());
-        getParentComponent()->mouseUp(event);
-    }
-
-    PopupMenu& getMenu(){
-        return menu;
-    }
-
-    //TODO do as clang says
-    void addToMenu(String item){
-        menu.addItem(item);
-    }
-
-    void setTitle(String name){
-        title = name;
-    }
-
-    void setVisible(bool shouldBeVisible) override {
-        for (auto c : childComponents){
-            c->setVisible(shouldBeVisible);
-        }
-        Component::setVisible(shouldBeVisible);
-    }
-
-    void childrenChanged() override {
-        childComponents.clear();
-        for (auto c : getChildren()){
-            if (c != &resizer && c != &closeButton) {
-                childComponents.add(c);
-            }
-        }
-        // If this is the first child to be added, adjust to its size
-        if (childComponents.size() == 1){
-            setSize(childComponents.getFirst()->getWidth(),childComponents.getFirst()->getHeight());
-        }
-        Component::childrenChanged();
-        resized();
-    }
-
-    ~GUIWrapper() override {
-        childComponents.clear();
-    }
-
-    void parentSizeChanged() override {
-        // Keep size
-        setSize(size.x, size.y);
-    }
-
-    void moved() override {
-        for (auto i : childComponents){
-            i->moved();
-        }
-        Component::moved();
-    }
-
-    Component* getChild(){
-        return childComponents.getFirst();
-    }
-
-    TextButton closeButton;
-
-private:
-    Point<int> size; // unchanging size
-    String title;
-    Rectangle<int> outline;
-    ComponentDragger dragger;
-    PopupMenu menu;
-    Resizer resizer;
-    Array<Component*> childComponents;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GUIWrapper)
 };
 
 class GuiParameter : public GuiObject
@@ -625,12 +490,23 @@ private:
  * Data for saving and loading state,
  * TODO Undoable action
  */
-class EffectTreeBase : public ReferenceCountedObject
+class EffectTreeBase : public ReferenceCountedObject, public Component
 {
 public:
+    void createConnection(std::unique_ptr<ConnectionLine> line);
 
-private:
+    static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
+                                std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
 
+protected:
+    OwnedArray<ConnectionLine> connections;
+    std::unique_ptr<Component> gui;
+
+    static void addAudioConnection(ConnectionLine& connectionLine);
+
+    static std::unique_ptr<AudioDeviceManager> deviceManager;
+    static std::unique_ptr<AudioProcessorPlayer> processorPlayer;
+    static std::unique_ptr<AudioProcessorGraph> audioGraph;
 };
 
 /**
@@ -673,9 +549,8 @@ public:
     const ValueTree& getTree() const {return effectTree;}
     GuiEffect* getGUIEffect() {return &guiEffect;}
     const GuiEffect* getGUIEffect() const {return &guiEffect;}
-    static void setAudioProcessorGraph(AudioProcessorGraph* processorGraph) {graph = processorGraph;}
 
-    AudioProcessor::Bus* getDefaultBus() { graph->getBus(true, 0); }
+    AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
     // Convenience functions
     EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
@@ -696,8 +571,6 @@ private:
     String name;
     ValueTree effectTree;
     GuiEffect guiEffect;
-
-    static AudioProcessorGraph* graph;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectVT)
 

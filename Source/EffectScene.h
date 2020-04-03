@@ -6,6 +6,8 @@
   ==============================================================================
 */
 
+
+
 #pragma once
 
 #include <JuceHeader.h>
@@ -16,6 +18,8 @@
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
+
+const String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
 /**
  * SelectedItemSet for Component* class, with
@@ -41,8 +45,9 @@ public:
  *
  */
 class EffectScene   :
-        public ValueTree::Listener, public Component,
-        public LassoSource<GuiObject::Ptr>, public EffectTreeBase {
+        public ValueTree::Listener, public EffectTreeBase,
+        public LassoSource<GuiObject::Ptr>, public ComponentListener
+{
 public:
 
     //==============================================================================
@@ -77,19 +82,10 @@ private:
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
     using Node = AudioProcessorGraph::Node;
 
-    AudioDeviceManager deviceManager;
-    AudioProcessorPlayer player;
 
-    AudioDeviceSelectorComponent deviceSelector;
+    //std::unique_ptr<AudioDeviceSelectorComponent> deviceSelector;
+    //GUIWrapper deviceSelectorComponent;
 
-    std::unique_ptr<AudioProcessorGraph> processorGraph;
-
-    GUIWrapper deviceSelectorComponent;
-
-    int numInputChannels = 2;
-    int numOutputChannels = 2;
-
-    void addAudioConnection(ConnectionLine* connectionLine);
     //==============================================================================
 
     std::unique_ptr<CustomMenuItems> mainMenu;
@@ -112,15 +108,10 @@ private:
     static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
 
     //==============================================================================
-    String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
     EffectVT::Ptr createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node = nullptr);
     void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain = true);
     PopupMenu getEffectSelectMenu(const MouseEvent &event);
-
-    //==============================================================================
-    // Connections
-    ReferenceCountedArray<ConnectionLine> connections;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)
 };
@@ -134,26 +125,22 @@ class MainComponent : public Viewport, private Timer
 {
 public:
     MainComponent() {
+        auto savedState = getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS);
+
+        main.initialiseAudio(
+                std::make_unique<AudioProcessorGraph>(),
+                std::make_unique<AudioDeviceManager>(),
+                std::make_unique<AudioProcessorPlayer>(),
+                std::move(savedState)
+        );
+
+
         setViewedComponent(&main);
         addAndMakeVisible(main);
-        setBounds(0,0,2000,2000);
-
+        setBounds(0,0, 1920, 1080);
 
         startTimer(3);
     }
-
-    // Mouse wheel should zoom in and out - but how about touchpad functionality?
-
-    /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &details) override {
-        move(details.deltaX, details.deltaY);
-
-        //Viewport::mouseWheelMove(event, details);
-    }*/
-    /*void resized() override {
-        main.resized();
-    }*/
-
-
 
 private:
 
@@ -187,4 +174,6 @@ private:
     }
 
     EffectScene main;
+    AudioDeviceManager deviceManager;
+    AudioProcessorPlayer player;
 };
