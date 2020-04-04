@@ -570,7 +570,7 @@ public:
         pos.y = newPos.y;
     }
 
-protected:
+//protected:
     struct Pos {
         CachedValue<int> x;
         CachedValue<int> y;

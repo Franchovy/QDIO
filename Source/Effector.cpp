@@ -264,7 +264,9 @@ void GuiEffect::mouseDrag(const MouseEvent &event) {
 void GuiEffect::mouseUp(const MouseEvent &event) {
     setAlwaysOnTop(false);
 
-    EVT->setPos(getPosition());
+    EVT->pos.x = event.getPosition().x;
+    EVT->pos.y = event.getPosition().y;
+    //setPos(getPosition());
 
     EVT->mouseUp(event);
 
