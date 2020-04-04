@@ -497,7 +497,7 @@ public:
 
     static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
                                 std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
-
+    static void close();
 protected:
     OwnedArray<ConnectionLine> connections;
     std::unique_ptr<Component> gui;
@@ -507,6 +507,8 @@ protected:
     static std::unique_ptr<AudioDeviceManager> deviceManager;
     static std::unique_ptr<AudioProcessorPlayer> processorPlayer;
     static std::unique_ptr<AudioProcessorGraph> audioGraph;
+
+    static UndoManager undoManager;
 };
 
 /**
@@ -561,12 +563,18 @@ public:
     int getNumChildren(){ return effectTree.getNumChildren(); }
     bool isIndividual() const { return guiEffect.isIndividual(); }
 
+    void mouseDown(const MouseEvent &event) override;
+    void mouseDrag(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
+
 private:
     // Used for an individual processor EffectVT. - does not contain anything else
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
 
     ReferenceCountedArray<ConnectionLine> connections;
+
+    Value pos;
 
     String name;
     ValueTree effectTree;

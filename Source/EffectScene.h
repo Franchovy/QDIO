@@ -134,12 +134,15 @@ public:
                 std::move(savedState)
         );
 
-
         setViewedComponent(&main);
         addAndMakeVisible(main);
         setBounds(0,0, 1920, 1080);
 
         startTimer(3);
+    }
+
+    ~MainComponent(){
+        main.close();
     }
 
 private:
@@ -174,6 +177,6 @@ private:
     }
 
     EffectScene main;
-    AudioDeviceManager deviceManager;
-    AudioProcessorPlayer player;
+    UndoManager undoManager;
+
 };

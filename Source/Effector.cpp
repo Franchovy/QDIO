@@ -14,6 +14,7 @@
 std::unique_ptr<AudioProcessorGraph> EffectTreeBase::audioGraph = nullptr;
 std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
 std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
+UndoManager EffectTreeBase::undoManager;
 
 LineComponent* LineComponent::dragLine = nullptr;
 
@@ -583,6 +584,18 @@ AudioProcessorGraph::NodeID EffectVT::getNodeID() const {
     return node->nodeID;
 }
 
+void EffectVT::mouseDown(const MouseEvent &event) {
+
+}
+
+void EffectVT::mouseDrag(const MouseEvent &event) {
+    Component::mouseDrag(event);
+}
+
+void EffectVT::mouseUp(const MouseEvent &event) {
+    Component::mouseUp(event);
+}
+
 //==============================================================================
 #if 0
 /*  -- Projucer information section --
@@ -764,3 +777,14 @@ void EffectTreeBase::initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph,
     processorPlayer->setProcessor (audioGraph.get());
 
 }
+
+void EffectTreeBase::close() {
+    processorPlayer->setProcessor(nullptr);
+    deviceManager->closeAudioDevice();
+
+    deviceManager.release();
+    processorPlayer.release();
+    audioGraph.release();
+}
+
+

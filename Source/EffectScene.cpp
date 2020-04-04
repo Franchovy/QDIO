@@ -67,9 +67,7 @@ EffectScene::EffectScene() :
     mainMenu->addItem("Toggle Settings", [=](){
         //deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
     });
-
 }
-
 
 EffectScene::~EffectScene()
 {
@@ -80,9 +78,6 @@ EffectScene::~EffectScene()
     incReferenceCount();
     effectsTree.removeProperty(ID_EFFECT_GUI, nullptr);
     decReferenceCountWithoutDeleting();
-
-    processorPlayer->setProcessor(nullptr);
-    deviceManager->closeAudioDevice();
 }
 
 //==============================================================================
@@ -103,10 +98,7 @@ void EffectScene::paint (Graphics& g)
 
 void EffectScene::resized()
 {
-
     setBounds(0, 0, 1920, 1080);
-
-
 }
 
 void EffectScene::mouseDown(const MouseEvent &event) {
