@@ -137,7 +137,7 @@ public:
             std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
 
 
-            delayBuffer.setSize(jmin(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
+            delayBuffer.setSize(jmin(0, getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
                                 newDelayBufferSize, true, true, true);
             if (delayBufferPt > newDelayBufferSize){
                 delayBufferPt = 1;

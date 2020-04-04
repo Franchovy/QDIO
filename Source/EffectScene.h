@@ -21,24 +21,6 @@ ApplicationCommandManager& getCommandManager();
 
 const String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
 
-/**
- * SelectedItemSet for Component* class, with
- * itemSelected/itemDeselected overrides. That is all.
- */
-class ComponentSelection : public SelectedItemSet<GuiObject::Ptr>
-{
-public:
-    ComponentSelection() = default;
-
-    void clear() {
-        SelectedItemSet<GuiObject::Ptr>::deselectAll();
-    }
-
-    void itemSelected(GuiObject::Ptr type) override;
-    void itemDeselected(GuiObject::Ptr type) override;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
-};
 
 
 /**
@@ -46,7 +28,7 @@ public:
  */
 class EffectScene   :
         public EffectTreeBase,
-        public LassoSource<GuiObject::Ptr>, public ComponentListener
+         public ComponentListener
 {
 public:
 
@@ -70,8 +52,6 @@ public:
 
 private:
     // Effect tree shit
-    ValueTree effectsTree;
-
     void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
@@ -91,26 +71,12 @@ private:
     std::unique_ptr<CustomMenuItems> mainMenu;
 
     // GUI Helper tools
-    LineComponent dragLine;
-    LassoComponent<GuiObject::Ptr> lasso;
-    bool intersectMode = true;
 
-    // TODO LassoComponent change to a different pointer type/
-    void findLassoItemsInArea (Array <GuiObject::Ptr>& results, const Rectangle<int>& area) override;
-    ReferenceCountedArray<GuiObject> componentsToSelect;
-    ComponentSelection selected;
-    SelectedItemSet<GuiObject::Ptr>& getLassoSelection() override;
 
-    void setHoverComponent(GuiObject::Ptr c);
-    GuiObject::Ptr hoverComponent = nullptr;
-
-    Component* effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree);
-    static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
 
     //==============================================================================
 
     EffectVT::Ptr createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node = nullptr);
-    void addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain = true);
     PopupMenu getEffectSelectMenu(const MouseEvent &event);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)

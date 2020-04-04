@@ -3,7 +3,7 @@
 
 //==============================================================================
 EffectScene::EffectScene() :
-        effectsTree("TreeTop")
+        EffectTreeBase(ID_TREE_TOP)
 {
     setComponentID("MainWindow");
     setName("MainWindow");
@@ -21,9 +21,9 @@ EffectScene::EffectScene() :
     //========================================================================================
     // Manage EffectsTree
 
-    effectsTree.setProperty(ID_EFFECT_GUI, this, nullptr);
-    //effectsTree.setProperty(ID_EFFECT_GUI, this);
-    effectsTree.addListener(this);
+    tree.setProperty(ID_EFFECT_GUI, this, nullptr);
+    //tree.setProperty(ID_EFFECT_GUI, this);
+    tree.addListener(this);
 
     //========================================================================================
     // Manage Audio
@@ -77,7 +77,7 @@ EffectScene::~EffectScene()
     // kinda messy managing one's own ReferenceCountedObject property.
     jassert(getReferenceCount() == 1);
     incReferenceCount();
-    effectsTree.removeProperty(ID_EFFECT_GUI, nullptr);
+    tree.removeProperty(ID_EFFECT_GUI, nullptr);
     decReferenceCountWithoutDeleting();
 }
 
@@ -133,7 +133,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
             if (parentToCheck != this)
                 treeToCheck = dynamic_cast<GuiEffect*>(parentToCheck)->EVT->getTree();
             else
-                treeToCheck = effectsTree;
+                treeToCheck = tree;
             connectPort = portToConnectTo(newEvent, treeToCheck);
 
             if (connectPort != nullptr) {
@@ -144,8 +144,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
         }
         // Effect drag
         else if (auto *effect = dynamic_cast<GuiEffect *>(event.eventComponent)){
-            auto newParent = effectToMoveTo(effect,
-                                            event.getEventRelativeTo(this).getPosition(), effectsTree);
+            auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
 
             if (newParent != this)
                 setHoverComponent(dynamic_cast<GuiObject*>(newParent));
@@ -170,15 +169,14 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             }
 
             // Scan effect to apply move to
-            auto newParent = effectToMoveTo(effect,
-                                            event.getEventRelativeTo(this).getPosition(), effectsTree);
+            auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
 
             if (auto e = dynamic_cast<GuiEffect *>(newParent))
                 if (!e->isInEditMode())
                     return;
             // target is not in edit mode
             if (effect->getParentComponent() != newParent) {
-                addEffect(event.getEventRelativeTo(newParent), effect->EVT);
+                addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
             }
         }
         // If component is LineComponent, respond to line drag event
@@ -237,6 +235,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
     }
 
     if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
+        std::cout << "Undo: " << undoManager.getCurrentTransactionName() << newLine;
         undoManager.undo();
     } else if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'Z') {
         undoManager.redo();
@@ -294,77 +293,7 @@ void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChange
 
 
 //============================================================================================
-// LassoSelector classes
 
-void EffectScene::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
-    for (auto c : componentsToSelect) {
-        if (!intersectMode) {
-            if (area.contains(c->getBoundsInParent())) {
-                results.addIfNotAlreadyThere(c);
-            }
-        } else {
-            if (area.intersects(c->getBoundsInParent())) {
-                results.addIfNotAlreadyThere(c);
-            }
-        }
-    }
-}
-
-SelectedItemSet<GuiObject::Ptr> &EffectScene::getLassoSelection() {
-    selected.clear();
-    //selected.addChangeListener(this);
-
-    return selected;
-}
-
-void EffectScene::setHoverComponent(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
-        e->hoverMode = false;
-        e->repaint();
-    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
-        p->hoverMode = false;
-        p->repaint();
-    }
-
-    hoverComponent = c;
-
-    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
-        e->hoverMode = true;
-        e->repaint();
-    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
-        p->hoverMode = true;
-        p->repaint();
-    }
-};
-
-
-
-Component* EffectScene::effectToMoveTo(Component* componentToIgnore, Point<int> point, ValueTree effectTree) {
-    for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
-
-        if (e_gui != nullptr
-                && e_gui->getBoundsInParent().contains(point)
-                && e_gui != componentToIgnore)
-        {
-            // Add any filters here
-            if (e_gui->isIndividual()){
-                continue;
-            }
-
-            // Check if there's a match in the children (sending child component coordinates)
-            if (auto e = effectToMoveTo(componentToIgnore,
-                    point - e_gui->getPosition(), effectTree.getChild(i)))
-                return e;
-            else
-                return e_gui;
-        }
-    }
-    // If nothing is found (at topmost level) then return the maincomponent
-    if (effectTree == effectsTree)
-        return this;
-    else return nullptr;
-}
 
 EffectVT::Ptr EffectScene::createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node)
 {
@@ -388,42 +317,26 @@ EffectVT::Ptr EffectScene::createEffect(const MouseEvent &event, const AudioProc
 }
 
 
-/**
- * Adds existing effect as child to the effect under the mouse
- * @param event for which the location will determine what effect to add to.
- * @param childEffect effect to add
- */
-void EffectScene::addEffect(const MouseEvent& event, EffectVT::Ptr childEffect, bool addToMain) {
-    auto parentTree = childEffect->getTree().getParent();
-    parentTree.removeChild(childEffect->getTree(), nullptr);
 
-    ValueTree newParent;
-    if (auto newGUIEffect = dynamic_cast<GuiEffect*>(event.eventComponent)){
-        newParent = newGUIEffect->EVT->getTree();
-    } else
-        newParent = effectsTree;
-
-    newParent.appendChild(childEffect->getTree(), nullptr);
-}
 
 PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
     PopupMenu m;
     m.addItem("Empty Effect", std::function<void()>(
             [=]{
                 auto e = createEffect(event);
-                addEffect(event, e);
+                addEffect(event, *e);
             }));
     m.addItem("Input Effect", std::function<void()>(
             [=]{
                 auto node = audioGraph->addNode(std::make_unique<InputDeviceEffect>());
                 auto e = createEffect(event, node);
-                addEffect(event, e);
+                addEffect(event, *e);
             }));
     m.addItem("Output Effect", std::function<void()>(
             [=]{
                 auto node = audioGraph->addNode(std::make_unique<OutputDeviceEffect>());
                 auto e = createEffect(event, node);
-                addEffect(event, e);
+                addEffect(event, *e);
             }));
     m.addItem("Delay Effect", std::function<void()>(
             [=](){
@@ -435,7 +348,7 @@ PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
                         audioGraph->getBlockSize()
                 );
                 auto e = createEffect(event, node);
-                addEffect(event, e);
+                addEffect(event, *e);
             }
     ));
     m.addItem("Distortion Effect", std::function<void()>(
@@ -448,49 +361,12 @@ PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
                         audioGraph->getBlockSize()
                 );
                 auto e = createEffect(event, node);
-                addEffect(event, e);
+                addEffect(event, *e);
             }
     ));
     return m;
 }
 
-ConnectionPort::Ptr EffectScene::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
-
-    // Check for self ports
-    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
-        if (auto e = dynamic_cast<GuiEffect*>(event.eventComponent))
-            if (auto returnPort = e->checkPort(event.getPosition()))
-                if (p->canConnect(returnPort))
-                    return returnPort;
-
-    // Check children for a match
-    for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
-
-        if (e_gui == nullptr)
-            continue;
-
-        // Filter self effect if AudioPort
-        if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
-            if (p->getParent() == e_gui)
-                continue;
-
-        auto localPos = e_gui->getLocalPoint(event.eventComponent, event.getPosition());
-
-        std::cout << "Local event: " <<  e_gui->getLocalPoint(event.eventComponent, event.getPosition()).toString() << newLine;
-        std::cout << "event pos: " << event.getPosition().toString() << newLine;
-
-        if (e_gui->contains(localPos))
-        {
-            if (auto p = e_gui->checkPort(localPos))
-                if (dynamic_cast<ConnectionPort*>(event.originalComponent)->canConnect(p))
-                    return p;
-        }
-    }
-
-    // If nothing is found return nullptr
-    return nullptr;
-}
 
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {

@@ -15,11 +15,14 @@ std::unique_ptr<AudioProcessorGraph> EffectTreeBase::audioGraph = nullptr;
 std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
 std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
+ComponentSelection EffectTreeBase::selected;
 
 const Identifier EffectVT::IDs::xPos = "xPos";
 const Identifier EffectVT::IDs::yPos = "yPos";
 
 LineComponent* LineComponent::dragLine = nullptr;
+
+
 
 //==============================================================================
 // Line Component methods
@@ -219,7 +222,7 @@ void GuiEffect::resized()
         p->internalPort->setCentrePosition(getWidth() - portIncrement - 50, outputPortPos);
         outputPortPos += portIncrement;
     }
-    
+
     title.setBounds(30,30,200, title.getFont().getHeight());
 }
 
@@ -252,14 +255,18 @@ void GuiEffect::mouseDrag(const MouseEvent &event) {
 
         setTopLeftPosition(newX, newY);
     }
+
+    EVT->mouseDrag(event);
+
     getParentComponent()->mouseDrag(event);
 }
 
 void GuiEffect::mouseUp(const MouseEvent &event) {
     setAlwaysOnTop(false);
 
-    EVT->pos.x = getPosition().x;
-    EVT->pos.y = getPosition().y;
+    EVT->setPos(getPosition());
+
+    EVT->mouseUp(event);
 
     getParentComponent()->mouseUp(event);
 }
@@ -518,7 +525,7 @@ EffectVT::EffectVT(const MouseEvent &event, Array<const EffectVT *> effectVTSet)
     for (auto eVT : effectVTSet){
         // Set itself as parent of given children
         eVT->getTree().getParent().removeChild(eVT->getTree(), nullptr);
-        effectTree.appendChild(eVT->getTree(), nullptr);
+        tree.appendChild(eVT->getTree(), nullptr);
 
         // Update position
         auto bounds = eVT->getGUIEffect()->getBoundsInParent();
@@ -540,7 +547,7 @@ EffectVT::EffectVT(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) 
     // Create from node:
     node = EffectVT::audioGraph->getNodeForId(nodeID);
     processor = node->getProcessor();
-    effectTree.setProperty("Node", node.get(), nullptr);
+    tree.setProperty("Node", node.get(), nullptr);
 
     // Initialise with processor
     guiEffect.setProcessor(processor);
@@ -550,23 +557,26 @@ EffectVT::EffectVT(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) 
  * Empty effectVT
  */
 EffectVT::EffectVT(const MouseEvent &event) :
-        effectTree("effectTree"),
+        EffectTreeBase(ID_EFFECT_VT),
+        TreeData(&undoManager),
         guiEffect(event, this)
 {
-    // Setup effectTree properties
-    effectTree.setProperty("Name", name, nullptr);
-    effectTree.setProperty("Effect", this, nullptr);
-    effectTree.setProperty("GUI", &guiEffect, nullptr);
+    // Setup tree properties
+    tree.setProperty("Name", name, nullptr);
+    tree.setProperty("Effect", this, nullptr);
+    tree.setProperty("GUI", &guiEffect, nullptr);
 
-    effectTree.addListener(this);
+    tree.addListener(this);
 
-    pos.x.referTo(effectTree, IDs::xPos, &undoManager);
-    pos.y.referTo(effectTree, IDs::yPos, &undoManager);
+    pos.x.referTo(tree, IDs::xPos, &undoManager);
+    pos.y.referTo(tree, IDs::yPos, &undoManager);
+
+    setPos(guiEffect.getPosition());
 }
 
 EffectVT::~EffectVT()
 {
-    effectTree.removeAllProperties(nullptr);
+    tree.removeAllProperties(nullptr);
     // Delete processor from graph
     EffectVT::audioGraph->removeNode(node->nodeID);
 }
@@ -612,13 +622,63 @@ AudioProcessorGraph::NodeID EffectVT::getNodeID() const {
 }
 
 void EffectVT::mouseDown(const MouseEvent &event) {
-    undoManager.beginNewTransaction();
-}
+    std::cout << "Begin transaction at pos: " << pos.x << " " << pos.y << newLine;
+    auto name = "poop " + String(pos.x) + " " + String(pos.y);
+    undoManager.beginNewTransaction(name);
 
+    if (event.mods.isLeftButtonDown() && event.originalComponent == this){
+        lasso.setVisible(true);
+        lasso.beginLasso(event, this);
+    }
+}
+//TODO
 void EffectVT::mouseDrag(const MouseEvent &event) {
+    if (lasso.isVisible())
+        lasso.dragLasso(event);
+    if (event.mods.isLeftButtonDown()) {
+        auto thisEvent = event.getEventRelativeTo(this);
 
+        // Line drag
+        /*if (dynamic_cast<LineComponent*>(event.eventComponent)) {
+            // ParentToCheck is the container of possible things to connect to.
+            Component* parentToCheck;
+            if (dynamic_cast<AudioPort*>(event.originalComponent))
+                parentToCheck = event.originalComponent->getParentComponent()->getParentComponent();
+            else if (dynamic_cast<InternalConnectionPort*>(event.originalComponent))
+                parentToCheck = event.originalComponent->getParentComponent();
+
+            //auto connectPort = portToConnectTo(newEvent, parentToCheck)
+            ConnectionPort::Ptr connectPort;
+            // Get port to connect to (if there is one)
+            auto newEvent = event.getEventRelativeTo(parentToCheck);
+
+            ValueTree treeToCheck;
+            if (parentToCheck != this)
+                treeToCheck = dynamic_cast<GuiEffect*>(parentToCheck)->EVT->getTree();
+            else
+                treeToCheck = tree;
+            connectPort = portToConnectTo(newEvent, treeToCheck);
+
+            if (connectPort != nullptr) {
+                setHoverComponent(connectPort);
+            } else
+                setHoverComponent(nullptr);
+
+        }
+            // Effect drag
+        else*/
+        if (auto effect = dynamic_cast<GuiEffect *>(event.eventComponent)){
+
+            auto newParent = effectToMoveTo(thisEvent, tree);
+
+            if (newParent != this)
+                setHoverComponent(dynamic_cast<GuiObject*>(newParent));
+            else
+                setHoverComponent(nullptr);
+        }
+    }
 }
-
+//TODO
 void EffectVT::mouseUp(const MouseEvent &event) {
     //TODO make GuiEffect and this one and the same
 
@@ -629,24 +689,186 @@ void EffectVT::mouseUp(const MouseEvent &event) {
     if (auto newParent = dynamic_cast<GuiEffect*>(event.eventComponent)) {
 
     }
+
+    if (lasso.isVisible())
+        lasso.endLasso();
+
+    if (event.mods.isLeftButtonDown()) {
+        // If the component is an effect, respond to move effect event
+        if (GuiEffect *effect = dynamic_cast<GuiEffect *>(event.originalComponent)) {
+            if (event.getDistanceFromDragStart() < 10) {
+                // Consider this a click and not a drag
+                selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
+                event.eventComponent->repaint();
+            }
+
+            // Scan effect to apply move to
+            auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
+
+            if (auto e = dynamic_cast<GuiEffect *>(newParent))
+                if (!e->isInEditMode())
+                    return;
+            // target is not in edit mode
+            if (effect->getParentComponent() != newParent) {
+                addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
+            }
+        }
+            // If component is LineComponent, respond to line drag event
+        else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
+            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
+                l->convert(port);
+            }
+        }
+    }
+
+    for (auto i : selected){
+        std::cout << i->getName() << newLine;
+    }
 }
 
 void EffectVT::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    if (treeWhosePropertyHasChanged == effectTree) {
+    if (treeWhosePropertyHasChanged == tree) {
         if (property == IDs::xPos) {
             guiEffect.setTopLeftPosition(pos.x, guiEffect.getPosition().y);
+            std::cout << "x: " << pos.x << newLine;
         } else if (property == IDs::yPos) {
             guiEffect.setTopLeftPosition(guiEffect.getPosition().x, pos.y);
+            std::cout << "y: " << pos.y << newLine;
         }
     }
 }
 
 void EffectVT::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
-    if (treeWhoseParentHasChanged == effectTree) {
+    if (treeWhoseParentHasChanged == tree) {
 
     }
 }
 
+//==============================================================================
+// Lasso
+
+void EffectTreeBase::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
+    for (auto c : componentsToSelect) {
+        if (!intersectMode) {
+            if (area.contains(c->getBoundsInParent())) {
+                results.addIfNotAlreadyThere(c);
+            }
+        } else {
+            if (area.intersects(c->getBoundsInParent())) {
+                results.addIfNotAlreadyThere(c);
+            }
+        }
+    }
+}
+
+SelectedItemSet<GuiObject::Ptr>& EffectTreeBase::getLassoSelection() {
+    selected.clear();
+    return selected;
+}
+//TODO
+void EffectTreeBase::setHoverComponent(GuiObject::Ptr c) {
+    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
+        e->hoverMode = false;
+        e->repaint();
+    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
+        p->hoverMode = false;
+        p->repaint();
+    }
+
+    hoverComponent = c;
+
+    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
+        e->hoverMode = true;
+        e->repaint();
+    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
+        p->hoverMode = true;
+        p->repaint();
+    }
+}
+//TODO
+Component* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
+    for (int i = 0; i < effectTree.getNumChildren(); i++) {
+        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+
+        if (e_gui != nullptr
+            && e_gui->getBoundsInParent().contains(event.x, event.y)
+            && e_gui != event.originalComponent)
+        {
+            // Add any filters here
+            if (e_gui->isIndividual()){
+                continue;
+            }
+
+            // Check if there's a match in the children (sending child component coordinates)
+            auto recursiveEvent = event.getEventRelativeTo(e_gui);
+            if (auto e = effectToMoveTo(recursiveEvent, effectTree.getChild(i)))
+                return e;
+            else
+                return e_gui;
+        }
+    }
+    // If nothing is found (at topmost level) then return the maincomponent
+    if (effectTree.hasType(ID_TREE_TOP))
+        return this;
+    else return nullptr;
+}
+//TODO
+ConnectionPort::Ptr EffectTreeBase::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
+
+    // Check for self ports
+    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
+        if (auto e = dynamic_cast<GuiEffect*>(event.eventComponent))
+            if (auto returnPort = e->checkPort(event.getPosition()))
+                if (p->canConnect(returnPort))
+                    return returnPort;
+
+    // Check children for a match
+    for (int i = 0; i < effectTree.getNumChildren(); i++) {
+        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+
+        if (e_gui == nullptr)
+            continue;
+
+        // Filter self effect if AudioPort
+        if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
+            if (p->getParent() == e_gui)
+                continue;
+
+        auto localPos = e_gui->getLocalPoint(event.eventComponent, event.getPosition());
+
+        std::cout << "Local event: " <<  e_gui->getLocalPoint(event.eventComponent, event.getPosition()).toString() << newLine;
+        std::cout << "event pos: " << event.getPosition().toString() << newLine;
+
+        if (e_gui->contains(localPos))
+        {
+            if (auto p = e_gui->checkPort(localPos))
+                if (dynamic_cast<ConnectionPort*>(event.originalComponent)->canConnect(p))
+                    return p;
+        }
+    }
+
+    // If nothing is found return nullptr
+    return nullptr;
+}
+
+/**
+ * Adds existing effect as child to the effect under the mouse
+ * @param event for which the location will determine what effect to add to.
+ * @param childEffect effect to add
+ */
+//TODO
+void EffectTreeBase::addEffect(const MouseEvent& event, const EffectVT& childEffect, bool addToMain) {
+    auto parentTree = childEffect.getTree().getParent();
+    parentTree.removeChild(childEffect.getTree(), nullptr);
+
+    ValueTree newParent;
+    if (auto newGUIEffect = dynamic_cast<GuiEffect*>(event.eventComponent)){
+        newParent = newGUIEffect->EVT->getTree();
+    } else
+        newParent = tree;
+
+    newParent.appendChild(childEffect.getTree(), nullptr);
+}
 
 //==============================================================================
 #if 0

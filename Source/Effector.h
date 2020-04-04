@@ -17,7 +17,7 @@
 //======================================================================================
 // Names for referencing EffectValueTree
 const Identifier ID_TREE_TOP("TreeTop");
-const Identifier ID_EFFECT_VT("effectTree");
+const Identifier ID_EFFECT_VT("tree");
 const Identifier ID_EVT_OBJECT("Effect");
 const Identifier ID_EFFECT_NAME("Name");
 const Identifier ID_EFFECT_GUI("GUI");
@@ -33,6 +33,26 @@ class GuiObject : public ReferenceCountedObject, public Component
 public:
     using Ptr = ReferenceCountedObjectPtr<GuiObject>;
 };
+
+/**
+ * SelectedItemSet for Component* class, with
+ * itemSelected/itemDeselected overrides. That is all.
+ */
+class ComponentSelection : public SelectedItemSet<GuiObject::Ptr>
+{
+public:
+    ComponentSelection() = default;
+
+    void clear() {
+        SelectedItemSet<GuiObject::Ptr>::deselectAll();
+    }
+
+    void itemSelected(GuiObject::Ptr type) override;
+    void itemDeselected(GuiObject::Ptr type) override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
+};
+
 
 class CustomMenuItems
 {
@@ -490,17 +510,42 @@ private:
  * Data for saving and loading state,
  * TODO Undoable action
  */
-class EffectTreeBase : public ReferenceCountedObject, public Component, public ValueTree::Listener
+class EffectTreeBase : public ReferenceCountedObject, public Component, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
 {
 public:
+    EffectTreeBase(Identifier id) : tree(id) {
+
+    }
+
     void createConnection(std::unique_ptr<ConnectionLine> line);
 
     static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
                                 std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
     static void close();
 protected:
+    ValueTree tree;
     OwnedArray<ConnectionLine> connections;
     std::unique_ptr<Component> gui;
+
+    //====================================================================================
+    // Lasso stuff (todo: simplify)
+    LineComponent dragLine;
+    LassoComponent<GuiObject::Ptr> lasso;
+    bool intersectMode = true;
+
+    void findLassoItemsInArea (Array <GuiObject::Ptr>& results, const Rectangle<int>& area) override;
+    ReferenceCountedArray<GuiObject> componentsToSelect;
+    static ComponentSelection selected;
+    SelectedItemSet<GuiObject::Ptr>& getLassoSelection() override;
+    //====================================================================================
+    // Hover identifier and management
+    void setHoverComponent(GuiObject::Ptr c);
+    GuiObject::Ptr hoverComponent = nullptr;
+
+    Component* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
+    static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
+    //====================================================================================
+    void addEffect(const MouseEvent& event, const EffectVT& childEffect, bool addToMain = true);
 
     static void addAudioConnection(ConnectionLine& connectionLine);
 
@@ -511,6 +556,30 @@ protected:
     static UndoManager undoManager;
 };
 
+class TreeData
+{
+public:
+    TreeData(UndoManager* undoManager) {
+        um = undoManager;
+    }
+
+    // Undoable actions
+    void setPos(Point<int> newPos) {
+        std::cout << "Setting new Pos" << newLine;
+        pos.x = newPos.x;
+        pos.y = newPos.y;
+    }
+
+protected:
+    struct Pos {
+        CachedValue<int> x;
+        CachedValue<int> y;
+    } pos;
+
+private:
+    UndoManager* um;
+};
+
 /**
  * EffectVT (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
  *
@@ -519,7 +588,7 @@ protected:
  * The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
  */
 
-class EffectVT : public EffectTreeBase
+class EffectVT : public EffectTreeBase, public TreeData
 {
 public:
 
@@ -535,14 +604,8 @@ public:
     // ================================================================================
     // Effect tree data
 
-    struct Pos {
-        CachedValue<int> x;
-        CachedValue<int> y;
-    } pos;
-
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
     void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
-
 
     // =================================================================================
     // Setters and getter functions
@@ -558,8 +621,8 @@ public:
     // Data
     const String& getName() const { return name; }
     void setName(const String &name) { this->name = name; }
-    ValueTree& getTree() {return effectTree;}
-    const ValueTree& getTree() const {return effectTree;}
+    ValueTree& getTree() {return tree;}
+    const ValueTree& getTree() const {return tree;}
     GuiEffect* getGUIEffect() {return &guiEffect;}
     const GuiEffect* getGUIEffect() const {return &guiEffect;}
 
@@ -567,11 +630,11 @@ public:
 
     // Convenience functions
     EffectVT::Ptr getParent(){ return dynamic_cast<EffectVT*>(
-            effectTree.getParent().getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
+            tree.getParent().getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
     EffectVT::Ptr getChild(int index){ return dynamic_cast<EffectVT*>(
-            effectTree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
+            tree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
     EffectVT::Ptr ptr(){ return this; }
-    int getNumChildren(){ return effectTree.getNumChildren(); }
+    int getNumChildren(){ return tree.getNumChildren(); }
     bool isIndividual() const { return guiEffect.isIndividual(); }
 
     void mouseDown(const MouseEvent &event) override;
@@ -586,9 +649,7 @@ private:
     ReferenceCountedArray<ConnectionLine> connections;
 
     String name;
-    ValueTree effectTree;
     GuiEffect guiEffect;
-
 
     struct IDs {
         static const Identifier xPos;
