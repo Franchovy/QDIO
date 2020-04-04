@@ -16,6 +16,9 @@ std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
 std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 
+const Identifier EffectVT::IDs::xPos = "xPos";
+const Identifier EffectVT::IDs::yPos = "yPos";
+
 LineComponent* LineComponent::dragLine = nullptr;
 
 //==============================================================================
@@ -71,7 +74,6 @@ void LineComponent::convert(ConnectionPort *port2) {
 //==============================================================================
 // GuiEffect methods
 
-
 GuiEffect::GuiEffect (const MouseEvent &event, EffectVT* parentEVT) :
     EVT(parentEVT)
 {
@@ -85,7 +87,6 @@ GuiEffect::GuiEffect (const MouseEvent &event, EffectVT* parentEVT) :
     } else {
         setBounds(event.getPosition().x, event.getPosition().y, 200,200);
     }
-
 
     menu.addItem("Toggle Edit Mode", [=]() {
         toggleEditMode();
@@ -159,7 +160,9 @@ void GuiEffect::paint (Graphics& g)
     // Draw outline rectangle
     g.setColour(Colours::black);
     Rectangle<float> outline(10,10,getWidth()-20, getHeight()-20);
-    g.drawRoundedRectangle(outline, 10, 3);
+    Path outlineRect;
+    outlineRect.addRoundedRectangle(outline, 10, 3);
+    PathStrokeType outlineStroke(1);
 
     // Hover rectangle
     g.setColour(Colours::blue);
@@ -180,12 +183,25 @@ void GuiEffect::paint (Graphics& g)
     if (!editMode) {
         g.setOpacity(1.f);
     } else {
-        g.setOpacity(0.3f);
+        g.setOpacity(0.1f);
     }
-    if (image.isNull())
+
+    if (image.isNull()) {
         g.fillRoundedRectangle(outline, 10);
-    else
+    } else {
         g.drawImage(image, outline);
+    }
+
+    g.setOpacity(1.f);
+
+    if (editMode){
+        float thiccness[] = {10, 10};
+        outlineStroke.createDashedStroke(outlineRect, outlineRect, thiccness, 2);
+    } else {
+        outlineStroke.createStrokedPath(outlineRect, outlineRect);
+        g.setColour(Colours::black);
+    }
+    g.strokePath(outlineRect, outlineStroke);
 }
 
 void GuiEffect::resized()
@@ -203,9 +219,7 @@ void GuiEffect::resized()
         p->internalPort->setCentrePosition(getWidth() - portIncrement - 50, outputPortPos);
         outputPortPos += portIncrement;
     }
-
-
-
+    
     title.setBounds(30,30,200, title.getFont().getHeight());
 }
 
@@ -215,6 +229,7 @@ void GuiEffect::mouseDown(const MouseEvent &event) {
         dragData.previousParent = getParentComponent();
         dragData.previousPos = getPosition();
         dragger.startDraggingComponent(this, event);
+        EVT->mouseDown(event);
     } else if (event.mods.isRightButtonDown())
         getParentComponent()->mouseDown(event);
 }
@@ -242,6 +257,10 @@ void GuiEffect::mouseDrag(const MouseEvent &event) {
 
 void GuiEffect::mouseUp(const MouseEvent &event) {
     setAlwaysOnTop(false);
+
+    EVT->pos.x = getPosition().x;
+    EVT->pos.y = getPosition().y;
+
     getParentComponent()->mouseUp(event);
 }
 
@@ -337,6 +356,9 @@ void GuiEffect::setEditMode(bool isEditMode) {
         }
         title.setMouseCursor(MouseCursor::IBeamCursor);
         title.setInterceptsMouseClicks(true, true);
+
+        title.setColour(title.textColourId, Colours::whitesmoke);
+
     }
     // Turn off edit mode
     else if (!isEditMode) {
@@ -347,6 +369,7 @@ void GuiEffect::setEditMode(bool isEditMode) {
         }
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
+        title.setColour(title.textColourId, Colours::black);
     }
 
     editMode = isEditMode;
@@ -534,6 +557,11 @@ EffectVT::EffectVT(const MouseEvent &event) :
     effectTree.setProperty("Name", name, nullptr);
     effectTree.setProperty("Effect", this, nullptr);
     effectTree.setProperty("GUI", &guiEffect, nullptr);
+
+    effectTree.addListener(this);
+
+    pos.x.referTo(effectTree, IDs::xPos, &undoManager);
+    pos.y.referTo(effectTree, IDs::yPos, &undoManager);
 }
 
 EffectVT::~EffectVT()
@@ -570,7 +598,6 @@ EffectVT::NodeAndPort EffectVT::getNode(ConnectionPort::Ptr &port) {
             portToCheck->incReferenceCount();
         }
 
-
         if (portToCheck->connectionLine != nullptr) {
             auto otherPort = portToCheck->connectionLine->getOtherPort(portToCheck);
             nodeAndPort = otherPort->getParent()->EVT->getNode(
@@ -585,16 +612,41 @@ AudioProcessorGraph::NodeID EffectVT::getNodeID() const {
 }
 
 void EffectVT::mouseDown(const MouseEvent &event) {
-
+    undoManager.beginNewTransaction();
 }
 
 void EffectVT::mouseDrag(const MouseEvent &event) {
-    Component::mouseDrag(event);
+
 }
 
 void EffectVT::mouseUp(const MouseEvent &event) {
-    Component::mouseUp(event);
+    //TODO make GuiEffect and this one and the same
+
+    // no reassignment
+    if (event.eventComponent == event.originalComponent)
+        return;
+
+    if (auto newParent = dynamic_cast<GuiEffect*>(event.eventComponent)) {
+
+    }
 }
+
+void EffectVT::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    if (treeWhosePropertyHasChanged == effectTree) {
+        if (property == IDs::xPos) {
+            guiEffect.setTopLeftPosition(pos.x, guiEffect.getPosition().y);
+        } else if (property == IDs::yPos) {
+            guiEffect.setTopLeftPosition(guiEffect.getPosition().x, pos.y);
+        }
+    }
+}
+
+void EffectVT::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
+    if (treeWhoseParentHasChanged == effectTree) {
+
+    }
+}
+
 
 //==============================================================================
 #if 0

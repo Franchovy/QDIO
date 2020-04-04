@@ -9,6 +9,7 @@ EffectScene::EffectScene() :
     setName("MainWindow");
     setSize (4000, 4000);
 
+    //setMouseClickGrabsKeyboardFocus(true);
 
     //========================================================================================
     // Drag Line GUI
@@ -155,6 +156,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
 }
 
 void EffectScene::mouseUp(const MouseEvent &event) {
+    // TODO implement all of this locally
     if (lasso.isVisible())
         lasso.endLasso();
 
@@ -220,7 +222,10 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     Component::mouseUp(event);
 }
 
-bool EffectScene::keyPressed(const KeyPress &key) {
+bool EffectScene::keyPressed(const KeyPress &key)
+{
+    //std::cout << "Key press: " << key.getKeyCode() << newLine;
+
     if (key == KeyPress::deleteKey) {
         if (!selected.getItemArray().isEmpty()) {
             // Delete selected
@@ -231,6 +236,11 @@ bool EffectScene::keyPressed(const KeyPress &key) {
         }
     }
 
+    if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
+        undoManager.undo();
+    } else if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'Z') {
+        undoManager.redo();
+    }
 
     return Component::keyPressed(key);
 }
@@ -276,7 +286,6 @@ void EffectScene::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childW
 }
 
 void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }

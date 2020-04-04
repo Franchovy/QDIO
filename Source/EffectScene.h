@@ -45,7 +45,7 @@ public:
  *
  */
 class EffectScene   :
-        public ValueTree::Listener, public EffectTreeBase,
+        public EffectTreeBase,
         public LassoSource<GuiObject::Ptr>, public ComponentListener
 {
 public:

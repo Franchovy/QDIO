@@ -490,7 +490,7 @@ private:
  * Data for saving and loading state,
  * TODO Undoable action
  */
-class EffectTreeBase : public ReferenceCountedObject, public Component
+class EffectTreeBase : public ReferenceCountedObject, public Component, public ValueTree::Listener
 {
 public:
     void createConnection(std::unique_ptr<ConnectionLine> line);
@@ -530,8 +530,19 @@ public:
     ~EffectVT();
 
     using Ptr = ReferenceCountedObjectPtr<EffectVT>;
-
     void addConnection(ConnectionLine* connection);
+
+    // ================================================================================
+    // Effect tree data
+
+    struct Pos {
+        CachedValue<int> x;
+        CachedValue<int> y;
+    } pos;
+
+    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
+    void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
+
 
     // =================================================================================
     // Setters and getter functions
@@ -574,12 +585,17 @@ private:
 
     ReferenceCountedArray<ConnectionLine> connections;
 
-    Value pos;
-
     String name;
     ValueTree effectTree;
     GuiEffect guiEffect;
 
+
+    struct IDs {
+        static const Identifier xPos;
+        static const Identifier yPos;
+    };
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectVT)
 
 };
+
