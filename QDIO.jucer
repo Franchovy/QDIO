@@ -4,6 +4,8 @@
               compilerFlagSchemes="NewScheme">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{7BA62652-E431-98B6-D8CC-8F9CF98F34BB}" name="Source">
+      <FILE id="rdmW6C" name="EffectGui.cpp" compile="1" resource="0" file="Source/EffectGui.cpp"/>
+      <FILE id="eTACmX" name="EffectGui.h" compile="0" resource="0" file="Source/EffectGui.h"/>
       <FILE id="VmJBC4" name="Effect.cpp" compile="1" resource="0" file="Source/Effect.cpp"/>
       <FILE id="FfOCUz" name="Effect.h" compile="0" resource="0" file="Source/Effect.h"/>
       <FILE id="hXFxn1" name="BaseEffects.cpp" compile="1" resource="1" file="Source/BaseEffects.cpp"

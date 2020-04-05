@@ -426,7 +426,7 @@ struct EffectDragData : ReferenceCountedObject
     v-- Is this necessary??
     ReferenceCountedObject for usage as part of ValueTree system
 */
-class GuiEffect : public GuiObject
+class GuiEffect : public GuiEffectBase
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<GuiEffect>;
@@ -522,6 +522,11 @@ public:
     static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
                                 std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
     static void close();
+
+    //===================================================================
+    // Setter / Getter info
+    ValueTree& getTree() { return tree; }
+
 protected:
     ValueTree tree;
     OwnedArray<ConnectionLine> connections;
@@ -556,29 +561,7 @@ protected:
     static UndoManager undoManager;
 };
 
-class TreeData
-{
-public:
-    TreeData(UndoManager* undoManager) {
-        um = undoManager;
-    }
 
-    // Undoable actions
-    void setPos(Point<int> newPos) {
-        std::cout << "Setting new Pos" << newLine;
-        pos.x = newPos.x;
-        pos.y = newPos.y;
-    }
-
-protected:
-    struct Pos {
-        CachedValue<int> x;
-        CachedValue<int> y;
-    } pos;
-
-private:
-    UndoManager* um;
-};
 
 /**
  * EffectVT (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
@@ -588,7 +571,7 @@ private:
  * The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
  */
 
-class EffectVT : public EffectTreeBase, public TreeData
+class EffectVT : public EffectTreeBase
 {
 public:
 
@@ -603,6 +586,21 @@ public:
 
     // ================================================================================
     // Effect tree data
+
+    // Undoable actions
+    void setPos(Point<int> newPos) {
+        pos.x = newPos.x;
+        pos.y = newPos.y;
+    }
+
+    struct Pos {
+        CachedValue<int> x;
+        CachedValue<int> y;
+    } pos;
+
+    void setParent(EffectTreeBase& parent) {
+        parent.getTree().appendChild(tree, &undoManager);
+    }
 
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
     void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;

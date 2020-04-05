@@ -710,7 +710,8 @@ void EffectVT::mouseUp(const MouseEvent &event) {
                     return;
             // target is not in edit mode
             if (effect->getParentComponent() != newParent) {
-                addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
+                setParent(newParent);
+                //addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
             }
         }
             // If component is LineComponent, respond to line drag event
@@ -866,6 +867,7 @@ void EffectTreeBase::addEffect(const MouseEvent& event, const EffectVT& childEff
         newParent = newGUIEffect->EVT->getTree();
     } else
         newParent = tree;
+
 
     newParent.appendChild(childEffect.getTree(), nullptr);
 }
