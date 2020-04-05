@@ -182,15 +182,19 @@ public:
         repaint();
     }
 
-    GuiEffect* getParent();
-
     virtual bool canConnect(ConnectionPort::Ptr& other) = 0;
 
     bool isInput;
-    ConnectionLine* connectionLine = nullptr;
+
+    void setOtherPort(ConnectionPort::Ptr newPort) { otherPort = newPort; }
+    ConnectionPort::Ptr getOtherPort() { return otherPort; }
+
+    bool isConnected() { return otherPort != nullptr; }
 
 protected:
     ConnectionPort() : GuiObject() {}
+
+    ConnectionPort::Ptr otherPort = nullptr;
 
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
@@ -245,8 +249,8 @@ struct ConnectionLine : public GuiObject, public ComponentListener
 
     ConnectionLine(ConnectionPort& p1, ConnectionPort& p2);
     ~ConnectionLine(){
-        inPort->connectionLine = nullptr;
-        outPort->connectionLine = nullptr;
+        inPort->setOtherPort(nullptr);
+        outPort->setOtherPort(nullptr);
         inPort->removeComponentListener(this);
         outPort->removeComponentListener(this);
     }
@@ -277,7 +281,7 @@ struct ConnectionLine : public GuiObject, public ComponentListener
         repaint();
     }
 
-    ConnectionPort::Ptr getOtherPort(ConnectionPort::Ptr& port) {
+    ConnectionPort::Ptr getOtherPort(ConnectionPort::Ptr port) {
         return inPort == port ? outPort : inPort;
     }
 
@@ -331,12 +335,14 @@ struct LineComponent : public GuiObject
 
     void mouseUp(const MouseEvent &event) override;
 
+    ConnectionPort* port1 = nullptr;
+
+
 private:
     static LineComponent* dragLine;
 
     Line<int> line;
     Point<int> p1, p2;
-    ConnectionPort* port1 = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LineComponent)
 };

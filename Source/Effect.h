@@ -15,88 +15,6 @@
 
 class Effect;
 
-/**
-    GuiEffect Component
-    GUI Representation of Effects / Container for plugins
-
-    v-- Is this necessary??
-    ReferenceCountedObject for usage as part of ValueTree system
-*/
-class GuiEffect : public GuiObject
-{
-public:
-    using Ptr = ReferenceCountedObjectPtr<GuiEffect>;
-
-    GuiEffect (const MouseEvent &event, Effect* parentEVT);
-    ~GuiEffect() override;
-
-    void setProcessor(AudioProcessor* processor);
-
-    void paint (Graphics& g) override;
-    void resized() override;
-    void moved() override;
-
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
-    void mouseEnter(const MouseEvent &event) override;
-    void mouseExit(const MouseEvent &event) override;
-
-    void childrenChanged() override;
-    void parentHierarchyChanged() override;
-
-    ConnectionPort::Ptr checkPort(Point<int> pos);
-
-    void setParameters(const AudioProcessorParameterGroup* group);
-    void addParameter(AudioProcessorParameter* param);
-
-    void addPort(AudioProcessor::Bus* bus, bool isInput);
-
-    Point<int> dragDetachFromParentComponent();
-    bool isIndividual() const { return individual; }
-    bool hasBeenInitialised = false;
-
-    Effect* EVT;
-
-    bool hoverMode = false;
-    bool selectMode = false;
-
-    void setEditMode(bool isEditMode);
-    bool toggleEditMode() { setEditMode(!editMode); }
-    bool isInEditMode() { return editMode; }
-
-    CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
-
-private:
-    bool individual = false;
-    bool editMode = false;
-    OwnedArray<AudioPort> inputPorts;
-    OwnedArray<AudioPort> outputPorts;
-    Label title;
-    Image image;
-
-    Resizer resizer;
-    ComponentDragger dragger;
-    ComponentBoundsConstrainer constrainer;
-
-    CustomMenuItems menu;
-    CustomMenuItems editMenu;
-
-    Component* currentParent = nullptr;
-
-    const AudioProcessorParameterGroup* parameters;
-
-    //============================================================================
-    // GUI auto stuff
-
-    int portIncrement = 50;
-    int inputPortStartPos = 100;
-    int inputPortPos = inputPortStartPos;
-    int outputPortStartPos = 100;
-    int outputPortPos = outputPortStartPos;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuiEffect)
-};
 
 /**
  * Base class for Effects and EffectScene
@@ -116,15 +34,18 @@ public:
     static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
                                 std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
     static void close();
+    virtual void resized() override = 0;
 
     //===================================================================
     // Setter / Getter info
     ValueTree& getTree() { return tree; }
+    const ValueTree& getTree() const {return tree; }
+
+    EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(tree.getParent().getProperty(IDs::effectTreeBase).getObject()); }
 
 protected:
     ValueTree tree;
     OwnedArray<ConnectionLine> connections;
-    std::unique_ptr<Component> gui;
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
@@ -139,9 +60,11 @@ protected:
     //====================================================================================
     // Hover identifier and management
     void setHoverComponent(GuiObject::Ptr c);
-    GuiObject::Ptr hoverComponent = nullptr;
+    static GuiObject::Ptr hoverComponent;
 
-    Component* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
+    Point<int> dragDetachFromParentComponent();
+
+    EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
     static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
     void addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain = true);
@@ -153,6 +76,10 @@ protected:
     static std::unique_ptr<AudioProcessorGraph> audioGraph;
 
     static UndoManager undoManager;
+
+    struct IDs {
+        static const Identifier effectTreeBase;
+    };
 };
 
 
@@ -168,39 +95,22 @@ protected:
 class Effect : public EffectTreeBase
 {
 public:
-
     Effect(const MouseEvent &event, Array<const Effect*> effectVTSet);
     Effect(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID);
     explicit Effect(const MouseEvent &event);
 
     ~Effect();
 
+    void resized() override;
+    void paint(Graphics& g) override;
+    void mouseDown(const MouseEvent &event) override;
+    void mouseDrag(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
+    void mouseEnter(const MouseEvent &event) override;
+    void mouseExit(const MouseEvent &event) override;
+
     using Ptr = ReferenceCountedObjectPtr<Effect>;
     void addConnection(ConnectionLine* connection);
-
-    // ================================================================================
-    // Effect tree data
-
-    // Undoable actions
-    void setPos(Point<int> newPos) {
-        pos.x = newPos.x;
-        pos.y = newPos.y;
-    }
-
-    struct Pos {
-        CachedValue<int> x;
-        CachedValue<int> y;
-    } pos;
-
-    void setParent(EffectTreeBase& parent) {
-        parent.getTree().appendChild(tree, &undoManager);
-    }
-
-    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
-    void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
-
-    // =================================================================================
-    // Setters and getter functions
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
@@ -208,30 +118,52 @@ public:
         bool isValid = false;
     };
     NodeAndPort getNode(ConnectionPort::Ptr& port);
+
+    void setParameters(const AudioProcessorParameterGroup* group);
+    void addParameter(AudioProcessorParameter* param);
+    void addPort(AudioProcessor::Bus* bus, bool isInput);
+
+    ConnectionPort::Ptr checkPort(Point<int> pos);
+
+    void setEditMode(bool isEditMode);
+    bool isInEditMode() { return editMode; }
+    void setHoverMode(bool newHoverMode) { hoverMode = newHoverMode; }
+    bool isInHoverMode() { return hoverMode; }
+    void setSelectMode(bool newSelectMode) { selectMode = newSelectMode; }
+    bool isInSelectMode() { return selectMode; }
+
+    // ================================================================================
+    // Effect tree data
+
+    // Undoable actions
+    void setPos(Point<int> newPos);
+    void setParent(EffectTreeBase& parent);
+
+    struct Pos {
+        CachedValue<int> x;
+        CachedValue<int> y;
+    } pos;
+
+    // ValueTree listener overrides
+    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
+    void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
+
+    // =================================================================================
+    // Setters and getter functions
+
+    void setProcessor(AudioProcessor* processor);
+
+    const String& getName() const;
+    void setName(const String &name);
+    CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
-
-    // Data
-    const String& getName() const { return name; }
-    void setName(const String &name) { this->name = name; }
-    ValueTree& getTree() {return tree;}
-    const ValueTree& getTree() const {return tree;}
-    GuiEffect* getGUIEffect() {return &guiEffect;}
-    const GuiEffect* getGUIEffect() const {return &guiEffect;}
-
     AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
     // Convenience functions
     Effect::Ptr getParent(){ return dynamic_cast<Effect*>(
-                tree.getParent().getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
-    Effect::Ptr getChild(int index){ return dynamic_cast<Effect*>(
-                tree.getChild(index).getProperty(ID_EVT_OBJECT).getObject())->ptr(); }
-    Effect::Ptr ptr(){ return this; }
-    int getNumChildren(){ return tree.getNumChildren(); }
-    bool isIndividual() const { return guiEffect.isIndividual(); }
+                tree.getParent().getProperty(ID_EVT_OBJECT).getObject()); }
 
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
+    bool isIndividual() const { return processor == nullptr; }
 
 private:
     // Used for an individual processor Effect. - does not contain anything else
@@ -241,12 +173,35 @@ private:
     ReferenceCountedArray<ConnectionLine> connections;
 
     String name;
-    GuiEffect guiEffect;
+
+    bool editMode = false;
+    OwnedArray<AudioPort> inputPorts;
+    OwnedArray<AudioPort> outputPorts;
+    Label title;
+    Image image;
+
+    Resizer resizer;
+    ComponentDragger dragger;
+    ComponentBoundsConstrainer constrainer;
+
+    CustomMenuItems menu;
+    CustomMenuItems editMenu;
+
+    const AudioProcessorParameterGroup* parameters;
+
+    bool hoverMode = false;
+    bool selectMode = false;
 
     struct IDs {
         static const Identifier xPos;
         static const Identifier yPos;
     };
+
+    int portIncrement = 50;
+    int inputPortStartPos = 100;
+    int inputPortPos = inputPortStartPos;
+    int outputPortStartPos = 100;
+    int outputPortPos = outputPortStartPos;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Effect)
 

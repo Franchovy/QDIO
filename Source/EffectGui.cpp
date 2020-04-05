@@ -61,7 +61,7 @@ void LineComponent::mouseUp(const MouseEvent &event) {
 void LineComponent::convert(ConnectionPort *port2) {
     if (port1 != nullptr) {
         // Connect port1 to port2
-        dynamic_cast<EffectTreeBase*>(getParentComponent())->createConnection(std::make_unique<ConnectionLine>(*port1, *port2));
+
     }
 }
 
@@ -90,10 +90,10 @@ bool AudioPort::canConnect(ConnectionPort::Ptr& other) {
 
     // Connect to AudioPort of mutual parent
     return (dynamic_cast<AudioPort *>(other.get())
-            && other->getParent()->getParentComponent() == this->getParent()->getParentComponent())
+            && other->getParentComponent()->getParentComponent() == this->getParentComponent()->getParentComponent())
            // Connect to ICP of containing parent effect
            || (dynamic_cast<InternalConnectionPort *>(other.get())
-               && other->getParent() == this->getParent()->getParentComponent());
+               && other->getParentComponent() == this->getParentComponent()->getParentComponent());
 }
 
 // ==============================================================================
@@ -139,11 +139,10 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
     line = Line<int>(inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint,
                      outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint);
 
-    inPort->getParent()->addComponentListener(this);
-    outPort->getParent()->addComponentListener(this);
-
-    inPort->connectionLine = this;
-    outPort->connectionLine = this;
+    inPort->setOtherPort(outPort);
+    outPort->setOtherPort(inPort);
+    inPort->getParentComponent()->addComponentListener(this);
+    outPort->getParentComponent()->addComponentListener(this);
 
     setBounds(0,0,getParentWidth(),getParentHeight());
 }
@@ -178,58 +177,11 @@ void ConnectionPort::paint(Graphics &g) {
     }
 }
 
-GuiEffect *ConnectionPort::getParent() {
-    return dynamic_cast<GuiEffect*>(getParentComponent());
-}
 
 bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
     // Return false if the port is AP and belongs to the same parent
     return !(dynamic_cast<AudioPort *>(other.get())
-             && this->getParent() == other->getParent());
+             && this->getParentComponent() == other->getParentComponent());
 }
 
-
-void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
-    // Add connection to this object
-    connections.add(move(line));
-
-    auto outputPort = line->inPort;
-    auto inputPort = line->outPort;
-
-    // Remember that an inputPort is receiving, on the output effect
-    // and the outputPort is source on the input effect
-    auto output = dynamic_cast<GuiEffect*>(outputPort->getParent());
-    auto input = dynamic_cast<GuiEffect*>(inputPort->getParent());
-
-
-    //TODO Must replace all this with in-subclass check and set methods!
-
-    // Check for common parent
-    // Find common parent
-    if (input->getParentComponent() == output->getParentComponent()) {
-        std::cout << "Common parent" << newLine;
-        if (input->getParentComponent() == this) {
-            addAndMakeVisible(line.get());
-        } else {
-            dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line.get());
-        }
-    } else if (input->getParentComponent() == output) {
-        std::cout << "Output parent" << newLine;
-        if (output->getParentComponent() == this) {
-            addAndMakeVisible(line.get());
-        } else {
-            dynamic_cast<GuiEffect*>(output->getParentComponent())->EVT->addConnection(line.get());
-        }
-    } else if (output->getParentComponent() == input) {
-        std::cout << "Input parent" << newLine;
-        if (input->getParentComponent() == this) {
-            addAndMakeVisible(line.get());
-        } else {
-            dynamic_cast<GuiEffect*>(input->getParentComponent())->EVT->addConnection(line.get());
-        }
-    }
-
-    // Update audiograph
-    addAudioConnection(*line);
-}
 

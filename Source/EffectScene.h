@@ -12,7 +12,7 @@
 
 #include <JuceHeader.h>
 
-#include "Effector.h"
+#include "Effect.h"
 #include "IOEffects.h"
 #include "BaseEffects.h"
 
@@ -76,7 +76,7 @@ private:
 
     //==============================================================================
 
-    EffectVT::Ptr createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node = nullptr);
+    Effect::Ptr createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node = nullptr);
     PopupMenu getEffectSelectMenu(const MouseEvent &event);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)

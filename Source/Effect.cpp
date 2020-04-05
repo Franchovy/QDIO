@@ -16,68 +16,17 @@ std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
 std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 ComponentSelection EffectTreeBase::selected;
+GuiObject::Ptr EffectTreeBase::hoverComponent = nullptr;
+
+
+const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
 
 const Identifier Effect::IDs::xPos = "xPos";
 const Identifier Effect::IDs::yPos = "yPos";
 
-
-
-
-GuiEffect::GuiEffect (const MouseEvent &event, Effect* parentEVT) :
-        EVT(parentEVT)
-{
-    addAndMakeVisible(resizer);
-
-    //TODO assign the tree before creation of GuiEffect for this to work
-    if (parentEVT->getTree().getParent().hasType(ID_EFFECT_VT)){
-        auto sizeDef = dynamic_cast<GuiEffect*>(parentEVT->getTree().getParent()
-                .getProperty(ID_EFFECT_GUI).getObject())->getWidth() / 3;
-        setBounds(event.getPosition().x, event.getPosition().y, sizeDef, sizeDef);
-    } else {
-        setBounds(event.getPosition().x, event.getPosition().y, 200,200);
-    }
-
-    menu.addItem("Toggle Edit Mode", [=]() {
-        toggleEditMode();
-    });
-    menu.addItem("Change Effect Image..", [=]() {
-        FileChooser imgChooser ("Select Effect Image..",
-                                File::getSpecialLocation (File::userHomeDirectory),
-                                "*.jpg;*.png;*.gif");
-
-        if (imgChooser.browseForFileToOpen())
-        {
-            image = ImageFileFormat::loadFrom(imgChooser.getResult());
-        }
-    });
-
-    editMenu.addItem("Add Input Port", [=](){addPort(EVT->getDefaultBus(), true); resized(); });
-    editMenu.addItem("Add Output Port", [=](){addPort(EVT->getDefaultBus(), false); resized(); });
-    editMenu.addItem("Toggle Edit Mode", [=]() {
-        toggleEditMode();
-    });
-
-    Font titleFont(20, Font::FontStyleFlags::bold);
-    title.setFont(titleFont);
-    title.setText("New Empty Effect", dontSendNotification);
-    title.setBounds(30,30,200, title.getFont().getHeight());
-    title.setColour(title.textColourId, Colours::black);
-    title.setEditable(true);
-    addAndMakeVisible(title);
-
-    // Make edit mode by default
-    setEditMode(true);
-}
-
-GuiEffect::~GuiEffect()
-{
-
-}
-
 // Processor hasEditor? What to do if processor is a predefined plugin
-void GuiEffect::setProcessor(AudioProcessor *processor) {
+void Effect::setProcessor(AudioProcessor *processor) {
     setEditMode(false);
-    individual = true;
 
     // Set up ports based on processor buses
     int numInputBuses = processor->getBusCount(true );
@@ -104,138 +53,7 @@ void GuiEffect::setProcessor(AudioProcessor *processor) {
     repaint();
 }
 
-void GuiEffect::paint (Graphics& g)
-{
-    // Draw outline rectangle
-    g.setColour(Colours::black);
-    Rectangle<float> outline(10,10,getWidth()-20, getHeight()-20);
-    Path outlineRect;
-    outlineRect.addRoundedRectangle(outline, 10, 3);
-    PathStrokeType outlineStroke(1);
-
-    // Hover rectangle
-    g.setColour(Colours::blue);
-    Path hoverRectangle;
-    hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
-    PathStrokeType strokeType(3);
-
-    if (hoverMode) {
-        float thiccness[] = {5, 7};
-        strokeType.createDashedStroke(hoverRectangle, hoverRectangle, thiccness, 2);
-    } else if (selectMode)
-        strokeType.createStrokedPath(hoverRectangle, hoverRectangle);
-
-    if (selectMode || hoverMode)
-        g.strokePath(hoverRectangle, strokeType);
-
-    g.setColour(Colours::whitesmoke);
-    if (!editMode) {
-        g.setOpacity(1.f);
-    } else {
-        g.setOpacity(0.1f);
-    }
-
-    if (image.isNull()) {
-        g.fillRoundedRectangle(outline, 10);
-    } else {
-        g.drawImage(image, outline);
-    }
-
-    g.setOpacity(1.f);
-
-    if (editMode){
-        float thiccness[] = {10, 10};
-        outlineStroke.createDashedStroke(outlineRect, outlineRect, thiccness, 2);
-    } else {
-        outlineStroke.createStrokedPath(outlineRect, outlineRect);
-        g.setColour(Colours::black);
-    }
-    g.strokePath(outlineRect, outlineStroke);
-}
-
-void GuiEffect::resized()
-{
-    // Position Ports
-    inputPortPos = inputPortStartPos;
-    outputPortPos = outputPortStartPos;
-    for (auto p : inputPorts){
-        p->setCentrePosition(portIncrement, inputPortPos);
-        p->internalPort->setCentrePosition(portIncrement + 50, inputPortPos);
-        inputPortPos += portIncrement;
-    }
-    for (auto p : outputPorts){
-        p->setCentrePosition(getWidth() - portIncrement, outputPortPos);
-        p->internalPort->setCentrePosition(getWidth() - portIncrement - 50, outputPortPos);
-        outputPortPos += portIncrement;
-    }
-
-    title.setBounds(30,30,200, title.getFont().getHeight());
-}
-
-void GuiEffect::mouseDown(const MouseEvent &event) {
-    setAlwaysOnTop(true);
-    if (event.mods.isLeftButtonDown()) {
-        dragger.startDraggingComponent(this, event);
-        EVT->mouseDown(event);
-    } else if (event.mods.isRightButtonDown())
-        getParentComponent()->mouseDown(event);
-}
-
-void GuiEffect::mouseDrag(const MouseEvent &event) {
-    if (event.eventComponent == this) {
-        dragger.dragComponent(this, event, &constrainer);
-
-        // Manual constraint
-        auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
-        auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
-
-        if (newX != getX() || newY != getY())
-            if (event.x<-(getWidth() / 2) || event.y<-(getHeight() / 2) ||
-                                                     event.x>(getWidth() * 3 / 2) || event.y>(getHeight() * 3 / 2)) {
-                auto newPos = dragDetachFromParentComponent();
-                newX = newPos.x;
-                newY = newPos.y;
-            }
-
-        setTopLeftPosition(newX, newY);
-    }
-
-    EVT->mouseDrag(event);
-
-    getParentComponent()->mouseDrag(event);
-}
-
-void GuiEffect::mouseUp(const MouseEvent &event) {
-    setAlwaysOnTop(false);
-
-    EVT->pos.x = event.getPosition().x;
-    EVT->pos.y = event.getPosition().y;
-    //setPos(getPosition());
-
-    EVT->mouseUp(event);
-
-    getParentComponent()->mouseUp(event);
-}
-
-void GuiEffect::mouseEnter(const MouseEvent &event) {
-    if (!dynamic_cast<GuiEffect*>(event.eventComponent)->hoverMode)
-        hoverMode = true;
-    repaint();
-
-    getParentComponent()->mouseEnter(event);
-    Component::mouseEnter(event);
-}
-
-void GuiEffect::mouseExit(const MouseEvent &event) {
-    if (dynamic_cast<GuiEffect*>(event.eventComponent)->hoverMode)
-        hoverMode = false;
-    repaint();
-
-    getParentComponent()->mouseExit(event);
-    Component::mouseExit(event);
-}
-
-Point<int> GuiEffect::dragDetachFromParentComponent() {
+Point<int> EffectTreeBase::dragDetachFromParentComponent() {
     auto newPos = getPosition() + getParentComponent()->getPosition();
     auto parentParent = getParentComponent()->getParentComponent();
     getParentComponent()->removeChildComponent(this);
@@ -247,14 +65,19 @@ Point<int> GuiEffect::dragDetachFromParentComponent() {
     return newPos;
 }
 
-void GuiEffect::childrenChanged() {
-    //TODO this function is probably useless
-    std::cout << "Children changed, call move" << newLine;
-    moved();
-    Component::childrenChanged();
+
+void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
+    // Add connection to this object
+    addAndMakeVisible(line.get());
+    auto nline = connections.add(move(line));
+
+    // Update audiograph
+    addAudioConnection(*nline);
 }
 
-void GuiEffect::parentHierarchyChanged() {
+
+
+/*void GuiEffect::parentHierarchyChanged() {
     // Children of parents who receive the change signal should ignore it.
     if (currentParent == getParentComponent())
         return;
@@ -273,14 +96,14 @@ void GuiEffect::parentHierarchyChanged() {
         currentParent = getParentComponent();
     }
     Component::parentHierarchyChanged();
-}
+}*/
 
 /**
  * Get the port at the given location, if there is one
  * @param pos relative to this component (no conversion needed here)
  * @return nullptr if no match, ConnectionPort* if found
  */
-ConnectionPort::Ptr GuiEffect::checkPort(Point<int> pos) {
+ConnectionPort::Ptr Effect::checkPort(Point<int> pos) {
     for (auto p : inputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
             return p;
@@ -296,7 +119,7 @@ ConnectionPort::Ptr GuiEffect::checkPort(Point<int> pos) {
     return nullptr;
 }
 
-void GuiEffect::setEditMode(bool isEditMode) {
+void Effect::setEditMode(bool isEditMode) {
     if (isIndividual() || editMode == isEditMode)
         return;
     // Turn on edit mode
@@ -329,7 +152,7 @@ void GuiEffect::setEditMode(bool isEditMode) {
     repaint();
 }
 
-void GuiEffect::setParameters(const AudioProcessorParameterGroup *group) {
+void Effect::setParameters(const AudioProcessorParameterGroup *group) {
     // Individual
     for (auto param : group->getParameters(false)) {
         addParameter(param);
@@ -338,7 +161,7 @@ void GuiEffect::setParameters(const AudioProcessorParameterGroup *group) {
         std::cout << c->getName() << newLine;
 }
 
-void GuiEffect::addParameter(AudioProcessorParameter *param) {
+void Effect::addParameter(AudioProcessorParameter *param) {
     if (param->isBoolean()) {
         // add bool parameter
         ToggleButton* button = new ToggleButton();
@@ -390,11 +213,8 @@ void GuiEffect::addParameter(AudioProcessorParameter *param) {
     }
 }
 
-void GuiEffect::moved() {
-    Component::moved();
-}
 
-void GuiEffect::addPort(AudioProcessor::Bus *bus, bool isInput) {
+void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     auto p = isInput ?
              inputPorts.add(std::make_unique<AudioPort>(isInput)) :
              outputPorts.add(std::make_unique<AudioPort>(isInput));
@@ -403,8 +223,7 @@ void GuiEffect::addPort(AudioProcessor::Bus *bus, bool isInput) {
 
     resized();
 
-
-    if (!individual) {
+    if (!isIndividual()) {
         addChildComponent(p->internalPort.get());
         Point<int> d;
         d = isInput ? Point<int>(50, 0) : Point<int>(-50, 0);
@@ -427,20 +246,20 @@ Effect::Effect(const MouseEvent &event, Array<const Effect *> effectVTSet) :
     // Note top left and bottom right effects to have a size to set
     Point<int> topLeft;
     Point<int> bottomRight;
-    auto thisBounds = guiEffect.getBoundsInParent();
+    auto thisBounds = getBoundsInParent();
 
     for (auto eVT : effectVTSet){
         // Set itself as parent of given children
-        eVT->getTree().getParent().removeChild(eVT->getTree(), nullptr);
+        tree.getParent().removeChild(tree, nullptr);
         tree.appendChild(eVT->getTree(), nullptr);
 
         // Update position
-        auto bounds = eVT->getGUIEffect()->getBoundsInParent();
+        auto bounds = eVT->getBoundsInParent();
         thisBounds = thisBounds.getUnion(bounds);
     }
 
     thisBounds.expand(10,10);
-    guiEffect.setBounds(thisBounds);
+    setBounds(thisBounds);
 }
 
 /**
@@ -457,27 +276,60 @@ Effect::Effect(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) :
     tree.setProperty("Node", node.get(), nullptr);
 
     // Initialise with processor
-    guiEffect.setProcessor(processor);
+    setProcessor(processor);
 }
 
 /**
  * Empty effectVT
  */
 Effect::Effect(const MouseEvent &event) :
-        EffectTreeBase(ID_EFFECT_VT),
-        guiEffect(event, this)
+        EffectTreeBase(ID_EFFECT_VT)
 {
+    setBounds(event.getPosition().x, event.getPosition().y, 200,200);
+
+    menu.addItem("Toggle Edit Mode", [=]() {
+        setEditMode(!editMode);
+    });
+    menu.addItem("Change Effect Image..", [=]() {
+        FileChooser imgChooser ("Select Effect Image..",
+                                File::getSpecialLocation (File::userHomeDirectory),
+                                "*.jpg;*.png;*.gif");
+
+        if (imgChooser.browseForFileToOpen())
+        {
+            image = ImageFileFormat::loadFrom(imgChooser.getResult());
+        }
+    });
+
+    editMenu.addItem("Add Input Port", [=](){addPort(getDefaultBus(), true); resized(); });
+    editMenu.addItem("Add Output Port", [=](){addPort(getDefaultBus(), false); resized(); });
+    editMenu.addItem("Toggle Edit Mode", [=]() {
+        setEditMode(!editMode);
+    });
+
+    Font titleFont(20, Font::FontStyleFlags::bold);
+    title.setFont(titleFont);
+    title.setText("New Empty Effect", dontSendNotification);
+    title.setBounds(30,30,200, title.getFont().getHeight());
+    title.setColour(title.textColourId, Colours::black);
+    title.setEditable(true);
+    addAndMakeVisible(title);
+
+    addAndMakeVisible(resizer);
+
     // Setup tree properties
     tree.setProperty("Name", name, nullptr);
     tree.setProperty("Effect", this, nullptr);
-    tree.setProperty("GUI", &guiEffect, nullptr);
 
     tree.addListener(this);
 
     pos.x.referTo(tree, IDs::xPos, &undoManager);
     pos.y.referTo(tree, IDs::yPos, &undoManager);
 
-    setPos(guiEffect.getPosition());
+    setPos(getPosition());
+
+    // Make edit mode by default
+    setEditMode(true);
 }
 
 Effect::~Effect()
@@ -487,16 +339,13 @@ Effect::~Effect()
     Effect::audioGraph->removeNode(node->nodeID);
 }
 
-void Effect::addConnection(ConnectionLine *connection) {
-    connections.add(connection);
-    guiEffect.addAndMakeVisible(connection);
-}
 
 Effect::NodeAndPort Effect::getNode(ConnectionPort::Ptr &port) {
     NodeAndPort nodeAndPort;
 
-    if (port->connectionLine == nullptr)
+    if (!port->isConnected())
         return nodeAndPort;
+
     else if (isIndividual()) {
         nodeAndPort.node = node;
         nodeAndPort.port = dynamic_cast<AudioPort*>(port.get());
@@ -514,9 +363,9 @@ Effect::NodeAndPort Effect::getNode(ConnectionPort::Ptr &port) {
             portToCheck->incReferenceCount();
         }
 
-        if (portToCheck->connectionLine != nullptr) {
-            auto otherPort = portToCheck->connectionLine->getOtherPort(portToCheck);
-            nodeAndPort = otherPort->getParent()->EVT->getNode(
+        if (portToCheck->isConnected()) {
+            auto otherPort = portToCheck->getOtherPort();
+            nodeAndPort = dynamic_cast<Effect*>(otherPort->getParentComponent())->getNode(
                     otherPort);
             return nodeAndPort;
         } else return nodeAndPort;
@@ -528,52 +377,57 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
-    std::cout << "Begin transaction at pos: " << pos.x << " " << pos.y << newLine;
     auto name = "poop " + String(pos.x) + " " + String(pos.y);
     undoManager.beginNewTransaction(name);
 
-    if (event.mods.isLeftButtonDown() && event.originalComponent == this){
-        lasso.setVisible(true);
-        lasso.beginLasso(event, this);
+    if (event.mods.isLeftButtonDown()) {
+        if (editMode) {
+            // Lasso
+            if (event.mods.isLeftButtonDown() && event.originalComponent == this) {
+                lasso.setVisible(true);
+                lasso.beginLasso(event, this);
+            }
+        } else {
+            // Drag
+            setAlwaysOnTop(true);
+            if (event.mods.isLeftButtonDown()) {
+                dragger.startDraggingComponent(this, event);
+            }
+        }
+    } else if (event.mods.isRightButtonDown()) {
+        // Send info upwards for menu
+        getParentComponent()->mouseDown(event);
     }
 }
-//TODO
+
 void Effect::mouseDrag(const MouseEvent &event) {
+    if (event.eventComponent == this) {
+        dragger.dragComponent(this, event, &constrainer);
+
+        // Manual constraint
+        auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
+        auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
+
+        if (newX != getX() || newY != getY())
+            if (event.x<-(getWidth() / 2) || event.y<-(getHeight() / 2) ||
+                                                     event.x>(getWidth() * 3 / 2) || event.y>(getHeight() * 3 / 2)) {
+                auto newPos = dragDetachFromParentComponent();
+                newX = newPos.x;
+                newY = newPos.y;
+            }
+
+        setTopLeftPosition(newX, newY);
+    }
+
+    getParentComponent()->mouseDrag(event);
+
     if (lasso.isVisible())
         lasso.dragLasso(event);
     if (event.mods.isLeftButtonDown()) {
         auto thisEvent = event.getEventRelativeTo(this);
 
-        // Line drag
-        /*if (dynamic_cast<LineComponent*>(event.eventComponent)) {
-            // ParentToCheck is the container of possible things to connect to.
-            Component* parentToCheck;
-            if (dynamic_cast<AudioPort*>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent()->getParentComponent();
-            else if (dynamic_cast<InternalConnectionPort*>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent();
-
-            //auto connectPort = portToConnectTo(newEvent, parentToCheck)
-            ConnectionPort::Ptr connectPort;
-            // Get port to connect to (if there is one)
-            auto newEvent = event.getEventRelativeTo(parentToCheck);
-
-            ValueTree treeToCheck;
-            if (parentToCheck != this)
-                treeToCheck = dynamic_cast<GuiEffect*>(parentToCheck)->EVT->getTree();
-            else
-                treeToCheck = tree;
-            connectPort = portToConnectTo(newEvent, treeToCheck);
-
-            if (connectPort != nullptr) {
-                setHoverComponent(connectPort);
-            } else
-                setHoverComponent(nullptr);
-
-        }
-            // Effect drag
-        else*/
-        if (auto effect = dynamic_cast<GuiEffect *>(event.eventComponent)){
+        // Effect drag
+        if (dynamic_cast<Effect *>(event.eventComponent)){
 
             auto newParent = effectToMoveTo(thisEvent, tree);
 
@@ -584,15 +438,16 @@ void Effect::mouseDrag(const MouseEvent &event) {
         }
     }
 }
-//TODO
-void Effect::mouseUp(const MouseEvent &event) {
-    //TODO make GuiEffect and this one and the same
 
+void Effect::mouseUp(const MouseEvent &event) {
+    setAlwaysOnTop(false);
+
+    setPos(getPosition());
     // no reassignment
     if (event.eventComponent == event.originalComponent)
         return;
 
-    if (auto newParent = dynamic_cast<GuiEffect*>(event.eventComponent)) {
+    if (auto newParent = dynamic_cast<EffectTreeBase*>(event.eventComponent)) {
 
     }
 
@@ -601,7 +456,7 @@ void Effect::mouseUp(const MouseEvent &event) {
 
     if (event.mods.isLeftButtonDown()) {
         // If the component is an effect, respond to move effect event
-        if (GuiEffect *effect = dynamic_cast<GuiEffect *>(event.originalComponent)) {
+        if (Effect *effect = dynamic_cast<Effect *>(event.originalComponent)) {
             if (event.getDistanceFromDragStart() < 10) {
                 // Consider this a click and not a drag
                 selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
@@ -611,19 +466,23 @@ void Effect::mouseUp(const MouseEvent &event) {
             // Scan effect to apply move to
             auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
 
-            if (auto e = dynamic_cast<GuiEffect *>(newParent))
+            if (auto e = dynamic_cast<Effect *>(newParent))
                 if (!e->isInEditMode())
                     return;
             // target is not in edit mode
             if (effect->getParentComponent() != newParent) {
-                setParent(newParent);
+                setParent(*newParent);
                 //addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
             }
         }
             // If component is LineComponent, respond to line drag event
         else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
             if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
-                l->convert(port);
+                if (l->port1 != nullptr) {
+                    // todo this must be called on common parent.
+                    dynamic_cast<EffectTreeBase*>(getParentComponent())
+                         ->createConnection(std::make_unique<ConnectionLine>(*l->port1, *port));
+                }
             }
         }
     }
@@ -631,15 +490,17 @@ void Effect::mouseUp(const MouseEvent &event) {
     for (auto i : selected){
         std::cout << i->getName() << newLine;
     }
+
+    getParentComponent()->mouseUp(event);
 }
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == tree) {
         if (property == IDs::xPos) {
-            guiEffect.setTopLeftPosition(pos.x, guiEffect.getPosition().y);
+            setTopLeftPosition(pos.x, getPosition().y);
             std::cout << "x: " << pos.x << newLine;
         } else if (property == IDs::yPos) {
-            guiEffect.setTopLeftPosition(guiEffect.getPosition().x, pos.y);
+            setTopLeftPosition(getPosition().x, pos.y);
             std::cout << "y: " << pos.y << newLine;
         }
     }
@@ -649,6 +510,99 @@ void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
     if (treeWhoseParentHasChanged == tree) {
 
     }
+}
+
+void Effect::resized() {
+    // Position Ports
+    inputPortPos = inputPortStartPos;
+    outputPortPos = outputPortStartPos;
+    for (auto p : inputPorts){
+        p->setCentrePosition(portIncrement, inputPortPos);
+        p->internalPort->setCentrePosition(portIncrement + 50, inputPortPos);
+        inputPortPos += portIncrement;
+    }
+    for (auto p : outputPorts){
+        p->setCentrePosition(getWidth() - portIncrement, outputPortPos);
+        p->internalPort->setCentrePosition(getWidth() - portIncrement - 50, outputPortPos);
+        outputPortPos += portIncrement;
+    }
+
+    title.setBounds(30,30,200, title.getFont().getHeight());
+}
+
+void Effect::mouseEnter(const MouseEvent &event) {
+    if (hoverMode)
+        hoverMode = true;
+    repaint();
+
+    getParentComponent()->mouseEnter(event);
+    Component::mouseEnter(event);
+}
+
+void Effect::mouseExit(const MouseEvent &event) {
+    if (hoverMode)
+        hoverMode = false;
+    repaint();
+
+    getParentComponent()->mouseExit(event);
+    Component::mouseExit(event);
+}
+
+void Effect::paint(Graphics& g) {
+    // Draw outline rectangle
+    g.setColour(Colours::black);
+    Rectangle<float> outline(10,10,getWidth()-20, getHeight()-20);
+    Path outlineRect;
+    outlineRect.addRoundedRectangle(outline, 10, 3);
+    PathStrokeType outlineStroke(1);
+
+    // Hover rectangle
+    g.setColour(Colours::blue);
+    Path hoverRectangle;
+    hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
+    PathStrokeType strokeType(3);
+
+    if (hoverMode) {
+        float thiccness[] = {5, 7};
+        strokeType.createDashedStroke(hoverRectangle, hoverRectangle, thiccness, 2);
+    } else if (selectMode)
+        strokeType.createStrokedPath(hoverRectangle, hoverRectangle);
+
+    if (selectMode || hoverMode)
+        g.strokePath(hoverRectangle, strokeType);
+
+    g.setColour(Colours::whitesmoke);
+    if (!editMode) {
+        g.setOpacity(1.f);
+    } else {
+        g.setOpacity(0.1f);
+    }
+
+    if (image.isNull()) {
+        g.fillRoundedRectangle(outline, 10);
+    } else {
+        g.drawImage(image, outline);
+    }
+
+    g.setOpacity(1.f);
+
+    if (editMode){
+        float thiccness[] = {10, 10};
+        outlineStroke.createDashedStroke(outlineRect, outlineRect, thiccness, 2);
+    } else {
+        outlineStroke.createStrokedPath(outlineRect, outlineRect);
+        g.setColour(Colours::black);
+    }
+    g.strokePath(outlineRect, outlineStroke);
+}
+
+void Effect::setParent(EffectTreeBase &parent) {
+    parent.getTree().appendChild(tree, &undoManager);
+}
+
+void Effect::setPos(Point<int> newPos) {
+    pos.x = newPos.x;
+    pos.y = newPos.y;
 }
 
 //==============================================================================
@@ -674,8 +628,8 @@ SelectedItemSet<GuiObject::Ptr>& EffectTreeBase::getLassoSelection() {
 }
 //TODO
 void EffectTreeBase::setHoverComponent(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
-        e->hoverMode = false;
+    if (auto e = dynamic_cast<Effect*>(hoverComponent.get())) {
+        e->setHoverMode(false);
         e->repaint();
     } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
         p->hoverMode = false;
@@ -684,8 +638,8 @@ void EffectTreeBase::setHoverComponent(GuiObject::Ptr c) {
 
     hoverComponent = c;
 
-    if (auto e = dynamic_cast<GuiEffect*>(hoverComponent.get())) {
-        e->hoverMode = true;
+    if (auto e = dynamic_cast<Effect*>(hoverComponent.get())) {
+        e->setHoverMode(true);
         e->repaint();
     } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
         p->hoverMode = true;
@@ -693,9 +647,9 @@ void EffectTreeBase::setHoverComponent(GuiObject::Ptr c) {
     }
 }
 //TODO
-Component* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
+EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+        auto e_gui = dynamic_cast<Effect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
 
         if (e_gui != nullptr
             && e_gui->getBoundsInParent().contains(event.x, event.y)
@@ -724,21 +678,21 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(MouseEvent& event, const Val
 
     // Check for self ports
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
-        if (auto e = dynamic_cast<GuiEffect*>(event.eventComponent))
+        if (auto e = dynamic_cast<Effect*>(event.eventComponent))
             if (auto returnPort = e->checkPort(event.getPosition()))
                 if (p->canConnect(returnPort))
                     return returnPort;
 
     // Check children for a match
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<GuiEffect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+        auto e_gui = dynamic_cast<Effect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
 
         if (e_gui == nullptr)
             continue;
 
         // Filter self effect if AudioPort
         if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
-            if (p->getParent() == e_gui)
+            if (p->getParentComponent() == e_gui)
                 continue;
 
         auto localPos = e_gui->getLocalPoint(event.eventComponent, event.getPosition());
@@ -769,8 +723,8 @@ void EffectTreeBase::addEffect(const MouseEvent& event, const Effect& childEffec
     parentTree.removeChild(childEffect.getTree(), nullptr);
 
     ValueTree newParent;
-    if (auto newGUIEffect = dynamic_cast<GuiEffect*>(event.eventComponent)){
-        newParent = newGUIEffect->EVT->getTree();
+    if (auto newGUIEffect = dynamic_cast<Effect*>(event.eventComponent)){
+        newParent = newGUIEffect->getTree();
     } else
         newParent = tree;
 
@@ -783,8 +737,8 @@ void EffectTreeBase::addEffect(const MouseEvent& event, const Effect& childEffec
 void EffectTreeBase::addAudioConnection(ConnectionLine& connectionLine) {
     Effect::NodeAndPort in;
     Effect::NodeAndPort out;
-    auto inEVT = connectionLine.inPort->getParent()->EVT;
-    auto outEVT = connectionLine.outPort->getParent()->EVT;
+    auto inEVT = dynamic_cast<Effect*>(connectionLine.inPort->getParentComponent());
+    auto outEVT = dynamic_cast<Effect*>(connectionLine.outPort->getParentComponent());
 
     in = inEVT->getNode(connectionLine.inPort);
     out = outEVT->getNode(connectionLine.outPort);
