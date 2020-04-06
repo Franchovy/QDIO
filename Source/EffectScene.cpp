@@ -131,7 +131,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
             //TODO EffectScene and EffectTree parent under one subclass
             ValueTree treeToCheck;
             if (parentToCheck != this)
-                treeToCheck = dynamic_cast<GuiEffect*>(parentToCheck)->EVT->getTree();
+                treeToCheck = dynamic_cast<Effect*>(parentToCheck)->getTree();
             else
                 treeToCheck = tree;
             connectPort = portToConnectTo(newEvent, treeToCheck);
@@ -143,7 +143,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
 
         }
         // Effect drag
-        else if (auto *effect = dynamic_cast<GuiEffect *>(event.eventComponent)){
+        else if (auto effect = dynamic_cast<Effect *>(event.eventComponent)){
             auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
 
             if (newParent != this)
@@ -161,7 +161,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
 
     if (event.mods.isLeftButtonDown()) {
         // If the component is an effect, respond to move effect event
-        if (GuiEffect *effect = dynamic_cast<GuiEffect *>(event.originalComponent)) {
+        if (auto effect = dynamic_cast<Effect *>(event.originalComponent)) {
             if (event.getDistanceFromDragStart() < 10) {
                 // Consider this a click and not a drag
                 selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
@@ -171,12 +171,12 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             // Scan effect to apply move to
             auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
 
-            if (auto e = dynamic_cast<GuiEffect *>(newParent))
+            if (auto e = dynamic_cast<Effect *>(newParent))
                 if (!e->isInEditMode())
                     return;
             // target is not in edit mode
             if (effect->getParentComponent() != newParent) {
-                addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
+                addEffect(event.getEventRelativeTo(newParent), *effect);
             }
         }
         // If component is LineComponent, respond to line drag event
@@ -202,14 +202,14 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             m.addSubMenu("Create Effect", createEffectSubmenu);
             // Add CustomMenuItems
             mainMenu->addToMenu(m);
-            if (auto e = dynamic_cast<GuiEffect*>(event.originalComponent))
+            if (auto e = dynamic_cast<Effect*>(event.originalComponent))
                 e->getMenu().addToMenu(m);
             // Execute result
             int result = m.show();
 
             if (mainMenu->inRange(result))
                 mainMenu->execute(result);
-            if (auto e = dynamic_cast<GuiEffect*>(event.originalComponent))
+            if (auto e = dynamic_cast<Effect*>(event.originalComponent))
                 e->getMenu().execute(result);
     }
 
@@ -228,7 +228,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         if (!selected.getItemArray().isEmpty()) {
             // Delete selected
             for (auto i : selected.getItemArray()) {
-                if (auto e = dynamic_cast<GuiEffect*>(i.get()))
+                if (auto e = dynamic_cast<Effect*>(i.get()))
                     deleteEffect(e);
             }
         }
@@ -244,7 +244,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
     return Component::keyPressed(key);
 }
 
-void EffectScene::deleteEffect(GuiEffect* e) {
+void EffectScene::deleteEffect(Effect* e) {
     delete e;
 }
 
@@ -252,28 +252,14 @@ void EffectScene::deleteEffect(GuiEffect* e) {
 
 void EffectScene::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     if (childWhichHasBeenAdded.getType() == ID_EFFECT_VT){
-        auto effectVT = dynamic_cast<EffectVT*>(childWhichHasBeenAdded.getProperty(ID_EVT_OBJECT).getObject());
-        auto effectGui = effectVT->getGUIEffect();
-        componentsToSelect.addIfNotAlreadyThere(effectGui);
+        auto effect = dynamic_cast<Effect*>(childWhichHasBeenAdded.getProperty(ID_EVT_OBJECT).getObject());
 
-        if (parentTree.getType() == ID_EFFECT_VT){
-            auto parentEffectVT = dynamic_cast<EffectVT*>(parentTree.getProperty(ID_EVT_OBJECT).getObject());
+        //TODO componentsToSelect update
+        //componentsToSelect.addIfNotAlreadyThere(effect);
 
-            // Add this gui to new parent
-            parentEffectVT->getGUIEffect()->addAndMakeVisible(effectGui);
-        } else {
-            effectGui->setVisible(true);
-            addAndMakeVisible(effectGui);
-        }
-
-        // Set initialised boolean in GuiEffect
-        effectGui->hasBeenInitialised = true;
-
-        //TODO check if recursive call for children is needed
-        for (int i = 0; i < effectVT->getNumChildren(); i++)
-            valueTreeChildAdded(effectVT->getTree(), effectVT->getChild(i)->getTree());
+        /*auto parent = dynamic_cast<EffectTreeBase*>(parentTree.getProperty(EffectTreeBase::IDs::effectTreeBase).getObject());
+        parent->addEffect(effect);*/
     }
-
 }
 
 void EffectScene::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
@@ -295,26 +281,6 @@ void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChange
 //============================================================================================
 
 
-EffectVT::Ptr EffectScene::createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node)
-{
-    if (node != nullptr){
-        // Individual effect from processor
-        return new EffectVT(event, node->nodeID);
-    }
-    if (selected.getNumSelected() == 0){
-        // Empty effect
-        return new EffectVT(event);
-    } else if (selected.getNumSelected() > 0){
-        // Create Effect with selected Effects inside
-        Array<const EffectVT*> effectVTArray;
-        for (auto item : selected.getItemArray()){
-            if (auto eGui = dynamic_cast<GuiEffect*>(item.get()))
-                effectVTArray.add(eGui->EVT);
-        }
-        selected.deselectAll();
-        return new EffectVT(event, effectVTArray);
-    }
-}
 
 
 
@@ -367,16 +333,14 @@ PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
     return m;
 }
 
-
-
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<GuiEffect*>(c.get()))
-        e->selectMode = true;
+    if (auto e = dynamic_cast<Effect*>(c.get()))
+        e->setSelectMode(true);
     c->repaint();
 }
 
 void ComponentSelection::itemDeselected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<GuiEffect*>(c.get()))
-        e->selectMode = false;
+    if (auto e = dynamic_cast<Effect*>(c.get()))
+        e->setSelectMode(false);
     c->repaint();
 }

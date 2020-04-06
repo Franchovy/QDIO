@@ -47,7 +47,7 @@ public:
 
     bool keyPressed(const KeyPress &key) override;
 
-    void deleteEffect(GuiEffect* e);
+    void deleteEffect(Effect* e);
     //==============================================================================
 
 private:
@@ -62,7 +62,6 @@ private:
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
     using Node = AudioProcessorGraph::Node;
 
-
     //std::unique_ptr<AudioDeviceSelectorComponent> deviceSelector;
     //GUIWrapper deviceSelectorComponent;
 
@@ -70,13 +69,6 @@ private:
 
     std::unique_ptr<CustomMenuItems> mainMenu;
 
-    // GUI Helper tools
-
-
-
-    //==============================================================================
-
-    Effect::Ptr createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node = nullptr);
     PopupMenu getEffectSelectMenu(const MouseEvent &event);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)

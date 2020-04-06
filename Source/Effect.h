@@ -36,6 +36,13 @@ public:
     static void close();
     virtual void resized() override = 0;
 
+    void mouseDown(const MouseEvent &event) override;
+    void mouseDrag(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
+
+    void addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain = true);
+    static Effect* createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node = nullptr);
+
     //===================================================================
     // Setter / Getter info
     ValueTree& getTree() { return tree; }
@@ -67,7 +74,6 @@ protected:
     EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
     static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
-    void addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain = true);
 
     static void addAudioConnection(ConnectionLine& connectionLine);
 
@@ -153,15 +159,15 @@ public:
 
     void setProcessor(AudioProcessor* processor);
 
-    const String& getName() const;
-    void setName(const String &name);
+
+    void setName(const String &name) override;
     CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
     AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
     // Convenience functions
-    Effect::Ptr getParent(){ return dynamic_cast<Effect*>(
-                tree.getParent().getProperty(ID_EVT_OBJECT).getObject()); }
+    /*Effect::Ptr getParent(){ return dynamic_cast<Effect*>(
+                tree.getParent().getProperty(ID_EVT_OBJECT).getObject()); }*/
 
     bool isIndividual() const { return processor == nullptr; }
 
