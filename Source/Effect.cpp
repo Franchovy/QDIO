@@ -20,9 +20,9 @@ GuiObject::Ptr EffectTreeBase::hoverComponent = nullptr;
 
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
-
-const Identifier Effect::IDs::xPos = "xPos";
-const Identifier Effect::IDs::yPos = "yPos";
+const Identifier EffectTreeBase::IDs::pos = "pos";
+const Identifier EffectTreeBase::IDs::processorID = "processor";
+const Identifier EffectTreeBase::IDs::initialised = "initialised";
 
 
 void EffectTreeBase::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
@@ -134,8 +134,7 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(MouseEvent& event, const Val
  * @param event for which the location will determine what effect to add to.
  * @param childEffect effect to add
  */
-//TODO
-void EffectTreeBase::addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain) {
+/*void EffectTreeBase::addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain) {
     auto parentTree = childEffect.getTree().getParent();
     parentTree.removeChild(childEffect.getTree(), nullptr);
 
@@ -153,9 +152,9 @@ void EffectTreeBase::addEffect(const MouseEvent& event, const Effect& childEffec
 
 
     newParent.appendChild(childEffect.getTree(), nullptr);
-}
+}*/
 
-Effect* EffectTreeBase::createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node)
+/*Effect* EffectTreeBase::createEffect(const AudioProcessorGraph::Node::Ptr& node)
 {
     if (node != nullptr){
         // Individual effect from processor
@@ -174,7 +173,7 @@ Effect* EffectTreeBase::createEffect(const MouseEvent &event, const AudioProcess
         selected.deselectAll();
         return new Effect(event, effectVTArray);
     }
-}
+}*/
 
 
 void EffectTreeBase::addAudioConnection(ConnectionLine& connectionLine) {
@@ -259,6 +258,110 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
 }
 
 
+PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
+    PopupMenu m;
+
+    m.addItem("Empty Effect", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction();
+                ValueTree newEffect(ID_EFFECT_VT);
+
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
+                this->getTree().appendChild(newEffect, &undoManager);
+
+                if (selected.getNumSelected() > 0) {
+                    for (auto s : selected.getItemArray()) {
+                        if (auto e = dynamic_cast<Effect*>(s.get())){
+                            newEffect.appendChild(e->getTree(), &undoManager);
+                        }
+                    }
+                }
+            }));
+    m.addItem("Input Effect", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction();
+                ValueTree newEffect(ID_EFFECT_VT);
+
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
+
+                auto property = newEffect.getProperty(IDs::pos);
+                std::cout << (int)(*property.getArray())[0] << " " << (int)(*property.getArray())[1] << newLine;
+
+                newEffect.setProperty(IDs::processorID, 0, &undoManager);
+                this->getTree().appendChild(newEffect, &undoManager);
+            }));
+    m.addItem("Output Effect", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction();
+                ValueTree newEffect(ID_EFFECT_VT);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
+                newEffect.setProperty(IDs::processorID, 1, &undoManager);
+                this->getTree().appendChild(newEffect, &undoManager);
+            }));
+    m.addItem("Delay Effect", std::function<void()>(
+            [=](){
+                undoManager.beginNewTransaction();
+                ValueTree newEffect(ID_EFFECT_VT);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
+                newEffect.setProperty(IDs::processorID, 3, &undoManager);
+                this->getTree().appendChild(newEffect, &undoManager);
+            }
+    ));
+    m.addItem("Distortion Effect", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction();
+                ValueTree newEffect(ID_EFFECT_VT);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
+                newEffect.setProperty(IDs::processorID, 2, &undoManager);
+                this->getTree().appendChild(newEffect, &undoManager);
+            }
+    ));
+
+    return m;
+}
+
+void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+
+}
+
+void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
+    // if effect has been created already
+    std::cout << "value tree child added" <<  newLine;
+    if (childWhichHasBeenAdded.hasProperty(IDs::initialised)) {
+        // Adjust pos
+
+    } else {
+        // Create new effect
+        childWhichHasBeenAdded.setProperty(IDs::initialised, true, &undoManager);
+
+        std::cout << "Parent? : " << childWhichHasBeenAdded.getParent().hasProperty(IDs::effectTreeBase) << newLine;
+
+        new Effect(childWhichHasBeenAdded);
+    }
+}
+
+void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
+                                           int indexFromWhichChildWasRemoved) {
+
+}
+
+bool EffectTreeBase::keyPressed(const KeyPress &key) {
+    std::cout << "Keypress" << newLine;
+    if (key == KeyPress::deleteKey) {
+        delete this;
+    }
+
+    if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
+        std::cout << "Undo: " << undoManager.getCurrentTransactionName() << newLine;
+        undoManager.undo();
+    } else if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'Z') {
+        undoManager.redo();
+    }
+
+    return Component::keyPressed(key);
+
+}
+
 
 /*void GuiEffect::parentHierarchyChanged() {
     // Children of parents who receive the change signal should ignore it.
@@ -282,57 +385,91 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
 }*/
 
 
-/**
- * ENCAPSULATOR CONSTRUCTOR Effect of group of EffectVTs
- * @param effectVTSet
- */
-Effect::Effect(const MouseEvent &event, Array<const Effect *> effectVTSet) :
-        Effect(event)
-{
-    // Note top left and bottom right effects to have a size to set
-    Point<int> topLeft;
-    Point<int> bottomRight;
-    auto thisBounds = getBoundsInParent();
 
-    for (auto eVT : effectVTSet){
-        // Set itself as parent of given children
-        tree.getParent().removeChild(tree, nullptr);
-        tree.appendChild(eVT->getTree(), nullptr);
 
-        // Update position
-        auto bounds = eVT->getBoundsInParent();
-        thisBounds = thisBounds.getUnion(bounds);
-    }
+Effect::Effect(ValueTree& vt) : EffectTreeBase(ID_EFFECT_VT) {
+    tree = vt;
 
-    thisBounds.expand(10,10);
-    setBounds(thisBounds);
+    auto parent = dynamic_cast<EffectTreeBase*>(vt.getParent().getProperty(IDs::effectTreeBase).getObject());
+
+    if (vt.hasProperty(IDs::processorID)) {
+
+        // Individual processor
+        std::unique_ptr<AudioProcessor> newProcessor;
+        int id = vt.getProperty(IDs::processorID);
+        switch (id) {
+            case 0:
+                newProcessor = std::make_unique<InputDeviceEffect>();
+                break;
+            case 1:
+                newProcessor = std::make_unique<OutputDeviceEffect>();
+                break;
+            case 2:
+                newProcessor = std::make_unique<DistortionEffect>();
+                break;
+            case 3:
+                newProcessor = std::make_unique<DelayEffect>();
+                break;
+            default:
+                std::cout << "ProcessorID not found." << newLine;
+        }
+
+        auto node = audioGraph->addNode(move(newProcessor));
+
+        // check if settings exist
+        node->getProcessor()->setPlayConfigDetails(
+                audioGraph->getMainBusNumInputChannels(),
+                audioGraph->getMainBusNumOutputChannels(),
+                audioGraph->getSampleRate(),
+                audioGraph->getBlockSize());
+
+        // Create from node:
+        processor = node->getProcessor();
+        setProcessor(processor);
+    }/* else if (vt.getNumChildren() > 0) {
+        Array<const Effect*> childEffects;
+        for (int i = 0; i < vt.getNumChildren(); i++) {
+            childEffects.add(dynamic_cast<Effect*>(vt.getChild(i).getProperty(IDs::effectTreeBase).getObject()));
+        }
+    }*/
+
+
+    Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
+    setBounds(newPos.x, newPos.y, 200,200);
+
+    addAndMakeVisible(resizer);
+
+    // Set tree properties?
+    // TODO name
+
+    tree.setProperty(IDs::effectTreeBase, this, &undoManager);
+
+    tree.addListener(this);
+
+    pos.referTo(tree, IDs::pos, &undoManager);
+    setPos(getPosition());
+
+    // Make edit mode by default
+    setEditMode(true);
+
+    parent->addAndMakeVisible(this);
+
 }
 
-/**
- * INDIVIDUAL CONSTRUCTOR
- * Node - Individual GuiEffect / effectVT
- * @param nodeID
- */
-Effect::Effect(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID) :
-        Effect(event)
-{
-    // Create from node:
-    node = Effect::audioGraph->getNodeForId(nodeID);
-    processor = node->getProcessor();
-    tree.setProperty("Node", node.get(), nullptr);
 
-    // Initialise with processor
-    setProcessor(processor);
+
+void Effect::setupTitle() {
+    Font titleFont(20, Font::FontStyleFlags::bold);
+    title.setFont(titleFont);
+    title.setText("New Empty Effect", dontSendNotification);
+    title.setBounds(30,30,200, title.getFont().getHeight());
+    title.setColour(title.textColourId, Colours::black);
+    title.setEditable(true);
+    addAndMakeVisible(title);
+
 }
 
-/**
- * Empty effectVT
- */
-Effect::Effect(const MouseEvent &event) :
-        EffectTreeBase(ID_EFFECT_VT)
-{
-    setBounds(event.getPosition().x, event.getPosition().y, 200,200);
-
+void Effect::setupMenu() {
     menu.addItem("Toggle Edit Mode", [=]() {
         setEditMode(!editMode);
     });
@@ -352,30 +489,6 @@ Effect::Effect(const MouseEvent &event) :
     editMenu.addItem("Toggle Edit Mode", [=]() {
         setEditMode(!editMode);
     });
-
-    Font titleFont(20, Font::FontStyleFlags::bold);
-    title.setFont(titleFont);
-    title.setText("New Empty Effect", dontSendNotification);
-    title.setBounds(30,30,200, title.getFont().getHeight());
-    title.setColour(title.textColourId, Colours::black);
-    title.setEditable(true);
-    addAndMakeVisible(title);
-
-    addAndMakeVisible(resizer);
-
-    // Setup tree properties
-    tree.setProperty("Name", name, nullptr);
-    tree.setProperty("Effect", this, nullptr);
-
-    tree.addListener(this);
-
-    pos.x.referTo(tree, IDs::xPos, &undoManager);
-    pos.y.referTo(tree, IDs::yPos, &undoManager);
-
-    setPos(getPosition());
-
-    // Make edit mode by default
-    setEditMode(true);
 }
 
 Effect::~Effect()
@@ -592,16 +705,16 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
-    auto name = "poop " + String(pos.x) + " " + String(pos.y);
+    auto name = "poop " + Position::fromVar(pos.get()).toString();
     undoManager.beginNewTransaction(name);
 
     if (event.mods.isLeftButtonDown()) {
         if (editMode) {
-            // Lasso
-            if (event.mods.isLeftButtonDown() && event.originalComponent == this) {
+            //TODO make lasso functionality static
+            /*if (event.mods.isLeftButtonDown() && event.originalComponent == this) {
                 lasso.setVisible(true);
                 lasso.beginLasso(event, this);
-            }
+            }*/
         } else {
             // Drag
             setAlwaysOnTop(true);
@@ -636,8 +749,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
     getParentComponent()->mouseDrag(event);
 
-    if (lasso.isVisible())
-        lasso.dragLasso(event);
+    /*if (lasso.isVisible())
+        lasso.dragLasso(event);*/
     if (event.mods.isLeftButtonDown()) {
         auto thisEvent = event.getEventRelativeTo(this);
 
@@ -657,7 +770,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
 void Effect::mouseUp(const MouseEvent &event) {
     setAlwaysOnTop(false);
 
-    setPos(getPosition());
+    setPos(getBoundsInParent().getPosition());
+
     // no reassignment
     if (event.eventComponent == event.originalComponent)
         return;
@@ -666,8 +780,8 @@ void Effect::mouseUp(const MouseEvent &event) {
 
     }
 
-    if (lasso.isVisible())
-        lasso.endLasso();
+    /*if (lasso.isVisible())
+        lasso.endLasso();*/
 
     if (event.mods.isLeftButtonDown()) {
         // If the component is an effect, respond to move effect event
@@ -711,12 +825,23 @@ void Effect::mouseUp(const MouseEvent &event) {
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == tree) {
-        if (property == IDs::xPos) {
-            setTopLeftPosition(pos.x, getPosition().y);
-            std::cout << "x: " << pos.x << newLine;
-        } else if (property == IDs::yPos) {
-            setTopLeftPosition(getPosition().x, pos.y);
-            std::cout << "y: " << pos.y << newLine;
+        if (property == IDs::pos) {
+            auto property = treeWhosePropertyHasChanged.getProperty(IDs::pos).getArray();
+            auto x = (int)(*property)[0];
+            auto y = (int)(*property)[1];
+            std::cout << "Property changed: " << newLine;
+            std::cout << x << " " << y << newLine;
+
+            auto xpos = (int)(*pos)[0];
+            auto ypos = (int)(*pos)[1];
+            std::cout << "Pos: " << newLine;
+            std::cout << xpos << " " << ypos << newLine;
+
+            if (x != 0 && y != 0) {
+                std::cout << "Undo operation" << newLine;
+                setTopLeftPosition(Point<int>(x,y));
+            }
+
         }
     }
 }
@@ -746,9 +871,7 @@ void Effect::resized() {
 }
 
 void Effect::mouseEnter(const MouseEvent &event) {
-    if (hoverMode)
-        hoverMode = true;
-    repaint();
+    setHoverComponent(this);
 
     getParentComponent()->mouseEnter(event);
     Component::mouseEnter(event);
@@ -816,12 +939,32 @@ void Effect::setParent(EffectTreeBase &parent) {
 }
 
 void Effect::setPos(Point<int> newPos) {
-    pos.x = newPos.x;
-    pos.y = newPos.y;
+    pos = Position::toVar(newPos);
 }
 
 void Effect::setName(const String &name) {
     Component::setName(name);
 }
 
+Point<int> Position::fromVar(const var &v) {
+    Array<var>* array = v.getArray();
+
+    int x = (*array)[0];
+    int y = (*array)[1];
+
+    return Point<int>(x, y);
+}
+
+var Position::toVar(const Point<int> &t) {
+    var x = t.getX();
+    var y = t.getY();
+
+    auto array = Array<var>();
+    array.add(x);
+    array.add(y);
+
+    var v = array;
+
+    return v;
+}
 

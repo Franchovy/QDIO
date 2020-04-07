@@ -9,7 +9,7 @@ EffectScene::EffectScene() :
     setName("MainWindow");
     setSize (4000, 4000);
 
-    //setMouseClickGrabsKeyboardFocus(true);
+    setMouseClickGrabsKeyboardFocus(true);
 
     //========================================================================================
     // Drag Line GUI
@@ -30,11 +30,6 @@ EffectScene::EffectScene() :
 
     //auto inputDevice  = MidiInput::getDevices()  [MidiInput::getDefaultDeviceIndex()];
     //auto outputDevice = MidiOutput::getDevices() [MidiOutput::getDefaultDeviceIndex()];
-
-
-
-
-
 
     //deviceManager.setMidiInputEnabled (inputDevice, true);
     //deviceManager.addMidiInputCallback (inputDevice, &processorPlayer); // [3]
@@ -72,7 +67,8 @@ EffectScene::EffectScene() :
 
 EffectScene::~EffectScene()
 {
-    //audioGraph->releaseResources();
+    // Save screen state
+    //auto savedState = getAppProperties().getUserSettings()->setXmlValue (KEYNAME_LOADED_EFFECTS);
 
     // kinda messy managing one's own ReferenceCountedObject property.
     jassert(getReferenceCount() == 1);
@@ -176,7 +172,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                     return;
             // target is not in edit mode
             if (effect->getParentComponent() != newParent) {
-                addEffect(event.getEventRelativeTo(newParent), *effect);
+                newParent->getTree().appendChild(effect->getTree(), &undoManager);
             }
         }
         // If component is LineComponent, respond to line drag event
@@ -222,115 +218,12 @@ void EffectScene::mouseUp(const MouseEvent &event) {
 
 bool EffectScene::keyPressed(const KeyPress &key)
 {
-    //std::cout << "Key press: " << key.getKeyCode() << newLine;
+    std::cout << "Key press: " << key.getKeyCode() << newLine;
 
-    if (key == KeyPress::deleteKey) {
-        if (!selected.getItemArray().isEmpty()) {
-            // Delete selected
-            for (auto i : selected.getItemArray()) {
-                if (auto e = dynamic_cast<Effect*>(i.get()))
-                    deleteEffect(e);
-            }
-        }
-    }
-
-    if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
-        std::cout << "Undo: " << undoManager.getCurrentTransactionName() << newLine;
-        undoManager.undo();
-    } else if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'Z') {
-        undoManager.redo();
-    }
-
-    return Component::keyPressed(key);
 }
 
 void EffectScene::deleteEffect(Effect* e) {
     delete e;
-}
-
-//==============================================================================
-
-void EffectScene::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    if (childWhichHasBeenAdded.getType() == ID_EFFECT_VT){
-        auto effect = dynamic_cast<Effect*>(childWhichHasBeenAdded.getProperty(ID_EVT_OBJECT).getObject());
-
-        //TODO componentsToSelect update
-        //componentsToSelect.addIfNotAlreadyThere(effect);
-
-        /*auto parent = dynamic_cast<EffectTreeBase*>(parentTree.getProperty(EffectTreeBase::IDs::effectTreeBase).getObject());
-        parent->addEffect(effect);*/
-    }
-}
-
-void EffectScene::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
-                                        int indexFromWhichChildWasRemoved) {
-    if (childWhichHasBeenRemoved.hasType(ID_EFFECT_VT)){
-        // Remove this from its parent
-        std::cout << "Remove from parent listener call" << newLine;
-    }
-}
-
-void EffectScene::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-
-    Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
-}
-
-//==============================================================================
-
-
-//============================================================================================
-
-
-
-
-
-
-PopupMenu EffectScene::getEffectSelectMenu(const MouseEvent &event) {
-    PopupMenu m;
-    m.addItem("Empty Effect", std::function<void()>(
-            [=]{
-                auto e = createEffect(event);
-                addEffect(event, *e);
-            }));
-    m.addItem("Input Effect", std::function<void()>(
-            [=]{
-                auto node = audioGraph->addNode(std::make_unique<InputDeviceEffect>());
-                auto e = createEffect(event, node);
-                addEffect(event, *e);
-            }));
-    m.addItem("Output Effect", std::function<void()>(
-            [=]{
-                auto node = audioGraph->addNode(std::make_unique<OutputDeviceEffect>());
-                auto e = createEffect(event, node);
-                addEffect(event, *e);
-            }));
-    m.addItem("Delay Effect", std::function<void()>(
-            [=](){
-                auto node = audioGraph->addNode(std::make_unique<DelayEffect>());
-                node->getProcessor()->setPlayConfigDetails(
-                        audioGraph->getMainBusNumInputChannels(),
-                        audioGraph->getMainBusNumOutputChannels(),
-                        audioGraph->getSampleRate(),
-                        audioGraph->getBlockSize()
-                );
-                auto e = createEffect(event, node);
-                addEffect(event, *e);
-            }
-    ));
-    m.addItem("Distortion Effect", std::function<void()>(
-            [=]{
-                auto node = audioGraph->addNode(std::make_unique<DistortionEffect>());
-                node->getProcessor()->setPlayConfigDetails(
-                        audioGraph->getMainBusNumInputChannels(),
-                        audioGraph->getMainBusNumOutputChannels(),
-                        audioGraph->getSampleRate(),
-                        audioGraph->getBlockSize()
-                );
-                auto e = createEffect(event, node);
-                addEffect(event, *e);
-            }
-    ));
-    return m;
 }
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {

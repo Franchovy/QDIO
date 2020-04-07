@@ -13,14 +13,12 @@
 #include <JuceHeader.h>
 
 #include "Effect.h"
-#include "IOEffects.h"
-#include "BaseEffects.h"
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
 
 const String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
-
+const String KEYNAME_LOADED_EFFECTS = "loadedEffects";
 
 
 /**
@@ -51,12 +49,6 @@ public:
     //==============================================================================
 
 private:
-    // Effect tree shit
-    void valueTreeChildAdded (ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
-    void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
-                               int indexFromWhichChildWasRemoved) override;
-    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
-
     //==============================================================================
     // Audio shit
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
@@ -69,7 +61,6 @@ private:
 
     std::unique_ptr<CustomMenuItems> mainMenu;
 
-    PopupMenu getEffectSelectMenu(const MouseEvent &event);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)
 };

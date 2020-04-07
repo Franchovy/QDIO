@@ -11,10 +11,12 @@
 #include <JuceHeader.h>
 #include "EffectGui.h"
 
+#include "IOEffects.h"
+#include "BaseEffects.h"
+
 #pragma once
 
 class Effect;
-
 
 /**
  * Base class for Effects and EffectScene
@@ -22,11 +24,12 @@ class Effect;
  * Convenience functions for tree navigation,
  * Data for saving and loading state,
  */
-class EffectTreeBase : public ReferenceCountedObject, public Component, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
+class EffectTreeBase : public GuiObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
 {
 public:
     EffectTreeBase(Identifier id) : tree(id) {
-
+        tree.setProperty(IDs::effectTreeBase, this, &undoManager);
+        setWantsKeyboardFocus(true);
     }
 
     void createConnection(std::unique_ptr<ConnectionLine> line);
@@ -39,9 +42,13 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
+    bool keyPressed(const KeyPress &key) override;
 
-    void addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain = true);
-    static Effect* createEffect(const MouseEvent &event, const AudioProcessorGraph::Node::Ptr& node = nullptr);
+
+    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
+    void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
+    void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
+                               int indexFromWhichChildWasRemoved) override;
 
     //===================================================================
     // Setter / Getter info
@@ -53,6 +60,10 @@ public:
 protected:
     ValueTree tree;
     OwnedArray<ConnectionLine> connections;
+
+    //====================================================================================
+    // Menu stuff
+    PopupMenu getEffectSelectMenu(const MouseEvent &event);
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
@@ -84,11 +95,20 @@ protected:
     static UndoManager undoManager;
 
     struct IDs {
+    public:
         static const Identifier effectTreeBase;
+        static const Identifier pos;
+        static const Identifier processorID;
+        static const Identifier initialised;
     };
+
 };
 
-
+struct Position : public VariantConverter<Point<int>>
+{
+    static Point<int> fromVar (const var &v);
+    static var toVar (const Point<int> &t);
+};
 
 /**
  * Effect (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
@@ -101,11 +121,12 @@ protected:
 class Effect : public EffectTreeBase
 {
 public:
-    Effect(const MouseEvent &event, Array<const Effect*> effectVTSet);
-    Effect(const MouseEvent &event, AudioProcessorGraph::NodeID nodeID);
-    explicit Effect(const MouseEvent &event);
+    explicit Effect(ValueTree& vt);
 
-    ~Effect();
+    void setupTitle();
+    void setupMenu();
+
+    ~Effect() override;
 
     void resized() override;
     void paint(Graphics& g) override;
@@ -145,10 +166,7 @@ public:
     void setPos(Point<int> newPos);
     void setParent(EffectTreeBase& parent);
 
-    struct Pos {
-        CachedValue<int> x;
-        CachedValue<int> y;
-    } pos;
+    CachedValue<Array<var>> pos;
 
     // ValueTree listener overrides
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
@@ -159,15 +177,10 @@ public:
 
     void setProcessor(AudioProcessor* processor);
 
-
     void setName(const String &name) override;
     CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
     AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
-
-    // Convenience functions
-    /*Effect::Ptr getParent(){ return dynamic_cast<Effect*>(
-                tree.getParent().getProperty(ID_EVT_OBJECT).getObject()); }*/
 
     bool isIndividual() const { return processor == nullptr; }
 
@@ -197,11 +210,6 @@ private:
 
     bool hoverMode = false;
     bool selectMode = false;
-
-    struct IDs {
-        static const Identifier xPos;
-        static const Identifier yPos;
-    };
 
     int portIncrement = 50;
     int inputPortStartPos = 100;
