@@ -346,11 +346,18 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
 }
 
 bool EffectTreeBase::keyPressed(const KeyPress &key) {
-    std::cout << "Keypress" << newLine;
-    if (key == KeyPress::deleteKey) {
-        delete this;
-    }
 
+    if (key.getKeyCode() == 's') {
+        std::cout << "Audiograph status: " << newLine;
+        for (auto node : audioGraph->getNodes()) {
+            if (node != nullptr) {
+                std::cout << "node: " << node->nodeID.uid << newLine;
+                std::cout << node->getProcessor()->getName() << newLine;
+            } else {
+                std::cout << "Null node." << newLine;
+            }
+        }
+    }
     if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
         std::cout << "Undo: " << undoManager.getCurrentTransactionName() << newLine;
         undoManager.undo();
@@ -359,6 +366,11 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
     }
 
     return Component::keyPressed(key);
+
+}
+
+EffectTreeBase::~EffectTreeBase() {
+    tree.removeAllProperties(&undoManager);
 
 }
 
@@ -414,7 +426,7 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(ID_EFFECT_VT) {
                 std::cout << "ProcessorID not found." << newLine;
         }
 
-        auto node = audioGraph->addNode(move(newProcessor));
+        node = audioGraph->addNode(move(newProcessor));
 
         // check if settings exist
         node->getProcessor()->setPlayConfigDetails(
@@ -453,10 +465,7 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(ID_EFFECT_VT) {
     setEditMode(true);
 
     parent->addAndMakeVisible(this);
-
 }
-
-
 
 void Effect::setupTitle() {
     Font titleFont(20, Font::FontStyleFlags::bold);
@@ -466,7 +475,6 @@ void Effect::setupTitle() {
     title.setColour(title.textColourId, Colours::black);
     title.setEditable(true);
     addAndMakeVisible(title);
-
 }
 
 void Effect::setupMenu() {
@@ -493,13 +501,9 @@ void Effect::setupMenu() {
 
 Effect::~Effect()
 {
-    tree.removeAllProperties(nullptr);
     // Delete processor from graph
-    Effect::audioGraph->removeNode(node->nodeID);
+    audioGraph->removeNode(node->nodeID);
 }
-
-
-
 
 // Processor hasEditor? What to do if processor is a predefined plugin
 void Effect::setProcessor(AudioProcessor *processor) {
@@ -706,7 +710,6 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 
 void Effect::mouseDown(const MouseEvent &event) {
     auto name = "poop " + Position::fromVar(pos.get()).toString();
-    undoManager.beginNewTransaction(name);
 
     if (event.mods.isLeftButtonDown()) {
         if (editMode) {
@@ -770,6 +773,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
 void Effect::mouseUp(const MouseEvent &event) {
     setAlwaysOnTop(false);
 
+    // set (undoable) data
+    undoManager.beginNewTransaction(name);
     setPos(getBoundsInParent().getPosition());
 
     // no reassignment
@@ -825,7 +830,7 @@ void Effect::mouseUp(const MouseEvent &event) {
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == tree) {
-        if (property == IDs::pos) {
+        if (property == IDs::pos && treeWhosePropertyHasChanged.hasProperty(property)) {
             auto property = treeWhosePropertyHasChanged.getProperty(IDs::pos).getArray();
             auto x = (int)(*property)[0];
             auto y = (int)(*property)[1];
@@ -944,6 +949,14 @@ void Effect::setPos(Point<int> newPos) {
 
 void Effect::setName(const String &name) {
     Component::setName(name);
+}
+
+bool Effect::keyPressed(const KeyPress &key) {
+    if (key == KeyPress::deleteKey) {
+        // delete Effect
+        delete this;
+    }
+    return EffectTreeBase::keyPressed(key);
 }
 
 Point<int> Position::fromVar(const var &v) {

@@ -32,6 +32,8 @@ public:
         setWantsKeyboardFocus(true);
     }
 
+    ~EffectTreeBase() override;
+
     void createConnection(std::unique_ptr<ConnectionLine> line);
 
     static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
@@ -135,6 +137,8 @@ public:
     void mouseUp(const MouseEvent &event) override;
     void mouseEnter(const MouseEvent &event) override;
     void mouseExit(const MouseEvent &event) override;
+
+    bool keyPressed(const KeyPress &key) override;
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
     void addConnection(ConnectionLine* connection);

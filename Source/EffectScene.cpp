@@ -219,7 +219,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
 bool EffectScene::keyPressed(const KeyPress &key)
 {
     std::cout << "Key press: " << key.getKeyCode() << newLine;
-
+    EffectTreeBase::keyPressed(key);
 }
 
 void EffectScene::deleteEffect(Effect* e) {
