@@ -10,7 +10,7 @@
 
 #include "EffectGui.h"
 
-
+SelectHoverObject* SelectHoverObject::hoverComponent = nullptr;
 LineComponent* LineComponent::dragLine = nullptr;
 
 
@@ -185,3 +185,27 @@ bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
 }
 
 
+void SelectHoverObject::setHoverComponent(SelectHoverObject::Ptr item) {
+    setHoverComponent(item.get());
+}
+
+void SelectHoverObject::setHoverComponent(SelectHoverObject* item) {
+    if (item != nullptr) {
+        item->hoverMode = !item->hoverMode;
+        item->repaint();
+    }
+}
+
+SelectHoverObject::SelectHoverObject() {
+
+}
+
+SelectHoverObject::~SelectHoverObject() {
+    if (hoverComponent == this){
+        hoverComponent = nullptr;
+    }
+}
+
+void SelectHoverObject::resetHoverObject() {
+    hoverComponent = nullptr;
+}

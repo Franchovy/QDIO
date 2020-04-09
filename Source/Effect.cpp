@@ -16,7 +16,6 @@ std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
 std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 ComponentSelection EffectTreeBase::selected;
-GuiObject::Ptr EffectTreeBase::hoverComponent = nullptr;
 
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
@@ -43,26 +42,8 @@ SelectedItemSet<GuiObject::Ptr>& EffectTreeBase::getLassoSelection() {
     selected.clear();
     return selected;
 }
-//TODO
-void EffectTreeBase::setHoverComponent(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<Effect*>(hoverComponent.get())) {
-        e->setHoverMode(false);
-        e->repaint();
-    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
-        p->hoverMode = false;
-        p->repaint();
-    }
 
-    hoverComponent = c;
 
-    if (auto e = dynamic_cast<Effect*>(hoverComponent.get())) {
-        e->setHoverMode(true);
-        e->repaint();
-    } else if (auto p = dynamic_cast<ConnectionPort*>(hoverComponent.get())) {
-        p->hoverMode = true;
-        p->repaint();
-    }
-}
 //TODO
 EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
@@ -333,7 +314,6 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     } else {
         // Create new effect
         childWhichHasBeenAdded.setProperty(IDs::initialised, true, &undoManager);
-
         std::cout << "Parent? : " << childWhichHasBeenAdded.getParent().hasProperty(IDs::effectTreeBase) << newLine;
 
         new Effect(childWhichHasBeenAdded);
@@ -372,6 +352,11 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
 EffectTreeBase::~EffectTreeBase() {
     tree.removeAllProperties(&undoManager);
 
+    // Warning: may be a bad move.
+    if (getReferenceCount() > 0) {
+        std::cout << "Warning: Reference count greater than zero. Exceptions may occur" << newLine;
+        resetReferenceCount();
+    }
 }
 
 
@@ -453,8 +438,6 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(ID_EFFECT_VT) {
 
     // Set tree properties?
     // TODO name
-
-    tree.setProperty(IDs::effectTreeBase, this, &undoManager);
 
     tree.addListener(this);
 
@@ -762,10 +745,12 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
             auto newParent = effectToMoveTo(thisEvent, tree);
 
-            if (newParent != this)
-                setHoverComponent(dynamic_cast<GuiObject*>(newParent));
-            else
-                setHoverComponent(nullptr);
+            if (newParent != this) {
+                SelectHoverObject::setHoverComponent(newParent);
+            } else {
+                SelectHoverObject::resetHoverObject();
+            }
+
         }
     }
 }
@@ -811,7 +796,7 @@ void Effect::mouseUp(const MouseEvent &event) {
         }
             // If component is LineComponent, respond to line drag event
         else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
+            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
                 if (l->port1 != nullptr) {
                     // todo this must be called on common parent.
                     dynamic_cast<EffectTreeBase*>(getParentComponent())
@@ -873,22 +858,6 @@ void Effect::resized() {
     }
 
     title.setBounds(30,30,200, title.getFont().getHeight());
-}
-
-void Effect::mouseEnter(const MouseEvent &event) {
-    setHoverComponent(this);
-
-    getParentComponent()->mouseEnter(event);
-    Component::mouseEnter(event);
-}
-
-void Effect::mouseExit(const MouseEvent &event) {
-    if (hoverMode)
-        hoverMode = false;
-    repaint();
-
-    getParentComponent()->mouseExit(event);
-    Component::mouseExit(event);
 }
 
 void Effect::paint(Graphics& g) {

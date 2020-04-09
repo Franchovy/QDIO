@@ -28,6 +28,31 @@ public:
 };
 
 
+class SelectHoverObject : public GuiObject
+{
+public:
+    SelectHoverObject();
+    ~SelectHoverObject();
+
+    using Ptr = ReferenceCountedObjectPtr<SelectHoverObject>;
+
+    void mouseEnter(const MouseEvent &event) override {
+        setHoverComponent(this);
+    }
+    void mouseExit(const MouseEvent &event) override {
+        resetHoverObject();
+    }
+
+    static void setHoverComponent(SelectHoverObject* item);
+    static void setHoverComponent(SelectHoverObject::Ptr item);
+    static void resetHoverObject();
+protected:
+    static SelectHoverObject* hoverComponent;
+
+    bool hoverMode = false;
+    bool selectMode = false;
+};
+
 /**
  * SelectedItemSet for Component* class, with
  * itemSelected/itemDeselected overrides. That is all.
@@ -155,7 +180,7 @@ private:
 /**
  * Base class - port to connect to other ports
  */
-class ConnectionPort : public GuiObject
+class ConnectionPort : public SelectHoverObject
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<ConnectionPort>;
@@ -173,15 +198,6 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    void mouseEnter(const MouseEvent &event) override {
-        hoverMode = true;
-        repaint();
-    }
-    void mouseExit(const MouseEvent &event) override {
-        hoverMode = false;
-        repaint();
-    }
-
     virtual bool canConnect(ConnectionPort::Ptr& other) = 0;
 
     bool isInput;
@@ -192,7 +208,7 @@ public:
     bool isConnected() { return otherPort != nullptr; }
 
 protected:
-    ConnectionPort() : GuiObject() {}
+    ConnectionPort() = default;
 
     ConnectionPort::Ptr otherPort = nullptr;
 
@@ -241,7 +257,7 @@ public:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)
 };
 
-struct ConnectionLine : public GuiObject, public ComponentListener
+struct ConnectionLine : public SelectHoverObject, public ComponentListener
 {
     using Ptr = ReferenceCountedObjectPtr<ConnectionLine>;
 
@@ -270,16 +286,6 @@ struct ConnectionLine : public GuiObject, public ComponentListener
     }
 
     bool hitTest(int x, int y) override;
-
-    void mouseEnter(const MouseEvent &event) override {
-        hoverMode = true;
-        repaint();
-    }
-
-    void mouseExit(const MouseEvent &event) override {
-        hoverMode = false;
-        repaint();
-    }
 
     ConnectionPort::Ptr getOtherPort(ConnectionPort::Ptr port) {
         return inPort == port ? outPort : inPort;

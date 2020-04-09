@@ -21,8 +21,6 @@ EffectScene::EffectScene() :
     //========================================================================================
     // Manage EffectsTree
 
-    tree.setProperty(ID_EFFECT_GUI, this, nullptr);
-    //tree.setProperty(ID_EFFECT_GUI, this);
     tree.addListener(this);
 
     //========================================================================================
@@ -143,7 +141,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
             auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
 
             if (newParent != this)
-                setHoverComponent(dynamic_cast<GuiObject*>(newParent));
+                setHoverComponent(dynamic_cast<SelectHoverObject*>(newParent));
             else
                 setHoverComponent(nullptr);
         }
@@ -177,7 +175,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
         }
         // If component is LineComponent, respond to line drag event
         else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
+            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
                 l->convert(port);
             }
         }

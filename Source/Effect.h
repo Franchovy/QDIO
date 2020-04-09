@@ -24,7 +24,7 @@ class Effect;
  * Convenience functions for tree navigation,
  * Data for saving and loading state,
  */
-class EffectTreeBase : public GuiObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
+class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
 {
 public:
     EffectTreeBase(Identifier id) : tree(id) {
@@ -79,8 +79,7 @@ protected:
     SelectedItemSet<GuiObject::Ptr>& getLassoSelection() override;
     //====================================================================================
     // Hover identifier and management
-    void setHoverComponent(GuiObject::Ptr c);
-    static GuiObject::Ptr hoverComponent;
+
 
     Point<int> dragDetachFromParentComponent();
 
@@ -135,8 +134,6 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
-    void mouseEnter(const MouseEvent &event) override;
-    void mouseExit(const MouseEvent &event) override;
 
     bool keyPressed(const KeyPress &key) override;
 
