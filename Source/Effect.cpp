@@ -253,7 +253,7 @@ PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
                     }
                 }
             }));
-    m.addItem("Input Effect", std::function<void()>(
+    m.addItem("Input Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("New Input Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
@@ -261,7 +261,7 @@ PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
                 newEffect.setProperty(IDs::processorID, 0, nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
             }));
-    m.addItem("Output Effect", std::function<void()>(
+    m.addItem("Output Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("New Output Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
@@ -322,10 +322,7 @@ T *EffectTreeBase::getFromTree(ValueTree &vt) {
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
-    std::cout << "Child removed" << newLine;
-
     auto test = childWhichHasBeenRemoved.hasProperty(IDs::effectTreeBase);
-    std::cout << "Test " << test << newLine;
 
     if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
         // Remove (and potentially delete later) effect)
@@ -395,12 +392,6 @@ EffectTreeBase::~EffectTreeBase() {
 Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
     tree = vt;
 
-    auto test = tree.hasProperty(IDs::effectTreeBase);
-    std::cout << "Test " << test << newLine;
-
-
-    auto parent = dynamic_cast<EffectTreeBase*>(vt.getParent().getProperty(IDs::effectTreeBase).getObject());
-
     if (vt.hasProperty(IDs::processorID)) {
 
         // Individual processor
@@ -447,14 +438,17 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
     pos.referTo(tree, IDs::pos, &undoManager);
     setPos(getPosition());
 
-
-    parent->addAndMakeVisible(this);
+    auto parentTree = vt.getParent();
+    if (parentTree.isValid()) {
+        auto parent = getFromTree<EffectTreeBase>(parentTree);
+        parent->addAndMakeVisible(this);
+    }
 }
 
 void Effect::setupTitle() {
     Font titleFont(20, Font::FontStyleFlags::bold);
     title.setFont(titleFont);
-    title.setText("New Empty Effect", dontSendNotification);
+    title.setText("Effect", dontSendNotification);
     title.setBounds(30,30,200, title.getFont().getHeight());
     title.setColour(title.textColourId, Colours::black);
     title.setEditable(true);
@@ -515,6 +509,9 @@ void Effect::setProcessor(AudioProcessor *processor) {
         // Create port - giving audiochannelset info and isInput bool
         addPort(bus, isInput);
     }
+    std::cout << "Processor name: " << processor->getName() << newLine;
+
+    setName(processor->getName());
     title.setText(processor->getName(), dontSendNotification);
 
     // Setup parameters
@@ -770,7 +767,7 @@ void Effect::mouseUp(const MouseEvent &event) {
 
     // set (undoable) data
     std::cout << "new transaction" << newLine;
-    undoManager.beginNewTransaction(name);
+    undoManager.beginNewTransaction(getName());
     setPos(getBoundsInParent().getPosition());
 
     // no reassignment
@@ -842,8 +839,7 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
                 std::cout << "Undo operation" << newLine;
                 setTopLeftPosition(Point<int>(x,y));
             }
-
-        }
+        } 
     }
 }
 
@@ -925,10 +921,6 @@ void Effect::setParent(EffectTreeBase &parent) {
 
 void Effect::setPos(Point<int> newPos) {
     pos = Position::toVar(newPos);
-}
-
-void Effect::setName(const String &name) {
-    Component::setName(name);
 }
 
 bool Effect::keyPressed(const KeyPress &key) {

@@ -185,7 +185,6 @@ public:
 
     void setProcessor(AudioProcessor* processor);
 
-    void setName(const String &name) override;
     CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
     AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
@@ -198,8 +197,6 @@ private:
     AudioProcessorGraph::Node::Ptr node = nullptr;
 
     ReferenceCountedArray<ConnectionLine> connections;
-
-    String name;
 
     bool editMode = false;
     OwnedArray<AudioPort> inputPorts;
