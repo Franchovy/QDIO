@@ -38,7 +38,6 @@ class BaseEffect : public AudioProcessor
 {
 public:
     BaseEffect() : AudioProcessor() {
-
     }
 
     //TODO fix const shit
@@ -47,11 +46,20 @@ public:
     }
 
     void setLayout(int numInputs, int numOutputs) {
-        BusesLayout layout;
-        for (int i = 0; i < numInputs; i++)
-            layout.inputBuses.add(layout.getMainInputChannelSet());
-        for (int i = 0; i < numOutputs; i++)
-            layout.outputBuses.add(layout.getMainOutputChannelSet());
+        auto defaultInChannel = AudioChannelSet();
+        defaultInChannel.addChannel(AudioChannelSet::ChannelType::left);
+        defaultInChannel.addChannel(AudioChannelSet::ChannelType::right);
+        auto defaultOutChannel = AudioChannelSet();
+        defaultOutChannel.addChannel(AudioChannelSet::ChannelType::left);
+        defaultOutChannel.addChannel(AudioChannelSet::ChannelType::right);
+
+        for (int i = 0; i < numInputs; i++) {
+            layout.inputBuses.add(defaultInChannel);
+        }
+        for (int i = 0; i < numOutputs; i++) {
+            layout.outputBuses.add(defaultOutChannel);
+        }
+        setBusesLayout(layout);
     }
 
     virtual void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) = 0;
@@ -109,6 +117,7 @@ public:
 protected:
     String name;
     ParameterListener parameterListener;
+    BusesLayout layout;
 };
 
 
@@ -123,6 +132,8 @@ public:
         addParameter(&delay);
         delay.addListener(&parameterListener);
         //parameterListener.parameters.add(&delayVal);
+        setLayout(1,1);
+
         startTimer(1000);
     }
 
@@ -234,6 +245,7 @@ public:
         gain.addListener(&parameterListener);
         addParameter(&cutoff);
         cutoff.addListener(&parameterListener);
+        setLayout(1,1);
     }
 
 

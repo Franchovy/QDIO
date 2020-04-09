@@ -156,7 +156,6 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(MouseEvent& event, const Val
     }
 }*/
 
-
 void EffectTreeBase::addAudioConnection(ConnectionLine& connectionLine) {
     Effect::NodeAndPort in;
     Effect::NodeAndPort out;
@@ -176,7 +175,6 @@ void EffectTreeBase::addAudioConnection(ConnectionLine& connectionLine) {
         }
     }
 }
-
 
 void EffectTreeBase::initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
                                      std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> savedState)
@@ -202,8 +200,6 @@ void EffectTreeBase::close() {
     audioGraph.release();
 }
 
-
-
 Point<int> EffectTreeBase::dragDetachFromParentComponent() {
     auto newPos = getPosition() + getParentComponent()->getPosition();
     auto parentParent = getParentComponent()->getParentComponent();
@@ -215,7 +211,6 @@ Point<int> EffectTreeBase::dragDetachFromParentComponent() {
 
     return newPos;
 }
-
 
 void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
     // Add connection to this object
@@ -244,10 +239,10 @@ PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
 
     m.addItem("Empty Effect", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction();
+                undoManager.beginNewTransaction("New Empty Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
 
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
 
                 if (selected.getNumSelected() > 0) {
@@ -260,40 +255,35 @@ PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
             }));
     m.addItem("Input Effect", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction();
+                undoManager.beginNewTransaction("New Input Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
-
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
-
-                auto property = newEffect.getProperty(IDs::pos);
-                std::cout << (int)(*property.getArray())[0] << " " << (int)(*property.getArray())[1] << newLine;
-
-                newEffect.setProperty(IDs::processorID, 0, &undoManager);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
+                newEffect.setProperty(IDs::processorID, 0, nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
             }));
     m.addItem("Output Effect", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction();
+                undoManager.beginNewTransaction("New Output Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
-                newEffect.setProperty(IDs::processorID, 1, &undoManager);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
+                newEffect.setProperty(IDs::processorID, 1, nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
             }));
     m.addItem("Delay Effect", std::function<void()>(
             [=](){
-                undoManager.beginNewTransaction();
+                undoManager.beginNewTransaction("New Delay Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
-                newEffect.setProperty(IDs::processorID, 3, &undoManager);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
+                newEffect.setProperty(IDs::processorID, 3, nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
             }
     ));
     m.addItem("Distortion Effect", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction();
+                undoManager.beginNewTransaction("New Distortion Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), &undoManager);
-                newEffect.setProperty(IDs::processorID, 2, &undoManager);
+                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
+                newEffect.setProperty(IDs::processorID, 2, nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
             }
     ));
@@ -359,14 +349,12 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
         }
     }
     if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
-        std::cout << "Undo: " << undoManager.getCurrentTransactionName() << newLine;
+        std::cout << "Undo: " << undoManager.getUndoDescription() << newLine;
         undoManager.undo();
     } else if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'Z') {
+        std::cout << "Redo: " << undoManager.getRedoDescription() << newLine;
         undoManager.redo();
     }
-
-    return Component::keyPressed(key);
-
 }
 
 EffectTreeBase::~EffectTreeBase() {
@@ -437,15 +425,9 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
 
         node = audioGraph->addNode(move(newProcessor));
 
-        // check if settings exist
-        node->getProcessor()->setPlayConfigDetails(
-                audioGraph->getMainBusNumInputChannels(),
-                audioGraph->getMainBusNumOutputChannels(),
-                audioGraph->getSampleRate(),
-                audioGraph->getBlockSize());
-
         // Create from node:
         setProcessor(node->getProcessor());
+
     } else {
         // Make edit mode true by default
         setEditMode(true);
@@ -511,6 +493,13 @@ Effect::~Effect()
 void Effect::setProcessor(AudioProcessor *processor) {
     setEditMode(false);
     this->processor = processor;
+
+    // Processor settings (how best to do this?)
+    node->getProcessor()->setPlayConfigDetails(
+            processor->getTotalNumInputChannels(),
+            processor->getTotalNumOutputChannels(),
+            audioGraph->getSampleRate(),
+            audioGraph->getBlockSize());
 
     // Set up ports based on processor buses
     int numInputBuses = processor->getBusCount(true );
@@ -780,6 +769,7 @@ void Effect::mouseUp(const MouseEvent &event) {
     setAlwaysOnTop(false);
 
     // set (undoable) data
+    std::cout << "new transaction" << newLine;
     undoManager.beginNewTransaction(name);
     setPos(getBoundsInParent().getPosition());
 
