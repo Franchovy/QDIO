@@ -11,6 +11,8 @@
 #include "EffectGui.h"
 
 SelectHoverObject* SelectHoverObject::hoverComponent = nullptr;
+ComponentSelection SelectHoverObject::selected;
+ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 LineComponent* LineComponent::dragLine = nullptr;
 
 
@@ -94,6 +96,11 @@ bool AudioPort::canConnect(ConnectionPort::Ptr& other) {
            // Connect to ICP of containing parent effect
            || (dynamic_cast<InternalConnectionPort *>(other.get())
                && other->getParentComponent() == this->getParentComponent()->getParentComponent());
+}
+
+void AudioPort::mouseDown(const MouseEvent &event) {
+    getParentComponent()->getParentComponent()->addAndMakeVisible(LineComponent::getDragLine());
+    ConnectionPort::mouseDown(event);
 }
 
 // ==============================================================================
@@ -184,28 +191,67 @@ bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
              && this->getParentComponent() == other->getParentComponent());
 }
 
+void InternalConnectionPort::mouseDown(const MouseEvent &event) {
+    getParentComponent()->addAndMakeVisible(LineComponent::getDragLine());
+    ConnectionPort::mouseDown(event);
+}
+
 
 void SelectHoverObject::setHoverComponent(SelectHoverObject::Ptr item) {
     setHoverComponent(item.get());
 }
 
 void SelectHoverObject::setHoverComponent(SelectHoverObject* item) {
+    resetHoverObject();
+
     if (item != nullptr) {
-        item->hoverMode = !item->hoverMode;
+
+        item->hoverMode = true;
+        hoverComponent = item;
         item->repaint();
     }
 }
 
 SelectHoverObject::SelectHoverObject() {
-
+    componentsToSelect.add(this);
 }
 
 SelectHoverObject::~SelectHoverObject() {
+    componentsToSelect.removeObject(this);
+
     if (hoverComponent == this){
         hoverComponent = nullptr;
     }
 }
 
 void SelectHoverObject::resetHoverObject() {
-    hoverComponent = nullptr;
+    if (hoverComponent != nullptr) {
+        hoverComponent->hoverMode = false;
+        hoverComponent->repaint();
+        hoverComponent = nullptr;
+    }
+}
+
+void SelectHoverObject::mouseEnter(const MouseEvent &event) {
+    setHoverComponent(this);
+}
+
+void SelectHoverObject::mouseExit(const MouseEvent &event) {
+    resetHoverObject();
+}
+
+void SelectHoverObject::setSelectMode(bool newSelectMode) {
+    if (newSelectMode) {
+        addSelectObject(this);
+    } else {
+        removeSelectObject(this);
+    }
+}
+
+void SelectHoverObject::addSelectObject(SelectHoverObject *item) {
+    selected.addToSelection(item);
+}
+
+void SelectHoverObject::removeSelectObject(SelectHoverObject *item) {
+    selected.deselect(item);
 }

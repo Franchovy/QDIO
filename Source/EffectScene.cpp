@@ -13,9 +13,6 @@ EffectScene::EffectScene() :
 
     //========================================================================================
     // Drag Line GUI
-    addChildComponent(dragLine);
-    dragLine.addComponentListener(this);
-    dragLine.setAlwaysOnTop(true);
     addChildComponent(lasso);
 
     //========================================================================================

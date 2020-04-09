@@ -25,8 +25,7 @@ const String KEYNAME_LOADED_EFFECTS = "loadedEffects";
  *
  */
 class EffectScene   :
-        public EffectTreeBase,
-         public ComponentListener
+        public EffectTreeBase
 {
 public:
 

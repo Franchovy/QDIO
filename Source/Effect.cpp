@@ -15,7 +15,7 @@ std::unique_ptr<AudioProcessorGraph> EffectTreeBase::audioGraph = nullptr;
 std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
 std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
-ComponentSelection EffectTreeBase::selected;
+LineComponent EffectTreeBase::dragLine;
 
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
@@ -307,22 +307,42 @@ void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasCha
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     // if effect has been created already
-    std::cout << "value tree child added" <<  newLine;
     if (childWhichHasBeenAdded.hasProperty(IDs::initialised)) {
-        // Adjust pos
-
+        if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)){
+            e->setVisible(true);
+            // Adjust pos
+            if (auto parent = getFromTree<EffectTreeBase>(childWhichHasBeenAdded)) {
+                if (!parent->getChildren().contains(e)) {
+                    std::cout << "Add child to parent" << newLine;
+                }
+            }
+        }
     } else {
-        // Create new effect
+        // Initialise VT
         childWhichHasBeenAdded.setProperty(IDs::initialised, true, &undoManager);
-        std::cout << "Parent? : " << childWhichHasBeenAdded.getParent().hasProperty(IDs::effectTreeBase) << newLine;
-
+        // Create new effect
         new Effect(childWhichHasBeenAdded);
     }
 }
 
+template<class T>
+T *EffectTreeBase::getFromTree(ValueTree &vt) {
+    return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
+}
+
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
+    std::cout << "Child removed" << newLine;
 
+    auto test = childWhichHasBeenRemoved.hasProperty(IDs::effectTreeBase);
+    std::cout << "Test " << test << newLine;
+
+    if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
+        // Remove (and potentially delete later) effect)
+
+        //remove connections
+        e->setVisible(false);
+    }
 }
 
 bool EffectTreeBase::keyPressed(const KeyPress &key) {
@@ -384,8 +404,12 @@ EffectTreeBase::~EffectTreeBase() {
 
 
 
-Effect::Effect(ValueTree& vt) : EffectTreeBase(ID_EFFECT_VT) {
+Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
     tree = vt;
+
+    auto test = tree.hasProperty(IDs::effectTreeBase);
+    std::cout << "Test " << test << newLine;
+
 
     auto parent = dynamic_cast<EffectTreeBase*>(vt.getParent().getProperty(IDs::effectTreeBase).getObject());
 
@@ -421,14 +445,11 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(ID_EFFECT_VT) {
                 audioGraph->getBlockSize());
 
         // Create from node:
-        processor = node->getProcessor();
-        setProcessor(processor);
-    }/* else if (vt.getNumChildren() > 0) {
-        Array<const Effect*> childEffects;
-        for (int i = 0; i < vt.getNumChildren(); i++) {
-            childEffects.add(dynamic_cast<Effect*>(vt.getChild(i).getProperty(IDs::effectTreeBase).getObject()));
-        }
-    }*/
+        setProcessor(node->getProcessor());
+    } else {
+        // Make edit mode true by default
+        setEditMode(true);
+    }
 
 
     Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
@@ -444,8 +465,6 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(ID_EFFECT_VT) {
     pos.referTo(tree, IDs::pos, &undoManager);
     setPos(getPosition());
 
-    // Make edit mode by default
-    setEditMode(true);
 
     parent->addAndMakeVisible(this);
 }
@@ -491,6 +510,7 @@ Effect::~Effect()
 // Processor hasEditor? What to do if processor is a predefined plugin
 void Effect::setProcessor(AudioProcessor *processor) {
     setEditMode(false);
+    this->processor = processor;
 
     // Set up ports based on processor buses
     int numInputBuses = processor->getBusCount(true );
@@ -539,8 +559,9 @@ ConnectionPort::Ptr Effect::checkPort(Point<int> pos) {
 }
 
 void Effect::setEditMode(bool isEditMode) {
-    if (isIndividual() || editMode == isEditMode)
+    if (isIndividual())
         return;
+
     // Turn on edit mode
     if (isEditMode) {
         for (auto c : getChildren()) {
@@ -553,9 +574,9 @@ void Effect::setEditMode(bool isEditMode) {
         title.setInterceptsMouseClicks(true, true);
 
         title.setColour(title.textColourId, Colours::whitesmoke);
-
     }
-        // Turn off edit mode
+
+    // Turn off edit mode
     else if (!isEditMode) {
         for (auto c : getChildren()) {
             c->setAlwaysOnTop(false);

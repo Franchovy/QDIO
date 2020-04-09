@@ -27,9 +27,21 @@ class Effect;
 class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
 {
 public:
-    EffectTreeBase(Identifier id) : tree(id) {
-        tree.setProperty(IDs::effectTreeBase, this, &undoManager);
+    explicit EffectTreeBase(ValueTree &vt) {
+        tree = vt;
+        tree.setProperty(IDs::effectTreeBase, this, nullptr);
         setWantsKeyboardFocus(true);
+
+        dragLine.setAlwaysOnTop(true);
+        LineComponent::setDragLine(&dragLine);
+    }
+
+    explicit EffectTreeBase(Identifier id) : tree(id) {
+        tree.setProperty(IDs::effectTreeBase, this, nullptr);
+        setWantsKeyboardFocus(true);
+
+        dragLine.setAlwaysOnTop(true);
+        LineComponent::setDragLine(&dragLine);
     }
 
     ~EffectTreeBase() override;
@@ -46,18 +58,20 @@ public:
     void mouseUp(const MouseEvent &event) override;
     bool keyPressed(const KeyPress &key) override;
 
-
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
 
     //===================================================================
-    // Setter / Getter info
+
     ValueTree& getTree() { return tree; }
     const ValueTree& getTree() const {return tree; }
 
     EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(tree.getParent().getProperty(IDs::effectTreeBase).getObject()); }
+
+    template<class T>
+    T* getFromTree(ValueTree& vt);
 
 protected:
     ValueTree tree;
@@ -69,17 +83,15 @@ protected:
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
-    LineComponent dragLine;
     LassoComponent<GuiObject::Ptr> lasso;
     bool intersectMode = true;
 
     void findLassoItemsInArea (Array <GuiObject::Ptr>& results, const Rectangle<int>& area) override;
-    ReferenceCountedArray<GuiObject> componentsToSelect;
-    static ComponentSelection selected;
+
     SelectedItemSet<GuiObject::Ptr>& getLassoSelection() override;
     //====================================================================================
     // Hover identifier and management
-
+    static LineComponent dragLine;
 
     Point<int> dragDetachFromParentComponent();
 
@@ -155,11 +167,6 @@ public:
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() { return editMode; }
-    void setHoverMode(bool newHoverMode) { hoverMode = newHoverMode; }
-    bool isInHoverMode() { return hoverMode; }
-    void setSelectMode(bool newSelectMode) { selectMode = newSelectMode; }
-    bool isInSelectMode() { return selectMode; }
-
     // ================================================================================
     // Effect tree data
 
@@ -183,7 +190,7 @@ public:
     AudioProcessorGraph::NodeID getNodeID() const;
     AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
-    bool isIndividual() const { return processor == nullptr; }
+    bool isIndividual() const { return processor != nullptr; }
 
 private:
     // Used for an individual processor Effect. - does not contain anything else
@@ -208,9 +215,6 @@ private:
     CustomMenuItems editMenu;
 
     const AudioProcessorParameterGroup* parameters;
-
-    bool hoverMode = false;
-    bool selectMode = false;
 
     int portIncrement = 50;
     int inputPortStartPos = 100;

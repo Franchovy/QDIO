@@ -27,32 +27,6 @@ public:
     using Ptr = ReferenceCountedObjectPtr<GuiObject>;
 };
 
-
-class SelectHoverObject : public GuiObject
-{
-public:
-    SelectHoverObject();
-    ~SelectHoverObject();
-
-    using Ptr = ReferenceCountedObjectPtr<SelectHoverObject>;
-
-    void mouseEnter(const MouseEvent &event) override {
-        setHoverComponent(this);
-    }
-    void mouseExit(const MouseEvent &event) override {
-        resetHoverObject();
-    }
-
-    static void setHoverComponent(SelectHoverObject* item);
-    static void setHoverComponent(SelectHoverObject::Ptr item);
-    static void resetHoverObject();
-protected:
-    static SelectHoverObject* hoverComponent;
-
-    bool hoverMode = false;
-    bool selectMode = false;
-};
-
 /**
  * SelectedItemSet for Component* class, with
  * itemSelected/itemDeselected overrides. That is all.
@@ -71,6 +45,37 @@ public:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
 };
+
+
+class SelectHoverObject : public GuiObject
+{
+public:
+    SelectHoverObject();
+    ~SelectHoverObject();
+
+    using Ptr = ReferenceCountedObjectPtr<SelectHoverObject>;
+
+    void mouseEnter(const MouseEvent &event) override;
+    void mouseExit(const MouseEvent &event) override;
+
+    static void setHoverComponent(SelectHoverObject* item);
+    static void setHoverComponent(SelectHoverObject::Ptr item);
+    static void resetHoverObject();
+
+    static void addSelectObject(SelectHoverObject* item);
+    static void removeSelectObject(SelectHoverObject* item);
+
+    void setSelectMode(bool newSelectMode);
+
+protected:
+    static SelectHoverObject* hoverComponent;
+    static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
+    static ComponentSelection selected;
+
+    bool hoverMode = false;
+    bool selectMode = false;
+};
+
 
 
 class CustomMenuItems
@@ -190,7 +195,6 @@ public:
     }
 
     Point<int> centrePoint;
-    bool hoverMode = false;
 
     void paint(Graphics &g) override;
 
@@ -222,6 +226,8 @@ class AudioPort;
 class InternalConnectionPort : public ConnectionPort
 {
 public:
+    void mouseDown(const MouseEvent &event) override;
+
     InternalConnectionPort(AudioPort* parent, bool isInput) : ConnectionPort() {
         audioPort = parent;
         this->isInput = isInput;
@@ -255,6 +261,8 @@ public:
     bool canConnect(ConnectionPort::Ptr& other) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)
+
+    void mouseDown(const MouseEvent &event) override;
 };
 
 struct ConnectionLine : public SelectHoverObject, public ComponentListener
@@ -290,8 +298,6 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
     ConnectionPort::Ptr getOtherPort(ConnectionPort::Ptr port) {
         return inPort == port ? outPort : inPort;
     }
-
-    bool hoverMode = false;
 
     ConnectionPort::Ptr inPort;
     ConnectionPort::Ptr outPort;
@@ -335,14 +341,15 @@ struct LineComponent : public GuiObject
         return dragLine;
     }
 
+    static void setDragLine(LineComponent* newLine) {
+        dragLine = newLine;
+    }
+
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
 
     ConnectionPort* port1 = nullptr;
-
 
 private:
     static LineComponent* dragLine;
