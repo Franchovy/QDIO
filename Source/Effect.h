@@ -58,7 +58,6 @@ public:
     void mouseUp(const MouseEvent &event) override;
     bool keyPressed(const KeyPress &key) override;
 
-    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
@@ -113,6 +112,7 @@ protected:
         static const Identifier pos;
         static const Identifier processorID;
         static const Identifier initialised;
+        static const Identifier name;
     };
 
 };

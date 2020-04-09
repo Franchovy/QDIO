@@ -22,6 +22,7 @@ const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
 const Identifier EffectTreeBase::IDs::pos = "pos";
 const Identifier EffectTreeBase::IDs::processorID = "processor";
 const Identifier EffectTreeBase::IDs::initialised = "initialised";
+const Identifier EffectTreeBase::IDs::name = "name";
 
 
 void EffectTreeBase::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
@@ -291,10 +292,6 @@ PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
     return m;
 }
 
-void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-
-}
-
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     // if effect has been created already
     if (childWhichHasBeenAdded.hasProperty(IDs::initialised)) {
@@ -418,26 +415,35 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
 
         // Create from node:
         setProcessor(node->getProcessor());
-
     } else {
         // Make edit mode true by default
         setEditMode(true);
     }
 
+    setupTitle();
+    setupMenu();
 
     Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
     setBounds(newPos.x, newPos.y, 200,200);
 
     addAndMakeVisible(resizer);
 
-    // Set tree properties?
-    // TODO name
+    // Set tree properties
 
     tree.addListener(this);
 
+    // Name
+    if (isIndividual()) {
+        tree.setProperty(IDs::name, processor->getName(), nullptr);
+    } else {
+        tree.setProperty(IDs::name, "Effect", nullptr);
+    }
+
+    // Position
     pos.referTo(tree, IDs::pos, &undoManager);
     setPos(getPosition());
 
+    // Set parent component
     auto parentTree = vt.getParent();
     if (parentTree.isValid()) {
         auto parent = getFromTree<EffectTreeBase>(parentTree);
@@ -448,10 +454,15 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
 void Effect::setupTitle() {
     Font titleFont(20, Font::FontStyleFlags::bold);
     title.setFont(titleFont);
-    title.setText("Effect", dontSendNotification);
     title.setBounds(30,30,200, title.getFont().getHeight());
     title.setColour(title.textColourId, Colours::black);
     title.setEditable(true);
+
+    title.onTextChange = [=]{
+        undoManager.beginNewTransaction("Name change to: " + title.getText(true));
+        tree.setProperty(IDs::name, title.getText(true), &undoManager);
+    };
+
     addAndMakeVisible(title);
 }
 
@@ -509,10 +520,6 @@ void Effect::setProcessor(AudioProcessor *processor) {
         // Create port - giving audiochannelset info and isInput bool
         addPort(bus, isInput);
     }
-    std::cout << "Processor name: " << processor->getName() << newLine;
-
-    setName(processor->getName());
-    title.setText(processor->getName(), dontSendNotification);
 
     // Setup parameters
     parameters = &processor->getParameterTree();
@@ -839,7 +846,13 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
                 std::cout << "Undo operation" << newLine;
                 setTopLeftPosition(Point<int>(x,y));
             }
-        } 
+        } else if (property == IDs::name) {
+            auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
+            auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
+
+            e->setName(newName);
+            e->title.setText(newName, sendNotificationAsync);
+        }
     }
 }
 
