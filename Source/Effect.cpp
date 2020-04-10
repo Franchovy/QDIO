@@ -44,33 +44,31 @@ SelectedItemSet<GuiObject::Ptr>& EffectTreeBase::getLassoSelection() {
     return selected;
 }
 
-
-//TODO
 EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
+    // Check if children match
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<Effect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+        auto childTree = effectTree.getChild(i);
+        auto child = getFromTree<EffectTreeBase>(childTree);
+        auto childEvent = event.getEventRelativeTo(child);
 
-        if (e_gui != nullptr
-            && e_gui->getBoundsInParent().contains(event.x, event.y)
-            && e_gui != event.originalComponent)
+        if (child != nullptr
+            && child->contains(childEvent.getPosition())
+            && child != event.originalComponent)
         {
             // Add any filters here
-            if (e_gui->isIndividual()){
-                continue;
-            }
+            // Must be in edit mode
+            if (! dynamic_cast<Effect*>(child)->isInEditMode()) { continue; }
 
             // Check if there's a match in the children (sending child component coordinates)
-            auto recursiveEvent = event.getEventRelativeTo(e_gui);
-            if (auto e = effectToMoveTo(recursiveEvent, effectTree.getChild(i)))
+            if (auto e = effectToMoveTo(childEvent, childTree))
                 return e;
             else
-                return e_gui;
+                return child;
         }
     }
-    // If nothing is found (at topmost level) then return the maincomponent
-    if (effectTree.hasType(ID_TREE_TOP))
-        return this;
-    else return nullptr;
+    // Check parents or something else?
+    //TODO
+    return nullptr;
 }
 //TODO
 ConnectionPort::Ptr EffectTreeBase::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
@@ -221,19 +219,6 @@ void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
     // Update audiograph
     addAudioConnection(*nline);
 }
-
-void EffectTreeBase::mouseDown(const MouseEvent &event) {
-    Component::mouseDown(event);
-}
-
-void EffectTreeBase::mouseDrag(const MouseEvent &event) {
-    Component::mouseDrag(event);
-}
-
-void EffectTreeBase::mouseUp(const MouseEvent &event) {
-    Component::mouseUp(event);
-}
-
 
 PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
     PopupMenu m;
@@ -724,6 +709,7 @@ void Effect::mouseDown(const MouseEvent &event) {
         }
     } else if (event.mods.isRightButtonDown()) {
         // Send info upwards for menu
+        //TODO don't do this, call custom menu function
         getParentComponent()->mouseDown(event);
     }
 }
@@ -747,24 +733,16 @@ void Effect::mouseDrag(const MouseEvent &event) {
         setTopLeftPosition(newX, newY);
     }
 
-    getParentComponent()->mouseDrag(event);
-
     /*if (lasso.isVisible())
         lasso.dragLasso(event);*/
     if (event.mods.isLeftButtonDown()) {
-        auto thisEvent = event.getEventRelativeTo(this);
-
         // Effect drag
-        if (dynamic_cast<Effect *>(event.eventComponent)){
+        auto newParent = effectToMoveTo(event, tree.getParent());
 
-            auto newParent = effectToMoveTo(thisEvent, tree);
-
-            if (newParent != this) {
-                SelectHoverObject::setHoverComponent(newParent);
-            } else {
-                SelectHoverObject::resetHoverObject();
-            }
-
+        if (newParent != this) {
+            SelectHoverObject::setHoverComponent(newParent);
+        } else {
+            SelectHoverObject::resetHoverObject();
         }
     }
 }
@@ -781,9 +759,6 @@ void Effect::mouseUp(const MouseEvent &event) {
     if (event.eventComponent == event.originalComponent)
         return;
 
-    if (auto newParent = dynamic_cast<EffectTreeBase*>(event.eventComponent)) {
-
-    }
 
     /*if (lasso.isVisible())
         lasso.endLasso();*/
@@ -797,7 +772,7 @@ void Effect::mouseUp(const MouseEvent &event) {
                 event.eventComponent->repaint();
             }
 
-            // Scan effect to apply move to
+            /*// Scan effect to apply move to
             auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
 
             if (auto e = dynamic_cast<Effect *>(newParent))
@@ -807,9 +782,9 @@ void Effect::mouseUp(const MouseEvent &event) {
             if (effect->getParentComponent() != newParent) {
                 setParent(*newParent);
                 //addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
-            }
+            }*/
         }
-            // If component is LineComponent, respond to line drag event
+        // If component is LineComponent, respond to line drag event
         else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
             if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
                 if (l->port1 != nullptr) {
@@ -824,8 +799,6 @@ void Effect::mouseUp(const MouseEvent &event) {
     for (auto i : selected){
         std::cout << i->getName() << newLine;
     }
-
-    getParentComponent()->mouseUp(event);
 }
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {

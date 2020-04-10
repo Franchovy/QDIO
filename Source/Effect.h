@@ -53,9 +53,6 @@ public:
     static void close();
     virtual void resized() override = 0;
 
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
     bool keyPressed(const KeyPress &key) override;
 
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
@@ -70,7 +67,7 @@ public:
     EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(tree.getParent().getProperty(IDs::effectTreeBase).getObject()); }
 
     template<class T>
-    T* getFromTree(ValueTree& vt);
+    static T* getFromTree(ValueTree& vt);
 
 protected:
     ValueTree tree;
@@ -94,7 +91,7 @@ protected:
 
     Point<int> dragDetachFromParentComponent();
 
-    EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
+    static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
     static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
