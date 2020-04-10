@@ -45,15 +45,18 @@ SelectedItemSet<GuiObject::Ptr>& EffectTreeBase::getLassoSelection() {
 }
 
 EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
-    auto e = dynamic_cast<Effect*>(event.originalComponent);
-    
     // Check if event is leaving parent
     auto parent = getFromTree<EffectTreeBase>(effectTree);
     if (! parent->contains(parent->getLocalPoint(event.eventComponent, event.getPosition()))) {
         // find new parent
         std::cout << "Find new parent" << newLine;
+        auto parentToCheck = parent->getParent();
+        if (parentToCheck != nullptr
+                && parentToCheck->contains(parentToCheck->getLocalPoint(event.eventComponent, event.getPosition())))
+        {
+            return parentToCheck;
+        }
     } else {
-
         // Check if children match
         for (int i = 0; i < effectTree.getNumChildren(); i++) {
             auto childTree = effectTree.getChild(i);
