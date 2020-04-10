@@ -67,7 +67,7 @@ public:
     EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(tree.getParent().getProperty(IDs::effectTreeBase).getObject()); }
 
     template<class T>
-    static T* getFromTree(ValueTree& vt);
+    static T* getFromTree(const ValueTree& vt);
 
 protected:
     ValueTree tree;
@@ -148,6 +148,8 @@ public:
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
     void addConnection(ConnectionLine* connection);
+
+    void hoverOver(EffectTreeBase* newParent);
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;

@@ -45,29 +45,36 @@ SelectedItemSet<GuiObject::Ptr>& EffectTreeBase::getLassoSelection() {
 }
 
 EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
-    // Check if children match
-    for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto childTree = effectTree.getChild(i);
-        auto child = getFromTree<EffectTreeBase>(childTree);
-        auto childEvent = event.getEventRelativeTo(child);
+    auto e = dynamic_cast<Effect*>(event.originalComponent);
+    
+    // Check if event is leaving parent
+    auto parent = getFromTree<EffectTreeBase>(effectTree);
+    if (! parent->contains(parent->getLocalPoint(event.eventComponent, event.getPosition()))) {
+        // find new parent
+        std::cout << "Find new parent" << newLine;
+    } else {
 
-        if (child != nullptr
-            && child->contains(childEvent.getPosition())
-            && child != event.originalComponent)
-        {
-            // Add any filters here
-            // Must be in edit mode
-            if (! dynamic_cast<Effect*>(child)->isInEditMode()) { continue; }
+        // Check if children match
+        for (int i = 0; i < effectTree.getNumChildren(); i++) {
+            auto childTree = effectTree.getChild(i);
+            auto child = getFromTree<EffectTreeBase>(childTree);
+            auto childEvent = event.getEventRelativeTo(child);
 
-            // Check if there's a match in the children (sending child component coordinates)
-            if (auto e = effectToMoveTo(childEvent, childTree))
-                return e;
-            else
-                return child;
+            if (child != nullptr
+                && child->contains(childEvent.getPosition())
+                && child != event.originalComponent) {
+                // Add any filters here
+                // Must be in edit mode
+                if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
+
+                // Check if there's a match in the children (sending child component coordinates)
+                if (auto e = effectToMoveTo(childEvent, childTree))
+                    return e;
+                else
+                    return child;
+            }
         }
     }
-    // Check parents or something else?
-    //TODO
     return nullptr;
 }
 //TODO
@@ -283,9 +290,12 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)){
             e->setVisible(true);
             // Adjust pos
-            if (auto parent = getFromTree<EffectTreeBase>(childWhichHasBeenAdded)) {
+            if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                 if (!parent->getChildren().contains(e)) {
                     std::cout << "Add child to parent" << newLine;
+                    e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
+
+                    parent->addAndMakeVisible(e);
                 }
             }
         }
@@ -298,7 +308,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
 }
 
 template<class T>
-T *EffectTreeBase::getFromTree(ValueTree &vt) {
+T *EffectTreeBase::getFromTree(const ValueTree &vt) {
     return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
 }
 
@@ -307,10 +317,16 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
     auto test = childWhichHasBeenRemoved.hasProperty(IDs::effectTreeBase);
 
     if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
-        // Remove (and potentially delete later) effect)
+        if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+            std::cout << "Child removed" << newLine;
 
-        //remove connections
-        e->setVisible(false);
+            // Adjust position
+            //e->setTopLeftPosition(e->getPosition() + parent->getPosition());
+
+            //TODO remove connections
+
+            e->setVisible(false);
+        }
     }
 }
 
@@ -564,6 +580,8 @@ void Effect::setEditMode(bool isEditMode) {
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
         title.setColour(title.textColourId, Colours::black);
+
+        setBounds(getBounds().expanded(50));
     }
 
     editMode = isEditMode;
@@ -691,7 +709,8 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
-    auto name = "poop " + Position::fromVar(pos.get()).toString();
+    std::cout << "new transaction" << newLine;
+    undoManager.beginNewTransaction(getName());
 
     if (event.mods.isLeftButtonDown()) {
         if (editMode) {
@@ -721,6 +740,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
         // Manual constraint
         auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
         auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
+/*
 
         if (newX != getX() || newY != getY())
             if (event.x<-(getWidth() / 2) || event.y<-(getHeight() / 2) ||
@@ -729,7 +749,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
                 newX = newPos.x;
                 newY = newPos.y;
             }
-
+*/
         setTopLeftPosition(newX, newY);
     }
 
@@ -737,12 +757,16 @@ void Effect::mouseDrag(const MouseEvent &event) {
         lasso.dragLasso(event);*/
     if (event.mods.isLeftButtonDown()) {
         // Effect drag
-        auto newParent = effectToMoveTo(event, tree.getParent());
-
-        if (newParent != this) {
-            SelectHoverObject::setHoverComponent(newParent);
-        } else {
-            SelectHoverObject::resetHoverObject();
+        if (auto newParent = effectToMoveTo(event, tree.getParent())) {
+            // todo hoverOver undomanager
+            hoverOver(newParent);
+            tree.getParent().removeChild(tree, &undoManager);
+            newParent->getTree().appendChild(tree, &undoManager);
+            if (newParent != this) {
+                SelectHoverObject::setHoverComponent(newParent);
+            } else {
+                SelectHoverObject::resetHoverObject();
+            }
         }
     }
 }
@@ -751,8 +775,6 @@ void Effect::mouseUp(const MouseEvent &event) {
     setAlwaysOnTop(false);
 
     // set (undoable) data
-    std::cout << "new transaction" << newLine;
-    undoManager.beginNewTransaction(getName());
     setPos(getBoundsInParent().getPosition());
 
     // no reassignment
@@ -912,9 +934,18 @@ void Effect::setPos(Point<int> newPos) {
 bool Effect::keyPressed(const KeyPress &key) {
     if (key == KeyPress::deleteKey) {
         // delete Effect
-        delete this;
+        tree.getParent().removeChild(tree, &undoManager);
+        //delete this;
     }
     return EffectTreeBase::keyPressed(key);
+}
+
+void Effect::hoverOver(EffectTreeBase *newParent) {
+    if (newParent->getWidth() < getParentWidth() || newParent->getHeight() < getParentHeight()) {
+        setBounds(getBounds().expanded(-20));
+    } else {
+        setBounds(getBounds().expanded(20));
+    }
 }
 
 Point<int> Position::fromVar(const var &v) {
