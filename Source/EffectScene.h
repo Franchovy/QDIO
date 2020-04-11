@@ -40,7 +40,6 @@ public:
     void resized() override;
 
     void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
     bool keyPressed(const KeyPress &key) override;
@@ -91,7 +90,7 @@ public:
         addAndMakeVisible(main);
         setBounds(0,0, 1920, 1080);
 
-        
+
         auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
 
         settingsButton.setImages(false, true, false,

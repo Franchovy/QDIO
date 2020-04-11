@@ -20,6 +20,7 @@ EffectScene::EffectScene() :
 
     tree.addListener(this);
 
+#define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
 
     //========================================================================================
@@ -107,49 +108,6 @@ void EffectScene::mouseDown(const MouseEvent &event) {
     //Component::mouseDown(event);
 }
 
-void EffectScene::mouseDrag(const MouseEvent &event) {
-    if (lasso.isVisible())
-        lasso.dragLasso(event);
-    if (event.mods.isLeftButtonDown()) {
-        // Line drag
-        if (dynamic_cast<LineComponent*>(event.eventComponent)) {
-            // ParentToCheck is the container of possible things to connect to.
-            Component* parentToCheck;
-            if (dynamic_cast<AudioPort*>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent()->getParentComponent();
-            else if (dynamic_cast<InternalConnectionPort*>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent();
-
-            //auto connectPort = portToConnectTo(newEvent, parentToCheck)
-            ConnectionPort::Ptr connectPort;
-            // Get port to connect to (if there is one)
-            auto newEvent = event.getEventRelativeTo(parentToCheck);
-
-            //TODO EffectScene and EffectTree parent under one subclass
-            ValueTree treeToCheck;
-            if (parentToCheck != this)
-                treeToCheck = dynamic_cast<Effect*>(parentToCheck)->getTree();
-            else
-                treeToCheck = tree;
-            connectPort = portToConnectTo(newEvent, treeToCheck);
-
-            if (connectPort != nullptr) {
-                setHoverComponent(connectPort);
-            } else
-                setHoverComponent(nullptr);
-
-        }
-        // Effect drag
-        else if (auto effect = dynamic_cast<Effect *>(event.eventComponent)){
-            auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
-
-            if (newParent != this)
-                setHoverComponent(dynamic_cast<SelectHoverObject*>(newParent));
-            else
-                setHoverComponent(nullptr);
-        }
-    }
-}
 
 void EffectScene::mouseUp(const MouseEvent &event) {
     // TODO implement all of this locally

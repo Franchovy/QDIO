@@ -81,35 +81,39 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
     return nullptr;
 }
 //TODO
-ConnectionPort::Ptr EffectTreeBase::portToConnectTo(MouseEvent& event, const ValueTree& effectTree) {
+ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
 
     // Check for self ports
-    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent))
-        if (auto e = dynamic_cast<Effect*>(event.eventComponent))
-            if (auto returnPort = e->checkPort(event.getPosition()))
-                if (p->canConnect(returnPort))
+    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        if (auto e = getFromTree<Effect>(effectTree)) {
+            if (auto returnPort = e->checkPort(e->getLocalPoint(event.eventComponent, event.getPosition()))) {
+                if (p->canConnect(returnPort)) {
                     return returnPort;
+                }
+            }
+        }
+    }
 
     // Check children for a match
     for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e_gui = dynamic_cast<Effect*>(effectTree.getChild(i).getProperty(ID_EFFECT_GUI).getObject());
+        auto e = getFromTree<Effect>(effectTree.getChild(i));
 
-        if (e_gui == nullptr)
+        if (e == nullptr)
             continue;
 
         // Filter self effect if AudioPort
         if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
-            if (p->getParentComponent() == e_gui)
+            if (p->getParentComponent() == e)
                 continue;
 
-        auto localPos = e_gui->getLocalPoint(event.eventComponent, event.getPosition());
+        auto localPos = e->getLocalPoint(event.eventComponent, event.getPosition());
 
-        std::cout << "Local event: " <<  e_gui->getLocalPoint(event.eventComponent, event.getPosition()).toString() << newLine;
+        std::cout << "Local event: " << e->getLocalPoint(event.eventComponent, event.getPosition()).toString() << newLine;
         std::cout << "event pos: " << event.getPosition().toString() << newLine;
 
-        if (e_gui->contains(localPos))
+        if (e->contains(localPos))
         {
-            if (auto p = e_gui->checkPort(localPos))
+            if (auto p = e->checkPort(localPos))
                 if (dynamic_cast<ConnectionPort*>(event.originalComponent)->canConnect(p))
                     return p;
         }
@@ -361,6 +365,51 @@ void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
     int result = m.show();
 
+}
+
+void EffectTreeBase::mouseDrag(const MouseEvent &event) {
+    if (lasso.isVisible())
+        lasso.dragLasso(event);
+
+    if (event.mods.isLeftButtonDown()) {
+        // Line drag
+        auto port = portToConnectTo(event, tree);
+
+        if (port != nullptr) {
+            SelectHoverObject::setHoverComponent(port);
+        } else {
+            SelectHoverObject::resetHoverObject();
+        }
+
+        /*
+        if (dynamic_cast<LineComponent *>(event.eventComponent)) {
+            // ParentToCheck is the container of possible things to connect to.
+            Component *parentToCheck;
+            if (dynamic_cast<AudioPort *>(event.originalComponent))
+                parentToCheck = event.originalComponent->getParentComponent()->getParentComponent();
+            else if (dynamic_cast<InternalConnectionPort *>(event.originalComponent))
+                parentToCheck = event.originalComponent->getParentComponent();
+
+            //auto connectPort = portToConnectTo(newEvent, parentToCheck)
+            ConnectionPort::Ptr connectPort;
+            // Get port to connect to (if there is one)
+            auto newEvent = event.getEventRelativeTo(parentToCheck);
+
+            //TODO EffectScene and EffectTree parent under one subclass
+            ValueTree treeToCheck;
+            if (parentToCheck != this)
+                treeToCheck = dynamic_cast<Effect *>(parentToCheck)->getTree();
+            else
+                treeToCheck = tree;
+            connectPort = portToConnectTo(newEvent, treeToCheck);
+
+            if (connectPort != nullptr) {
+                setHoverComponent(connectPort);
+            } else
+                setHoverComponent(nullptr);
+
+        }*/
+    }
 }
 
 
@@ -761,17 +810,22 @@ void Effect::mouseDrag(const MouseEvent &event) {
     /*if (lasso.isVisible())
         lasso.dragLasso(event);*/
     if (event.mods.isLeftButtonDown()) {
-        // Effect drag
-        if (auto newParent = effectToMoveTo(event, tree.getParent())) {
-            // todo hoverOver undomanager
-            hoverOver(newParent);
-            tree.getParent().removeChild(tree, &undoManager);
-            newParent->getTree().appendChild(tree, &undoManager);
-            if (newParent != this) {
-                SelectHoverObject::setHoverComponent(newParent);
-            } else {
-                SelectHoverObject::resetHoverObject();
+        if (dynamic_cast<Effect*>(event.originalComponent)) {
+            // Effect drag
+            if (auto newParent = effectToMoveTo(event, tree.getParent())) {
+                // todo hoverOver undomanager
+                hoverOver(newParent);
+                tree.getParent().removeChild(tree, &undoManager);
+                newParent->getTree().appendChild(tree, &undoManager);
+                if (newParent != this) {
+                    SelectHoverObject::setHoverComponent(newParent);
+                } else {
+                    SelectHoverObject::resetHoverObject();
+                }
             }
+        } else if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+            // Line Drag
+            EffectTreeBase::mouseDrag(event);
         }
     }
 }

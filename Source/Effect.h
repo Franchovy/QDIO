@@ -59,6 +59,8 @@ public:
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
 
+    void mouseDrag(const MouseEvent& event) override;
+
     //===================================================================
 
     ValueTree& getTree() { return tree; }
@@ -96,7 +98,7 @@ protected:
     Point<int> dragDetachFromParentComponent();
 
     static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
-    static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
+    static ConnectionPort::Ptr portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
 
