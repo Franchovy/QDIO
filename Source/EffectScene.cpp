@@ -114,7 +114,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.endLasso();
 
-    if (event.mods.isLeftButtonDown()) {
+    /*if (event.mods.isLeftButtonDown()) {
         // If the component is an effect, respond to move effect event
         if (auto effect = dynamic_cast<Effect *>(event.originalComponent)) {
             if (event.getDistanceFromDragStart() < 10) {
@@ -134,24 +134,14 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                 newParent->getTree().appendChild(effect->getTree(), &undoManager);
             }
         }
-        // If component is LineComponent, respond to line drag event
-        else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
-                l->convert(port);
-            }
-        }
-    }
+    }*/
         
     // Open menu - either right click or left click (for mac)
     if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
             callMenu(mainMenu);
     }
 
-    for (auto i : selected){
-        std::cout << i->getName() << newLine;
-    }
-
-    Component::mouseUp(event);
+    EffectTreeBase::mouseUp(event);
 }
 
 bool EffectScene::keyPressed(const KeyPress &key)

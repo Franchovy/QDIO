@@ -60,6 +60,7 @@ public:
                                int indexFromWhichChildWasRemoved) override;
 
     void mouseDrag(const MouseEvent& event) override;
+    void mouseUp(const MouseEvent& event) override;
 
     //===================================================================
 

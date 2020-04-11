@@ -108,9 +108,6 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
 
         auto localPos = e->getLocalPoint(event.eventComponent, event.getPosition());
 
-        std::cout << "Local event: " << e->getLocalPoint(event.eventComponent, event.getPosition()).toString() << newLine;
-        std::cout << "event pos: " << event.getPosition().toString() << newLine;
-
         if (e->contains(localPos))
         {
             if (auto p = e->checkPort(localPos))
@@ -409,6 +406,31 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
                 setHoverComponent(nullptr);
 
         }*/
+    }
+}
+
+void EffectTreeBase::mouseUp(const MouseEvent &event) {
+    if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
+        if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
+            // Call create on common parent
+            auto effect1 = dynamic_cast<EffectTreeBase*>(l->port1->getParentComponent());
+            auto effect2 = dynamic_cast<EffectTreeBase*>(port->getParentComponent());
+
+            if (effect1->getParent() == effect2->getParent()) {
+                dynamic_cast<EffectTreeBase*>(effect1->getParent())->createConnection(
+                        std::make_unique<ConnectionLine>(*port, *l->port1));
+            } else if (effect1->getParent() == effect2) {
+                dynamic_cast<EffectTreeBase*>(effect2)->createConnection(
+                        std::make_unique<ConnectionLine>(*port, *l->port1));
+            } else if (effect2->getParent() == effect1) {
+                dynamic_cast<EffectTreeBase*>(effect1)->createConnection(
+                        std::make_unique<ConnectionLine>(*port, *l->port1));
+            } else {
+                std::cout << "what is parent???" << newLine;
+                std::cout << "Parent 1: " << l->port1->getParentComponent()->getName() << newLine;
+                std::cout << "Parent 2: " << port->getParentComponent()->getName() << newLine;
+            }
+        }
     }
 }
 
@@ -859,27 +881,10 @@ void Effect::mouseUp(const MouseEvent &event) {
                 event.eventComponent->repaint();
             }
 
-            /*// Scan effect to apply move to
-            auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
-
-            if (auto e = dynamic_cast<Effect *>(newParent))
-                if (!e->isInEditMode())
-                    return;
-            // target is not in edit mode
-            if (effect->getParentComponent() != newParent) {
-                setParent(*newParent);
-                //addEffect(event.getEventRelativeTo(newParent), *effect->EVT);
-            }*/
         }
         // If component is LineComponent, respond to line drag event
         else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
-                if (l->port1 != nullptr) {
-                    // todo this must be called on common parent.
-                    dynamic_cast<EffectTreeBase*>(getParentComponent())
-                         ->createConnection(std::make_unique<ConnectionLine>(*l->port1, *port));
-                }
-            }
+            EffectTreeBase::mouseUp(event);
         }
     }
 
