@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <BinaryData.h>
 
 #include "Effect.h"
 
@@ -45,6 +46,7 @@ public:
     bool keyPressed(const KeyPress &key) override;
 
     void deleteEffect(Effect* e);
+
     //==============================================================================
 
 private:
@@ -55,10 +57,12 @@ private:
 
     //std::unique_ptr<AudioDeviceSelectorComponent> deviceSelector;
     //GUIWrapper deviceSelectorComponent;
+    Image bg;
+
 
     //==============================================================================
 
-    std::unique_ptr<CustomMenuItems> mainMenu;
+    PopupMenu mainMenu;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)
@@ -72,7 +76,8 @@ private:
 class MainComponent : public Viewport, private Timer
 {
 public:
-    MainComponent() {
+    MainComponent()
+    {
         auto savedState = getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS);
 
         main.initialiseAudio(
@@ -85,6 +90,15 @@ public:
         setViewedComponent(&main);
         addAndMakeVisible(main);
         setBounds(0,0, 1920, 1080);
+
+        
+        auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
+
+        settingsButton.setImages(false, true, false,
+                image, 1.0f, Colours::grey, image, 1.0f, Colours::lightgrey,
+                image, 1.0f, Colours::darkgrey);
+        addAndMakeVisible(settingsButton);
+        settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
 
         startTimer(3);
     }
@@ -123,6 +137,8 @@ private:
 
         startTimer(3);
     }
+
+    ImageButton settingsButton;
 
     EffectScene main;
     UndoManager undoManager;

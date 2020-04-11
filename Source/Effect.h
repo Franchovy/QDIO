@@ -75,7 +75,11 @@ protected:
 
     //====================================================================================
     // Menu stuff
-    PopupMenu getEffectSelectMenu(const MouseEvent &event);
+    static void callMenu(PopupMenu& menu);
+
+    PopupMenu createEffectMenu;
+    PopupMenu getEffectSelectMenu();
+    void newEffect(String name, int processorID);
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
@@ -95,6 +99,8 @@ protected:
     static ConnectionPort::Ptr portToConnectTo(MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
+
+
     static void addAudioConnection(ConnectionLine& connectionLine);
 
     static std::unique_ptr<AudioDeviceManager> deviceManager;
@@ -111,7 +117,6 @@ protected:
         static const Identifier initialised;
         static const Identifier name;
     };
-
 };
 
 struct Position : public VariantConverter<Point<int>>
@@ -184,7 +189,7 @@ public:
 
     void setProcessor(AudioProcessor* processor);
 
-    CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
+    //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
     AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
@@ -207,8 +212,8 @@ private:
     ComponentDragger dragger;
     ComponentBoundsConstrainer constrainer;
 
-    CustomMenuItems menu;
-    CustomMenuItems editMenu;
+    PopupMenu menu;
+    PopupMenu editMenu;
 
     const AudioProcessorParameterGroup* parameters;
 

@@ -20,6 +20,8 @@ EffectScene::EffectScene() :
 
     tree.addListener(this);
 
+    bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+
     //========================================================================================
     // Manage Audio
 
@@ -53,11 +55,11 @@ EffectScene::EffectScene() :
 
     //==============================================================================
     // Main component popup menu
-    mainMenu = std::make_unique<CustomMenuItems>();
-
-    mainMenu->addItem("Toggle Settings", [=](){
+    PopupMenu createEffectSubmenu = getEffectSelectMenu();
+    mainMenu.addSubMenu("Create Effect", createEffectSubmenu);
+    /*mainMenu.addItem("Toggle Settings", [=](){
         //deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
-    });
+    });*/
 }
 
 EffectScene::~EffectScene()
@@ -75,6 +77,9 @@ EffectScene::~EffectScene()
 //==============================================================================
 void EffectScene::paint (Graphics& g)
 {
+#ifdef BACKGROUND_IMAGE
+    g.drawImage(bg, getBounds().toFloat());
+#else
     g.fillAll (Colour(30, 35, 40));
     
     // bg logo
@@ -86,6 +91,7 @@ void EffectScene::paint (Graphics& g)
     g.setFont(30);
     
     g.drawText("QDIO",getWidth()/2-50, getHeight()/2-50, 100, 100, Justification::centred);
+#endif
 }
 
 void EffectScene::resized()
@@ -179,29 +185,8 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     }
         
     // Open menu - either right click or left click (for mac)
-    if (event.mods.isRightButtonDown() ||
-               (event.getDistanceFromDragStart() < 10 &&
-                event.mods.isLeftButtonDown() &&
-                event.mods.isCtrlDown())) {
-
-            // Right-click menu
-            PopupMenu m;
-
-            // Populate menu
-            // Add submenus
-            PopupMenu createEffectSubmenu = getEffectSelectMenu(event);
-            m.addSubMenu("Create Effect", createEffectSubmenu);
-            // Add CustomMenuItems
-            mainMenu->addToMenu(m);
-            if (auto e = dynamic_cast<Effect*>(event.originalComponent))
-                e->getMenu().addToMenu(m);
-            // Execute result
-            int result = m.show();
-
-            if (mainMenu->inRange(result))
-                mainMenu->execute(result);
-            if (auto e = dynamic_cast<Effect*>(event.originalComponent))
-                e->getMenu().execute(result);
+    if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
+            callMenu(mainMenu);
     }
 
     for (auto i : selected){

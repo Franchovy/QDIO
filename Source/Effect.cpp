@@ -230,15 +230,13 @@ void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
     addAudioConnection(*nline);
 }
 
-PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
-    PopupMenu m;
-
-    m.addItem("Empty Effect", std::function<void()>(
+PopupMenu EffectTreeBase::getEffectSelectMenu() {
+    createEffectMenu.addItem("Empty Effect", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("New Empty Effect");
                 ValueTree newEffect(ID_EFFECT_VT);
 
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
+                newEffect.setProperty(IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
 
                 if (selected.getNumSelected() > 0) {
@@ -249,42 +247,34 @@ PopupMenu EffectTreeBase::getEffectSelectMenu(const MouseEvent &event) {
                     }
                 }
             }));
-    m.addItem("Input Device", std::function<void()>(
+    createEffectMenu.addItem("Input Device", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction("New Input Effect");
-                ValueTree newEffect(ID_EFFECT_VT);
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
-                newEffect.setProperty(IDs::processorID, 0, nullptr);
-                this->getTree().appendChild(newEffect, &undoManager);
+                newEffect("Input Device", 0);
             }));
-    m.addItem("Output Device", std::function<void()>(
+    createEffectMenu.addItem("Output Device", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction("New Output Effect");
-                ValueTree newEffect(ID_EFFECT_VT);
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
-                newEffect.setProperty(IDs::processorID, 1, nullptr);
-                this->getTree().appendChild(newEffect, &undoManager);
+                newEffect("Output Device", 1);
             }));
-    m.addItem("Delay Effect", std::function<void()>(
+    createEffectMenu.addItem("Delay Effect", std::function<void()>(
             [=](){
-                undoManager.beginNewTransaction("New Delay Effect");
-                ValueTree newEffect(ID_EFFECT_VT);
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
-                newEffect.setProperty(IDs::processorID, 3, nullptr);
-                this->getTree().appendChild(newEffect, &undoManager);
+                newEffect("Delay Effect", 3);
             }
     ));
-    m.addItem("Distortion Effect", std::function<void()>(
+    createEffectMenu.addItem("Distortion Effect", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction("New Distortion Effect");
-                ValueTree newEffect(ID_EFFECT_VT);
-                newEffect.setProperty(IDs::pos, Position::toVar(event.getPosition()), nullptr);
-                newEffect.setProperty(IDs::processorID, 2, nullptr);
-                this->getTree().appendChild(newEffect, &undoManager);
+                newEffect("Distortion Effect", 2);
             }
     ));
 
-    return m;
+    return createEffectMenu;
+}
+
+void EffectTreeBase::newEffect(String name, int processorID) {
+    undoManager.beginNewTransaction("New " + name);
+    ValueTree newEffect(ID_EFFECT_VT);
+    newEffect.setProperty(IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
+    newEffect.setProperty(IDs::processorID, processorID, nullptr);
+    this->getTree().appendChild(newEffect, &undoManager);
 }
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
@@ -363,6 +353,14 @@ EffectTreeBase::~EffectTreeBase() {
         std::cout << "Warning: Reference count greater than zero. Exceptions may occur" << newLine;
         resetReferenceCount();
     }
+}
+
+
+
+void EffectTreeBase::callMenu(PopupMenu& m) {
+    // Execute result
+    int result = m.show();
+
 }
 
 
@@ -485,8 +483,12 @@ void Effect::setupMenu() {
         }
     });
 
-    editMenu.addItem("Add Input Port", [=](){addPort(getDefaultBus(), true); resized(); });
-    editMenu.addItem("Add Output Port", [=](){addPort(getDefaultBus(), false); resized(); });
+    editMenu.addItem("Add Input Port", [=]() {
+        addPort(getDefaultBus(), true); resized();
+    });
+    editMenu.addItem("Add Output Port", [=](){
+        addPort(getDefaultBus(), false); resized();
+    });
     editMenu.addItem("Toggle Edit Mode", [=]() {
         setEditMode(!editMode);
     });
@@ -571,6 +573,8 @@ void Effect::setEditMode(bool isEditMode) {
         title.setInterceptsMouseClicks(true, true);
 
         title.setColour(title.textColourId, Colours::whitesmoke);
+
+        setBounds(getBounds().expanded(50));
     }
 
     // Turn off edit mode
@@ -583,8 +587,6 @@ void Effect::setEditMode(bool isEditMode) {
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
         title.setColour(title.textColourId, Colours::black);
-
-        setBounds(getBounds().expanded(50));
     }
 
     editMode = isEditMode;
@@ -780,10 +782,16 @@ void Effect::mouseUp(const MouseEvent &event) {
     // set (undoable) data
     setPos(getBoundsInParent().getPosition());
 
-    // no reassignment
-    if (event.eventComponent == event.originalComponent)
-        return;
-
+    if (event.eventComponent == event.originalComponent) {
+        if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
+            // open menu
+            if (editMode) {
+                callMenu(editMenu);
+            } else {
+                callMenu(menu);
+            }
+        } else return;
+    }
 
     /*if (lasso.isVisible())
         lasso.endLasso();*/

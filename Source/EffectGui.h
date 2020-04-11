@@ -97,8 +97,8 @@ public:
     int addToMenu(PopupMenu &menu) {
         int numItems = menu.getNumItems();
         thisRange.setStart(numItems);
-        for (int i = 0; i < names.size(); i++)
-            menu.addItem(numItems++, names[i]);
+        for (auto && name : names)
+            menu.addItem(numItems++, name);
         thisRange.setEnd(numItems);
         return numItems;
     }

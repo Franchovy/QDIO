@@ -3,6 +3,10 @@
 <JUCERPROJECT id="XyrfN6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7"
               compilerFlagSchemes="NewScheme">
   <MAINGROUP id="T8wAiB" name="QDIO">
+    <GROUP id="{3656747D-F630-B6A0-87B7-F4E2A08E98F7}" name="Resources">
+      <FILE id="DRvEs5" name="background.png" compile="0" resource="1" file="Resources/background.png"/>
+      <FILE id="k87fdV" name="settings.png" compile="0" resource="1" file="Resources/settings.png"/>
+    </GROUP>
     <GROUP id="{7BA62652-E431-98B6-D8CC-8F9CF98F34BB}" name="Source">
       <FILE id="rdmW6C" name="EffectGui.cpp" compile="1" resource="0" file="Source/EffectGui.cpp"/>
       <FILE id="eTACmX" name="EffectGui.h" compile="0" resource="0" file="Source/EffectGui.h"/>
