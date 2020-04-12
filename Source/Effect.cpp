@@ -251,14 +251,15 @@ Point<int> EffectTreeBase::dragDetachFromParentComponent() {
 
 void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
     // Add connection to this object
-    auto nline = connections.add(move(line));
-    addChildComponent(nline);
+    ConnectionLine::Ptr nline = connections.add(move(line));
+    connectionsList->add(nline);
+    addChildComponent(nline.get());
 
     std::cout << "Check 0: " << nline->isVisible() << newLine;
 
     // Update tree data
     auto newList = connectionsList.get();
-    newList.add(line.get());
+    newList.add(nline);
 
     undoManager.beginNewTransaction("Connection");
     connectionsList.setValue(newList, &undoManager);
@@ -314,22 +315,28 @@ void EffectTreeBase::newEffect(String name, int processorID) {
 
 void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (property == IDs::connections) {
-        auto activeConnections = ConnectionVar::fromVarArray(connectionsList.get());
+        auto activeConnections = connectionsList.get();
 
-        std::cout << "update" << newLine;
+
 
         for (auto connection : connections) {
             // Connections removed from activeConnections
-            if (connection->isVisible() && ! activeConnections.contains(connection)) {
-                // manipulate audio
-                std::cout << "remove!" << newLine;
-                // remove from activeConnections
+            if (connection->isVisible() && ! activeConnections.contains(ConnectionVar::fromVar(connection))) {
+                std::cout << "Remove connection" << newLine;
+                // Remove from audio
+                disconnectAudio(*connection);
+
+                connection->setVisible(false);
             }
             // Connections added to activeConnections
-            if (! connection->isVisible() && activeConnections.contains(connection)) {
-                // manipulate audio
-                std::cout << "add!" << newLine;
-                // add to activeConnections
+            else if (! connection->isVisible() && activeConnections.contains(ConnectionVar::fromVar(connection))) {
+                std::cout << "Add connection" << newLine;
+                // Add to audio
+                connectAudio(*connection);
+
+                connection->setVisible(true);
+            } else {
+                std::cout << "Schtruderloooder" << newLine;
             }
         }
 
@@ -408,10 +415,7 @@ T *EffectTreeBase::getPropertyFromTree(const ValueTree &vt, Identifier property)
     return dynamic_cast<T*>(vt.getProperty(property).getObject());
 }
 
-
-
 bool EffectTreeBase::keyPressed(const KeyPress &key) {
-
     if (key.getKeyCode() == 's') {
         std::cout << "Audiograph status: " << newLine;
         for (auto node : audioGraph->getNodes()) {
@@ -426,8 +430,9 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
     if (key.getKeyCode() == KeyPress::deleteKey) {
         for (const auto& selectedItem : selected.getItemArray()) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
-                connectionsList->remove(ConnectionVar::toVar(l));
-                std::cout << "update expected here." << newLine;
+                auto list = connectionsList.get();
+                list.removeObject(l);
+                connectionsList = list;
             }
         }
     }
@@ -579,7 +584,6 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
             default:
                 std::cout << "ProcessorID not found." << newLine;
         }
-
         node = audioGraph->addNode(move(newProcessor));
 
         // Create from node:
@@ -1137,9 +1141,9 @@ var Position::toVar(const Point<int> &t) {
 }
 
 
-Array<ConnectionLine *> ConnectionVar::fromVarArray(const var &v) {
+ReferenceCountedArray<ConnectionLine> ConnectionVar::fromVarArray(const var &v) {
     Array<var>* varArray = v.getArray();
-    Array<ConnectionLine*> array;
+    ReferenceCountedArray<ConnectionLine> array;
     for (auto i : *varArray) {
         array.add(dynamic_cast<ConnectionLine*>(i.getObject()));
     }
@@ -1147,7 +1151,7 @@ Array<ConnectionLine *> ConnectionVar::fromVarArray(const var &v) {
     return array;
 }
 
-var ConnectionVar::toVarArray(const Array<ConnectionLine *> &t) {
+var ConnectionVar::toVarArray(const ReferenceCountedArray<ConnectionLine> &t) {
     Array<var> varArray;
     for (auto i : t) {
         varArray.add(i);
@@ -1156,11 +1160,11 @@ var ConnectionVar::toVarArray(const Array<ConnectionLine *> &t) {
     return varArray;
 }
 
-ConnectionLine *ConnectionVar::fromVar(const var &v) {
+ConnectionLine::Ptr ConnectionVar::fromVar(const var &v) {
     return dynamic_cast<ConnectionLine*>(v.getObject());
 }
 
-var ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
-    var v = t.get();
-    return v;
+var* ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
+    //var v = t.get();
+    return reinterpret_cast<var *>(t.get());
 }

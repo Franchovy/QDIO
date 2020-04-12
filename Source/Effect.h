@@ -19,12 +19,12 @@
 class Effect;
 
 
-struct ConnectionVar : public VariantConverter<Array<ConnectionLine*>>
+struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionLine>>
 {
-    static Array<ConnectionLine*> fromVarArray (const var &v);
-    static var toVarArray (const Array<ConnectionLine*> &t);
-    static ConnectionLine* fromVar (const var &v);
-    static var toVar (const ConnectionLine::Ptr &t);
+    static ReferenceCountedArray<ConnectionLine> fromVarArray (const var &v);
+    static var toVarArray (const ReferenceCountedArray<ConnectionLine> &t);
+    static ConnectionLine::Ptr fromVar (const var &v);
+    static var* toVar (const ConnectionLine::Ptr &t);
 
 };
 
@@ -95,7 +95,7 @@ public:
 protected:
     ValueTree tree;
     OwnedArray<ConnectionLine> connections;
-    CachedValue<Array<var>> connectionsList;
+    CachedValue<ReferenceCountedArray<ConnectionLine>> connectionsList;
 
     //====================================================================================
     // Menu stuff
