@@ -18,6 +18,13 @@
 
 class Effect;
 
+
+struct Connection : public VariantConverter<ConnectionLine*>
+{
+    static ConnectionLine* fromVar (const var &v);
+    static var toVar (const ConnectionLine* &t);
+};
+
 /**
  * Base class for Effects and EffectScene
  * Contains all functionality common to both:
@@ -31,6 +38,8 @@ public:
         tree = vt;
         tree.setProperty(IDs::effectTreeBase, this, nullptr);
         setWantsKeyboardFocus(true);
+
+        tree.setProperty(IDs::connections, Array<var>(), nullptr);
 
         dragLine.setAlwaysOnTop(true);
         LineComponent::setDragLine(&dragLine);
@@ -54,6 +63,8 @@ public:
     virtual void resized() override = 0;
 
     bool keyPressed(const KeyPress &key) override;
+
+    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
 
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
@@ -102,9 +113,8 @@ protected:
     static ConnectionPort::Ptr portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
-
-
-    static void addAudioConnection(ConnectionLine& connectionLine);
+    static void disconnectAudio(ConnectionLine& connectionLine);
+    static void connectAudio(ConnectionLine& connectionLine);
 
     static std::unique_ptr<AudioDeviceManager> deviceManager;
     static std::unique_ptr<AudioProcessorPlayer> processorPlayer;
@@ -119,6 +129,7 @@ protected:
         static const Identifier processorID;
         static const Identifier initialised;
         static const Identifier name;
+        static const Identifier connections;
     };
 };
 

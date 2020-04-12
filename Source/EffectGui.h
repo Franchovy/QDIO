@@ -282,7 +282,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
     void paint(Graphics &g) override
     {
         int thiccness;
-        if (hoverMode) {
+        if (hoverMode || selectMode) {
             g.setColour(Colours::blue);
             thiccness = 3;
         } else {

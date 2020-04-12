@@ -23,6 +23,7 @@ const Identifier EffectTreeBase::IDs::pos = "pos";
 const Identifier EffectTreeBase::IDs::processorID = "processor";
 const Identifier EffectTreeBase::IDs::initialised = "initialised";
 const Identifier EffectTreeBase::IDs::name = "name";
+const Identifier EffectTreeBase::IDs::connections = "connections";
 
 
 void EffectTreeBase::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
@@ -166,7 +167,7 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
     }
 }*/
 
-void EffectTreeBase::addAudioConnection(ConnectionLine& connectionLine) {
+void EffectTreeBase::connectAudio(ConnectionLine& connectionLine) {
     Effect::NodeAndPort in;
     Effect::NodeAndPort out;
     auto inEVT = dynamic_cast<Effect*>(connectionLine.inPort->getParentComponent());
@@ -227,8 +228,12 @@ void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
     addAndMakeVisible(line.get());
     auto nline = connections.add(move(line));
 
+    auto connectionsList = Array<ConnectionLine*>(tree.getProperty(IDs::connections).getArray());
+    connectionsList.add(line.get());
+    tree.setProperty(IDs::connections, connectionsList, &undoManager);
+
     // Update audiograph
-    addAudioConnection(*nline);
+    connectAudio(*nline);
 }
 
 PopupMenu EffectTreeBase::getEffectSelectMenu() {
@@ -337,6 +342,16 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
             }
         }
     }
+    if (key.getKeyCode() == KeyPress::deleteKey) {
+        for (auto selectedItem : selected.getItemArray()) {
+            if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
+                // TODO delete (undoable) line
+                l->setVisible(false);
+
+            }
+        }
+    }
+
     if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
         std::cout << "Undo: " << undoManager.getUndoDescription() << newLine;
         undoManager.undo();
@@ -432,6 +447,18 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
             }
         }
     }
+}
+
+void EffectTreeBase::disconnectAudio(ConnectionLine &connectionLine) {
+
+}
+
+void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    if (property == IDs::connections) {
+        std::cout << "Connections changed" << newLine;
+    }
+
+    //Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
 
 
@@ -1040,3 +1067,12 @@ var Position::toVar(const Point<int> &t) {
     return v;
 }
 
+ConnectionLine* Connection::fromVar(const var &v) {
+
+
+}
+
+var Connection::toVar(const ConnectionLine* &t) {
+
+    return var();
+}
