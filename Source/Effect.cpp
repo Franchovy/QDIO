@@ -181,8 +181,8 @@ bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
 
 void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
-        if (audioGraph->isConnected(connectionLine.getAudioConnection())) {
-            audioGraph->removeConnection(connectionLine.getAudioConnection());
+        if (audioGraph->isConnected(connection)) {
+            audioGraph->removeConnection(connection);
         }
     }
 }
@@ -388,7 +388,10 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             }
             auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
+
+
             line = new ConnectionLine(*inport, *outport);
+            childWhichHasBeenAdded.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
             addAndMakeVisible(line);
         } else {
             line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded, ConnectionLine::IDs::ConnectionLineObject);
@@ -401,19 +404,24 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
-    auto test = childWhichHasBeenRemoved.hasProperty(IDs::effectTreeBase);
 
-    if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
-        if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
-            std::cout << "Child removed" << newLine;
+    if (childWhichHasBeenRemoved.hasType(Effect::IDs::EFFECT_ID)) {
+        if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
+            if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+                std::cout << "Child removed" << newLine;
 
-            // Adjust position
-            //e->setTopLeftPosition(e->getPosition() + parent->getPosition());
+                // Adjust position
+                //e->setTopLeftPosition(e->getPosition() + parent->getPosition());
 
-            //TODO remove connections
+                //TODO remove connections
 
-            e->setVisible(false);
+                e->setVisible(false);
+            }
         }
+    } else if (childWhichHasBeenRemoved.hasType(ConnectionLine::IDs::CONNECTION_ID)) {
+        auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
+        line->setVisible(false);
+        disconnectAudio(*line);
     }
 }
 
@@ -472,6 +480,12 @@ EffectTreeBase::~EffectTreeBase() {
 void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
     int result = m.show();
+
+}
+
+void EffectTreeBase::mouseDown(const MouseEvent &event) {
+    std::cout << "Begin new transaction" << newLine;
+    undoManager.beginNewTransaction(getName());
 
 }
 
@@ -606,6 +620,13 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
         setEditMode(true);
     }
 
+    // Set name
+    if (isIndividual()) {
+        tree.setProperty(EffectTreeBase::IDs::name, processor->getName(), nullptr);
+    } else {
+        tree.setProperty(EffectTreeBase::IDs::name, "Effect", nullptr);
+    }
+
     setupTitle();
     setupMenu();
 
@@ -615,15 +636,7 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
     addAndMakeVisible(resizer);
 
     // Set tree properties
-
     tree.addListener(this);
-
-    // Name
-    if (isIndividual()) {
-        tree.setProperty(EffectTreeBase::IDs::name, processor->getName(), nullptr);
-    } else {
-        tree.setProperty(EffectTreeBase::IDs::name, "Effect", nullptr);
-    }
 
     // Position
     pos.referTo(tree, EffectTreeBase::IDs::pos, &undoManager);
@@ -644,7 +657,9 @@ void Effect::setupTitle() {
     title.setColour(title.textColourId, Colours::black);
     title.setEditable(true);
 
+
     title.onTextChange = [=]{
+        // Name change undoable action
         undoManager.beginNewTransaction("Name change to: " + title.getText(true));
         tree.setProperty(EffectTreeBase::IDs::name, title.getText(true), &undoManager);
     };
@@ -898,9 +913,6 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
-    std::cout << "new transaction" << newLine;
-    undoManager.beginNewTransaction(getName());
-
     if (event.mods.isLeftButtonDown()) {
         if (editMode) {
             //TODO make lasso functionality static
@@ -920,6 +932,7 @@ void Effect::mouseDown(const MouseEvent &event) {
         //TODO don't do this, call custom menu function
         getParentComponent()->mouseDown(event);
     }
+    EffectTreeBase::mouseDown(event);
 }
 
 void Effect::mouseDrag(const MouseEvent &event) {

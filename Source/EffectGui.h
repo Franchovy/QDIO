@@ -326,6 +326,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
     void setAudioConnection(AudioProcessorGraph::Connection connection) {
         audioConnection = connection;
     }
+
     const AudioProcessorGraph::Connection getAudioConnection() const {
         return audioConnection;
     }
@@ -337,8 +338,6 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
         static const Identifier ConnectionLineObject;
         static const Identifier AudioConnection;
     };
-
-
 
 private:
     Line<int> line;

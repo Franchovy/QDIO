@@ -42,6 +42,8 @@ void LineComponent::mouseDown(const MouseEvent &event) {
 
     setVisible(true);
     repaint();
+
+    getParentComponent()->mouseDown(event);
 }
 
 void LineComponent::mouseDrag(const MouseEvent &event) {

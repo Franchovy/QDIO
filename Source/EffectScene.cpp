@@ -105,7 +105,7 @@ void EffectScene::mouseDown(const MouseEvent &event) {
         lasso.setVisible(true);
         lasso.beginLasso(event, this);
     }
-    //Component::mouseDown(event);
+    EffectTreeBase::mouseDown(event);
 }
 
 
