@@ -654,9 +654,8 @@ void Effect::setupTitle() {
     Font titleFont(20, Font::FontStyleFlags::bold);
     title.setFont(titleFont);
     title.setBounds(30,30,200, title.getFont().getHeight());
-    title.setColour(title.textColourId, Colours::black);
     title.setEditable(true);
-
+    title.setText(tree.getProperty(EffectTreeBase::IDs::name), dontSendNotification);
 
     title.onTextChange = [=]{
         // Name change undoable action
@@ -962,13 +961,15 @@ void Effect::mouseDrag(const MouseEvent &event) {
             // Effect drag
             if (auto newParent = effectToMoveTo(event, tree.getParent())) {
                 // todo hoverOver undomanager
-                hoverOver(newParent);
-                tree.getParent().removeChild(tree, &undoManager);
-                newParent->getTree().appendChild(tree, &undoManager);
-                if (newParent != this) {
-                    SelectHoverObject::setHoverComponent(newParent);
-                } else {
-                    SelectHoverObject::resetHoverObject();
+                if (newParent != getFromTree<Effect>(tree.getParent())) {
+                    hoverOver(newParent);
+                    tree.getParent().removeChild(tree, &undoManager);
+                    newParent->getTree().appendChild(tree, &undoManager);
+                    if (newParent != this) {
+                        SelectHoverObject::setHoverComponent(newParent);
+                    } else {
+                        SelectHoverObject::resetHoverObject();
+                    }
                 }
             }
         } else if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
