@@ -299,10 +299,42 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
         return inPort == port ? outPort : inPort;
     }
 
-    ConnectionPort::Ptr inPort;
-    ConnectionPort::Ptr outPort;
+    ConnectionPort::Ptr getInPort() {
+        return inPort;
+    }
+
+    const ConnectionPort::Ptr getInPort() const {
+        return inPort;
+    }
+
+    ConnectionPort::Ptr getOutPort() {
+        return outPort;
+    }
+
+    const ConnectionPort::Ptr getOutPort() const {
+        return outPort;
+    }
+
+    void setInPort(ConnectionPort::Ptr newInPort) {
+        inPort = newInPort;
+    }
+
+    void setOutPort(ConnectionPort::Ptr newOutPort) {
+        outPort = newOutPort;
+    }
+
+    void setAudioConnection(AudioProcessorGraph::Connection connection) {
+        audioConnection = connection;
+    }
+    const AudioProcessorGraph::Connection getAudioConnection() const {
+        return audioConnection;
+    }
 private:
     Line<int> line;
+    AudioProcessorGraph::Connection audioConnection;
+
+    ConnectionPort::Ptr inPort;
+    ConnectionPort::Ptr outPort;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionLine)
 };

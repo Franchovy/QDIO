@@ -167,24 +167,50 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
     }
 }*/
 
-void EffectTreeBase::connectAudio(ConnectionLine& connectionLine) {
-    Effect::NodeAndPort in;
-    Effect::NodeAndPort out;
-    auto inEVT = dynamic_cast<Effect*>(connectionLine.inPort->getParentComponent());
-    auto outEVT = dynamic_cast<Effect*>(connectionLine.outPort->getParentComponent());
-
-    in = inEVT->getNode(connectionLine.inPort);
-    out = outEVT->getNode(connectionLine.outPort);
-
-    if (in.isValid && out.isValid) {
-        for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(), EffectTreeBase::audioGraph->getTotalNumOutputChannels()); c++) {
-            AudioProcessorGraph::Connection connection = {{in.node->nodeID, in.port->bus->getChannelIndexInProcessBlockBuffer(c)},
-                                                          {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(c)}};
-            if (!EffectTreeBase::audioGraph->isConnected(connection) && EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
-                EffectTreeBase::audioGraph->addConnection(connection);
-            }
+bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
+    for (auto connection : getAudioConnection(connectionLine)) {
+        if (!EffectTreeBase::audioGraph->isConnected(connection) &&
+            EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
+            // Make audio connection
+            return EffectTreeBase::audioGraph->addConnection(connection);
         }
     }
+}
+
+void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
+    for (auto connection : getAudioConnection(connectionLine)) {
+        if (audioGraph->isConnected(connectionLine.getAudioConnection())) {
+            audioGraph->removeConnection(connectionLine.getAudioConnection());
+        }
+    }
+}
+
+Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const ConnectionLine& connectionLine) {
+    Effect::NodeAndPort in;
+    Effect::NodeAndPort out;
+
+    auto inPort = connectionLine.getInPort();
+    auto outPort = connectionLine.getOutPort();
+
+    auto inEVT = dynamic_cast<Effect *>(inPort->getParentComponent());
+    auto outEVT = dynamic_cast<Effect *>(outPort->getParentComponent());
+
+    in = inEVT->getNode(inPort);
+    out = outEVT->getNode(outPort);
+
+    auto returnArray = Array<AudioProcessorGraph::Connection>();
+
+    if (in.isValid && out.isValid) {
+        for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(),
+                                 EffectTreeBase::audioGraph->getTotalNumOutputChannels()); c++) {
+            AudioProcessorGraph::Connection connection = {{in.node->nodeID,  in.port->bus->getChannelIndexInProcessBlockBuffer(
+                    c)},
+                                                          {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(
+                                                                  c)}};
+            returnArray.add(connection);
+        }
+    }
+    return returnArray;
 }
 
 void EffectTreeBase::initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
@@ -225,15 +251,18 @@ Point<int> EffectTreeBase::dragDetachFromParentComponent() {
 
 void EffectTreeBase::createConnection(std::unique_ptr<ConnectionLine> line) {
     // Add connection to this object
-    addAndMakeVisible(line.get());
     auto nline = connections.add(move(line));
+    addChildComponent(nline);
 
-    auto connectionsList = Array<ConnectionLine*>(tree.getProperty(IDs::connections).getArray());
-    connectionsList.add(line.get());
-    tree.setProperty(IDs::connections, connectionsList, &undoManager);
+    std::cout << "Check 0: " << nline->isVisible() << newLine;
 
-    // Update audiograph
-    connectAudio(*nline);
+    // Update tree data
+    auto newList = connectionsList.get();
+    newList.add(line.get());
+
+    undoManager.beginNewTransaction("Connection");
+    connectionsList.setValue(newList, &undoManager);
+
 }
 
 PopupMenu EffectTreeBase::getEffectSelectMenu() {
@@ -283,6 +312,51 @@ void EffectTreeBase::newEffect(String name, int processorID) {
     this->getTree().appendChild(newEffect, &undoManager);
 }
 
+void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    if (property == IDs::connections) {
+        auto activeConnections = ConnectionVar::fromVarArray(connectionsList.get());
+
+        std::cout << "update" << newLine;
+
+        for (auto connection : connections) {
+            // Connections removed from activeConnections
+            if (connection->isVisible() && ! activeConnections.contains(connection)) {
+                // manipulate audio
+                std::cout << "remove!" << newLine;
+                // remove from activeConnections
+            }
+            // Connections added to activeConnections
+            if (! connection->isVisible() && activeConnections.contains(connection)) {
+                // manipulate audio
+                std::cout << "add!" << newLine;
+                // add to activeConnections
+            }
+        }
+
+
+        // Depending on if connection is visible or not, make or remove the audio connections.
+        /*for (auto connection : connections) {
+            // Get connections to make or remove
+            auto audioConnections = getAudioConnection(*connection);
+            for (auto audioConnection : audioConnections) {
+                // If connection is visible it should be created
+                if (connection->isVisible() && ! audioGraph->isConnected(audioConnection)) {
+                    if (audioGraph->isConnectionLegal(audioConnection)) {
+                        audioGraph->addConnection(audioConnection);
+                    }
+                }
+                // If connection is not visible it should be removed
+                else if (! connection->isVisible() && audioGraph->isConnected(audioConnection)) {
+                    audioGraph->removeConnection(audioConnection);
+                }
+            }
+        }*/
+    }
+
+    //Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
+}
+
+
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     // if effect has been created already
     if (childWhichHasBeenAdded.hasProperty(IDs::initialised)) {
@@ -306,11 +380,6 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     }
 }
 
-template<class T>
-T *EffectTreeBase::getFromTree(const ValueTree &vt) {
-    return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
-}
-
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
     auto test = childWhichHasBeenRemoved.hasProperty(IDs::effectTreeBase);
@@ -329,6 +398,18 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
     }
 }
 
+template<class T>
+T *EffectTreeBase::getFromTree(const ValueTree &vt) {
+    return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
+}
+
+template<class T>
+T *EffectTreeBase::getPropertyFromTree(const ValueTree &vt, Identifier property) {
+    return dynamic_cast<T*>(vt.getProperty(property).getObject());
+}
+
+
+
 bool EffectTreeBase::keyPressed(const KeyPress &key) {
 
     if (key.getKeyCode() == 's') {
@@ -343,11 +424,10 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
         }
     }
     if (key.getKeyCode() == KeyPress::deleteKey) {
-        for (auto selectedItem : selected.getItemArray()) {
+        for (const auto& selectedItem : selected.getItemArray()) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
-                // TODO delete (undoable) line
-                l->setVisible(false);
-
+                connectionsList->remove(ConnectionVar::toVar(l));
+                std::cout << "update expected here." << newLine;
             }
         }
     }
@@ -449,17 +529,6 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
     }
 }
 
-void EffectTreeBase::disconnectAudio(ConnectionLine &connectionLine) {
-
-}
-
-void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    if (property == IDs::connections) {
-        std::cout << "Connections changed" << newLine;
-    }
-
-    //Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
-}
 
 
 /*void GuiEffect::parentHierarchyChanged() {
@@ -1067,12 +1136,31 @@ var Position::toVar(const Point<int> &t) {
     return v;
 }
 
-ConnectionLine* Connection::fromVar(const var &v) {
 
+Array<ConnectionLine *> ConnectionVar::fromVarArray(const var &v) {
+    Array<var>* varArray = v.getArray();
+    Array<ConnectionLine*> array;
+    for (auto i : *varArray) {
+        array.add(dynamic_cast<ConnectionLine*>(i.getObject()));
+    }
 
+    return array;
 }
 
-var Connection::toVar(const ConnectionLine* &t) {
+var ConnectionVar::toVarArray(const Array<ConnectionLine *> &t) {
+    Array<var> varArray;
+    for (auto i : t) {
+        varArray.add(i);
+    }
 
-    return var();
+    return varArray;
+}
+
+ConnectionLine *ConnectionVar::fromVar(const var &v) {
+    return dynamic_cast<ConnectionLine*>(v.getObject());
+}
+
+var ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
+    var v = t.get();
+    return v;
 }

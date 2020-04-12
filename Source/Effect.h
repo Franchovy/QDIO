@@ -19,10 +19,13 @@
 class Effect;
 
 
-struct Connection : public VariantConverter<ConnectionLine*>
+struct ConnectionVar : public VariantConverter<Array<ConnectionLine*>>
 {
+    static Array<ConnectionLine*> fromVarArray (const var &v);
+    static var toVarArray (const Array<ConnectionLine*> &t);
     static ConnectionLine* fromVar (const var &v);
-    static var toVar (const ConnectionLine* &t);
+    static var toVar (const ConnectionLine::Ptr &t);
+
 };
 
 /**
@@ -39,7 +42,8 @@ public:
         tree.setProperty(IDs::effectTreeBase, this, nullptr);
         setWantsKeyboardFocus(true);
 
-        tree.setProperty(IDs::connections, Array<var>(), nullptr);
+        connectionsList.referTo(tree, IDs::connections, nullptr);
+        //tree.setProperty(IDs::connections, Array<var>(), nullptr);
 
         dragLine.setAlwaysOnTop(true);
         LineComponent::setDragLine(&dragLine);
@@ -48,6 +52,8 @@ public:
     explicit EffectTreeBase(Identifier id) : tree(id) {
         tree.setProperty(IDs::effectTreeBase, this, nullptr);
         setWantsKeyboardFocus(true);
+
+        connectionsList.referTo(tree, IDs::connections, nullptr);
 
         dragLine.setAlwaysOnTop(true);
         LineComponent::setDragLine(&dragLine);
@@ -60,7 +66,7 @@ public:
     static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
                                 std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
     static void close();
-    virtual void resized() override = 0;
+    void resized() override = 0;
 
     bool keyPressed(const KeyPress &key) override;
 
@@ -83,9 +89,13 @@ public:
     template<class T>
     static T* getFromTree(const ValueTree& vt);
 
+    template <class T>
+    static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
+
 protected:
     ValueTree tree;
     OwnedArray<ConnectionLine> connections;
+    CachedValue<Array<var>> connectionsList;
 
     //====================================================================================
     // Menu stuff
@@ -113,8 +123,9 @@ protected:
     static ConnectionPort::Ptr portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
-    static void disconnectAudio(ConnectionLine& connectionLine);
-    static void connectAudio(ConnectionLine& connectionLine);
+    static void disconnectAudio(const ConnectionLine& connectionLine);
+    static bool connectAudio(const ConnectionLine& connectionLine);
+    static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
     static std::unique_ptr<AudioDeviceManager> deviceManager;
     static std::unique_ptr<AudioProcessorPlayer> processorPlayer;
