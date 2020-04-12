@@ -63,21 +63,23 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
         // Check if children match
         for (int i = 0; i < effectTree.getNumChildren(); i++) {
             auto childTree = effectTree.getChild(i);
-            auto child = getFromTree<EffectTreeBase>(childTree);
-            auto childEvent = event.getEventRelativeTo(child);
+            if (childTree.hasType(Effect::IDs::EFFECT_ID)) {
+                auto child = getFromTree<EffectTreeBase>(childTree);
+                auto childEvent = event.getEventRelativeTo(child);
 
-            if (child != nullptr
-                && child->contains(childEvent.getPosition())
-                && child != event.originalComponent) {
-                // Add any filters here
-                // Must be in edit mode
-                if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
+                if (child != nullptr
+                    && child->contains(childEvent.getPosition())
+                    && child != event.originalComponent) {
+                    // Add any filters here
+                    // Must be in edit mode
+                    if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
 
-                // Check if there's a match in the children (sending child component coordinates)
-                if (auto e = effectToMoveTo(childEvent, childTree))
-                    return e;
-                else
-                    return child;
+                    // Check if there's a match in the children (sending child component coordinates)
+                    if (auto e = effectToMoveTo(childEvent, childTree))
+                        return e;
+                    else
+                        return child;
+                }
             }
         }
     }
@@ -366,8 +368,10 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                 if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                     if (!parent->getChildren().contains(e)) {
                         std::cout << "Add child to parent" << newLine;
+
                         e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
 
+                        std::cout << "Set pos to: " << e->getPosition().toString() << newLine;
                         parent->addAndMakeVisible(e);
                     }
                 }
@@ -409,11 +413,10 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
         if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
             if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                 std::cout << "Child removed" << newLine;
+                std::cout << "Pos: " << e->getPosition().toString() << newLine;
 
                 // Adjust position
                 //e->setTopLeftPosition(e->getPosition() + parent->getPosition());
-
-                //TODO remove connections
 
                 e->setVisible(false);
             }
