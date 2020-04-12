@@ -15,6 +15,11 @@ ComponentSelection SelectHoverObject::selected;
 ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 LineComponent* LineComponent::dragLine = nullptr;
 
+const Identifier ConnectionLine::IDs::CONNECTION_ID = "connection";
+const Identifier ConnectionLine::IDs::ConnectionLineObject = "connectionLineObject";
+const Identifier ConnectionLine::IDs::InPort = "inport";
+const Identifier ConnectionLine::IDs::OutPort = "outport";
+const Identifier ConnectionLine::IDs::AudioConnection = "audioConnection";
 
 
 //==============================================================================

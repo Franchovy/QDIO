@@ -329,6 +329,17 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
     const AudioProcessorGraph::Connection getAudioConnection() const {
         return audioConnection;
     }
+
+    struct IDs {
+        static const Identifier CONNECTION_ID;
+        static const Identifier InPort;
+        static const Identifier OutPort;
+        static const Identifier ConnectionLineObject;
+        static const Identifier AudioConnection;
+    };
+
+
+
 private:
     Line<int> line;
     AudioProcessorGraph::Connection audioConnection;

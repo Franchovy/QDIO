@@ -42,9 +42,6 @@ public:
         tree.setProperty(IDs::effectTreeBase, this, nullptr);
         setWantsKeyboardFocus(true);
 
-        connectionsList.referTo(tree, IDs::connections, nullptr);
-        //tree.setProperty(IDs::connections, Array<var>(), nullptr);
-
         dragLine.setAlwaysOnTop(true);
         LineComponent::setDragLine(&dragLine);
     }
@@ -53,15 +50,13 @@ public:
         tree.setProperty(IDs::effectTreeBase, this, nullptr);
         setWantsKeyboardFocus(true);
 
-        connectionsList.referTo(tree, IDs::connections, nullptr);
-
         dragLine.setAlwaysOnTop(true);
         LineComponent::setDragLine(&dragLine);
     }
 
     ~EffectTreeBase() override;
 
-    void createConnection(std::unique_ptr<ConnectionLine> line);
+    void createConnection(ConnectionLine::Ptr line);
 
     static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
                                 std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
@@ -94,8 +89,6 @@ public:
 
 protected:
     ValueTree tree;
-    OwnedArray<ConnectionLine> connections;
-    CachedValue<ReferenceCountedArray<ConnectionLine>> connectionsList;
 
     //====================================================================================
     // Menu stuff
@@ -219,6 +212,10 @@ public:
     AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
     bool isIndividual() const { return processor != nullptr; }
+
+    struct IDs {
+        static const Identifier EFFECT_ID;
+    };
 
 private:
     // Used for an individual processor Effect. - does not contain anything else
