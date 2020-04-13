@@ -46,7 +46,7 @@ public:
 
     void deleteEffect(Effect* e);
 
-    AudioDeviceManager& getDeviceManager() { return *deviceManager.get(); }
+    AudioDeviceManager& getDeviceManager() { return deviceManager; }
 
 private:
     //==============================================================================
@@ -143,7 +143,6 @@ private:
     ImageButton settingsButton;
 
     EffectScene main;
-    UndoManager undoManager;
 
     SettingsComponent settingsMenu;
 

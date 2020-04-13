@@ -106,9 +106,9 @@ protected:
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
-    static std::unique_ptr<AudioDeviceManager> deviceManager;
-    static std::unique_ptr<AudioProcessorPlayer> processorPlayer;
-    static std::unique_ptr<AudioProcessorGraph> audioGraph;
+    static AudioDeviceManager deviceManager;
+    static AudioProcessorPlayer processorPlayer;
+    static AudioProcessorGraph audioGraph;
 
     static UndoManager undoManager;
 
@@ -198,7 +198,7 @@ public:
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
-    AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
+    AudioProcessor::Bus* getDefaultBus() { audioGraph.getBus(true, 0); }
 
     bool isIndividual() const { return processor != nullptr; }
 

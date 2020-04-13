@@ -12,15 +12,12 @@ EffectScene::EffectScene() :
 
     // Set up static members
 
-    audioGraph = std::make_unique<AudioProcessorGraph>();
-    audioGraph->enableAllBuses();
+    audioGraph.enableAllBuses();
 
-    deviceManager = std::make_unique<AudioDeviceManager>();
-    deviceManager->initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS).get(), true);
+    deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS).get(), true);
 
-    processorPlayer = std::make_unique<AudioProcessorPlayer>();
-    deviceManager->addAudioCallback(processorPlayer.get());
-    processorPlayer->setProcessor(audioGraph.get());
+    deviceManager.addAudioCallback(&processorPlayer);
+    processorPlayer.setProcessor(&audioGraph);
 
 
 
@@ -60,16 +57,6 @@ EffectScene::~EffectScene()
     // Save screen state
     //auto savedState = getAppProperties().getUserSettings()->setXmlValue (KEYNAME_LOADED_EFFECTS);
 
-    // kinda messy managing one's own ReferenceCountedObject property.
-    /*jassert(getReferenceCount() == 1);
-    incReferenceCount();
-    tree.removeProperty(ID_EFFECT_GUI, nullptr);
-    decReferenceCountWithoutDeleting();*/
-
-    // Whatever, when effectscene is called to delete it should be cause the application is closing. Forget leftover references.
-    /*for (int i = 1; i < getReferenceCount(); i++) {
-        decReferenceCountWithoutDeleting();
-    }*/
 }
 
 //==============================================================================

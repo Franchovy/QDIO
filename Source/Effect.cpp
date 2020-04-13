@@ -11,9 +11,9 @@
 #include "Effect.h"
 
 // Static members
-std::unique_ptr<AudioProcessorGraph> EffectTreeBase::audioGraph = nullptr;
-std::unique_ptr<AudioProcessorPlayer> EffectTreeBase::processorPlayer = nullptr;
-std::unique_ptr<AudioDeviceManager> EffectTreeBase::deviceManager = nullptr;
+AudioProcessorGraph EffectTreeBase::audioGraph;
+AudioProcessorPlayer EffectTreeBase::processorPlayer;
+AudioDeviceManager EffectTreeBase::deviceManager;
 UndoManager EffectTreeBase::undoManager;
 LineComponent EffectTreeBase::dragLine;
 
@@ -173,18 +173,18 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
 
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
-        if (!EffectTreeBase::audioGraph->isConnected(connection) &&
-            EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
+        if (!EffectTreeBase::audioGraph.isConnected(connection) &&
+            EffectTreeBase::audioGraph.isConnectionLegal(connection)) {
             // Make audio connection
-            return EffectTreeBase::audioGraph->addConnection(connection);
+            return EffectTreeBase::audioGraph.addConnection(connection);
         }
     }
 }
 
 void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
-        if (audioGraph->isConnected(connection)) {
-            audioGraph->removeConnection(connection);
+        if (audioGraph.isConnected(connection)) {
+            audioGraph.removeConnection(connection);
         }
     }
 }
@@ -205,8 +205,8 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     auto returnArray = Array<AudioProcessorGraph::Connection>();
 
     if (in.isValid && out.isValid) {
-        for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(),
-                                 EffectTreeBase::audioGraph->getTotalNumOutputChannels()); c++) {
+        for (int c = 0; c < jmin(EffectTreeBase::audioGraph.getTotalNumInputChannels(),
+                                 EffectTreeBase::audioGraph.getTotalNumOutputChannels()); c++) {
             AudioProcessorGraph::Connection connection = {{in.node->nodeID,  in.port->bus->getChannelIndexInProcessBlockBuffer(
                     c)},
                                                           {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(
@@ -221,13 +221,8 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
 void EffectTreeBase::close() {
     SelectHoverObject::close();
 
-    processorPlayer->setProcessor(nullptr);
-    deviceManager->closeAudioDevice();
-
-    deviceManager.
-    deviceManager.release();
-    processorPlayer.release();
-    audioGraph.release();
+    processorPlayer.setProcessor(nullptr);
+    deviceManager.closeAudioDevice();
 }
 
 Point<int> EffectTreeBase::dragDetachFromParentComponent() {
@@ -330,14 +325,14 @@ void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasCha
             auto audioConnections = getAudioConnection(*connection);
             for (auto audioConnection : audioConnections) {
                 // If connection is visible it should be created
-                if (connection->isVisible() && ! audioGraph->isConnected(audioConnection)) {
-                    if (audioGraph->isConnectionLegal(audioConnection)) {
-                        audioGraph->addConnection(audioConnection);
+                if (connection->isVisible() && ! audioGraph.isConnected(audioConnection)) {
+                    if (audioGraph.isConnectionLegal(audioConnection)) {
+                        audioGraph.addConnection(audioConnection);
                     }
                 }
                 // If connection is not visible it should be removed
-                else if (! connection->isVisible() && audioGraph->isConnected(audioConnection)) {
-                    audioGraph->removeConnection(audioConnection);
+                else if (! connection->isVisible() && audioGraph.isConnected(audioConnection)) {
+                    audioGraph.removeConnection(audioConnection);
                 }
             }
         }*//*
@@ -426,7 +421,7 @@ T *EffectTreeBase::getPropertyFromTree(const ValueTree &vt, Identifier property)
 bool EffectTreeBase::keyPressed(const KeyPress &key) {
     if (key.getKeyCode() == 's') {
         std::cout << "Audiograph status: " << newLine;
-        for (auto node : audioGraph->getNodes()) {
+        for (auto node : audioGraph.getNodes()) {
             if (node != nullptr) {
                 std::cout << "node: " << node->nodeID.uid << newLine;
                 std::cout << node->getProcessor()->getName() << newLine;
@@ -615,7 +610,7 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
             default:
                 std::cout << "ProcessorID not found." << newLine;
         }
-        node = audioGraph->addNode(move(newProcessor));
+        node = audioGraph.addNode(move(newProcessor));
 
         // Create from node:
         setProcessor(node->getProcessor());
@@ -699,7 +694,7 @@ void Effect::setupMenu() {
 Effect::~Effect()
 {
     // Delete processor from graph
-    audioGraph->removeNode(node->nodeID);
+    audioGraph.removeNode(node->nodeID);
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -711,8 +706,8 @@ void Effect::setProcessor(AudioProcessor *processor) {
     node->getProcessor()->setPlayConfigDetails(
             processor->getTotalNumInputChannels(),
             processor->getTotalNumOutputChannels(),
-            audioGraph->getSampleRate(),
-            audioGraph->getBlockSize());
+            audioGraph.getSampleRate(),
+            audioGraph.getBlockSize());
 
     // Set up ports based on processor buses
     int numInputBuses = processor->getBusCount(true );

@@ -205,9 +205,7 @@ class ConnectionPort : public SelectHoverObject
 public:
     using Ptr = ReferenceCountedObjectPtr<ConnectionPort>;
 
-    ~ConnectionPort(){
-
-    }
+    ~ConnectionPort() = default;
 
     Point<int> centrePoint;
 
@@ -312,7 +310,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
 
     bool hitTest(int x, int y) override;
 
-    ConnectionPort::Ptr getOtherPort(ConnectionPort::Ptr port) {
+    ConnectionPort::Ptr getOtherPort(const ConnectionPort::Ptr& port) {
         return inPort == port ? outPort : inPort;
     }
 
@@ -320,7 +318,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
         return inPort;
     }
 
-    const ConnectionPort::Ptr getInPort() const {
+    ConnectionPort::Ptr getInPort() const {
         return inPort;
     }
 
@@ -328,7 +326,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
         return outPort;
     }
 
-    const ConnectionPort::Ptr getOutPort() const {
+    ConnectionPort::Ptr getOutPort() const {
         return outPort;
     }
 
@@ -344,7 +342,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
         audioConnection = connection;
     }
 
-    const AudioProcessorGraph::Connection getAudioConnection() const {
+    AudioProcessorGraph::Connection getAudioConnection() const {
         return audioConnection;
     }
 
@@ -427,7 +425,7 @@ class GuiParameter : public GuiObject
 class ButtonListener : public Button::Listener
 {
 public:
-    ButtonListener(AudioProcessorParameter* parameter) : Button::Listener() {
+    explicit ButtonListener(AudioProcessorParameter* parameter) : Button::Listener() {
         linkedParameter = parameter;
     }
 
@@ -443,7 +441,7 @@ private:
 class ComboListener : public ComboBox::Listener
 {
 public:
-    ComboListener(AudioProcessorParameter* parameter) : ComboBox::Listener(){
+    explicit ComboListener(AudioProcessorParameter* parameter) : ComboBox::Listener(){
         linkedParameter = parameter;
     }
 
@@ -459,7 +457,7 @@ private:
 class SliderListener : public Slider::Listener
 {
 public:
-    SliderListener(AudioProcessorParameter* parameter) : Slider::Listener(){
+    explicit SliderListener(AudioProcessorParameter* parameter) : Slider::Listener(){
         linkedParameter = parameter;
     }
 
