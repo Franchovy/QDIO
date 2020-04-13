@@ -9,3 +9,44 @@
 */
 
 #pragma once
+
+#include <JuceHeader.h>
+
+class SettingsComponent : public Component
+{
+public:
+    explicit SettingsComponent(AudioDeviceManager& dm) : deviceSelectorMenu(dm, 0, 2, 0, 2, false, false, true, false) {
+        addAndMakeVisible(closeButton);
+        addAndMakeVisible(deviceSelectorMenu);
+
+        auto image = ImageCache::getFromMemory (BinaryData::close_png, BinaryData::close_pngSize);
+
+        closeButton.setImages(false, true, false,
+                                 image, 1.0f, Colours::grey, image, 1.0f, Colours::lightgrey,
+                                 image, 1.0f, Colours::darkgrey);
+
+
+        setSize(800, 450);
+    }
+
+    ImageButton& getCloseButton() { return closeButton; }
+
+    void paint(Graphics& g) override {
+        g.setColour(Colours::whitesmoke);
+        g.drawRoundedRectangle(outline, 5, 1);
+    }
+
+    void resized() override {
+        outline.setBounds(0, 0, getWidth(), getHeight());
+        closeButton.setBounds(getWidth() - 30, 10, 20, 20);
+        deviceSelectorMenu.setBounds(10, 30, getWidth() - 10, getHeight() - 10);
+    }
+
+private:
+    Rectangle<float> outline;
+    AudioDeviceSelectorComponent deviceSelectorMenu;
+    ImageButton closeButton;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SettingsComponent)
+};
+

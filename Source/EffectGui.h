@@ -25,6 +25,14 @@ class GuiObject : public ReferenceCountedObject, public Component
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<GuiObject>;
+
+    GuiObject() = default;
+    ~GuiObject() override {
+        resetReferenceCount();
+    }
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuiObject)
 };
 
 /**
@@ -35,6 +43,7 @@ class ComponentSelection : public SelectedItemSet<GuiObject::Ptr>
 {
 public:
     ComponentSelection() = default;
+    ~ComponentSelection() = default;
 
     void clear() {
         SelectedItemSet<GuiObject::Ptr>::deselectAll();
@@ -43,6 +52,7 @@ public:
     void itemSelected(GuiObject::Ptr type) override;
     void itemDeselected(GuiObject::Ptr type) override;
 
+private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
 };
 
@@ -72,8 +82,13 @@ protected:
     static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
     static ComponentSelection selected;
 
+    static void close();
+
     bool hoverMode = false;
     bool selectMode = false;
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectHoverObject)
 };
 
 
@@ -219,6 +234,7 @@ protected:
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
 
+private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionPort)
 };
 
@@ -240,7 +256,7 @@ public:
 
     bool canConnect(ConnectionPort::Ptr& other) override;
     AudioPort* audioPort;
-
+private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InternalConnectionPort)
 };
 
@@ -260,6 +276,7 @@ public:
 
     bool canConnect(ConnectionPort::Ptr& other) override;
 
+private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)
 
     void mouseDown(const MouseEvent &event) override;

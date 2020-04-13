@@ -9,22 +9,36 @@ EffectScene::EffectScene() :
     setName("MainWindow");
     setSize (4000, 4000);
 
+
+    // Set up static members
+
+    audioGraph = std::make_unique<AudioProcessorGraph>();
+    audioGraph->enableAllBuses();
+
+    deviceManager = std::make_unique<AudioDeviceManager>();
+    deviceManager->initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS).get(), true);
+
+    processorPlayer = std::make_unique<AudioProcessorPlayer>();
+    deviceManager->addAudioCallback(processorPlayer.get());
+    processorPlayer->setProcessor(audioGraph.get());
+
+
+
     setMouseClickGrabsKeyboardFocus(true);
 
-    //========================================================================================
     // Drag Line GUI
     addChildComponent(lasso);
 
-    //========================================================================================
     // Manage EffectsTree
-
     tree.addListener(this);
 
 #define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
 
+
+
     //========================================================================================
-    // Manage Audio
+    // MIDI example code
 
     //auto inputDevice  = MidiInput::getDevices()  [MidiInput::getDefaultDeviceIndex()];
     //auto outputDevice = MidiOutput::getDevices() [MidiOutput::getDefaultDeviceIndex()];
@@ -35,32 +49,10 @@ EffectScene::EffectScene() :
 
 
     //==============================================================================
-    // DeviceSelector GUI
-
-    //TODO custom Device selector (without GUIWrapper)
-    /*deviceSelector(*deviceManager, 0,2,0,2,false,false,true,false);
-            deviceSelectorComponent(true);
-
-    deviceSelectorComponent->addAndMakeVisible(deviceSelector);
-    deviceSelectorComponent.setTitle("Device Settings");
-    deviceSelectorComponent.setSize(deviceSelector.getWidth(), deviceSelector.getHeight()+150);
-    deviceSelectorComponent.closeButton.onClick = [=]{
-        deviceSelectorComponent.setVisible(false);
-        auto audioState = deviceManager->createStateXml();
-
-        getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
-        getAppProperties().getUserSettings()->saveIfNeeded();
-    };
-    addChildComponent(deviceSelectorComponent);
-*/
-
-    //==============================================================================
     // Main component popup menu
     PopupMenu createEffectSubmenu = getEffectSelectMenu();
     mainMenu.addSubMenu("Create Effect", createEffectSubmenu);
-    /*mainMenu.addItem("Toggle Settings", [=](){
-        //deviceSelectorComponent.setVisible(!deviceSelectorComponent.isVisible());
-    });*/
+
 }
 
 EffectScene::~EffectScene()
@@ -69,10 +61,15 @@ EffectScene::~EffectScene()
     //auto savedState = getAppProperties().getUserSettings()->setXmlValue (KEYNAME_LOADED_EFFECTS);
 
     // kinda messy managing one's own ReferenceCountedObject property.
-    jassert(getReferenceCount() == 1);
+    /*jassert(getReferenceCount() == 1);
     incReferenceCount();
     tree.removeProperty(ID_EFFECT_GUI, nullptr);
-    decReferenceCountWithoutDeleting();
+    decReferenceCountWithoutDeleting();*/
+
+    // Whatever, when effectscene is called to delete it should be cause the application is closing. Forget leftover references.
+    /*for (int i = 1; i < getReferenceCount(); i++) {
+        decReferenceCountWithoutDeleting();
+    }*/
 }
 
 //==============================================================================

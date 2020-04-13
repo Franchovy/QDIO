@@ -224,7 +224,13 @@ SelectHoverObject::SelectHoverObject() {
 }
 
 SelectHoverObject::~SelectHoverObject() {
+    removeSelectObject(this);
+
     componentsToSelect.removeObject(this);
+
+    for (auto i : componentsToSelect) {
+        std::cout << "c: " << i->getName() << newLine;
+    }
 
     if (hoverComponent == this){
         hoverComponent = nullptr;
@@ -261,4 +267,10 @@ void SelectHoverObject::addSelectObject(SelectHoverObject *item) {
 
 void SelectHoverObject::removeSelectObject(SelectHoverObject *item) {
     selected.deselect(item);
+}
+
+void SelectHoverObject::close() {
+    componentsToSelect.clear();
+    selected.clear();
+    hoverComponent = nullptr;
 }

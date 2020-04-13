@@ -37,29 +37,14 @@ struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionL
 class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
 {
 public:
-    explicit EffectTreeBase(ValueTree &vt) {
-        tree = vt;
-        tree.setProperty(IDs::effectTreeBase, this, nullptr);
-        setWantsKeyboardFocus(true);
+    explicit EffectTreeBase(ValueTree &vt);
 
-        dragLine.setAlwaysOnTop(true);
-        LineComponent::setDragLine(&dragLine);
-    }
-
-    explicit EffectTreeBase(Identifier id) : tree(id) {
-        tree.setProperty(IDs::effectTreeBase, this, nullptr);
-        setWantsKeyboardFocus(true);
-
-        dragLine.setAlwaysOnTop(true);
-        LineComponent::setDragLine(&dragLine);
-    }
+    explicit EffectTreeBase(Identifier id);
 
     ~EffectTreeBase() override;
 
     void createConnection(ConnectionLine::Ptr line);
 
-    static void initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
-                                std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> ptr);
     static void close();
     void resized() override = 0;
 
@@ -136,6 +121,9 @@ protected:
         static const Identifier name;
         static const Identifier connections;
     };
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTreeBase)
 };
 
 struct Position : public VariantConverter<Point<int>>

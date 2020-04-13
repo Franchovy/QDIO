@@ -14,12 +14,12 @@
 #include <BinaryData.h>
 
 #include "Effect.h"
+#include "Settings.h"
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
 
 const String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
-const String KEYNAME_LOADED_EFFECTS = "loadedEffects";
 
 
 /**
@@ -32,7 +32,7 @@ public:
 
     //==============================================================================
     EffectScene();
-    ~EffectScene();
+    ~EffectScene() override;
 
     //==============================================================================
     // Component overrides
@@ -46,7 +46,7 @@ public:
 
     void deleteEffect(Effect* e);
 
-    //==============================================================================
+    AudioDeviceManager& getDeviceManager() { return *deviceManager.get(); }
 
 private:
     //==============================================================================
@@ -54,14 +54,10 @@ private:
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
     using Node = AudioProcessorGraph::Node;
 
-    //std::unique_ptr<AudioDeviceSelectorComponent> deviceSelector;
-    //GUIWrapper deviceSelectorComponent;
     Image bg;
 
-
-    //==============================================================================
-
     PopupMenu mainMenu;
+
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)
@@ -75,21 +71,11 @@ private:
 class MainComponent : public Viewport, private Timer
 {
 public:
-    MainComponent()
+    MainComponent() : main(), settingsMenu(main.getDeviceManager())
     {
-        auto savedState = getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS);
-
-        main.initialiseAudio(
-                std::make_unique<AudioProcessorGraph>(),
-                std::make_unique<AudioDeviceManager>(),
-                std::make_unique<AudioProcessorPlayer>(),
-                std::move(savedState)
-        );
-
         setViewedComponent(&main);
         addAndMakeVisible(main);
         setBounds(0,0, 1920, 1080);
-
 
         auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
 
@@ -99,11 +85,28 @@ public:
         addAndMakeVisible(settingsButton);
         settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
 
+        settingsMenu.setTopRightPosition(getWidth() - 40, 40);
+        addChildComponent(settingsMenu);
+        settingsButton.onClick = [=] {
+            settingsMenu.setVisible(true);
+            settingsButton.setVisible(false);
+        };
+
+        settingsMenu.getCloseButton().onClick = [=] {
+            settingsMenu.setVisible(false);
+            settingsButton.setVisible(true);
+        };
+
         startTimer(3);
     }
 
-    ~MainComponent(){
-        main.close();
+    ~MainComponent() override {
+        auto audioState = main.getDeviceManager().createStateXml();
+
+        getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
+        getAppProperties().getUserSettings()->saveIfNeeded();
+
+        EffectTreeBase::close();
     }
 
 private:
@@ -142,4 +145,8 @@ private:
     EffectScene main;
     UndoManager undoManager;
 
+    SettingsComponent settingsMenu;
+
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

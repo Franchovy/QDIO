@@ -217,25 +217,14 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     return returnArray;
 }
 
-void EffectTreeBase::initialiseAudio(std::unique_ptr<AudioProcessorGraph> graph, std::unique_ptr<AudioDeviceManager> dm,
-                                     std::unique_ptr<AudioProcessorPlayer> pp, std::unique_ptr<XmlElement> savedState)
-{
-    audioGraph = move(graph);
-    audioGraph->enableAllBuses();
-
-    EffectTreeBase::deviceManager = move(dm);
-    deviceManager->initialise (256, 256, savedState.get(), true);
-
-    EffectTreeBase::processorPlayer = move(pp);
-    deviceManager->addAudioCallback (processorPlayer.get());
-    processorPlayer->setProcessor (audioGraph.get());
-
-}
 
 void EffectTreeBase::close() {
+    SelectHoverObject::close();
+
     processorPlayer->setProcessor(nullptr);
     deviceManager->closeAudioDevice();
 
+    deviceManager.
     deviceManager.release();
     processorPlayer.release();
     audioGraph.release();
@@ -386,10 +375,6 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         ConnectionLine* line;
         // Add connection here
         if (! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
-            if (! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::InPort)
-                || ! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::OutPort)) {
-                std::cout << "FUCK YOU!!!!" << newLine;
-            }
             auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
 
@@ -472,10 +457,10 @@ EffectTreeBase::~EffectTreeBase() {
     tree.removeAllProperties(&undoManager);
 
     // Warning: may be a bad move.
-    if (getReferenceCount() > 0) {
+    /*if (getReferenceCount() > 0) {
         std::cout << "Warning: Reference count greater than zero. Exceptions may occur" << newLine;
         resetReferenceCount();
-    }
+    }*/
 }
 
 
@@ -564,6 +549,22 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
     }
 }
 
+EffectTreeBase::EffectTreeBase(ValueTree &vt) {
+        tree = vt;
+        tree.setProperty(IDs::effectTreeBase, this, nullptr);
+        setWantsKeyboardFocus(true);
+
+        dragLine.setAlwaysOnTop(true);
+        LineComponent::setDragLine(&dragLine);
+}
+
+EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
+    tree.setProperty(IDs::effectTreeBase, this, nullptr);
+    setWantsKeyboardFocus(true);
+
+    dragLine.setAlwaysOnTop(true);
+    LineComponent::setDragLine(&dragLine);
+}
 
 
 /*void GuiEffect::parentHierarchyChanged() {
