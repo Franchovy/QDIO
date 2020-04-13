@@ -19,12 +19,12 @@ LineComponent EffectTreeBase::dragLine;
 
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
-const Identifier EffectTreeBase::IDs::pos = "pos";
-const Identifier EffectTreeBase::IDs::processorID = "processor";
-const Identifier EffectTreeBase::IDs::initialised = "initialised";
-const Identifier EffectTreeBase::IDs::name = "name";
-const Identifier EffectTreeBase::IDs::connections = "connections";
 
+const Identifier Effect::IDs::pos = "pos";
+const Identifier Effect::IDs::processorID = "processor";
+const Identifier Effect::IDs::initialised = "initialised";
+const Identifier Effect::IDs::name = "name";
+const Identifier Effect::IDs::connections = "connections";
 const Identifier Effect::IDs::EFFECT_ID = "effect";
 
 
@@ -249,7 +249,7 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
                 undoManager.beginNewTransaction("New Empty Effect");
                 ValueTree newEffect(Effect::IDs::EFFECT_ID);
 
-                newEffect.setProperty(IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
+                newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
 
                 if (selected.getNumSelected() > 0) {
@@ -285,8 +285,9 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
 void EffectTreeBase::newEffect(String name, int processorID) {
     undoManager.beginNewTransaction("New " + name);
     ValueTree newEffect(Effect::IDs::EFFECT_ID);
-    newEffect.setProperty(IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
-    newEffect.setProperty(IDs::processorID, processorID, nullptr);
+    newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
+    newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
+
     this->getTree().appendChild(newEffect, &undoManager);
 }
 
@@ -345,7 +346,7 @@ void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasCha
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     // if effect has been created already
     if (childWhichHasBeenAdded.hasType(Effect::IDs::EFFECT_ID)) {
-        if (childWhichHasBeenAdded.hasProperty(IDs::initialised)) {
+        if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
                 e->setVisible(true);
                 // Adjust pos
@@ -362,7 +363,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             }
         } else {
             // Initialise VT
-            childWhichHasBeenAdded.setProperty(IDs::initialised, true, &undoManager);
+            childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, &undoManager);
             // Create new effect
             new Effect(childWhichHasBeenAdded);
         }
@@ -544,7 +545,7 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
     }
 }
 
-EffectTreeBase::EffectTreeBase(ValueTree &vt) {
+EffectTreeBase::EffectTreeBase(const ValueTree &vt) {
         tree = vt;
         tree.setProperty(IDs::effectTreeBase, this, nullptr);
         setWantsKeyboardFocus(true);
@@ -560,6 +561,7 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
     dragLine.setAlwaysOnTop(true);
     LineComponent::setDragLine(&dragLine);
 }
+
 
 
 /*void GuiEffect::parentHierarchyChanged() {
@@ -586,14 +588,14 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
 
 
 
-Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
+Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     tree = vt;
 
-    if (vt.hasProperty(EffectTreeBase::IDs::processorID)) {
+    if (vt.hasProperty(IDs::processorID)) {
 
         // Individual processor
         std::unique_ptr<AudioProcessor> newProcessor;
-        int id = vt.getProperty(EffectTreeBase::IDs::processorID);
+        int id = vt.getProperty(IDs::processorID);
         switch (id) {
             case 0:
                 newProcessor = std::make_unique<InputDeviceEffect>();
@@ -621,15 +623,15 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
 
     // Set name
     if (isIndividual()) {
-        tree.setProperty(EffectTreeBase::IDs::name, processor->getName(), nullptr);
+        tree.setProperty(IDs::name, processor->getName(), nullptr);
     } else {
-        tree.setProperty(EffectTreeBase::IDs::name, "Effect", nullptr);
+        tree.setProperty(IDs::name, "Effect", nullptr);
     }
 
     setupTitle();
     setupMenu();
 
-    Point<int> newPos = Position::fromVar(tree.getProperty(EffectTreeBase::IDs::pos));
+    Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
     setBounds(newPos.x, newPos.y, 200,200);
 
     addAndMakeVisible(resizer);
@@ -638,7 +640,7 @@ Effect::Effect(ValueTree& vt) : EffectTreeBase(vt) {
     tree.addListener(this);
 
     // Position
-    pos.referTo(tree, EffectTreeBase::IDs::pos, &undoManager);
+    pos.referTo(tree, IDs::pos, &undoManager);
     setPos(getPosition());
 
     // Set parent component
@@ -654,12 +656,12 @@ void Effect::setupTitle() {
     title.setFont(titleFont);
     title.setBounds(30,30,200, title.getFont().getHeight());
     title.setEditable(true);
-    title.setText(tree.getProperty(EffectTreeBase::IDs::name), dontSendNotification);
+    title.setText(tree.getProperty(IDs::name), dontSendNotification);
 
     title.onTextChange = [=]{
         // Name change undoable action
         undoManager.beginNewTransaction("Name change to: " + title.getText(true));
-        tree.setProperty(EffectTreeBase::IDs::name, title.getText(true), &undoManager);
+        tree.setProperty(IDs::name, title.getText(true), &undoManager);
     };
 
     addAndMakeVisible(title);
@@ -1021,8 +1023,8 @@ void Effect::mouseUp(const MouseEvent &event) {
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == tree) {
-        if (property == EffectTreeBase::IDs::pos && treeWhosePropertyHasChanged.hasProperty(property)) {
-            auto property = treeWhosePropertyHasChanged.getProperty(EffectTreeBase::IDs::pos).getArray();
+        if (property == IDs::pos && treeWhosePropertyHasChanged.hasProperty(property)) {
+            auto property = treeWhosePropertyHasChanged.getProperty(IDs::pos).getArray();
             auto x = (int)(*property)[0];
             auto y = (int)(*property)[1];
             std::cout << "Property changed: " << newLine;
@@ -1037,9 +1039,9 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
                 std::cout << "Undo operation" << newLine;
                 setTopLeftPosition(Point<int>(x,y));
             }
-        } else if (property == EffectTreeBase::IDs::name) {
+        } else if (property == IDs::name) {
             auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
-            auto newName = treeWhosePropertyHasChanged.getProperty(EffectTreeBase::IDs::name);
+            auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
 
             e->setName(newName);
             e->title.setText(newName, sendNotificationAsync);

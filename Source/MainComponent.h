@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "EffectScene.h"
+#include "IDs"
 #include "Settings.h"
 
 /**
@@ -39,12 +40,6 @@ private:
     SettingsComponent settingsMenu;
 
     ValueTree effectTree;
-    ComponentBuilder builder;
-
-    //EffectSceneTypeHandler effectSceneTypeHandler;
-    EffectTypeHandler effectTypeHandler;
-    ConnectionTypeHandler connectionTypeHandler;
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

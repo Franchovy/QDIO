@@ -37,7 +37,7 @@ struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionL
 class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
 {
 public:
-    explicit EffectTreeBase(ValueTree &vt);
+    explicit EffectTreeBase(const ValueTree &vt);
 
     explicit EffectTreeBase(Identifier id);
 
@@ -46,12 +46,11 @@ public:
     void createConnection(ConnectionLine::Ptr line);
 
     static void close();
-    void resized() override = 0;
 
+    void resized() override = 0;
     bool keyPressed(const KeyPress &key) override;
 
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
-
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
@@ -113,13 +112,7 @@ protected:
     static UndoManager undoManager;
 
     struct IDs {
-    public:
         static const Identifier effectTreeBase;
-        static const Identifier pos;
-        static const Identifier processorID;
-        static const Identifier initialised;
-        static const Identifier name;
-        static const Identifier connections;
     };
 
 private:
@@ -143,7 +136,7 @@ struct Position : public VariantConverter<Point<int>>
 class Effect : public EffectTreeBase
 {
 public:
-    explicit Effect(ValueTree& vt);
+    explicit Effect(const ValueTree& vt);
 
     void setupTitle();
     void setupMenu();
@@ -204,6 +197,12 @@ public:
 
     struct IDs {
         static const Identifier EFFECT_ID;
+        static const Identifier pos;
+        static const Identifier processorID;
+        static const Identifier initialised;
+        static const Identifier name;
+        static const Identifier connections;
+
     };
 
 private:

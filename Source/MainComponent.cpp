@@ -13,17 +13,10 @@
 MainComponent::MainComponent()
     : main()
     , effectTree(EFFECT_ID) // TODO load if existing
-    , builder(effectTree)
     , deviceManager(main.getDeviceManager())
     , settingsMenu(deviceManager)
 {
-    // TODO (load settings)
-
-    // Component Builder
-    //builder.registerTypeHandler(&effectSceneTypeHandler);
-
-    //auto mainCB = dynamic_cast<EffectScene*>(builder.getManagedComponent());
-
+    // EffectScene component
     setViewedComponent(&main);
     addAndMakeVisible(main);
     setBounds(0,0, 1920, 1080);

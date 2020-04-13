@@ -14,9 +14,6 @@
       <FILE id="zIPSEt" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="CK43xB" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
-      <FILE id="KfK4xf" name="TypeHandlers.cpp" compile="1" resource="0"
-            file="Source/TypeHandlers.cpp"/>
-      <FILE id="OvPax3" name="TypeHandlers.h" compile="0" resource="0" file="Source/TypeHandlers.h"/>
       <FILE id="rdmW6C" name="EffectGui.cpp" compile="1" resource="0" file="Source/EffectGui.cpp"/>
       <FILE id="eTACmX" name="EffectGui.h" compile="0" resource="0" file="Source/EffectGui.h"/>
       <FILE id="VmJBC4" name="Effect.cpp" compile="1" resource="0" file="Source/Effect.cpp"/>

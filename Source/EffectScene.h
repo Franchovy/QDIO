@@ -14,7 +14,6 @@
 #include <BinaryData.h>
 
 #include "Effect.h"
-#include "TypeHandlers.h"
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
