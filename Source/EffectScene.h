@@ -48,6 +48,10 @@ public:
 
     AudioDeviceManager& getDeviceManager() { return deviceManager; }
 
+    struct IDs {
+        static const Identifier EFFECTSCENE_ID;
+    };
+
 private:
     //==============================================================================
     // Audio shit
@@ -71,8 +75,18 @@ private:
 class MainComponent : public Viewport, private Timer
 {
 public:
-    MainComponent() : main(), settingsMenu(main.getDeviceManager())
+    //
+    MainComponent()
+        : mainTree(EffectScene::IDs::EFFECTSCENE_ID) // TODO load if existing
+        , mainBuilder(mainTree)
+        , main()
+        , settingsMenu(main.getDeviceManager())
     {
+
+        // Component Builder
+        
+        auto eh_nani = mainBuilder.getManagedComponent();
+
         setViewedComponent(&main);
         addAndMakeVisible(main);
         setBounds(0,0, 1920, 1080);
@@ -141,10 +155,12 @@ private:
     }
 
     ImageButton settingsButton;
+    SettingsComponent settingsMenu;
 
+    ValueTree mainTree;
+    ComponentBuilder mainBuilder;
     EffectScene main;
 
-    SettingsComponent settingsMenu;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

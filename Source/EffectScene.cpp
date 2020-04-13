@@ -1,6 +1,8 @@
 #include "EffectScene.h"
 
 
+const Identifier EffectScene::IDs::EFFECTSCENE_ID = "effectscene";
+
 //==============================================================================
 EffectScene::EffectScene() :
         EffectTreeBase(ID_TREE_TOP)
