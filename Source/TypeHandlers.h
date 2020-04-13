@@ -18,7 +18,7 @@ using TypeHandler = ComponentBuilder::TypeHandler;
 
 class EffectSceneTypeHandler : TypeHandler
 {
-    EffectSceneTypeHandler() : TypeHandler(IDs::EFFECTSCENE_ID) {
+    EffectSceneTypeHandler() : TypeHandler(EFFECTSCENE_ID) {
 
     }
 

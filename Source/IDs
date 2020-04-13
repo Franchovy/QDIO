@@ -10,8 +10,4 @@
 
 #pragma once
 
-struct IDs
-{
-    const Identifier EFFECTSCENE_ID = "effectscene";
-
-};
+const Identifier EFFECTSCENE_ID = "effectscene";
