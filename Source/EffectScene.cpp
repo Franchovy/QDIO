@@ -56,7 +56,11 @@ EffectScene::EffectScene() :
 EffectScene::~EffectScene()
 {
     // Save screen state
-    //auto savedState = getAppProperties().getUserSettings()->setXmlValue (KEYNAME_LOADED_EFFECTS);
+    auto savedState = tree.toXmlString();
+
+    std::cout << "Save state: " << savedState.toStdString() << newLine;
+    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState);
+    getAppProperties().getUserSettings()->saveIfNeeded();
 
 }
 
