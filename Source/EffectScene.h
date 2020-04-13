@@ -15,6 +15,7 @@
 
 #include "Effect.h"
 #include "Settings.h"
+#include "TypeHandlers.h"
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
@@ -84,7 +85,7 @@ public:
     {
 
         // Component Builder
-        
+
         auto eh_nani = mainBuilder.getManagedComponent();
 
         setViewedComponent(&main);

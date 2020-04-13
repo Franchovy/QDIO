@@ -9,3 +9,20 @@
 */
 
 #pragma once
+
+#include <JuceHeader.h>
+#include "IDs"
+
+
+using TypeHandler = ComponentBuilder::TypeHandler;
+
+class EffectSceneTypeHandler : TypeHandler
+{
+    EffectSceneTypeHandler() : TypeHandler(IDs::EFFECTSCENE_ID) {
+
+    }
+
+    Component *addNewComponentFromState(const ValueTree &state, Component *parent) override;
+
+    void updateComponentFromState(Component *component, const ValueTree &state) override;
+};
