@@ -22,22 +22,28 @@ class MainComponent : public Viewport, private Timer
 {
 public:
     //
-    MainComponent();
+    explicit MainComponent();
 
     ~MainComponent() override;
+
 
 private:
 
     void move(int deltaX, int deltaY);
-
     void timerCallback() override;
+
+    EffectScene main;
+    AudioDeviceManager& deviceManager;
 
     ImageButton settingsButton;
     SettingsComponent settingsMenu;
 
-    ValueTree mainTree;
-    ComponentBuilder mainBuilder;
-    EffectScene main;
+    ValueTree effectTree;
+    ComponentBuilder builder;
+
+    //EffectSceneTypeHandler effectSceneTypeHandler;
+    EffectTypeHandler effectTypeHandler;
+    ConnectionTypeHandler connectionTypeHandler;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

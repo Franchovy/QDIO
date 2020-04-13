@@ -15,7 +15,8 @@
 class SettingsComponent : public Component
 {
 public:
-    explicit SettingsComponent(AudioDeviceManager& dm) : deviceSelectorMenu(dm, 0, 2, 0, 2, false, false, true, false) {
+    explicit SettingsComponent(AudioDeviceManager& dm) : deviceSelectorMenu(dm, 0, 2, 0, 2, false, false, true, false)
+    {
         addAndMakeVisible(closeButton);
         addAndMakeVisible(deviceSelectorMenu);
 
@@ -28,6 +29,7 @@ public:
 
         setSize(800, 450);
     }
+
 
     ImageButton& getCloseButton() { return closeButton; }
 

@@ -48,6 +48,10 @@ public:
 
     AudioDeviceManager& getDeviceManager() { return deviceManager; }
 
+    struct IDs {
+        static const Identifier DeviceManager;
+    };
+
 private:
     //==============================================================================
     // Audio shit

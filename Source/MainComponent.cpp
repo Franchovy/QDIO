@@ -11,15 +11,18 @@
 #include "MainComponent.h"
 
 MainComponent::MainComponent()
-    : mainTree(EFFECTSCENE_ID) // TODO load if existing
-    , mainBuilder(mainTree)
-    , main()
-    , settingsMenu(main.getDeviceManager())
+    : main()
+    , effectTree(EFFECT_ID) // TODO load if existing
+    , builder(effectTree)
+    , deviceManager(main.getDeviceManager())
+    , settingsMenu(deviceManager)
 {
+    // TODO (load settings)
 
     // Component Builder
+    //builder.registerTypeHandler(&effectSceneTypeHandler);
 
-    auto eh_nani = mainBuilder.getManagedComponent();
+    //auto mainCB = dynamic_cast<EffectScene*>(builder.getManagedComponent());
 
     setViewedComponent(&main);
     addAndMakeVisible(main);

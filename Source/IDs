@@ -11,3 +11,5 @@
 #pragma once
 
 const Identifier EFFECTSCENE_ID = "effectscene";
+const Identifier EFFECT_ID = "effect";
+const Identifier CONNECTION_ID = "connection";

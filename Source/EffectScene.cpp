@@ -1,7 +1,6 @@
 #include "EffectScene.h"
 
-
-const Identifier EffectScene::IDs::EFFECTSCENE_ID = "effectscene";
+const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 
 //==============================================================================
 EffectScene::EffectScene() :
