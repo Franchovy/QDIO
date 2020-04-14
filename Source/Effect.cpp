@@ -9,6 +9,7 @@
 */
 
 #include "Effect.h"
+#include "IDs"
 
 // Static members
 AudioProcessorGraph EffectTreeBase::audioGraph;
@@ -344,6 +345,8 @@ void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasCha
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
+    std::cout << "BOOOOMM!!!" << newLine;
+
     // if effect has been created already
     if (childWhichHasBeenAdded.hasType(Effect::IDs::EFFECT_ID)) {
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
@@ -562,6 +565,115 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
     LineComponent::setDragLine(&dragLine);
 }
 
+XmlElement EffectTreeBase::toStorage(ValueTree& activeData) {
+    XmlElement storageData(activeData.getType());
+
+    // Convert effect to data
+    if (activeData.hasType(EFFECT_ID)) {
+        std::cout << "effect" << newLine;
+
+        // Name
+        String name = activeData.getProperty(Effect::IDs::name);
+        storageData.setAttribute("name", name);
+
+        // Position
+        auto pos = Position::fromVar(activeData.getProperty(Effect::IDs::pos));
+        storageData.setAttribute("x", pos.x);
+        storageData.setAttribute("y", pos.y);
+
+        // ProcessorID
+        int processorID = activeData.getProperty(Effect::IDs::processorID);
+        storageData.setAttribute("processor ID", processorID);
+    }
+
+    if (activeData.hasType(EFFECT_ID) || activeData.hasType(EFFECTSCENE_ID)) {
+        std::cout << "recurse" << newLine;
+
+        // Iterate through children
+
+        for (int i = 0; i < activeData.getNumChildren(); i++) {
+            ValueTree child = activeData.getChild(i);
+
+            // Recurse through Effects
+            if (child.hasType(EFFECT_ID)) {
+                storageData.addChildElement(new XmlElement(toStorage(child)));
+            }
+            // Add connections
+            else if (child.hasType(CONNECTION_ID)) {
+                auto connectionElement = new XmlElement(child.getType());
+                //TODO
+                storageData.addChildElement(connectionElement);
+            }
+        }
+    }
+    //getStorageObjectID(storageData, object)
+
+    /*if (auto processorID = storageData.getStringAttribute(Effect::IDs::processorID)) {
+        storageData.removeAttribute(Effect::IDs::processorID);
+        processorID
+    }*/
+
+
+    return storageData;
+}
+
+ValueTree EffectTreeBase::toActive(const XmlElement& storageData) {
+
+
+    ValueTree activeData(storageData.getTagName());
+
+    // Convert effect to data
+    if (storageData.hasTagName(EFFECT_ID)) {
+        std::cout << "effect" << newLine;
+
+        // Name
+        String name = storageData.getStringAttribute("name");
+        activeData.setProperty(Effect::IDs::name, name, nullptr);
+
+        // Position
+        int x = std::stoi(storageData.getStringAttribute("x").toStdString());
+        int y = std::stoi(storageData.getStringAttribute("y").toStdString());
+        auto pos = Point<int>(x,y);
+        activeData.setProperty(Effect::IDs::pos, Position::toVar(pos), nullptr);
+
+        // ProcessorID
+        int processorID = std::stoi(storageData.getStringAttribute("processorID").toStdString());
+        activeData.setProperty(Effect::IDs::processorID, processorID, nullptr);
+    }
+
+    if (storageData.hasTagName(EFFECT_ID) || storageData.hasTagName(EFFECTSCENE_ID)) {
+        std::cout << "recurse" << newLine;
+
+        // Iterate through children
+
+        for (int i = 0; i < storageData.getNumChildElements(); i++) {
+            auto child = storageData.getChildElement(i);
+
+            // Recurse through Effects
+            if (child->hasTagName(EFFECT_ID)) {
+                activeData.appendChild(toActive(*child), nullptr);
+            }
+                // Add connections
+            else if (child->hasTagName(CONNECTION_ID)) {
+                ValueTree connectionChildTree(child->getTagName());
+                //TODO
+                activeData.appendChild(connectionChildTree, nullptr);
+            }
+        }
+    }
+
+    return activeData;
+}
+
+ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
+    ValueTree copy = tree;
+    return copy;
+}
+
+void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
+    ValueTree copy = loadData;
+    parentTree.appendChild(copy, &undoManager);
+}
 
 
 /*void GuiEffect::parentHierarchyChanged() {

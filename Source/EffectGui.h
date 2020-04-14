@@ -12,14 +12,7 @@
 
 #pragma once
 
-// Names for referencing EffectValueTree
-const Identifier ID_TREE_TOP("TreeTop");
-const Identifier ID_EFFECT_VT("tree");
-const Identifier ID_EVT_OBJECT("Effect");
-const Identifier ID_EFFECT_NAME("Name");
-const Identifier ID_EFFECT_GUI("GUI");
-// Ref for dragline VT
-const Identifier ID_DRAGLINE("DragLine");
+
 
 class GuiObject : public ReferenceCountedObject, public Component
 {

@@ -47,6 +47,13 @@ public:
 
     static void close();
 
+    //TODO remove these
+    static XmlElement toStorage(ValueTree& activeData);
+    static ValueTree toActive(const XmlElement& storageData);
+
+    static ValueTree storeEffect(ValueTree& tree);
+    static void loadEffect(ValueTree& parentTree, ValueTree& loadData);
+
     void resized() override = 0;
     bool keyPressed(const KeyPress &key) override;
 

@@ -4,23 +4,20 @@ const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 
 //==============================================================================
 EffectScene::EffectScene() :
-        EffectTreeBase(ID_TREE_TOP)
-{
+        EffectTreeBase(EFFECTSCENE_ID) {
     setComponentID("MainWindow");
     setName("MainWindow");
-    setSize (4000, 4000);
-
+    setSize(4000, 4000);
 
     // Set up static members
 
     audioGraph.enableAllBuses();
 
-    deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue (KEYNAME_DEVICE_SETTINGS).get(), true);
+    deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
+                             true);
 
     deviceManager.addAudioCallback(&processorPlayer);
     processorPlayer.setProcessor(&audioGraph);
-
-
 
     setMouseClickGrabsKeyboardFocus(true);
 
@@ -32,8 +29,6 @@ EffectScene::EffectScene() :
 
 #define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
-
-
 
     //========================================================================================
     // MIDI example code
@@ -51,15 +46,36 @@ EffectScene::EffectScene() :
     PopupMenu createEffectSubmenu = getEffectSelectMenu();
     mainMenu.addSubMenu("Create Effect", createEffectSubmenu);
 
+    //==============================================================================
+    // Load Effects if there are any saved
+
+    if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
+        auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
+
+        std::cout << loadedEffectsData->toString() << newLine;
+        std::cout << loadedEffectsData->getTagName() << newLine;
+
+        ValueTree effectLoadDataTree(loadedEffectsData->getTagName());
+        effectLoadDataTree.fromXml(*loadedEffectsData);
+
+        loadEffect(tree, effectLoadDataTree);
+
+        //tree.appendChild(loadedEffects, nullptr);
+    }
+
+
+
+
 }
 
 EffectScene::~EffectScene()
 {
     // Save screen state
-    auto savedState = tree.toXmlString();
+    //auto savedState = toStorage(tree);
+    auto savedState = storeEffect(tree).createXml();
 
-    std::cout << "Save state: " << savedState.toStdString() << newLine;
-    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState);
+    std::cout << "Save state: " << savedState->toString() << newLine;
+    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
     getAppProperties().getUserSettings()->saveIfNeeded();
 
 }

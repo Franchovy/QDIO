@@ -14,6 +14,7 @@
 #include <BinaryData.h>
 
 #include "Effect.h"
+#include "IDs"
 
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();

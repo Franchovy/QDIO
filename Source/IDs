@@ -13,3 +13,6 @@
 const Identifier EFFECTSCENE_ID = "effectscene";
 const Identifier EFFECT_ID = "effect";
 const Identifier CONNECTION_ID = "connection";
+
+// Ref for dragline VT
+//const Identifier DRAGLINE_ID("DragLine");
