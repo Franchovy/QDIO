@@ -159,7 +159,6 @@ public:
     bool keyPressed(const KeyPress &key) override;
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
-    void addConnection(ConnectionLine* connection);
 
     void hoverOver(EffectTreeBase* newParent);
 
@@ -175,7 +174,9 @@ public:
     void addPort(AudioProcessor::Bus* bus, bool isInput);
 
     ConnectionPort::Ptr checkPort(Point<int> pos);
+
     int getPortID(const ConnectionPort* port);
+    AudioPort* getPortFromID(const int id);
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() { return editMode; }

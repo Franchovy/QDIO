@@ -368,7 +368,8 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             // Initialise VT
             childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, &undoManager);
             // Create new effect
-            new Effect(childWhichHasBeenAdded);
+            auto e = new Effect(childWhichHasBeenAdded);
+            childWhichHasBeenAdded.setProperty(IDs::effectTreeBase, e, nullptr);
         }
     } else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
         ConnectionLine* line;
@@ -551,6 +552,7 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
 EffectTreeBase::EffectTreeBase(const ValueTree &vt) {
         tree = vt;
         tree.setProperty(IDs::effectTreeBase, this, nullptr);
+
         setWantsKeyboardFocus(true);
 
         dragLine.setAlwaysOnTop(true);
@@ -756,38 +758,22 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
         copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);
     }
 
-    //
-
-    if (loadData.hasType(EFFECT_ID)) {
-        parentTree.appendChild(copy, &undoManager);
-    }
-
-    // After effects created, add connections.
+    // Load child effects
 
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
             if (child.hasType(EFFECT_ID)) {
                 loadEffect(copy, child);
-            } else if (child.hasType(CONNECTION_ID)) {
-                // Set data
-/*
-                ValueTree connectionToSet(CONNECTION_ID);
-
-                auto inPort = child.getProperty("inPortEffect")
-
-                connectionToSet.setProperty(ConnectionLine::IDs::InPort, , nullptr);
-                connectionToSet.setProperty(ConnectionLine::IDs::OutPort, , nullptr);
-
-*/
-
             }
         }
     }
 
     // Create effects by adding them to valuetree
 
-    if (loadData.hasType(EFFECTSCENE_ID)) {
+    if (loadData.hasType(EFFECT_ID)) {
+        parentTree.appendChild(copy, &undoManager);
+    } else if (loadData.hasType(EFFECTSCENE_ID)) {
         // Set children of Effectscene, and object property
         auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
 
@@ -796,6 +782,44 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
         copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
         parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
     }
+
+
+
+    // After effects created, add connections.
+
+    if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
+        for (int i = 0; i < loadData.getNumChildren(); i++) {
+            auto child = loadData.getChild(i);
+            if (child.hasType(CONNECTION_ID)) {
+                // Set data
+                ValueTree connectionToSet(CONNECTION_ID);
+
+                int64 inPortEffectID = child.getProperty("inPortEffect");
+                int64 outPortEffectID = child.getProperty("outPortEffect");
+
+                auto in = parentTree.getChildWithProperty("ID", inPortEffectID);
+                auto out = parentTree.getChildWithProperty("ID", outPortEffectID);
+
+                auto inEffect = getFromTree<Effect>(in);
+                auto outEffect = getFromTree<Effect>(out);
+
+                auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"));
+                auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"));
+
+                connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
+                connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
+
+                parentTree.appendChild(connectionToSet, nullptr);
+
+                /*std::cout << "Add connection" << newLine;
+                std::cout << parentTree.toXmlString() << newLine;
+                std::cout << copy.getChildWithProperty("ID", outPortEffectID).isValid() << newLine;*/
+
+
+            }
+        }
+    }
+
 
 }
 
@@ -825,7 +849,7 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
 
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
-    tree = vt;
+    //tree = vt;
 
     if (vt.hasProperty(IDs::processorID)) {
 
@@ -1403,6 +1427,15 @@ int Effect::getPortID(const ConnectionPort *port) {
     }
     return -1;
 }
+
+AudioPort *Effect::getPortFromID(const int id) {
+    if (id < inputPorts.size()) {
+        return inputPorts[id];
+    } else {
+        return outputPorts[id - inputPorts.size()];
+    }
+}
+
 
 Point<int> Position::fromVar(const var &v) {
     Array<var>* array = v.getArray();
