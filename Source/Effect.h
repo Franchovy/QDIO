@@ -175,6 +175,7 @@ public:
     void addPort(AudioProcessor::Bus* bus, bool isInput);
 
     ConnectionPort::Ptr checkPort(Point<int> pos);
+    int getPortID(const ConnectionPort* port);
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() { return editMode; }

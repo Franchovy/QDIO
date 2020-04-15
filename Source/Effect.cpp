@@ -667,11 +667,48 @@ ValueTree EffectTreeBase::toActive(const XmlElement& storageData) {
 
 ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
     ValueTree copy = tree;
+
+    copy.removeProperty(Effect::IDs::initialised, nullptr);
+    copy.removeProperty(Effect::IDs::connections, nullptr);
+
+    //todo change connection data to represent objects
+    // iterate through connections
+        // if connection is internal mark it as such.
+        // parent1 = port1.getparent // set object id to match other
+        // parent1 -> get port ID // set port id
+        // parent2 = port2.getparent // set object id to match other
+        // parent2 -> get port ID // set port id
+
+    copy.removeProperty(EffectTreeBase::IDs::effectTreeBase, nullptr);
+
+    // Set position property
+    auto pos = Position::fromVar(tree.getProperty(Effect::IDs::pos));
+    copy.setProperty("x", pos.x, nullptr);
+    copy.setProperty("y", pos.y, nullptr);
+
     return copy;
 }
 
 void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
     ValueTree copy = loadData;
+
+
+    //todo change connection data to represent objects
+    // iterate through connections
+    // if connection is internal mark it as such.
+    // parent1 = port1.getparent // set object id to match other
+    // parent1 -> get port ID // set port id
+    // parent2 = port2.getparent // set object id to match other
+    // parent2 -> get port ID // set port id
+
+    copy.removeProperty(EffectTreeBase::IDs::effectTreeBase, nullptr);
+
+    // Set position property
+    int x = loadData.getProperty("x");
+    int y = loadData.getProperty("y");
+    copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);
+
+
     parentTree.appendChild(copy, &undoManager);
 }
 
@@ -1256,6 +1293,28 @@ void Effect::hoverOver(EffectTreeBase *newParent) {
     } else {
         setBounds(getBounds().expanded(20));
     }
+}
+
+int Effect::getPortID(const ConnectionPort *port) {
+    if (auto p = dynamic_cast<const AudioPort*>(port)) {
+        if (inputPorts.contains(p)) {
+            return inputPorts.indexOf(p);
+        } else if (outputPorts.contains(p)) {
+            return inputPorts.size() + outputPorts.indexOf(p);
+        }
+    } else if (auto p = dynamic_cast<const InternalConnectionPort*>(port)) {
+        for (int i = 0; i < inputPorts.size(); i++) {
+            if (inputPorts[i]->internalPort == p) {
+                return i;
+            }
+        }
+        for (int i = 0; i < outputPorts.size(); i++) {
+            if (outputPorts[i]->internalPort == p) {
+                return inputPorts.size() + i;
+            }
+        }
+    }
+    return -1;
 }
 
 Point<int> Position::fromVar(const var &v) {
