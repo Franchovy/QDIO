@@ -48,15 +48,14 @@ EffectScene::EffectScene() :
 
     //==============================================================================
     // Load Effects if there are any saved
-
+    tree.setProperty(EffectTreeBase::IDs::effectTreeBase, this, nullptr);
     if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
 
         std::cout << loadedEffectsData->toString() << newLine;
         std::cout << loadedEffectsData->getTagName() << newLine;
 
-        ValueTree effectLoadDataTree(loadedEffectsData->getTagName());
-        effectLoadDataTree.fromXml(*loadedEffectsData);
+        ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
 
         loadEffect(tree, effectLoadDataTree);
 
@@ -70,14 +69,7 @@ EffectScene::EffectScene() :
 
 EffectScene::~EffectScene()
 {
-    // Save screen state
-    //auto savedState = toStorage(tree);
-    auto savedState = storeEffect(tree).createXml();
-
-    std::cout << "Save state: " << savedState->toString() << newLine;
-    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-    getAppProperties().getUserSettings()->saveIfNeeded();
-
+    tree.removeAllChildren(nullptr);
 }
 
 //==============================================================================
@@ -157,6 +149,16 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
 void EffectScene::deleteEffect(Effect* e) {
     delete e;
+}
+
+void EffectScene::storeState() {
+    // Save screen state
+    //auto savedState = toStorage(tree);
+    auto savedState = storeEffect(tree).createXml();
+
+    std::cout << "Save state: " << savedState->toString() << newLine;
+    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
+    getAppProperties().getUserSettings()->saveIfNeeded();
 }
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {

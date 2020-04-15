@@ -293,7 +293,7 @@ void EffectTreeBase::newEffect(String name, int processorID) {
 }
 
 void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    /*if (tree.hasType(ConnectionLine::IDs::CONNECTION_ID))
+    /*if (tree.hasType(CONNECTION_ID))
         std::cout << "Type connectionLine" << newLine;
 
     if (property == IDs::connections) {
@@ -345,10 +345,10 @@ void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasCha
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    std::cout << "BOOOOMM!!!" << newLine;
+    std::cout << "Loading: " << childWhichHasBeenAdded.getType().toString() << newLine << "  To: " << parentTree.getType().toString() << newLine;
 
     // if effect has been created already
-    if (childWhichHasBeenAdded.hasType(Effect::IDs::EFFECT_ID)) {
+    if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
                 e->setVisible(true);
@@ -370,7 +370,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             // Create new effect
             new Effect(childWhichHasBeenAdded);
         }
-    } else if (childWhichHasBeenAdded.hasType(ConnectionLine::IDs::CONNECTION_ID)) {
+    } else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
         ConnectionLine* line;
         // Add connection here
         if (! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
@@ -392,8 +392,8 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
-
-    if (childWhichHasBeenRemoved.hasType(Effect::IDs::EFFECT_ID)) {
+    std::cout << "Should not be called" << newLine;
+    if (childWhichHasBeenRemoved.hasType(EFFECT_ID)) {
         if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
             if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                 std::cout << "Child removed" << newLine;
@@ -405,7 +405,7 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
                 e->setVisible(false);
             }
         }
-    } else if (childWhichHasBeenRemoved.hasType(ConnectionLine::IDs::CONNECTION_ID)) {
+    } else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
         line->setVisible(false);
         disconnectAudio(*line);
@@ -528,7 +528,7 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
             auto effect1 = dynamic_cast<EffectTreeBase*>(l->port1->getParentComponent());
             auto effect2 = dynamic_cast<EffectTreeBase*>(port->getParentComponent());
 
-            auto newConnection = ValueTree(ConnectionLine::IDs::CONNECTION_ID);
+            auto newConnection = ValueTree(CONNECTION_ID);
             newConnection.setProperty(ConnectionLine::IDs::InPort, port, nullptr);
             newConnection.setProperty(ConnectionLine::IDs::OutPort, l->port1, nullptr);
             //auto newConnection = new ConnectionLine(*port, *l->port1);
@@ -618,8 +618,6 @@ XmlElement EffectTreeBase::toStorage(ValueTree& activeData) {
 }
 
 ValueTree EffectTreeBase::toActive(const XmlElement& storageData) {
-
-
     ValueTree activeData(storageData.getTagName());
 
     // Convert effect to data
@@ -668,48 +666,109 @@ ValueTree EffectTreeBase::toActive(const XmlElement& storageData) {
 ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
     ValueTree copy = tree;
 
-    copy.removeProperty(Effect::IDs::initialised, nullptr);
-    copy.removeProperty(Effect::IDs::connections, nullptr);
+    std::cout << "Storing: " << tree.getType().toString() << newLine;
 
-    //todo change connection data to represent objects
-    // iterate through connections
-        // if connection is internal mark it as such.
-        // parent1 = port1.getparent // set object id to match other
-        // parent1 -> get port ID // set port id
-        // parent2 = port2.getparent // set object id to match other
-        // parent2 -> get port ID // set port id
+    if (tree.hasType(EFFECT_ID)) {
+        // Recurse for children
+        copy.removeProperty(Effect::IDs::initialised, nullptr);
+        copy.removeProperty(Effect::IDs::connections, nullptr);
 
-    copy.removeProperty(EffectTreeBase::IDs::effectTreeBase, nullptr);
+        copy.removeProperty(EffectTreeBase::IDs::effectTreeBase, nullptr);
 
-    // Set position property
-    auto pos = Position::fromVar(tree.getProperty(Effect::IDs::pos));
-    copy.setProperty("x", pos.x, nullptr);
-    copy.setProperty("y", pos.y, nullptr);
+        // Set position property
+        auto pos = Position::fromVar(copy.getProperty(Effect::IDs::pos));
+        copy.setProperty("x", pos.x, nullptr);
+        copy.setProperty("y", pos.y, nullptr);
+
+        copy.removeProperty(Effect::IDs::pos, nullptr);
+
+    }
+
+    if (tree.hasType(EFFECTSCENE_ID) || tree.hasType(EFFECT_ID)) {
+        // Store object as ID
+        auto id = reinterpret_cast<int64>(tree.getProperty(IDs::effectTreeBase).getObject());
+        copy.removeProperty(IDs::effectTreeBase, nullptr);
+        copy.setProperty("ID", id, nullptr);
+
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            auto child = tree.getChild(i);
+            copy.appendChild(child, nullptr);
+
+            if (child.hasType(EFFECT_ID)) {
+                storeEffect(child);
+            }
+
+            if (child.hasType(CONNECTION_ID)) {
+                // Register connections
+
+                //todo change connection data to represent objects
+                // iterate through connections
+                // if connection is internal mark it as such.
+                // parent1 = port1.getparent // set object id to match other
+                // parent1 -> get port ID // set port id
+                // parent2 = port2.getparent // set object id to match other
+                // parent2 -> get port ID // set port id
+
+            }
+        }
+    }
+
+    std::cout << "Properties" << newLine;
+    for (int i = 0; i < copy.getNumProperties(); i++) {
+        std::cout << copy.getPropertyName(i).toString() << newLine;
+    }
+    std::cout << "Children" << newLine;
+    for (int i = 0; i < copy.getNumChildren(); i++) {
+        std::cout << copy.getChild(i).getType().toString() << newLine;
+    }
 
     return copy;
 }
 
+//todo storageIDs
 void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
-    ValueTree copy = loadData;
+    ValueTree copy(loadData.getType());
 
+    if (loadData.hasType(EFFECT_ID)) {
+        copy.copyPropertiesFrom(loadData, nullptr);
 
-    //todo change connection data to represent objects
-    // iterate through connections
-    // if connection is internal mark it as such.
-    // parent1 = port1.getparent // set object id to match other
-    // parent1 -> get port ID // set port id
-    // parent2 = port2.getparent // set object id to match other
-    // parent2 -> get port ID // set port id
+        copy.removeProperty(EffectTreeBase::IDs::effectTreeBase, nullptr);
 
-    copy.removeProperty(EffectTreeBase::IDs::effectTreeBase, nullptr);
+        // Set position property
+        int x = loadData.getProperty("x");
+        int y = loadData.getProperty("y");
+        copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);
+    }
 
-    // Set position property
-    int x = loadData.getProperty("x");
-    int y = loadData.getProperty("y");
-    copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);
+    if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
+        for (int i = 0; i < loadData.getNumChildren(); i++) {
+            auto child = loadData.getChild(i);
+            if (child.hasType(EFFECT_ID)) {
+                loadEffect(copy, child);
+            } else if (child.hasType(CONNECTION_ID)) {
+                //todo change connection data to represent objects
+                // if connection is internal mark it as such.
+                // parent1 = port1.getparent // set object id to match other
+                // parent1 -> get port ID // set port id
+                // parent2 = port2.getparent // set object id to match other
+                // parent2 -> get port ID // set port id
 
+                //auto connectionObject = child.getProperty()
+            }
+        }
+    }
 
-    parentTree.appendChild(copy, &undoManager);
+    if (loadData.hasType(EFFECT_ID)) {
+        parentTree.appendChild(copy, &undoManager);
+    } else if (loadData.hasType(EFFECTSCENE_ID)) {
+        // Set children of Effectscene, and object property
+        auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
+
+        copy.removeAllProperties(nullptr);
+
+        copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
+        parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
+    }
 }
 
 

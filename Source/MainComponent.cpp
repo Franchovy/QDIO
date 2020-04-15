@@ -45,6 +45,8 @@ MainComponent::MainComponent()
 }
 
 MainComponent::~MainComponent() {
+    main.storeState();
+
     auto audioState = main.getDeviceManager().createStateXml();
 
     getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());

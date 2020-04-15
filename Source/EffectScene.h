@@ -46,6 +46,8 @@ public:
 
     void deleteEffect(Effect* e);
 
+    void storeState();
+
     AudioDeviceManager& getDeviceManager() { return deviceManager; }
 
     struct IDs {

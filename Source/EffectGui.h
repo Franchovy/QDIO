@@ -65,8 +65,8 @@ public:
     static void setHoverComponent(SelectHoverObject::Ptr item);
     static void resetHoverObject();
 
-    static void addSelectObject(SelectHoverObject* item);
-    static void removeSelectObject(SelectHoverObject* item);
+    static void addSelectObject(const SelectHoverObject::Ptr& item);
+    static void removeSelectObject(const SelectHoverObject::Ptr& item);
 
     void setSelectMode(bool newSelectMode);
 

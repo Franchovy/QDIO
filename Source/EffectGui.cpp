@@ -224,16 +224,14 @@ SelectHoverObject::SelectHoverObject() {
 }
 
 SelectHoverObject::~SelectHoverObject() {
-    removeSelectObject(this);
-
     componentsToSelect.removeObject(this);
-
-    for (auto i : componentsToSelect) {
-        std::cout << "c: " << i->getName() << newLine;
-    }
 
     if (hoverComponent == this){
         hoverComponent = nullptr;
+    }
+
+    if (getReferenceCount() > 1) {
+        selected.deselect(this);
     }
 }
 
@@ -261,11 +259,11 @@ void SelectHoverObject::setSelectMode(bool newSelectMode) {
     }
 }
 
-void SelectHoverObject::addSelectObject(SelectHoverObject *item) {
+void SelectHoverObject::addSelectObject(const SelectHoverObject::Ptr& item) {
     selected.addToSelection(item);
 }
 
-void SelectHoverObject::removeSelectObject(SelectHoverObject *item) {
+void SelectHoverObject::removeSelectObject(const SelectHoverObject::Ptr& item) {
     selected.deselect(item);
 }
 
