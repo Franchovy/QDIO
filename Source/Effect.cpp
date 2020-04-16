@@ -292,8 +292,8 @@ void EffectTreeBase::newEffect(String name, int processorID) {
     this->getTree().appendChild(newEffect, &undoManager);
 }
 
-void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    /*if (tree.hasType(CONNECTION_ID))
+/*void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    *//*if (tree.hasType(CONNECTION_ID))
         std::cout << "Type connectionLine" << newLine;
 
     if (property == IDs::connections) {
@@ -322,7 +322,7 @@ void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasCha
 
 
         // Depending on if connection is visible or not, make or remove the audio connections.
-        *//*for (auto connection : connections) {
+        *//**//*for (auto connection : connections) {
             // Get connections to make or remove
             auto audioConnections = getAudioConnection(*connection);
             for (auto audioConnection : audioConnections) {
@@ -337,11 +337,11 @@ void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasCha
                     audioGraph.removeConnection(audioConnection);
                 }
             }
-        }*//*
+        }*//**//*
     }
-*/
+*//*
     //Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
-}
+}*/
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
@@ -1062,6 +1062,8 @@ void Effect::setParameters(const AudioProcessorParameterGroup *group) {
 }
 
 void Effect::addParameter(AudioProcessorParameter *param) {
+
+    //todo parent class for dis shit pllssss
     if (param->isBoolean()) {
         // add bool parameter
         ToggleButton* button = new ToggleButton();
@@ -1108,13 +1110,25 @@ void Effect::addParameter(AudioProcessorParameter *param) {
         slider->addListener(listener);
         slider->setName("Slider");
 
+
+        auto label = new Label(param->getName(30), param->getName(30));
+        label->setFont(Font(15, Font::FontStyleFlags::bold));
+        label->setColour(Label::textColourId, Colours::black);
+
         slider->setTextBoxIsEditable(true);
         slider->setValue(param->getValue(), dontSendNotification);
 
         auto i = parameters->getParameters(false).indexOf(param);
-        slider->setBounds(20 , 50 + (i * 50), 150, 40);
 
+
+        slider->setBounds(40 , 40 + (i * 70), 150, 70);
         addAndMakeVisible(slider);
+
+        label->setBounds(slider->getX(), slider->getY(), slider->getWidth(), 20);
+        addAndMakeVisible(label);
+
+
+        setSize(slider->getWidth() + 100, getHeight());
     }
 }
 
@@ -1289,21 +1303,48 @@ void Effect::mouseUp(const MouseEvent &event) {
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == tree) {
         if (property == IDs::pos && treeWhosePropertyHasChanged.hasProperty(property)) {
+            std::cout << "Position changed" << newLine;
+
+            /*auto newPos = Position::fromVar(*treeWhosePropertyHasChanged.getProperty(IDs::pos).getArray());
+
+            newPos = Position::fromVar(pos.get());
+
+            if (undoManager.isPerformingUndoRedo()) {
+                std::cout << "undoredo" << newLine;
+                setTopLeftPosition(Point<int>(newPos.getX(), newPos.getY()));
+            }
+            std::cout << "poop: " << newPos.toString() << newLine;*/
+/*
+            if (newPos.getX() != 0 && newPos.getY() != 0) {
+
+            }*/
+            /*
+            std::cout << "pos changed yet?" << newLine;
+            std::cout << "tree: " << newpos.getX() << " " << newpos.getY() << newLine;
+            pos.forceUpdateOfCachedValue();
+            auto otherpos = Position::fromVar(pos.get());
+            std::cout << "pos: " << otherpos.getX() << " " << otherpos.getY() << newLine;
+
+            setTopLeftPosition(newpos);*/
+                    /*
+
             auto property = treeWhosePropertyHasChanged.getProperty(IDs::pos).getArray();
             auto x = (int)(*property)[0];
             auto y = (int)(*property)[1];
             std::cout << "Property changed: " << newLine;
             std::cout << x << " " << y << newLine;
 
+
             auto xpos = (int)(*pos)[0];
             auto ypos = (int)(*pos)[1];
             std::cout << "Pos: " << newLine;
             std::cout << xpos << " " << ypos << newLine;
 
-            if (x != 0 && y != 0) {
+            *//*if (x != 0 && y != 0) {
                 std::cout << "Undo operation" << newLine;
                 setTopLeftPosition(Point<int>(x,y));
             }
+            setTopLeftPosition(Point<int>(x,y));*/
         } else if (property == IDs::name) {
             auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
             auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
@@ -1312,6 +1353,7 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
             e->title.setText(newName, sendNotificationAsync);
         }
     }
+    Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
 
 void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
@@ -1321,6 +1363,7 @@ void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
 }
 
 void Effect::resized() {
+    std::cout << "resized" << newLine;
     // Position Ports
     inputPortPos = inputPortStartPos;
     outputPortPos = outputPortStartPos;
@@ -1391,7 +1434,9 @@ void Effect::setParent(EffectTreeBase &parent) {
 }
 
 void Effect::setPos(Point<int> newPos) {
-    pos = Position::toVar(newPos);
+    setTopLeftPosition(newPos);
+    pos.setValue(Position::toVar(newPos), nullptr); //todo undomanager
+    /*pos = Position::toVar(newPos);*/
 }
 
 bool Effect::keyPressed(const KeyPress &key) {

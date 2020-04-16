@@ -125,7 +125,7 @@ class DelayEffect : public BaseEffect, public Timer
 {
 public:
     DelayEffect() : BaseEffect()
-                    , delay("delay", "Delay",
+                    , delay("length", "Length",
                           NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f)
                     , fade("fade", "Fade",
                                  NormalisableRange<float>(0, 1.f, 0.001, 0.95f), 0.9f)
@@ -155,12 +155,12 @@ public:
             std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
 
 
-            delayBuffer.setSize(jmin(0, getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
-                                newDelayBufferSize, true, true, true);
+            delayBuffer.setSize(numChannels, newDelayBufferSize
+                    , true, true, true);
             if (delayBufferPt > newDelayBufferSize){
                 delayBufferPt = 1;
             }
-            delayBuffer.clear();
+            /*delayBuffer.clear();*/
 
             delayBufferSize = newDelayBufferSize;
         }
@@ -169,12 +169,19 @@ public:
 
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override {
         currentSampleRate = sampleRate;
+        numChannels = jmax(getMainBusNumInputChannels(), getMainBusNumOutputChannels());
+
+        // init buffer
+        delayBuffer.setSize(numChannels,ceil(delay.range.end * sampleRate)
+                , false, true, false);
+
+        std::cout << "max size: " <<  delay.range.end * sampleRate << newLine;
 
         delayBufferSize = ceil( delay.get() * sampleRate );
         delayBufferPt = 1;
 
-        delayBuffer.setSize(jmax(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
-                delayBufferSize, true, false, true);
+        delayBuffer.setSize(numChannels, delayBufferSize
+                , true, false, true);
         delayBuffer.clear();
 
         fadeVal = fade.get();
@@ -185,8 +192,9 @@ public:
     }
 
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override {
-        if (delayBufferSize == 0)
+        if (delayBufferSize < buffer.getNumSamples())
             return;
+
 
         auto totalNumInputChannels  = getTotalNumInputChannels();
         auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -235,6 +243,9 @@ private:
     //std::atomic<float> delayVal;
     AudioBuffer<float> delayBuffer;
 
+    int minSize;
+
+    int numChannels;
     double currentSampleRate;
     int delayBufferSize;
     int newDelayBufferSize;

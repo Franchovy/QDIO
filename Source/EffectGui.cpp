@@ -260,10 +260,14 @@ void SelectHoverObject::setSelectMode(bool newSelectMode) {
 }
 
 void SelectHoverObject::addSelectObject(const SelectHoverObject::Ptr& item) {
+    item->selectMode = true;
+    item->repaint();
     selected.addToSelection(item);
 }
 
 void SelectHoverObject::removeSelectObject(const SelectHoverObject::Ptr& item) {
+    item->selectMode = false;
+    item->repaint();
     selected.deselect(item);
 }
 
@@ -271,4 +275,15 @@ void SelectHoverObject::close() {
     componentsToSelect.clear();
     selected.clear();
     hoverComponent = nullptr;
+}
+
+void SelectHoverObject::mouseDown(const MouseEvent &event) {
+    Component::mouseDown(event);
+}
+
+void SelectHoverObject::mouseUp(const MouseEvent &event) {
+    if (event.getDistanceFromDragStart() < 10) {
+        addSelectObject(this);
+    }
+    Component::mouseUp(event);
 }

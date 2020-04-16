@@ -61,6 +61,10 @@ public:
     void mouseEnter(const MouseEvent &event) override;
     void mouseExit(const MouseEvent &event) override;
 
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
+
     static void setHoverComponent(SelectHoverObject* item);
     static void setHoverComponent(SelectHoverObject::Ptr item);
     static void resetHoverObject();
