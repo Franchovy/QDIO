@@ -124,16 +124,20 @@ protected:
 class DelayEffect : public BaseEffect, public Timer
 {
 public:
-    DelayEffect() : BaseEffect(),
-                    delay("delay", "Delay",
+    DelayEffect() : BaseEffect()
+                    , delay("delay", "Delay",
                           NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f)
+                    , fade("fade", "Fade",
+                                 NormalisableRange<float>(0, 1.f, 0.001, 0.95f), 0.9f)
     {
         name = "Delay Effect";
         addParameter(&delay);
         delay.addListener(&parameterListener);
-        //parameterListener.parameters.add(&delayVal);
-        setLayout(1,1);
 
+        addParameter(&fade);
+        fade.addListener(&parameterListener);
+
+        setLayout(1,1);
         startTimer(1000);
     }
 
@@ -142,6 +146,9 @@ public:
      */
     void timerCallback() override {
         // TODO fix crashing
+        if (fadeVal != fade.get()) {
+            fadeVal = fade.get();
+        }
 
         newDelayBufferSize = ceil(delay.get() * currentSampleRate );
         if (newDelayBufferSize != delayBufferSize){
@@ -169,6 +176,8 @@ public:
         delayBuffer.setSize(jmax(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
                 delayBufferSize, true, false, true);
         delayBuffer.clear();
+
+        fadeVal = fade.get();
     }
 
     void releaseResources() override {
@@ -200,8 +209,8 @@ public:
                 delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, firstHalfSize);
                 delayBuffer.copyFrom(channel, 0, buffer, channel, firstHalfSize, secondHalfSize);
                 // Apply gain to echo buffer
-                delayBuffer.applyGain(delayBufferPt, firstHalfSize, 0.9);
-                delayBuffer.applyGain(channel, 0, secondHalfSize, 0.9);
+                delayBuffer.applyGain(delayBufferPt, firstHalfSize, fadeVal);
+                delayBuffer.applyGain(channel, 0, secondHalfSize, fadeVal);
                 // Set new delayBufferPt if this is the last channel
                 if (resetState)
                     delayBufferPt = numSamples - firstHalfSize;
@@ -211,7 +220,7 @@ public:
                 // Copy to echo buffer
                 delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, numSamples);
                 // Apply gain to echo buffer
-                delayBuffer.applyGain(channel, delayBufferPt, numSamples, 0.9);
+                delayBuffer.applyGain(channel, delayBufferPt, numSamples, fadeVal);
                 // Set new delayBufferPt if this is the last channel
                 if (resetState)
                     delayBufferPt += numSamples;
@@ -221,6 +230,8 @@ public:
 
 private:
     AudioParameterFloat delay;
+    AudioParameterFloat fade;
+    std::atomic<float> fadeVal;
     //std::atomic<float> delayVal;
     AudioBuffer<float> delayBuffer;
 
@@ -229,7 +240,7 @@ private:
     int newDelayBufferSize;
     int delayBufferPt;
 
-    std::atomic<float> delayVal;
+
 };
 
 class DistortionEffect : public BaseEffect {

@@ -1107,7 +1107,12 @@ void Effect::addParameter(AudioProcessorParameter *param) {
         SliderListener* listener = new SliderListener(param);
         slider->addListener(listener);
         slider->setName("Slider");
-        slider->setBounds(20, 50, 200, 40);
+
+        slider->setTextBoxIsEditable(true);
+        slider->setValue(param->getValue(), dontSendNotification);
+
+        auto i = parameters->getParameters(false).indexOf(param);
+        slider->setBounds(20 , 50 + (i * 50), 150, 40);
 
         addAndMakeVisible(slider);
     }
