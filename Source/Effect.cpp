@@ -1033,6 +1033,13 @@ void Effect::setEditMode(bool isEditMode) {
 
         title.setColour(title.textColourId, Colours::whitesmoke);
 
+        for (auto p : inputPorts) {
+            p->setColour(0, Colours::whitesmoke);
+        }
+        for (auto p : outputPorts) {
+            p->setColour(0, Colours::whitesmoke);
+        }
+
         setBounds(getBounds().expanded(50));
     }
 
@@ -1046,6 +1053,13 @@ void Effect::setEditMode(bool isEditMode) {
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
         title.setColour(title.textColourId, Colours::black);
+
+        for (auto p : inputPorts) {
+            p->setColour(0, Colours::black);
+        }
+        for (auto p : outputPorts) {
+            p->setColour(0, Colours::black);
+        }
     }
 
     editMode = isEditMode;
@@ -1138,6 +1152,9 @@ void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
              inputPorts.add(std::make_unique<AudioPort>(isInput)) :
              outputPorts.add(std::make_unique<AudioPort>(isInput));
     p->bus = bus;
+    if (editMode){
+        p->setColour(p->portColour, Colours::whitesmoke);
+    }
     addAndMakeVisible(p);
 
     resized();
@@ -1147,6 +1164,7 @@ void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
         Point<int> d;
         d = isInput ? Point<int>(50, 0) : Point<int>(-50, 0);
 
+        p->internalPort->setColour(p->portColour, Colours::whitesmoke);
         p->internalPort->setCentrePosition(getLocalPoint(p, p->centrePoint + d));
         p->internalPort->setVisible(editMode);
     } else {

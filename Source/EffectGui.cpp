@@ -174,7 +174,7 @@ void ConnectionPort::mouseUp(const MouseEvent &event) {
 }
 
 void ConnectionPort::paint(Graphics &g) {
-    g.setColour(Colours::black);
+    g.setColour(findColour(ColourIDs::portColour));
     //rectangle.setPosition(10,10);
     g.drawRect(outline,2);
 

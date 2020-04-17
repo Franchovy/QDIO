@@ -221,8 +221,14 @@ public:
 
     bool isConnected() { return otherPort != nullptr; }
 
+    enum ColourIDs {
+        portColour = 0
+    };
+
 protected:
-    ConnectionPort() = default;
+    ConnectionPort() {
+        setColour(portColour, Colours::black);
+    };
 
     ConnectionPort::Ptr otherPort = nullptr;
 
@@ -298,7 +304,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
             g.setColour(Colours::blue);
             thiccness = 3;
         } else {
-            g.setColour(Colours::black);
+            g.setColour(Colours::whitesmoke);
             thiccness = 2;
         }
 
