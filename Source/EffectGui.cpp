@@ -133,7 +133,7 @@ bool ConnectionLine::hitTest(int x, int y) {
     auto d2 = line.getEnd().getDistanceFrom(Point<int>(x,y));
     auto d = d1 + d2 - line.getLength();
 
-    if (d < 7) {
+    if (d < 3) {
         return true;
     } else {
         return false;

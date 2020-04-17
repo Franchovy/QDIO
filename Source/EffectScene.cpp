@@ -61,10 +61,6 @@ EffectScene::EffectScene() :
 
         //tree.appendChild(loadedEffects, nullptr);
     }
-
-
-
-
 }
 
 EffectScene::~EffectScene()

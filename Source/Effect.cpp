@@ -814,8 +814,6 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
         tree.setProperty(IDs::name, "Effect", nullptr);
     }
 
-    setupTitle();
-    setupMenu();
 
     int x = tree.getProperty(IDs::x);
     int y = tree.getProperty(IDs::y);
@@ -837,14 +835,18 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
         auto parent = getFromTree<EffectTreeBase>(parentTree);
         parent->addAndMakeVisible(this);
     }
+
+    setupTitle();
+    setupMenu();
 }
 
 void Effect::setupTitle() {
     Font titleFont(20, Font::FontStyleFlags::bold);
     title.setFont(titleFont);
-    title.setBounds(30,30,200, title.getFont().getHeight());
+
     title.setEditable(true);
     title.setText(tree.getProperty(IDs::name), dontSendNotification);
+    title.setBounds(25, 20, 200, title.getFont().getHeight());
 
     title.onTextChange = [=]{
         // Name change undoable action
@@ -1068,13 +1070,14 @@ void Effect::addParameter(AudioProcessorParameter *param) {
 
         auto i = parameters->getParameters(false).indexOf(param);
 
-
         slider->setBounds(40 , 40 + (i * 70), 150, 70);
         addAndMakeVisible(slider);
 
-        label->setBounds(slider->getX(), slider->getY(), slider->getWidth(), 20);
+        label->setBounds(slider->getX(), slider->getY() + 5, slider->getWidth(), 20);
         addAndMakeVisible(label);
 
+        slider->hideTextBox(false);
+        slider->hideTextBox(true);
 
         resize(slider->getWidth() + 100, getHeight());
     }
