@@ -355,8 +355,7 @@ void EffectTreeBase::newEffect(String name, int processorID) {
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    std::cout << "Loading: " << childWhichHasBeenAdded.getType().toString() << newLine << "  To: " << parentTree.getType().toString() << newLine;
-
+    std::cout << "VT child added" << newLine;
     // if effect has been created already
     if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
@@ -365,12 +364,10 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                 // Adjust pos
                 if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                     if (!parent->getChildren().contains(e)) {
-                        std::cout << "Add child to parent" << newLine;
-
-                        e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
-
-                        std::cout << "Set pos to: " << e->getPosition().toString() << newLine;
                         parent->addAndMakeVisible(e);
+                        std::cout << "Pre pos: " << e->getPosition().toString() << newLine;
+                        e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
+                        std::cout << "Post pos: " << e->getPosition().toString() << newLine;
                     }
                 }
             }
@@ -403,16 +400,12 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
-    std::cout << "Should not be called" << newLine;
+    std::cout << "VT child removed" << newLine;
     if (childWhichHasBeenRemoved.hasType(EFFECT_ID)) {
         if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
             if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
-                std::cout << "Child removed" << newLine;
-                std::cout << "Pos: " << e->getPosition().toString() << newLine;
 
-                // Adjust position
-                //e->setTopLeftPosition(e->getPosition() + parent->getPosition());
-
+                parent->removeChildComponent(e);
                 e->setVisible(false);
             }
         }
@@ -445,7 +438,7 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
             }
         }
     }
-    if (key.getKeyCode() == KeyPress::deleteKey) {
+    if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         for (const auto& selectedItem : selected.getItemArray()) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
                 auto lineTree = tree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
@@ -493,14 +486,15 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
 
     if (event.mods.isLeftButtonDown()) {
         // Line drag
-        auto port = portToConnectTo(event, tree);
+        if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+            auto port = portToConnectTo(event, tree);
 
-        if (port != nullptr) {
-            SelectHoverObject::setHoverComponent(port);
-        } else {
-            SelectHoverObject::resetHoverObject();
+            if (port != nullptr) {
+                SelectHoverObject::setHoverComponent(port);
+            } else {
+                SelectHoverObject::resetHoverObject();
+            }
         }
-
         /*
         if (dynamic_cast<LineComponent *>(event.eventComponent)) {
             // ParentToCheck is the container of possible things to connect to.
@@ -1178,11 +1172,11 @@ void Effect::mouseDrag(const MouseEvent &event) {
         if (dynamic_cast<Effect*>(event.originalComponent)) {
             // Effect drag
             if (auto newParent = effectToMoveTo(event, tree.getParent())) {
-                // todo hoverOver undomanager
                 if (newParent != getFromTree<Effect>(tree.getParent())) {
-                    hoverOver(newParent);
                     tree.getParent().removeChild(tree, &undoManager);
                     newParent->getTree().appendChild(tree, &undoManager);
+                    //hoverOver(newParent);
+
                     if (newParent != this) {
                         SelectHoverObject::setHoverComponent(newParent);
                     } else {
@@ -1239,6 +1233,7 @@ void Effect::mouseUp(const MouseEvent &event) {
 }
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    std::cout << "VT property changed: " << property.toString() << newLine;
     if (treeWhosePropertyHasChanged == tree) {
         if (property == IDs::x) {
             int x = treeWhosePropertyHasChanged.getProperty(IDs::x);
@@ -1270,7 +1265,7 @@ void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
 }
 
 void Effect::resized() {
-    if (! undoManager.isPerformingUndoRedo()) {
+    /*if (! undoManager.isPerformingUndoRedo()) {
         int w = tree.getProperty(IDs::w);
         int h = tree.getProperty(IDs::h);
         if (getWidth() != w) {
@@ -1278,7 +1273,7 @@ void Effect::resized() {
         } else if (getHeight() != h) {
             tree.setProperty(IDs::h, getHeight(), &undoManager);
         }
-    }
+    }*/
 
     // Position Ports
     inputPortPos = inputPortStartPos;
@@ -1355,7 +1350,7 @@ void Effect::setPos(Point<int> newPos) {
 }
 
 bool Effect::keyPressed(const KeyPress &key) {
-    if (key == KeyPress::deleteKey) {
+    if (key == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         // delete Effect
         tree.getParent().removeChild(tree, &undoManager);
         //delete this;
