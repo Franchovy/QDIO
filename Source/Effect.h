@@ -47,10 +47,6 @@ public:
 
     static void close();
 
-    //TODO remove these
-    static XmlElement toStorage(ValueTree& activeData);
-    static ValueTree toActive(const XmlElement& storageData);
-
     static ValueTree storeEffect(ValueTree& tree);
     static void loadEffect(ValueTree& parentTree, ValueTree& loadData);
 
@@ -185,9 +181,10 @@ public:
 
     // Undoable actions
     void setPos(Point<int> newPos);
+    void resize(int w, int h);
     void setParent(EffectTreeBase& parent);
 
-    CachedValue<Array<var>> pos;
+    //CachedValue<Array<var>> pos;
 
     // ValueTree listener overrides
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
@@ -206,7 +203,11 @@ public:
 
     struct IDs {
         static const Identifier EFFECT_ID;
-        static const Identifier pos;
+        //static const Identifier pos;
+        static const Identifier x;
+        static const Identifier y;
+        static const Identifier w;
+        static const Identifier h;
         static const Identifier processorID;
         static const Identifier initialised;
         static const Identifier name;

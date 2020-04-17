@@ -149,7 +149,8 @@ public:
         startPos = Point<float>(getX() + event.getMouseDownX(), getY() + event.getMouseDownY());
         dragger.startDraggingComponent(this, event);
         setMouseCursor(MouseCursor::DraggingHandCursor);
-        Component::mouseDown(event);
+        getParentComponent()->mouseDown(event);
+        //Component::mouseDown(event);
     }
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override{

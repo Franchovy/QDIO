@@ -57,7 +57,7 @@ EffectScene::EffectScene() :
 
         ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
 
-        //loadEffect(tree, effectLoadDataTree);
+        loadEffect(tree, effectLoadDataTree);
 
         //tree.appendChild(loadedEffects, nullptr);
     }

@@ -21,7 +21,11 @@ LineComponent EffectTreeBase::dragLine;
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
 
-const Identifier Effect::IDs::pos = "pos";
+//const Identifier Effect::IDs::pos = "pos";
+const Identifier Effect::IDs::x = "x";
+const Identifier Effect::IDs::y = "y";
+const Identifier Effect::IDs::w = "w";
+const Identifier Effect::IDs::h = "h";
 const Identifier Effect::IDs::processorID = "processor";
 const Identifier Effect::IDs::initialised = "initialised";
 const Identifier Effect::IDs::name = "name";
@@ -250,7 +254,10 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
                 undoManager.beginNewTransaction("New Empty Effect");
                 ValueTree newEffect(Effect::IDs::EFFECT_ID);
 
-                newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
+                newEffect.setProperty(Effect::IDs::x, getMouseXYRelative().x, nullptr);
+                newEffect.setProperty(Effect::IDs::y, getMouseXYRelative().y, nullptr);
+
+                //newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
                 this->getTree().appendChild(newEffect, &undoManager);
 
                 if (selected.getNumSelected() > 0) {
@@ -286,7 +293,10 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
 void EffectTreeBase::newEffect(String name, int processorID) {
     undoManager.beginNewTransaction("New " + name);
     ValueTree newEffect(Effect::IDs::EFFECT_ID);
-    newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
+    newEffect.setProperty(Effect::IDs::x, getMouseXYRelative().x, nullptr);
+    newEffect.setProperty(Effect::IDs::y, getMouseXYRelative().y, nullptr);
+
+    //newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
     newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
 
     this->getTree().appendChild(newEffect, &undoManager);
@@ -567,104 +577,6 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
     LineComponent::setDragLine(&dragLine);
 }
 
-XmlElement EffectTreeBase::toStorage(ValueTree& activeData) {
-    XmlElement storageData(activeData.getType());
-
-    // Convert effect to data
-    if (activeData.hasType(EFFECT_ID)) {
-        std::cout << "effect" << newLine;
-
-        // Name
-        String name = activeData.getProperty(Effect::IDs::name);
-        storageData.setAttribute("name", name);
-
-        // Position
-        auto pos = Position::fromVar(activeData.getProperty(Effect::IDs::pos));
-        storageData.setAttribute("x", pos.x);
-        storageData.setAttribute("y", pos.y);
-
-        // ProcessorID
-        int processorID = activeData.getProperty(Effect::IDs::processorID);
-        storageData.setAttribute("processor ID", processorID);
-    }
-
-    if (activeData.hasType(EFFECT_ID) || activeData.hasType(EFFECTSCENE_ID)) {
-        std::cout << "recurse" << newLine;
-
-        // Iterate through children
-
-        for (int i = 0; i < activeData.getNumChildren(); i++) {
-            ValueTree child = activeData.getChild(i);
-
-            // Recurse through Effects
-            if (child.hasType(EFFECT_ID)) {
-                storageData.addChildElement(new XmlElement(toStorage(child)));
-            }
-            // Add connections
-            else if (child.hasType(CONNECTION_ID)) {
-                auto connectionElement = new XmlElement(child.getType());
-                //TODO
-                storageData.addChildElement(connectionElement);
-            }
-        }
-    }
-    //getStorageObjectID(storageData, object)
-
-    /*if (auto processorID = storageData.getStringAttribute(Effect::IDs::processorID)) {
-        storageData.removeAttribute(Effect::IDs::processorID);
-        processorID
-    }*/
-
-
-    return storageData;
-}
-
-ValueTree EffectTreeBase::toActive(const XmlElement& storageData) {
-    ValueTree activeData(storageData.getTagName());
-
-    // Convert effect to data
-    if (storageData.hasTagName(EFFECT_ID)) {
-        std::cout << "effect" << newLine;
-
-        // Name
-        String name = storageData.getStringAttribute("name");
-        activeData.setProperty(Effect::IDs::name, name, nullptr);
-
-        // Position
-        int x = std::stoi(storageData.getStringAttribute("x").toStdString());
-        int y = std::stoi(storageData.getStringAttribute("y").toStdString());
-        auto pos = Point<int>(x,y);
-        activeData.setProperty(Effect::IDs::pos, Position::toVar(pos), nullptr);
-
-        // ProcessorID
-        int processorID = std::stoi(storageData.getStringAttribute("processorID").toStdString());
-        activeData.setProperty(Effect::IDs::processorID, processorID, nullptr);
-    }
-
-    if (storageData.hasTagName(EFFECT_ID) || storageData.hasTagName(EFFECTSCENE_ID)) {
-        std::cout << "recurse" << newLine;
-
-        // Iterate through children
-
-        for (int i = 0; i < storageData.getNumChildElements(); i++) {
-            auto child = storageData.getChildElement(i);
-
-            // Recurse through Effects
-            if (child->hasTagName(EFFECT_ID)) {
-                activeData.appendChild(toActive(*child), nullptr);
-            }
-                // Add connections
-            else if (child->hasTagName(CONNECTION_ID)) {
-                ValueTree connectionChildTree(child->getTagName());
-                //TODO
-                activeData.appendChild(connectionChildTree, nullptr);
-            }
-        }
-    }
-
-    return activeData;
-}
-
 ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
     ValueTree copy = tree;
 
@@ -676,12 +588,12 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
         copy.removeProperty(Effect::IDs::connections, nullptr);
 
         // Set position property
-        auto pos = Position::fromVar(copy.getProperty(Effect::IDs::pos));
+        /*auto pos = Position::fromVar(copy.getProperty(Effect::IDs::pos));
         copy.setProperty("x", pos.x, nullptr);
         copy.setProperty("y", pos.y, nullptr);
 
         copy.removeProperty(Effect::IDs::pos, nullptr);
-
+*/
         // Store object as ID
         auto ptr = dynamic_cast<Effect*>(tree.getProperty(
                 IDs::effectTreeBase).getObject());
@@ -751,11 +663,11 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
 
     if (loadData.hasType(EFFECT_ID)) {
         copy.copyPropertiesFrom(loadData, nullptr);
-
+/*
         // Set position property
         int x = loadData.getProperty("x");
         int y = loadData.getProperty("y");
-        copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);
+        copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);*/
     }
 
     // Load child effects
@@ -891,8 +803,10 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     setupTitle();
     setupMenu();
 
-    Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
-    setBounds(newPos.x, newPos.y, 200,200);
+    int x = tree.getProperty(IDs::x);
+    int y = tree.getProperty(IDs::y);
+    //Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
+    setBounds(x, y, 200,200);
 
     addAndMakeVisible(resizer);
 
@@ -900,7 +814,7 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     tree.addListener(this);
 
     // Position
-    pos.referTo(tree, IDs::pos, &undoManager);
+    //pos.referTo(tree, IDs::pos, &undoManager);
     setPos(getPosition());
 
     // Set parent component
@@ -1040,7 +954,8 @@ void Effect::setEditMode(bool isEditMode) {
             p->setColour(0, Colours::whitesmoke);
         }
 
-        setBounds(getBounds().expanded(50));
+        auto size = getBounds().expanded(50);
+        setSize(size.getX(), size.getY());
     }
 
     // Turn off edit mode
@@ -1142,7 +1057,7 @@ void Effect::addParameter(AudioProcessorParameter *param) {
         addAndMakeVisible(label);
 
 
-        setSize(slider->getWidth() + 100, getHeight());
+        resize(slider->getWidth() + 100, getHeight());
     }
 }
 
@@ -1210,6 +1125,11 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
+    if (dynamic_cast<Resizer*>(event.originalComponent)) {
+        undoManager.beginNewTransaction("resize");
+        return;
+    }
+
     if (event.mods.isLeftButtonDown()) {
         if (editMode) {
             //TODO make lasso functionality static
@@ -1320,49 +1240,18 @@ void Effect::mouseUp(const MouseEvent &event) {
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     if (treeWhosePropertyHasChanged == tree) {
-        if (property == IDs::pos && treeWhosePropertyHasChanged.hasProperty(property)) {
-            std::cout << "Position changed" << newLine;
-
-            /*auto newPos = Position::fromVar(*treeWhosePropertyHasChanged.getProperty(IDs::pos).getArray());
-
-            newPos = Position::fromVar(pos.get());
-
-            if (undoManager.isPerformingUndoRedo()) {
-                std::cout << "undoredo" << newLine;
-                setTopLeftPosition(Point<int>(newPos.getX(), newPos.getY()));
-            }
-            std::cout << "poop: " << newPos.toString() << newLine;*/
-/*
-            if (newPos.getX() != 0 && newPos.getY() != 0) {
-
-            }*/
-            /*
-            std::cout << "pos changed yet?" << newLine;
-            std::cout << "tree: " << newpos.getX() << " " << newpos.getY() << newLine;
-            pos.forceUpdateOfCachedValue();
-            auto otherpos = Position::fromVar(pos.get());
-            std::cout << "pos: " << otherpos.getX() << " " << otherpos.getY() << newLine;
-
-            setTopLeftPosition(newpos);*/
-                    /*
-
-            auto property = treeWhosePropertyHasChanged.getProperty(IDs::pos).getArray();
-            auto x = (int)(*property)[0];
-            auto y = (int)(*property)[1];
-            std::cout << "Property changed: " << newLine;
-            std::cout << x << " " << y << newLine;
-
-
-            auto xpos = (int)(*pos)[0];
-            auto ypos = (int)(*pos)[1];
-            std::cout << "Pos: " << newLine;
-            std::cout << xpos << " " << ypos << newLine;
-
-            *//*if (x != 0 && y != 0) {
-                std::cout << "Undo operation" << newLine;
-                setTopLeftPosition(Point<int>(x,y));
-            }
-            setTopLeftPosition(Point<int>(x,y));*/
+        if (property == IDs::x) {
+            int x = treeWhosePropertyHasChanged.getProperty(IDs::x);
+            setTopLeftPosition(x, getY());
+        } else if (property == IDs::y) {
+            int y = treeWhosePropertyHasChanged.getProperty(IDs::y);
+            setTopLeftPosition(getX(), y);
+        } else if (property == IDs::w) {
+            int w = treeWhosePropertyHasChanged.getProperty(IDs::w);
+            setSize(w, getHeight());
+        } else if (property == IDs::h) {
+            int h = treeWhosePropertyHasChanged.getProperty(IDs::h);
+            setSize(h, getWidth());
         } else if (property == IDs::name) {
             auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
             auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
@@ -1381,7 +1270,16 @@ void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
 }
 
 void Effect::resized() {
-    std::cout << "resized" << newLine;
+    if (! undoManager.isPerformingUndoRedo()) {
+        int w = tree.getProperty(IDs::w);
+        int h = tree.getProperty(IDs::h);
+        if (getWidth() != w) {
+            tree.setProperty(IDs::w, getWidth(), &undoManager);
+        } else if (getHeight() != h) {
+            tree.setProperty(IDs::h, getHeight(), &undoManager);
+        }
+    }
+
     // Position Ports
     inputPortPos = inputPortStartPos;
     outputPortPos = outputPortStartPos;
@@ -1452,9 +1350,8 @@ void Effect::setParent(EffectTreeBase &parent) {
 }
 
 void Effect::setPos(Point<int> newPos) {
-    setTopLeftPosition(newPos);
-    pos.setValue(Position::toVar(newPos), nullptr); //todo undomanager
-    /*pos = Position::toVar(newPos);*/
+    tree.setProperty("x", newPos.getX(), &undoManager);
+    tree.setProperty("y", newPos.getY(), &undoManager);
 }
 
 bool Effect::keyPressed(const KeyPress &key) {
@@ -1468,9 +1365,11 @@ bool Effect::keyPressed(const KeyPress &key) {
 
 void Effect::hoverOver(EffectTreeBase *newParent) {
     if (newParent->getWidth() < getParentWidth() || newParent->getHeight() < getParentHeight()) {
-        setBounds(getBounds().expanded(-20));
+        auto newSize = getBounds().expanded(-20);
+        resize(newSize.getX(), newSize.getY());
     } else {
-        setBounds(getBounds().expanded(20));
+        auto newSize = getBounds().expanded(20);
+        resize(newSize.getX(), newSize.getY());
     }
 }
 
@@ -1502,6 +1401,11 @@ AudioPort *Effect::getPortFromID(const int id) {
     } else {
         return outputPorts[id - inputPorts.size()];
     }
+}
+
+void Effect::resize(int w, int h) {
+    tree.setProperty(IDs::w, w, &undoManager);
+    tree.setProperty(IDs::h, h, &undoManager);
 }
 
 
