@@ -220,19 +220,32 @@ void SelectHoverObject::setHoverComponent(SelectHoverObject* item) {
 }
 
 SelectHoverObject::SelectHoverObject() {
-    componentsToSelect.add(this);
+    if (getName() != "MainWindow") {
+        componentsToSelect.add(this);
+    }
+
 }
 
 SelectHoverObject::~SelectHoverObject() {
+    std::cout << "ComponentsToSelect: " << newLine;
+    /*for (auto c : componentsToSelect) {
+        std::cout << "object: " << c << " " << c->getName() << newLine;
+    }
+
+    for (auto c : getChildren()) {
+        if (auto s = dynamic_cast<SelectHoverObject*>(c)) {
+            componentsToSelect.removeObject(s);
+        }
+    }*/
     componentsToSelect.removeObject(this);
 
     if (hoverComponent == this){
         hoverComponent = nullptr;
     }
 
-    if (getReferenceCount() > 1) {
+    /*if (getReferenceCount() > 1) {
         selected.deselect(this);
-    }
+    }*/
 }
 
 void SelectHoverObject::resetHoverObject() {

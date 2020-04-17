@@ -18,6 +18,8 @@ AudioDeviceManager EffectTreeBase::deviceManager;
 UndoManager EffectTreeBase::undoManager;
 LineComponent EffectTreeBase::dragLine;
 
+ReferenceCountedArray<Effect> EffectTreeBase::effectsToDelete;
+
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
 
@@ -224,7 +226,13 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
 
 
 void EffectTreeBase::close() {
+    for (auto e : effectsToDelete) {
+        e->getTree().removeAllProperties(nullptr);
+    }
+
     SelectHoverObject::close();
+
+    effectsToDelete.clear();
 
     processorPlayer.setProcessor(nullptr);
     deviceManager.closeAudioDevice();
@@ -709,19 +717,31 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
                 auto inEffect = getFromTree<Effect>(in);
                 auto outEffect = getFromTree<Effect>(out);
 
-                auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"));
-                auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"));
+                auto inPortIsInternal = in.getProperty("inPortIsInternal");
+                auto outPortIsInternal = out.getProperty("outPortIsInternal");
 
-                connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
-                connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
+                if (inPortIsInternal || outPortIsInternal) {
 
-                parentTree.appendChild(connectionToSet, nullptr);
+                    std::cout << "internal port" << newLine;
+                    //todo
+                    continue;
+                } else {
+                    if (inEffect == NULL || outEffect == NULL) {
+                        return; //todo return bool?
+                    }
 
-                /*std::cout << "Add connection" << newLine;
-                std::cout << parentTree.toXmlString() << newLine;
-                std::cout << copy.getChildWithProperty("ID", outPortEffectID).isValid() << newLine;*/
+                    auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"));
+                    auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"));
 
+                    if (inPort == NULL || outPort == NULL) {
+                        return;
+                    }
 
+                    connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
+                    connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
+
+                    parentTree.appendChild(connectionToSet, nullptr);
+                }
             }
         }
     }
@@ -897,6 +917,11 @@ void Effect::setProcessor(AudioProcessor *processor) {
     // Setup parameters
     parameters = &processor->getParameterTree();
     setParameters(parameters);
+
+    int numParams = parameters->getParameters(false).size();
+    if (numParams > 0) {
+        setBounds(getBounds().expanded(40, numParams * 20));
+    }
 
     // Update
     resized();
@@ -1351,9 +1376,8 @@ void Effect::setPos(Point<int> newPos) {
 
 bool Effect::keyPressed(const KeyPress &key) {
     if (key == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
-        // delete Effect
+        effectsToDelete.add(this);
         tree.getParent().removeChild(tree, &undoManager);
-        //delete this;
     }
     return EffectTreeBase::keyPressed(key);
 }

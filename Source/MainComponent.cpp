@@ -52,7 +52,9 @@ MainComponent::~MainComponent() {
     getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
     getAppProperties().getUserSettings()->saveIfNeeded();
 
+    main.incReferenceCount();
     EffectTreeBase::close();
+    main.decReferenceCountWithoutDeleting();
 }
 
 void MainComponent::move(int deltaX, int deltaY) {

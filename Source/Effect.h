@@ -75,6 +75,8 @@ public:
     template <class T>
     static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
 
+
+    static ReferenceCountedArray<Effect> effectsToDelete;
 protected:
     ValueTree tree;
 

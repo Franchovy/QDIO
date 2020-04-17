@@ -21,7 +21,7 @@ public:
 
     GuiObject() = default;
     ~GuiObject() override {
-        resetReferenceCount();
+        //resetReferenceCount();
     }
 
 private:
