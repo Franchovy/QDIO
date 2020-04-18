@@ -19,7 +19,7 @@
  * This is the class that contains the main / static stuff. The EffectScene is part of the effect tree,
  * as the tree-top, and the MainComponent/Viewport acts as its manager.
  */
-class MainComponent : public Viewport, private Timer
+class MainComponent : public Viewport, private Timer, public ChangeListener
 {
 public:
     //
@@ -27,6 +27,7 @@ public:
 
     ~MainComponent() override;
 
+    void changeListenerCallback(ChangeBroadcaster *source) override;
 
 private:
 
@@ -34,7 +35,9 @@ private:
     void timerCallback() override;
 
     EffectScene main;
+    AudioProcessorGraph& audioGraph;
     AudioDeviceManager& deviceManager;
+    AudioProcessorPlayer& audioPlayer;
 
     ImageButton settingsButton;
     SettingsComponent settingsMenu;

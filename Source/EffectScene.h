@@ -48,7 +48,11 @@ public:
 
     void storeState();
 
+    void updateChannels();
+
     AudioDeviceManager& getDeviceManager() { return deviceManager; }
+    AudioProcessorGraph& getAudioGraph() { return audioGraph; }
+    AudioProcessorPlayer& getAudioPlayer() { return processorPlayer; }
 
     struct IDs {
         static const Identifier DeviceManager;

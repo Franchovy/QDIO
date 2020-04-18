@@ -26,7 +26,6 @@ public:
                                  image, 1.0f, Colours::grey, image, 1.0f, Colours::lightgrey,
                                  image, 1.0f, Colours::darkgrey);
 
-
         setSize(800, 450);
     }
 

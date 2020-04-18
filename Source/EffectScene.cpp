@@ -157,6 +157,33 @@ void EffectScene::storeState() {
     getAppProperties().getUserSettings()->saveIfNeeded();
 }
 
+void EffectScene::updateChannels() {
+    auto defaultInChannel = AudioChannelSet();
+    defaultInChannel.addChannel(AudioChannelSet::ChannelType::left);
+    defaultInChannel.addChannel(AudioChannelSet::ChannelType::right);
+    auto defaultOutChannel = AudioChannelSet();
+    defaultOutChannel.addChannel(AudioChannelSet::ChannelType::left);
+    defaultOutChannel.addChannel(AudioChannelSet::ChannelType::right);
+
+    // update num ins and outs
+    for (auto node : audioGraph.getNodes()) {
+        // Set buses layout or whatever
+        auto layout = node->getProcessor()->getBusesLayout();
+        auto numInputs = deviceManager.getAudioDeviceSetup().inputChannels.toInteger();
+        for (int i = 0; i < numInputs; i++) {
+            layout.inputBuses.add(defaultInChannel);
+        }
+        auto numOutputs = deviceManager.getAudioDeviceSetup().outputChannels.toInteger();
+        for (int i = 0; i < numOutputs; i++) {
+            layout.outputBuses.add(defaultOutChannel);
+        }
+        node->getProcessor()->setBusesLayout(layout);
+
+        // Tell gui to update
+        Effect::updateEffectProcessor(node->getProcessor(), tree);
+    }
+}
+
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
     if (auto e = dynamic_cast<Effect*>(c.get()))
         e->setSelectMode(true);

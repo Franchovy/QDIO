@@ -14,6 +14,8 @@ MainComponent::MainComponent()
     : main()
     , effectTree(EFFECT_ID) // TODO load if existing
     , deviceManager(main.getDeviceManager())
+    , audioGraph(main.getAudioGraph())
+    , audioPlayer(main.getAudioPlayer())
     , settingsMenu(deviceManager)
 {
     // EffectScene component
@@ -40,6 +42,8 @@ MainComponent::MainComponent()
         settingsMenu.setVisible(false);
         settingsButton.setVisible(true);
     };
+
+    deviceManager.addChangeListener(this);
 
     startTimer(3);
 }
@@ -84,4 +88,10 @@ void MainComponent::timerCallback() {
     move(deltaX, deltaY);
 
     startTimer(3);
+}
+
+void MainComponent::changeListenerCallback(ChangeBroadcaster *source) {
+    deviceManager.getCurrentAudioDevice()->stop();
+    main.updateChannels();
+    deviceManager.getCurrentAudioDevice()->start(&audioPlayer);
 }

@@ -186,6 +186,8 @@ public:
     void resize(int w, int h);
     void setParent(EffectTreeBase& parent);
 
+    static void updateEffectProcessor(AudioProcessor* processorToUpdate, ValueTree treeToSearch);
+
     //CachedValue<Array<var>> pos;
 
     // ValueTree listener overrides
@@ -194,8 +196,7 @@ public:
 
     // =================================================================================
     // Setters and getter functions
-
-    void setProcessor(AudioProcessor* processor);
+    bool hasProcessor(AudioProcessor* processor);
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
@@ -219,6 +220,8 @@ public:
 
 private:
     // Used for an individual processor Effect. - does not contain anything else
+    void setProcessor(AudioProcessor* processor);
+
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
 

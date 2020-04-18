@@ -1430,6 +1430,35 @@ void Effect::resize(int w, int h) {
     tree.setProperty(IDs::h, h, &undoManager);
 }
 
+bool Effect::hasProcessor(AudioProcessor *processor) {
+    return processor == this->processor;
+}
+
+void Effect::updateEffectProcessor(AudioProcessor *processorToUpdate, ValueTree treeToSearch) {
+    for (int i = 0; i < treeToSearch.getNumChildren(); i++) {
+        if (auto e = getFromTree<Effect>(treeToSearch.getChild(i))) {
+            if (e->hasProcessor(processorToUpdate)) {
+                // update processor gui
+                if (processorToUpdate->getMainBusNumInputChannels() > e->inputPorts.size()) {
+                    auto numPortsToAdd = processorToUpdate->getMainBusNumInputChannels() - e->inputPorts.size();
+                    for (int j = 0; j < numPortsToAdd; j++) {
+                        e->addPort(e->getDefaultBus(), true);
+                    }
+                }
+                if (processorToUpdate->getMainBusNumOutputChannels() < e->outputPorts.size()) {
+                    auto numPortsToAdd = processorToUpdate->getMainBusNumOutputChannels() - e->outputPorts.size();
+                    for (int j = 0; j < numPortsToAdd; j++) {
+                        e->addPort(e->getDefaultBus(), false);
+                    }
+                }
+            } else {
+                //recurse
+                updateEffectProcessor(processorToUpdate, treeToSearch.getChild(i));
+            }
+        }
+    }
+}
+
 
 Point<int> Position::fromVar(const var &v) {
     Array<var>* array = v.getArray();
