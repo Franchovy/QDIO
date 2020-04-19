@@ -1135,7 +1135,7 @@ void Effect::addParameter(AudioProcessorParameter *param) {
         SliderListener* listener = new SliderListener(param);
         slider->addListener(listener);
         slider->setName("Slider");
-
+        slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 
         auto label = new Label(param->getName(30), param->getName(30));
         label->setFont(Font(15, Font::FontStyleFlags::bold));
@@ -1146,7 +1146,7 @@ void Effect::addParameter(AudioProcessorParameter *param) {
 
         auto i = parameters->getParameters(false).indexOf(param);
 
-        slider->setBounds(40 , 40 + (i * 70), 150, 70);
+        slider->setBounds(40 , 40 + (i * 70), 100, 70);
         addAndMakeVisible(slider);
 
         label->setBounds(slider->getX(), slider->getY() + 5, slider->getWidth(), 20);
