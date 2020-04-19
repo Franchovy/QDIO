@@ -47,12 +47,12 @@ public:
 
         auto numIns = getMainBusNumInputChannels();
         auto numOuts = getMainBusNumOutputChannels();
-        if (numIns > numOuts) {
+        /*if (numIns > numOuts) {
             for (int i = 0; i < numIns - numOuts; i++)
             {
                 buffer.copyFrom(i + numIns, 0, buffer, i, 0, buffer.getNumSamples());
             }
-        }
+        }*/
     }
 
     const String getName() const override { return name; }

@@ -446,6 +446,10 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
             }
         }
     }
+    if (key.getKeyCode() == 'p') {
+        std::cout << "Main Position: " << getMouseXYRelative().toString() << newLine;
+        std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
+    }
     if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         for (const auto& selectedItem : selected.getItemArray()) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {

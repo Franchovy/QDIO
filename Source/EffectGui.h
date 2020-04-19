@@ -291,6 +291,7 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
     ConnectionLine(ConnectionPort& p1, ConnectionPort& p2);
+
     ~ConnectionLine(){
         inPort->setOtherPort(nullptr);
         outPort->setOtherPort(nullptr);

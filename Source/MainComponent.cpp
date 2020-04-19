@@ -91,7 +91,7 @@ void MainComponent::timerCallback() {
 }
 
 void MainComponent::changeListenerCallback(ChangeBroadcaster *source) {
-    deviceManager.getCurrentAudioDevice()->stop();
+    /*deviceManager.getCurrentAudioDevice()->stop();
     main.updateChannels();
-    deviceManager.getCurrentAudioDevice()->start(&audioPlayer);
+    deviceManager.getCurrentAudioDevice()->start(&audioPlayer);*/
 }

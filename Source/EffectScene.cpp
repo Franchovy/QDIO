@@ -165,17 +165,27 @@ void EffectScene::updateChannels() {
     defaultOutChannel.addChannel(AudioChannelSet::ChannelType::left);
     defaultOutChannel.addChannel(AudioChannelSet::ChannelType::right);
 
-    // update num ins and outs
+    // Update num ins and outs
     for (auto node : audioGraph.getNodes()) {
+        //todo dgaf about buses layout. Only channels within buses.
+        // How about a follow-through method that changes channels if possible given port?
+
         // Set buses layout or whatever
         auto layout = node->getProcessor()->getBusesLayout();
-        auto numInputs = deviceManager.getAudioDeviceSetup().inputChannels.toInteger();
-        for (int i = 0; i < numInputs; i++) {
-            layout.inputBuses.add(defaultInChannel);
+
+        auto inputs = deviceManager.getAudioDeviceSetup().inputChannels;
+        auto outputs = deviceManager.getAudioDeviceSetup().outputChannels;
+
+        for (int i = 0; i < inputs.getHighestBit(); i++) {
+            if (inputs[i] == 1) {
+                layout.inputBuses.add(defaultInChannel);
+            }
         }
-        auto numOutputs = deviceManager.getAudioDeviceSetup().outputChannels.toInteger();
-        for (int i = 0; i < numOutputs; i++) {
-            layout.outputBuses.add(defaultOutChannel);
+
+        for (int i = 0; i < outputs.getHighestBit(); i++) {
+            if (inputs[i] == 1) {
+                layout.outputBuses.add(defaultOutChannel);
+            }
         }
         node->getProcessor()->setBusesLayout(layout);
 
