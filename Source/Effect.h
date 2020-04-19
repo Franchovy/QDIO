@@ -115,9 +115,9 @@ protected:
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
-    static AudioDeviceManager deviceManager;
-    static AudioProcessorPlayer processorPlayer;
-    static AudioProcessorGraph audioGraph;
+    static AudioDeviceManager* deviceManager;
+    static AudioProcessorPlayer* processorPlayer;
+    static AudioProcessorGraph* audioGraph;
 
     static UndoManager undoManager;
 
@@ -203,7 +203,7 @@ public:
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
-    AudioProcessor::Bus* getDefaultBus() { audioGraph.getBus(true, 0); }
+    AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
     bool isIndividual() const { return processor != nullptr; }
 
@@ -225,9 +225,6 @@ private:
     // Used for an individual processor Effect. - does not contain anything else
     void setProcessor(AudioProcessor* processor);
 
-    AudioProcessor* processor = nullptr;
-    AudioProcessorGraph::Node::Ptr node = nullptr;
-
     bool editMode = false;
     ReferenceCountedArray<AudioPort> inputPorts;
     ReferenceCountedArray<AudioPort> outputPorts;
@@ -242,6 +239,9 @@ private:
     PopupMenu editMenu;
 
     const AudioProcessorParameterGroup* parameters;
+
+    AudioProcessor* processor = nullptr;
+    AudioProcessorGraph::Node::Ptr node = nullptr;
 
     int portIncrement = 50;
     int inputPortStartPos = 100;

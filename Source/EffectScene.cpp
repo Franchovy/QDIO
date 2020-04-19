@@ -11,6 +11,10 @@ EffectScene::EffectScene() :
 
     // Set up static members
 
+    EffectTreeBase::audioGraph = &audioGraph;
+    EffectTreeBase::processorPlayer = &processorPlayer;
+    EffectTreeBase::deviceManager = &deviceManager;
+
     audioGraph.enableAllBuses();
 
     deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
@@ -66,6 +70,9 @@ EffectScene::EffectScene() :
 EffectScene::~EffectScene()
 {
     audioGraph.clear();
+    processorPlayer.setProcessor(nullptr);
+    deviceManager.closeAudioDevice();
+
     undoManager.clearUndoHistory();
 }
 

@@ -59,6 +59,10 @@ public:
     };
 
 private:
+    AudioDeviceManager deviceManager;
+    AudioProcessorPlayer processorPlayer;
+    AudioProcessorGraph audioGraph;
+
     //==============================================================================
     // Audio shit
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;

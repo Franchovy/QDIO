@@ -14,9 +14,9 @@
 #include "IDs"
 
 // Static members
-AudioProcessorGraph EffectTreeBase::audioGraph;
-AudioProcessorPlayer EffectTreeBase::processorPlayer;
-AudioDeviceManager EffectTreeBase::deviceManager;
+AudioProcessorGraph* EffectTreeBase::audioGraph = nullptr;
+AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
+AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 LineComponent EffectTreeBase::dragLine;
 
@@ -182,18 +182,18 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
 
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
-        if (!EffectTreeBase::audioGraph.isConnected(connection) &&
-            EffectTreeBase::audioGraph.isConnectionLegal(connection)) {
+        if (!EffectTreeBase::audioGraph->isConnected(connection) &&
+            EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
             // Make audio connection
-            return EffectTreeBase::audioGraph.addConnection(connection);
+            return EffectTreeBase::audioGraph->addConnection(connection);
         }
     }
 }
 
 void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
-        if (audioGraph.isConnected(connection)) {
-            audioGraph.removeConnection(connection);
+        if (audioGraph->isConnected(connection)) {
+            audioGraph->removeConnection(connection);
         }
     }
 }
@@ -214,8 +214,8 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     auto returnArray = Array<AudioProcessorGraph::Connection>();
 
     if (in.isValid && out.isValid) {
-        for (int c = 0; c < jmin(EffectTreeBase::audioGraph.getTotalNumInputChannels(),
-                                 EffectTreeBase::audioGraph.getTotalNumOutputChannels()); c++) {
+        for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(),
+                                 EffectTreeBase::audioGraph->getTotalNumOutputChannels()); c++) {
             AudioProcessorGraph::Connection connection = {{in.node->nodeID,  in.port->bus->getChannelIndexInProcessBlockBuffer(
                     c)},
                                                           {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(
@@ -234,9 +234,6 @@ void EffectTreeBase::close() {
     }
 
     effectsToDelete.clear();
-
-    processorPlayer.setProcessor(nullptr);
-    deviceManager.closeAudioDevice();
 }
 
 Point<int> EffectTreeBase::dragDetachFromParentComponent() {
@@ -443,7 +440,7 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
 #ifdef DEBUG_UTILITIES
     if (key.getKeyCode() == 's') {
         std::cout << "Audiograph status: " << newLine;
-        for (auto node : audioGraph.getNodes()) {
+        for (auto node : audioGraph->getNodes()) {
             if (node != nullptr) {
                 std::cout << "node: " << node->nodeID.uid << newLine;
                 std::cout << node->getProcessor()->getName() << newLine;
@@ -477,10 +474,10 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
 #endif
 
     if (key.getKeyCode() == KeyPress::spaceKey) {
-        if (deviceManager.getCurrentAudioDevice()->isPlaying()) {
-            deviceManager.getCurrentAudioDevice()->stop();
+        if (deviceManager->getCurrentAudioDevice()->isPlaying()) {
+            deviceManager->getCurrentAudioDevice()->stop();
         } else {
-            deviceManager.getCurrentAudioDevice()->start(&processorPlayer);
+            deviceManager->getCurrentAudioDevice()->start(processorPlayer);
         }
     }
 
@@ -863,7 +860,7 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
             default:
                 std::cout << "ProcessorID not found." << newLine;
         }
-        node = audioGraph.addNode(move(newProcessor));
+        node = audioGraph->addNode(move(newProcessor));
 
         node->incReferenceCount();
 
@@ -962,9 +959,10 @@ Effect::~Effect()
     }
 
     std::cout << "nodeptr" << newLine;*/
-    while (node->getReferenceCount() > 2) {
+    while (node->getReferenceCount() > 1) {
         node->decReferenceCount();
     }
+
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -976,8 +974,8 @@ void Effect::setProcessor(AudioProcessor *processor) {
     node->getProcessor()->setPlayConfigDetails(
             processor->getTotalNumInputChannels(),
             processor->getTotalNumOutputChannels(),
-            audioGraph.getSampleRate(),
-            audioGraph.getBlockSize());
+            audioGraph->getSampleRate(),
+            audioGraph->getBlockSize());
 
     // Set up ports based on processor buses
     int numInputBuses = processor->getBusCount(true );
