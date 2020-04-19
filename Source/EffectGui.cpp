@@ -150,18 +150,13 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
         outPort = &p1;
     }
 
-    std::cout << "Centre pos: " << inPort->centrePoint.toString() << newLine;
-    std::cout << "Centre plus port pos: " << (inPort->centrePoint + inPort->getPosition()).toString() << newLine;
-    std::cout << "Centre plus port and parent: " << (inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint).toString() << newLine;
-    std::cout << "Point Relative: " << getLocalPoint(inPort.get(), inPort->centrePoint).toString() << newLine;
-
     auto inPos = dynamic_cast<AudioPort*>(inPort.get()) != nullptr
             ? inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint
             : inPort->getPosition() + inPort->centrePoint;
     auto outPos = dynamic_cast<AudioPort*>(outPort.get()) != nullptr
             ? outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint
             : outPort->getPosition() + outPort->centrePoint;
-    
+
     line = Line<int>(inPos, outPos);
 
     inPort->setOtherPort(outPort);

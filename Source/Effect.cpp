@@ -8,6 +8,8 @@
   ==============================================================================
 */
 
+#define DEBUG_UTILITIES
+
 #include "Effect.h"
 #include "IDs"
 
@@ -59,7 +61,6 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
     auto parent = getFromTree<EffectTreeBase>(effectTree);
     if (! parent->contains(parent->getLocalPoint(event.eventComponent, event.getPosition()))) {
         // find new parent
-        std::cout << "Find new parent" << newLine;
         auto parentToCheck = parent->getParent();
         if (parentToCheck != nullptr
                 && parentToCheck->contains(parentToCheck->getLocalPoint(event.eventComponent, event.getPosition())))
@@ -70,22 +71,23 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
         // Check if children match
         for (int i = 0; i < effectTree.getNumChildren(); i++) {
             auto childTree = effectTree.getChild(i);
-            if (childTree.hasType(Effect::IDs::EFFECT_ID)) {
-                auto child = getFromTree<EffectTreeBase>(childTree);
-                auto childEvent = event.getEventRelativeTo(child);
+            if (childTree.hasType(EFFECT_ID)) {
+                auto child = getFromTree<Effect>(childTree);
 
-                if (child != nullptr
-                    && child->contains(childEvent.getPosition())
-                    && child != event.originalComponent) {
-                    // Add any filters here
-                    // Must be in edit mode
-                    if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
+                if (child != nullptr) {
+                    auto childEvent = event.getEventRelativeTo(child);
+                    if (child->contains(childEvent.getPosition())
+                            && child != event.originalComponent) {
+                        // Add any filters here
+                        // Must be in edit mode
+                        if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
 
-                    // Check if there's a match in the children (sending child component coordinates)
-                    if (auto e = effectToMoveTo(childEvent, childTree))
-                        return e;
-                    else
-                        return child;
+                        // Check if there's a match in the children (sending child component coordinates)
+                        if (auto e = effectToMoveTo(childEvent, childTree))
+                            return e;
+                        else
+                            return child;
+                    }
                 }
             }
         }
@@ -226,11 +228,10 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
 
 
 void EffectTreeBase::close() {
+    SelectHoverObject::close();
     for (auto e : effectsToDelete) {
         e->getTree().removeAllProperties(nullptr);
     }
-
-    SelectHoverObject::close();
 
     effectsToDelete.clear();
 
@@ -363,7 +364,10 @@ void EffectTreeBase::newEffect(String name, int processorID) {
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    std::cout << "VT child added" << newLine;
+    if (getFromTree<Effect>(childWhichHasBeenAdded) != nullptr) {
+        std::cout << "Add " << getFromTree<Effect>(childWhichHasBeenAdded)->getName() <<  " to " << parentTree.getType().toString() << newLine;
+    }
+
     // if effect has been created already
     if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
@@ -435,6 +439,8 @@ T *EffectTreeBase::getPropertyFromTree(const ValueTree &vt, Identifier property)
 }
 
 bool EffectTreeBase::keyPressed(const KeyPress &key) {
+
+#ifdef DEBUG_UTILITIES
     if (key.getKeyCode() == 's') {
         std::cout << "Audiograph status: " << newLine;
         for (auto node : audioGraph.getNodes()) {
@@ -450,6 +456,34 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
         std::cout << "Main Position: " << getMouseXYRelative().toString() << newLine;
         std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
     }
+    if (key.getKeyCode() == 'e') {
+        if (auto e = dynamic_cast<EffectTreeBase*>(getComponentAt(getMouseXYRelative()))) {
+            auto tree = e->getTree();
+            std::cout << "Properties: " << newLine;
+            for (int i = 0; i < tree.getNumProperties(); i++) {
+                auto property = tree.getPropertyName(i);
+                std::cout << property.toString() << ": " << tree.getProperty(property).toString() << newLine;
+            }
+            if (tree.getNumChildren() > 0) {
+                std::cout << "Children: " << newLine;
+                for (int i = 0; i < tree.getNumChildren(); i++) {
+                    auto child = tree.getChild(i);
+
+                    std::cout << child.getType().toString() << newLine;
+                }
+            }
+        }
+    }
+#endif
+
+    if (key.getKeyCode() == KeyPress::spaceKey) {
+        if (deviceManager.getCurrentAudioDevice()->isPlaying()) {
+            deviceManager.getCurrentAudioDevice()->stop();
+        } else {
+            deviceManager.getCurrentAudioDevice()->start(&processorPlayer);
+        }
+    }
+
     if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         for (const auto& selectedItem : selected.getItemArray()) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
@@ -1204,10 +1238,9 @@ void Effect::mouseDrag(const MouseEvent &event) {
         if (dynamic_cast<Effect*>(event.originalComponent)) {
             // Effect drag
             if (auto newParent = effectToMoveTo(event, tree.getParent())) {
+                std::cout << "new parent: " << newParent->getName() << newLine;
                 if (newParent != getFromTree<Effect>(tree.getParent())) {
-                    tree.getParent().removeChild(tree, &undoManager);
-                    newParent->getTree().appendChild(tree, &undoManager);
-                    //hoverOver(newParent);
+                    reassignNewParent(newParent);
 
                     if (newParent != this) {
                         SelectHoverObject::setHoverComponent(newParent);
@@ -1370,6 +1403,34 @@ void Effect::paint(Graphics& g) {
         g.setColour(Colours::black);
     }
     g.strokePath(outlineRect, outlineStroke);
+}
+
+void Effect::reassignNewParent(EffectTreeBase* newParent) {
+    auto parent = tree.getParent();
+
+    // Remove connections
+    //todo use connections refarray as Effect member for fast access
+    for (int i = 0; i < parent.getNumChildren(); i ++) {
+        auto child = parent.getChild(i);
+        if (child.hasType(CONNECTION_ID)) {
+            auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
+
+            if (outputPorts.contains(dynamic_cast<AudioPort*>(connection->getInPort().get()))) {
+                std::cout << "Remove input connection" << newLine;
+                parent.removeChild(child, &undoManager);
+                //todo disconnect op
+            }
+            if (inputPorts.contains(dynamic_cast<AudioPort*>(connection->getOutPort().get()))) {
+                std::cout << "Remove output connection" << newLine;
+                parent.removeChild(child, &undoManager);
+            }
+        }
+
+    }
+
+    parent.removeChild(tree, &undoManager);
+    newParent->getTree().appendChild(tree, &undoManager);
+
 }
 
 void Effect::setParent(EffectTreeBase &parent) {

@@ -57,6 +57,10 @@ MainComponent::~MainComponent() {
     getAppProperties().getUserSettings()->saveIfNeeded();
 
     main.incReferenceCount();
+    std::cout << "Are child still active?" << newLine;
+    for (int i = 0; i < main.getTree().getNumChildren(); i++) {
+        std::cout << main.getTree().getChild(i).hasProperty(EffectTreeBase::IDs::effectTreeBase) << newLine;
+    }
     EffectTreeBase::close();
     main.decReferenceCountWithoutDeleting();
 }

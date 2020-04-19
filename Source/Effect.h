@@ -77,6 +77,11 @@ public:
 
 
     static ReferenceCountedArray<Effect> effectsToDelete;
+
+    struct IDs {
+        static const Identifier effectTreeBase;
+    };
+
 protected:
     ValueTree tree;
 
@@ -116,9 +121,6 @@ protected:
 
     static UndoManager undoManager;
 
-    struct IDs {
-        static const Identifier effectTreeBase;
-    };
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTreeBase)
@@ -159,6 +161,7 @@ public:
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
     void hoverOver(EffectTreeBase* newParent);
+    void reassignNewParent(EffectTreeBase* newParent);
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
@@ -224,8 +227,6 @@ private:
 
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
-
-    ReferenceCountedArray<ConnectionLine> connections;
 
     bool editMode = false;
     OwnedArray<AudioPort> inputPorts;
