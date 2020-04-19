@@ -65,7 +65,8 @@ EffectScene::EffectScene() :
 
 EffectScene::~EffectScene()
 {
-    tree.removeAllChildren(nullptr);
+    audioGraph.clear();
+    undoManager.clearUndoHistory();
 }
 
 //==============================================================================
@@ -150,6 +151,7 @@ void EffectScene::deleteEffect(Effect* e) {
 void EffectScene::storeState() {
     // Save screen state
     //auto savedState = toStorage(tree);
+
     auto savedState = storeEffect(tree).createXml();
 
     std::cout << "Save state: " << savedState->toString() << newLine;

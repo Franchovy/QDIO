@@ -40,6 +40,10 @@ public:
     BaseEffect() : AudioProcessor() {
     }
 
+    ~BaseEffect() override {
+
+    }
+
     //TODO fix const shit
     const String getName() const override {
         return name;

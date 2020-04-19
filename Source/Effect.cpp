@@ -503,7 +503,33 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
 }
 
 EffectTreeBase::~EffectTreeBase() {
-    tree.removeAllProperties(&undoManager);
+    for (int i = 0; i < tree.getNumChildren(); i++) {
+
+        tree.getChild(i).removeProperty(IDs::effectTreeBase, nullptr);
+        tree.removeChild(i, nullptr);
+    }
+    if (getReferenceCount() > 0) {
+        incReferenceCount();
+        tree.removeAllProperties(nullptr);
+        decReferenceCountWithoutDeleting();
+    }
+
+    /*
+    tree.removeListener(this);
+
+    for (int i = 0; i < tree.getNumChildren(); i++) {
+        tree.getChild(i).removeProperty(IDs::effectTreeBase, nullptr);
+        tree.removeChild(i, nullptr);
+    }
+
+    if (tree.hasProperty(IDs::effectTreeBase)) {
+        incReferenceCount();
+        tree.removeAllProperties(nullptr);
+        decReferenceCountWithoutDeleting();
+    } else {
+        tree.removeAllProperties(nullptr);
+    }
+*/
 
     // Warning: may be a bad move.
     /*if (getReferenceCount() > 0) {
@@ -574,7 +600,7 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
 
 void EffectTreeBase::mouseUp(const MouseEvent &event) {
     if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-        if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
+        if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
             // Call create on common parent
             auto effect1 = dynamic_cast<EffectTreeBase*>(l->port1->getParentComponent());
             auto effect2 = dynamic_cast<EffectTreeBase*>(port->getParentComponent());
@@ -618,7 +644,8 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
 }
 
 ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
-    ValueTree copy = tree;
+    ValueTree copy(tree.getType());
+    copy.copyPropertiesFrom(tree, nullptr);
 
     std::cout << "Storing: " << tree.getType().toString() << newLine;
 
@@ -646,10 +673,10 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
 
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto child = tree.getChild(i);
-            copy.appendChild(child, nullptr);
+            //copy.appendChild(child, nullptr);
 
             if (child.hasType(EFFECT_ID)) {
-                storeEffect(child);
+                copy.appendChild(storeEffect(child), nullptr);
             }
 
             // Register connection
@@ -680,7 +707,7 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
                                             (dynamic_cast<InternalConnectionPort*>(outPortObject) != nullptr), nullptr);
 
                 // Set data to ValueTree
-                child.copyPropertiesFrom(connectionToSet, nullptr);
+                copy.appendChild(connectionToSet, nullptr);
             }
         }
     }
@@ -838,6 +865,8 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
         }
         node = audioGraph.addNode(move(newProcessor));
 
+        node->incReferenceCount();
+
         // Create from node:
         setProcessor(node->getProcessor());
     } else {
@@ -922,9 +951,20 @@ void Effect::setupMenu() {
 }
 
 Effect::~Effect()
-{
+{/*
+    std::cout << audioGraph.getNodeForId(node->nodeID) << newLine;
     // Delete processor from graph
-    audioGraph.removeNode(node->nodeID);
+    if (audioGraph.removeNode(node->nodeID)) {
+        std::cout << "good" << newLine;
+        audioGraph.getNodeForId(node->nodeID);
+    } else {
+        std::cout << "ouh shit" << newLine;
+    }
+
+    std::cout << "nodeptr" << newLine;*/
+    while (node->getReferenceCount() > 2) {
+        node->decReferenceCount();
+    }
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -1124,8 +1164,8 @@ void Effect::addParameter(AudioProcessorParameter *param) {
 
 void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     auto p = isInput ?
-             inputPorts.add(std::make_unique<AudioPort>(isInput)) :
-             outputPorts.add(std::make_unique<AudioPort>(isInput));
+             inputPorts.add(new AudioPort(isInput)) :
+             outputPorts.add(new AudioPort(isInput));
     p->bus = bus;
     if (editMode){
         p->setColour(p->portColour, Colours::whitesmoke);
@@ -1314,10 +1354,14 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
             setSize(h, getWidth());
         } else if (property == IDs::name) {
             auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
-            auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
+            if (e != nullptr) {
+                auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
 
-            e->setName(newName);
-            e->title.setText(newName, sendNotificationAsync);
+                e->setName(newName);
+                e->title.setText(newName, sendNotificationAsync);
+            }
+        } else if (property == EffectTreeBase::IDs::effectTreeBase) {
+            std::cout << "bro wut" << newLine;
         }
     }
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
@@ -1482,11 +1526,11 @@ int Effect::getPortID(const ConnectionPort *port) {
     return -1;
 }
 
-AudioPort *Effect::getPortFromID(const int id) {
+AudioPort* Effect::getPortFromID(const int id) {
     if (id < inputPorts.size()) {
-        return inputPorts[id];
+        return inputPorts[id].get();
     } else {
-        return outputPorts[id - inputPorts.size()];
+        return outputPorts[id - inputPorts.size()].get();
     }
 }
 

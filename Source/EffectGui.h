@@ -65,7 +65,6 @@ public:
 
     void mouseUp(const MouseEvent &event) override;
 
-    static void setHoverComponent(SelectHoverObject* item);
     static void setHoverComponent(SelectHoverObject::Ptr item);
     static void resetHoverObject();
 
@@ -75,7 +74,7 @@ public:
     void setSelectMode(bool newSelectMode);
 
 protected:
-    static SelectHoverObject* hoverComponent;
+    static SelectHoverObject::Ptr hoverComponent;
     static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
     static ComponentSelection selected;
 

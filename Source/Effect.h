@@ -229,8 +229,8 @@ private:
     AudioProcessorGraph::Node::Ptr node = nullptr;
 
     bool editMode = false;
-    OwnedArray<AudioPort> inputPorts;
-    OwnedArray<AudioPort> outputPorts;
+    ReferenceCountedArray<AudioPort> inputPorts;
+    ReferenceCountedArray<AudioPort> outputPorts;
     Label title;
     Image image;
 

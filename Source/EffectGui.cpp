@@ -10,7 +10,7 @@
 
 #include "EffectGui.h"
 
-SelectHoverObject* SelectHoverObject::hoverComponent = nullptr;
+SelectHoverObject::Ptr SelectHoverObject::hoverComponent = nullptr;
 ComponentSelection SelectHoverObject::selected;
 ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 LineComponent* LineComponent::dragLine = nullptr;
@@ -211,10 +211,6 @@ void InternalConnectionPort::mouseDown(const MouseEvent &event) {
 
 
 void SelectHoverObject::setHoverComponent(SelectHoverObject::Ptr item) {
-    setHoverComponent(item.get());
-}
-
-void SelectHoverObject::setHoverComponent(SelectHoverObject* item) {
     resetHoverObject();
 
     if (item != nullptr) {
@@ -233,25 +229,19 @@ SelectHoverObject::SelectHoverObject() {
 }
 
 SelectHoverObject::~SelectHoverObject() {
-    std::cout << "ComponentsToSelect: " << newLine;
-    /*for (auto c : componentsToSelect) {
-        std::cout << "object: " << c << " " << c->getName() << newLine;
-    }
+    if (getReferenceCount() > 0) {
+        componentsToSelect.removeObject(this);
 
-    for (auto c : getChildren()) {
-        if (auto s = dynamic_cast<SelectHoverObject*>(c)) {
-            componentsToSelect.removeObject(s);
+        if (hoverComponent == this) {
+            hoverComponent = nullptr;
         }
-    }*/
-    componentsToSelect.removeObject(this);
 
-    if (hoverComponent == this){
-        hoverComponent = nullptr;
-    }
-
-    /*if (getReferenceCount() > 1) {
         selected.deselect(this);
-    }*/
+
+        if (getReferenceCount() > 0) {
+            std::cout << "shit gonna hit the fan!!" << newLine;
+        }
+    }
 }
 
 void SelectHoverObject::resetHoverObject() {

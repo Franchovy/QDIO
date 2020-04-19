@@ -19,7 +19,7 @@ MainComponent::MainComponent()
     , settingsMenu(deviceManager)
 {
     // EffectScene component
-    setViewedComponent(&main);
+    setViewedComponent(&main, false);
     addAndMakeVisible(main);
     setBounds(0,0, 1920, 1080);
 
@@ -56,13 +56,13 @@ MainComponent::~MainComponent() {
     getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
     getAppProperties().getUserSettings()->saveIfNeeded();
 
-    main.incReferenceCount();
+    /*main.incReferenceCount();
     std::cout << "Are child still active?" << newLine;
     for (int i = 0; i < main.getTree().getNumChildren(); i++) {
         std::cout << main.getTree().getChild(i).hasProperty(EffectTreeBase::IDs::effectTreeBase) << newLine;
-    }
+    }*/
     EffectTreeBase::close();
-    main.decReferenceCountWithoutDeleting();
+    //main.decReferenceCountWithoutDeleting();
 }
 
 void MainComponent::move(int deltaX, int deltaY) {
