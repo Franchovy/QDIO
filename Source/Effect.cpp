@@ -1241,19 +1241,14 @@ void Effect::mouseDown(const MouseEvent &event) {
     }
 
     if (event.mods.isLeftButtonDown()) {
-        if (editMode) {
-            //TODO make lasso functionality static
-            /*if (event.mods.isLeftButtonDown() && event.originalComponent == this) {
-                lasso.setVisible(true);
-                lasso.beginLasso(event, this);
-            }*/
-        } else {
-            // Drag
-            setAlwaysOnTop(true);
-            if (event.mods.isLeftButtonDown()) {
-                dragger.startDraggingComponent(this, event);
-            }
+        //todo static lasso functionality?
+
+        // Drag
+        setAlwaysOnTop(true);
+        if (event.mods.isLeftButtonDown()) {
+            dragger.startDraggingComponent(this, event);
         }
+
     } else if (event.mods.isRightButtonDown()) {
         // Send info upwards for menu
         //TODO don't do this, call custom menu function
