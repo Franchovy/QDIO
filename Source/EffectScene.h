@@ -39,6 +39,8 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+    /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
+    
     void mouseDown(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 

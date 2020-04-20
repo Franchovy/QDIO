@@ -21,7 +21,7 @@ MainComponent::MainComponent()
     // EffectScene component
     setViewedComponent(&main, false);
     addAndMakeVisible(main);
-    setBounds(0,0, 1920, 1080);
+    setBounds(0,0, 1000, 800);
 
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
 
@@ -99,3 +99,13 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster *source) {
     main.updateChannels();
     deviceManager.getCurrentAudioDevice()->start(&audioPlayer);*/
 }
+/*
+void MainComponent::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel) { 
+    //main.setBounds(main.getBoundsInParent().expanded(wheel.deltaY));
+}*/
+
+void MainComponent::resized() { 
+    settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
+}
+
+

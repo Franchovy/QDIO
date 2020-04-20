@@ -27,8 +27,10 @@ public:
 
     ~MainComponent() override;
 
+    void resized() override;
     void changeListenerCallback(ChangeBroadcaster *source) override;
-
+    /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
+    
 private:
 
     void move(int deltaX, int deltaY);

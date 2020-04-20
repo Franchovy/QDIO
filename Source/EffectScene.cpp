@@ -147,7 +147,9 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     }*/
         
     // Open menu - either right click or left click (for mac)
-    if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
+    if (event.getDistanceFromDragStart() < 10
+        && (event.mods.isRightButtonDown() ||
+            event.mods.isCtrlDown())) {
             callMenu(mainMenu);
     }
 
@@ -211,6 +213,11 @@ void EffectScene::updateChannels() {
         Effect::updateEffectProcessor(node->getProcessor(), tree);
     }
 }
+/*
+void EffectScene::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel) { 
+    getParentComponent()->mouseWheelMove(event, wheel);
+}*/
+
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
     if (auto e = dynamic_cast<Effect*>(c.get()))
