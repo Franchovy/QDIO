@@ -413,6 +413,29 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
     if (childWhichHasBeenRemoved.hasType(EFFECT_ID)) {
         if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
             if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+                // Remove connections
+                //todo use connections refarray as Effect member for fast access
+                std::cout << "num children: " << parentTree.getNumChildren() << newLine;
+                int childrenRemoved = 0; // Used for index-correcting
+                for (int i = 0; (i - childrenRemoved) < parentTree.getNumChildren(); i ++) {
+                    auto child = parentTree.getChild(i - childrenRemoved);
+                    std::cout << i << newLine;
+                    if (child.hasType(CONNECTION_ID)) {
+                        std::cout << "connection" << newLine;
+                        auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
+
+                        if (e->hasPort(connection->getInPort().get())) {
+                            std::cout << "Remove input connection" << newLine;
+                            parentTree.removeChild(child, &undoManager);
+                            childrenRemoved++;
+                        }
+                        if (e->hasPort(connection->getOutPort().get())) {
+                            std::cout << "Remove output connection" << newLine;
+                            parentTree.removeChild(child, &undoManager);
+                            childrenRemoved++;
+                        }
+                    }
+                }
 
                 parent->removeChildComponent(e);
                 e->setVisible(false);
@@ -948,21 +971,10 @@ void Effect::setupMenu() {
 }
 
 Effect::~Effect()
-{/*
-    std::cout << audioGraph.getNodeForId(node->nodeID) << newLine;
-    // Delete processor from graph
-    if (audioGraph.removeNode(node->nodeID)) {
-        std::cout << "good" << newLine;
-        audioGraph.getNodeForId(node->nodeID);
-    } else {
-        std::cout << "ouh shit" << newLine;
-    }
-
-    std::cout << "nodeptr" << newLine;*/
+{
     while (node->getReferenceCount() > 1) {
         node->decReferenceCount();
     }
-
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -1450,25 +1462,7 @@ void Effect::paint(Graphics& g) {
 void Effect::reassignNewParent(EffectTreeBase* newParent) {
     auto parent = tree.getParent();
 
-    // Remove connections
-    //todo use connections refarray as Effect member for fast access
-    for (int i = 0; i < parent.getNumChildren(); i ++) {
-        auto child = parent.getChild(i);
-        if (child.hasType(CONNECTION_ID)) {
-            auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
 
-            if (outputPorts.contains(dynamic_cast<AudioPort*>(connection->getInPort().get()))) {
-                std::cout << "Remove input connection" << newLine;
-                parent.removeChild(child, &undoManager);
-                //todo disconnect op
-            }
-            if (inputPorts.contains(dynamic_cast<AudioPort*>(connection->getOutPort().get()))) {
-                std::cout << "Remove output connection" << newLine;
-                parent.removeChild(child, &undoManager);
-            }
-        }
-
-    }
 
     parent.removeChild(tree, &undoManager);
     newParent->getTree().appendChild(tree, &undoManager);
@@ -1564,6 +1558,21 @@ void Effect::updateEffectProcessor(AudioProcessor *processorToUpdate, ValueTree 
             }
         }
     }
+}
+
+bool Effect::hasPort(const ConnectionPort *port) {
+    if (auto p = dynamic_cast<const AudioPort*>(port)) {
+        return (inputPorts.contains(p) || outputPorts.contains(p));
+    } else if (auto p = dynamic_cast<const InternalConnectionPort*>(port)) {
+        for (auto list : {inputPorts, outputPorts}) {
+            for (auto portToCheck : list) {
+                if (portToCheck->internalPort == p) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 

@@ -175,6 +175,7 @@ public:
     void addPort(AudioProcessor::Bus* bus, bool isInput);
 
     ConnectionPort::Ptr checkPort(Point<int> pos);
+    bool hasPort(const ConnectionPort* port);
 
     int getPortID(const ConnectionPort* port);
     AudioPort* getPortFromID(const int id);
