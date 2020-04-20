@@ -21,7 +21,7 @@ public:
     const String getName() const override { return name; }
 
 private:
-    const String name = "Audio Device Input";
+    const String name = "Input Device";
 };
 
 class OutputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
@@ -33,6 +33,6 @@ public:
 
     const String getName() const override { return name; }
 private:
-    const String name = "Audio Device Output";
+    const String name = "Output Device";
 };
 

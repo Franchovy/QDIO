@@ -9,7 +9,7 @@
 */
 
 #include <JuceHeader.h>
-#include "EffectScene.h"
+#include "MainComponent.h"
 
 
 

@@ -38,7 +38,6 @@ class BaseEffect : public AudioProcessor
 {
 public:
     BaseEffect() : AudioProcessor() {
-
     }
 
     //TODO fix const shit
@@ -47,11 +46,20 @@ public:
     }
 
     void setLayout(int numInputs, int numOutputs) {
-        BusesLayout layout;
-        for (int i = 0; i < numInputs; i++)
-            layout.inputBuses.add(layout.getMainInputChannelSet());
-        for (int i = 0; i < numOutputs; i++)
-            layout.outputBuses.add(layout.getMainOutputChannelSet());
+        auto defaultInChannel = AudioChannelSet();
+        defaultInChannel.addChannel(AudioChannelSet::ChannelType::left);
+        defaultInChannel.addChannel(AudioChannelSet::ChannelType::right);
+        auto defaultOutChannel = AudioChannelSet();
+        defaultOutChannel.addChannel(AudioChannelSet::ChannelType::left);
+        defaultOutChannel.addChannel(AudioChannelSet::ChannelType::right);
+
+        for (int i = 0; i < numInputs; i++) {
+            layout.inputBuses.add(defaultInChannel);
+        }
+        for (int i = 0; i < numOutputs; i++) {
+            layout.outputBuses.add(defaultOutChannel);
+        }
+        setBusesLayout(layout);
     }
 
     virtual void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) = 0;
@@ -109,20 +117,27 @@ public:
 protected:
     String name;
     ParameterListener parameterListener;
+    BusesLayout layout;
 };
 
 
 class DelayEffect : public BaseEffect, public Timer
 {
 public:
-    DelayEffect() : BaseEffect(),
-                    delay("delay", "Delay",
+    DelayEffect() : BaseEffect()
+                    , delay("length", "Length",
                           NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f)
+                    , fade("fade", "Fade",
+                                 NormalisableRange<float>(0, 1.f, 0.001, 0.95f), 0.9f)
     {
         name = "Delay Effect";
         addParameter(&delay);
         delay.addListener(&parameterListener);
-        //parameterListener.parameters.add(&delayVal);
+
+        addParameter(&fade);
+        fade.addListener(&parameterListener);
+
+        setLayout(1,1);
         startTimer(1000);
     }
 
@@ -131,18 +146,21 @@ public:
      */
     void timerCallback() override {
         // TODO fix crashing
+        if (fadeVal != fade.get()) {
+            fadeVal = fade.get();
+        }
 
         newDelayBufferSize = ceil(delay.get() * currentSampleRate );
         if (newDelayBufferSize != delayBufferSize){
             std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
 
 
-            delayBuffer.setSize(jmin(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
-                                newDelayBufferSize, true, true, true);
+            delayBuffer.setSize(numChannels, newDelayBufferSize
+                    , true, true, true);
             if (delayBufferPt > newDelayBufferSize){
                 delayBufferPt = 1;
             }
-            delayBuffer.clear();
+            /*delayBuffer.clear();*/
 
             delayBufferSize = newDelayBufferSize;
         }
@@ -151,13 +169,22 @@ public:
 
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override {
         currentSampleRate = sampleRate;
+        numChannels = jmax(getMainBusNumInputChannels(), getMainBusNumOutputChannels());
+
+        // init buffer
+        delayBuffer.setSize(numChannels,ceil(delay.range.end * sampleRate)
+                , false, true, false);
+
+        std::cout << "max size: " <<  delay.range.end * sampleRate << newLine;
 
         delayBufferSize = ceil( delay.get() * sampleRate );
         delayBufferPt = 1;
 
-        delayBuffer.setSize(jmax(getMainBusNumInputChannels(), getMainBusNumOutputChannels()),
-                delayBufferSize, true, false, true);
+        delayBuffer.setSize(numChannels, delayBufferSize
+                , true, false, true);
         delayBuffer.clear();
+
+        fadeVal = fade.get();
     }
 
     void releaseResources() override {
@@ -165,8 +192,9 @@ public:
     }
 
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override {
-        if (delayBufferSize == 0)
+        if (delayBufferSize < buffer.getNumSamples())
             return;
+
 
         auto totalNumInputChannels  = getTotalNumInputChannels();
         auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -189,8 +217,8 @@ public:
                 delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, firstHalfSize);
                 delayBuffer.copyFrom(channel, 0, buffer, channel, firstHalfSize, secondHalfSize);
                 // Apply gain to echo buffer
-                delayBuffer.applyGain(delayBufferPt, firstHalfSize, 0.9);
-                delayBuffer.applyGain(channel, 0, secondHalfSize, 0.9);
+                delayBuffer.applyGain(delayBufferPt, firstHalfSize, fadeVal);
+                delayBuffer.applyGain(channel, 0, secondHalfSize, fadeVal);
                 // Set new delayBufferPt if this is the last channel
                 if (resetState)
                     delayBufferPt = numSamples - firstHalfSize;
@@ -200,7 +228,7 @@ public:
                 // Copy to echo buffer
                 delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, numSamples);
                 // Apply gain to echo buffer
-                delayBuffer.applyGain(channel, delayBufferPt, numSamples, 0.9);
+                delayBuffer.applyGain(channel, delayBufferPt, numSamples, fadeVal);
                 // Set new delayBufferPt if this is the last channel
                 if (resetState)
                     delayBufferPt += numSamples;
@@ -210,25 +238,36 @@ public:
 
 private:
     AudioParameterFloat delay;
+    AudioParameterFloat fade;
+    std::atomic<float> fadeVal;
     //std::atomic<float> delayVal;
     AudioBuffer<float> delayBuffer;
 
+    int minSize;
+
+    int numChannels;
     double currentSampleRate;
     int delayBufferSize;
     int newDelayBufferSize;
     int delayBufferPt;
 
-    std::atomic<float> delayVal;
+
 };
 
 class DistortionEffect : public BaseEffect {
 public:
     DistortionEffect() : BaseEffect(),
                          gain("gain", "Gain",
-                              NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f) {
-        name = "Gain Effect";
+                              NormalisableRange<float>(0, 20.f, 0.001, 5.0f), 5.0f),
+                         cutoff("cutoff", "Cutoff",
+                              NormalisableRange<float>(0.0f, 1.0f, 0.001f, 0.5f), 0.8f)
+              {
+        name = "Distortion Effect";
         addParameter(&gain);
         gain.addListener(&parameterListener);
+        addParameter(&cutoff);
+        cutoff.addListener(&parameterListener);
+        setLayout(1,1);
     }
 
 
@@ -243,10 +282,21 @@ public:
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override
     {
         buffer.applyGain(gain);
+        for (int c = 0; c < buffer.getNumChannels(); c++) {
+            for (int s = 0; s < buffer.getNumSamples(); s++){
+                float sample = buffer.getSample(c, s);
+                if (sample > cutoff) {
+                    buffer.setSample(c,s,cutoff);
+                } else if (sample < -cutoff) {
+                    buffer.setSample(c, s, -cutoff);
+                }
+            }
+        }
     }
 
 private:
     AudioParameterFloat gain;
+    AudioParameterFloat cutoff;
     std::atomic<float> gainVal;
 
 };

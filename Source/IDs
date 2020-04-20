@@ -1,0 +1,18 @@
+/*
+  ==============================================================================
+
+    IDs
+    Created: 13 Apr 2020 4:14:48pm
+    Author:  maxime
+
+  ==============================================================================
+*/
+
+#pragma once
+
+const Identifier EFFECTSCENE_ID = "effectscene";
+const Identifier EFFECT_ID = "effect";
+const Identifier CONNECTION_ID = "connection";
+
+// Ref for dragline VT
+//const Identifier DRAGLINE_ID("DragLine");
