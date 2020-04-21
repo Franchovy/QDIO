@@ -374,9 +374,9 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                 if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                     if (!parent->getChildren().contains(e)) {
                         parent->addAndMakeVisible(e);
-                        std::cout << "Pre pos: " << e->getPosition().toString() << newLine;
+
                         e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
-                        std::cout << "Post pos: " << e->getPosition().toString() << newLine;
+
                     }
                 }
             }
@@ -413,24 +413,20 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
     if (childWhichHasBeenRemoved.hasType(EFFECT_ID)) {
         if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
             if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+
                 // Remove connections
                 //todo use connections refarray as Effect member for fast access
-                std::cout << "num children: " << parentTree.getNumChildren() << newLine;
                 int childrenRemoved = 0; // Used for index-correcting
                 for (int i = 0; (i - childrenRemoved) < parentTree.getNumChildren(); i ++) {
                     auto child = parentTree.getChild(i - childrenRemoved);
-                    std::cout << i << newLine;
                     if (child.hasType(CONNECTION_ID)) {
-                        std::cout << "connection" << newLine;
                         auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
 
                         if (e->hasPort(connection->getInPort().get())) {
-                            std::cout << "Remove input connection" << newLine;
                             parentTree.removeChild(child, &undoManager);
                             childrenRemoved++;
                         }
                         if (e->hasPort(connection->getOutPort().get())) {
-                            std::cout << "Remove output connection" << newLine;
                             parentTree.removeChild(child, &undoManager);
                             childrenRemoved++;
                         }

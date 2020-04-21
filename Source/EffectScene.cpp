@@ -4,7 +4,8 @@ const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 
 //==============================================================================
 EffectScene::EffectScene() :
-        EffectTreeBase(EFFECTSCENE_ID) {
+        EffectTreeBase(EFFECTSCENE_ID)
+{
     setComponentID("MainWindow");
     setName("MainWindow");
     setSize(4000, 4000);
@@ -15,8 +16,6 @@ EffectScene::EffectScene() :
     for (auto e : (list1; list2)) {
         std::cout << e << newLine;
     }*/
-
-
 
     // Set up static members
 
@@ -124,28 +123,6 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.endLasso();
 
-    /*if (event.mods.isLeftButtonDown()) {
-        // If the component is an effect, respond to move effect event
-        if (auto effect = dynamic_cast<Effect *>(event.originalComponent)) {
-            if (event.getDistanceFromDragStart() < 10) {
-                // Consider this a click and not a drag
-                selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
-                event.eventComponent->repaint();
-            }
-
-            // Scan effect to apply move to
-            auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
-
-            if (auto e = dynamic_cast<Effect *>(newParent))
-                if (!e->isInEditMode())
-                    return;
-            // target is not in edit mode
-            if (effect->getParentComponent() != newParent) {
-                newParent->getTree().appendChild(effect->getTree(), &undoManager);
-            }
-        }
-    }*/
-        
     // Open menu - either right click or left click (for mac)
     if (event.getDistanceFromDragStart() < 10
         && (event.mods.isRightButtonDown() ||

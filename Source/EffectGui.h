@@ -88,48 +88,6 @@ private:
 };
 
 
-
-class CustomMenuItems
-{
-public:
-    CustomMenuItems() = default;
-    ~CustomMenuItems() {
-        // TODO smart pointer to manage - deallocate here
-        /*names.clear();
-        functions.clear();*/
-    }
-
-    int addItem(String name, std::function<void()> function) {
-        functions.add(function);
-        names.add(name);
-        return functions.size();
-    }
-
-    int addToMenu(PopupMenu &menu) {
-        int numItems = menu.getNumItems();
-        thisRange.setStart(numItems);
-        for (auto && name : names)
-            menu.addItem(numItems++, name);
-        thisRange.setEnd(numItems);
-        return numItems;
-    }
-
-    int execute(int result) {
-        if (thisRange.contains(result))
-            functions[result - thisRange.getStart()]();
-    }
-
-    int getSize() { return names.size(); }
-    bool inRange(int i) { return thisRange.contains(i); }
-
-private:
-    Range<int> thisRange;
-    Array<String> names;
-    Array<std::function<void()>> functions;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CustomMenuItems)
-};
-
 class Resizer : public GuiObject
 {
 public:

@@ -225,7 +225,6 @@ SelectHoverObject::SelectHoverObject() {
     if (getName() != "MainWindow") {
         componentsToSelect.add(this);
     }
-
 }
 
 SelectHoverObject::~SelectHoverObject() {
