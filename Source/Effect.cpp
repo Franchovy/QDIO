@@ -683,7 +683,7 @@ void EffectTreeBase::createGroupEffect() {
         if (auto e = dynamic_cast<Effect*>(s.get())) {
             // Adjust new effect size
             newE->setBounds(newE->getBounds().getUnion(e->getBounds().expanded(20)));
-            
+
             //TODO from here
             auto newEffectPos = newE->getLocalPoint(e->getParentComponent(), e->getPosition());
 
@@ -694,31 +694,57 @@ void EffectTreeBase::createGroupEffect() {
             e->setTopLeftPosition(newEffectPos);
         }
     }
-/*
     // Add new connections
     for (auto c : connectionsToChange) {
-        if (! selected.getItemArray().contains(dynamic_cast<Effect*>(c->getInPort()->getParentComponent()))){
-            // Create connection going from this to inPort parent
-
-        } else if (! selected.getItemArray().contains(dynamic_cast<Effect*>(c->getOutPort()->getParentComponent()))) {
-            // Create connection going from outPort parent to this
-
+        if (! selected.getItemArray().contains(dynamic_cast<Effect*>(c->getOutPort()->getParentComponent()))){
+            // Create connection going from this to outPort parent
+            // Create Output port and internal
+            auto newPort = newE->addPort(Effect::getDefaultBus(), false);
+            // Connect internal
+            auto inConnection = newConnection(c->getInPort(), newPort->internalPort);
+            newEffectTree.appendChild(inConnection, &undoManager);
+            // Connect external
+            auto outConnection = newConnection(c->getOutPort(), newPort);
+            newEffectTree.appendChild(outConnection, &undoManager);
+        } else if (! selected.getItemArray().contains(dynamic_cast<Effect*>(c->getInPort()->getParentComponent()))) {
+            // Create connection going from inPort parent to this
+            // Create Input port and internal
+            auto newPort = newE->addPort(Effect::getDefaultBus(), true);
+            // Connect internal
+            auto inConnection = newConnection(c->getOutPort(), newPort->internalPort);
+            newEffectTree.appendChild(inConnection, &undoManager);
+            // Connect external
+            auto outConnection = newConnection(c->getInPort(), newPort);
+            newEffectTree.appendChild(outConnection, &undoManager);
         } else {
             auto connection = newConnection(c->getInPort(), c->getOutPort());
             tree.appendChild(connection, &undoManager);
         }
-    }*/
+    }
+
+    selected.deselectAll();
 }
 
-ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort) {
+ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPort::Ptr port2) {
+    ConnectionPort::Ptr inPort;
+    ConnectionPort::Ptr outPort;
+    if (port1->isInput) {
+        inPort = port1;
+        outPort = port2;
+    } else {
+        inPort = port2;
+        outPort = port1;
+    }
+
     // Get port parents - Remember that input port is for output effect and vice versa.
-    auto effect1 = dynamic_cast<EffectTreeBase*>(outPort->getParentComponent());
-    auto effect2 = dynamic_cast<EffectTreeBase*>(inPort->getParentComponent());
+    auto effect1 = dynamic_cast<Effect*>(outPort->getParentComponent());
+    auto effect2 = dynamic_cast<Effect*>(inPort->getParentComponent());
 
     auto newConnection = ValueTree(CONNECTION_ID);
     newConnection.setProperty(ConnectionLine::IDs::InPort, inPort.get(), nullptr);
     newConnection.setProperty(ConnectionLine::IDs::OutPort, outPort.get(), nullptr);
     //auto newConnection = new ConnectionLine(*port, *l->port1);
+    std::cout << "Effect1: " << effect1 << newLine;
 
     if (effect1->getParent() == effect2->getParent()) {
         dynamic_cast<EffectTreeBase*>(effect1->getParent())->getTree().appendChild(newConnection, &undoManager);
@@ -1051,7 +1077,7 @@ void Effect::addParameter(AudioProcessorParameter *param) {
 }
 
 
-void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
+AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     auto p = isInput ?
              inputPorts.add(new AudioPort(isInput)) :
              outputPorts.add(new AudioPort(isInput));
@@ -1074,6 +1100,8 @@ void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     } else {
         p->internalPort->setVisible(false);
     }
+
+    return p;
 }
 
 

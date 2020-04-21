@@ -201,6 +201,8 @@ class AudioPort;
 class InternalConnectionPort : public ConnectionPort
 {
 public:
+    using Ptr = ReferenceCountedObjectPtr<InternalConnectionPort>;
+
     void mouseDown(const MouseEvent &event) override;
 
     InternalConnectionPort(AudioPort* parent, bool isInput) : ConnectionPort() {
@@ -222,6 +224,8 @@ private:
 class AudioPort : public ConnectionPort
 {
 public:
+    using Ptr = ReferenceCountedObjectPtr<AudioPort>;
+
     explicit AudioPort(bool isInput);
 
     bool hitTest(int x, int y) override {

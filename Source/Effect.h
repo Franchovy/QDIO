@@ -178,7 +178,7 @@ public:
 
     void setParameters(const AudioProcessorParameterGroup* group);
     void addParameter(AudioProcessorParameter* param);
-    void addPort(AudioProcessor::Bus* bus, bool isInput);
+    AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
 
     ConnectionPort::Ptr checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);
@@ -212,7 +212,7 @@ public:
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
-    AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
+    static AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
     bool isIndividual() const { return processor != nullptr; }
 
