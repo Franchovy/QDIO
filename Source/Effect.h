@@ -82,6 +82,11 @@ public:
         static const Identifier effectTreeBase;
     };
 
+    enum AppState {
+        loading = 0,
+        neutral = 1
+    } static appState;
+
 protected:
     ValueTree tree;
 

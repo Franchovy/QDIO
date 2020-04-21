@@ -64,6 +64,8 @@ EffectScene::EffectScene() :
 
     //==============================================================================
     // Load Effects if there are any saved
+    appState = loading;
+
     tree.setProperty(EffectTreeBase::IDs::effectTreeBase, this, nullptr);
     if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
@@ -74,9 +76,9 @@ EffectScene::EffectScene() :
         ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
 
         loadEffect(tree, effectLoadDataTree);
-
-        //tree.appendChild(loadedEffects, nullptr);
     }
+
+    appState = neutral;
 }
 
 EffectScene::~EffectScene()

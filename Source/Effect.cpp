@@ -14,6 +14,7 @@
 #include "IDs"
 
 // Static members
+EffectTreeBase::AppState EffectTreeBase::appState = neutral;
 AudioProcessorGraph* EffectTreeBase::audioGraph = nullptr;
 AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
 AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
@@ -134,52 +135,6 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
     return nullptr;
 }
 
-/**
- * Adds existing effect as child to the effect under the mouse
- * @param event for which the location will determine what effect to add to.
- * @param childEffect effect to add
- */
-/*void EffectTreeBase::addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain) {
-    auto parentTree = childEffect.getTree().getParent();
-    parentTree.removeChild(childEffect.getTree(), nullptr);
-
-    ValueTree newParent;
-    if (auto newGUIEffect = dynamic_cast<Effect*>(event.eventComponent)){
-        newParent = newGUIEffect->getTree();
-    } else
-        newParent = tree;
-
-    if (newParent == tree) {
-        std::cout << "Change me" << newLine;
-    } else {
-        std::cout << "Don't change me" << newLine;
-    }
-
-
-    newParent.appendChild(childEffect.getTree(), nullptr);
-}*/
-
-/*Effect* EffectTreeBase::createEffect(const AudioProcessorGraph::Node::Ptr& node)
-{
-    if (node != nullptr){
-        // Individual effect from processor
-        return new Effect(event, node->nodeID);
-    }
-    if (selected.getNumSelected() == 0){
-        // Empty effect
-        return new Effect(event);
-    } else if (selected.getNumSelected() > 0){
-        // Create Effect with selected Effects inside
-        Array<const Effect*> effectVTArray;
-        for (auto item : selected.getItemArray()){
-            if (auto e = dynamic_cast<Effect*>(item.get()))
-                effectVTArray.add(e);
-        }
-        selected.deselectAll();
-        return new Effect(event, effectVTArray);
-    }
-}*/
-
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
         if (!EffectTreeBase::audioGraph->isConnected(connection) &&
@@ -257,22 +212,7 @@ void EffectTreeBase::createConnection(ConnectionLine::Ptr line) {
 PopupMenu EffectTreeBase::getEffectSelectMenu() {
     createEffectMenu.addItem("Empty Effect", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction("New Empty Effect");
-                ValueTree newEffect(Effect::IDs::EFFECT_ID);
-
-                newEffect.setProperty(Effect::IDs::x, getMouseXYRelative().x, nullptr);
-                newEffect.setProperty(Effect::IDs::y, getMouseXYRelative().y, nullptr);
-
-                //newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
-                this->getTree().appendChild(newEffect, &undoManager);
-
-                if (selected.getNumSelected() > 0) {
-                    for (auto s : selected.getItemArray()) {
-                        if (auto e = dynamic_cast<Effect*>(s.get())){
-                            newEffect.appendChild(e->getTree(), &undoManager);
-                        }
-                    }
-                }
+                newEffect("Effect", -1);
             }));
     createEffectMenu.addItem("Input Device", std::function<void()>(
             [=]{
@@ -302,62 +242,12 @@ void EffectTreeBase::newEffect(String name, int processorID) {
     newEffect.setProperty(Effect::IDs::x, getMouseXYRelative().x, nullptr);
     newEffect.setProperty(Effect::IDs::y, getMouseXYRelative().y, nullptr);
 
-    //newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
-    newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
+    if (processorID != -1) {
+        newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
+    }
 
     this->getTree().appendChild(newEffect, &undoManager);
 }
-
-/*void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    *//*if (tree.hasType(CONNECTION_ID))
-        std::cout << "Type connectionLine" << newLine;
-
-    if (property == IDs::connections) {
-
-
-        for (auto connection : tree) {
-            // Connections removed from activeConnections
-            if (connection->isVisible() && ! activeConnections.contains(ConnectionVar::fromVar(connection))) {
-                std::cout << "Remove connection" << newLine;
-                // Remove from audio
-                disconnectAudio(*connection);
-
-                connection->setVisible(false);
-            }
-            // Connections added to activeConnections
-            else if (! connection->isVisible() && activeConnections.contains(ConnectionVar::fromVar(connection))) {
-                std::cout << "Add connection" << newLine;
-                // Add to audio
-                connectAudio(*connection);
-
-                connection->setVisible(true);
-            } else {
-                std::cout << "Schtruderloooder" << newLine;
-            }
-        }
-
-
-        // Depending on if connection is visible or not, make or remove the audio connections.
-        *//**//*for (auto connection : connections) {
-            // Get connections to make or remove
-            auto audioConnections = getAudioConnection(*connection);
-            for (auto audioConnection : audioConnections) {
-                // If connection is visible it should be created
-                if (connection->isVisible() && ! audioGraph.isConnected(audioConnection)) {
-                    if (audioGraph.isConnectionLegal(audioConnection)) {
-                        audioGraph.addConnection(audioConnection);
-                    }
-                }
-                // If connection is not visible it should be removed
-                else if (! connection->isVisible() && audioGraph.isConnected(audioConnection)) {
-                    audioGraph.removeConnection(audioConnection);
-                }
-            }
-        }*//**//*
-    }
-*//*
-    //Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
-}*/
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
@@ -376,7 +266,6 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                         parent->addAndMakeVisible(e);
 
                         e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
-
                     }
                 }
             }
@@ -758,7 +647,11 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
 }
 
 void EffectTreeBase::createGroupEffect() {
-    std::cout << "Create group effect" << newLine;
+    // Save any connections to be broken
+
+    // Add effects to new
+
+    // Add new connections
 }
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
@@ -844,6 +737,12 @@ void Effect::setupTitle() {
     };
 
     addAndMakeVisible(title);
+
+    if (! tree.hasProperty(IDs::processorID) && appState != loading) {
+        //title.grabKeyboardFocus();
+        title.setWantsKeyboardFocus(true);
+        title.showEditor();
+    }
 }
 
 void Effect::setupMenu() {
@@ -1210,37 +1109,26 @@ void Effect::mouseUp(const MouseEvent &event) {
     setPos(getBoundsInParent().getPosition());
 
     if (event.eventComponent == event.originalComponent) {
-        if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
-            // open menu
-            if (editMode) {
-                callMenu(editMenu);
-            } else {
-                callMenu(menu);
+        if (event.getDistanceFromDragStart() < 10) {
+            if (event.mods.isLeftButtonDown()) {
+                addSelectObject(this);
+            } else if (event.mods.isRightButtonDown()) {
+                // open menu
+                if (editMode) {
+                    callMenu(editMenu);
+                } else {
+                    callMenu(menu);
+                }
             }
-        } else return;
+        }
     }
 
     /*if (lasso.isVisible())
         lasso.endLasso();*/
 
-    if (event.mods.isLeftButtonDown()) {
-        // If the component is an effect, respond to move effect event
-        if (Effect *effect = dynamic_cast<Effect *>(event.originalComponent)) {
-            if (event.getDistanceFromDragStart() < 10) {
-                // Consider this a click and not a drag
-                selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
-                event.eventComponent->repaint();
-            }
-
-        }
-        // If component is LineComponent, respond to line drag event
-        else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            EffectTreeBase::mouseUp(event);
-        }
-    }
-
-    for (auto i : selected){
-        std::cout << i->getName() << newLine;
+    // If component is LineComponent, respond to line drag event
+    else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
+        EffectTreeBase::mouseUp(event);
     }
 }
 
