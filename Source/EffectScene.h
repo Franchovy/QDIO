@@ -73,7 +73,8 @@ private:
     Image bg;
 
     PopupMenu mainMenu;
-
+    PopupMenu createEffectMenu;
+    PopupMenu::Item createGroupEffectItem;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)

@@ -115,6 +115,8 @@ protected:
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
+    static void createGroupEffect();
+
     static AudioDeviceManager* deviceManager;
     static AudioProcessorPlayer* processorPlayer;
     static AudioProcessorGraph* audioGraph;

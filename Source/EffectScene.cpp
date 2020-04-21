@@ -55,8 +55,12 @@ EffectScene::EffectScene() :
 
     //==============================================================================
     // Main component popup menu
-    PopupMenu createEffectSubmenu = getEffectSelectMenu();
-    mainMenu.addSubMenu("Create Effect", createEffectSubmenu);
+    createEffectMenu = getEffectSelectMenu();
+    createGroupEffectItem = PopupMenu::Item("Create Effect with group");
+    createGroupEffectItem.setAction([=] {
+        createGroupEffect();
+    });
+    //mainMenu.addSubMenu("Create Effect", createEffectMenu);
 
     //==============================================================================
     // Load Effects if there are any saved
@@ -125,9 +129,15 @@ void EffectScene::mouseUp(const MouseEvent &event) {
 
     // Open menu - either right click or left click (for mac)
     if (event.getDistanceFromDragStart() < 10
-        && (event.mods.isRightButtonDown() ||
-            event.mods.isCtrlDown())) {
-            callMenu(mainMenu);
+                && (event.mods.isRightButtonDown() ||
+                event.mods.isCtrlDown())) {
+            PopupMenu menu;
+            if (selected.getNumSelected() > 0) {
+                menu.addItem(createGroupEffectItem);
+            }
+            menu.addSubMenu("Create Effect..", createEffectMenu);
+
+            callMenu(menu);
     }
 
     EffectTreeBase::mouseUp(event);

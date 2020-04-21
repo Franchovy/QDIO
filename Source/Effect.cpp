@@ -757,6 +757,10 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
 
 }
 
+void EffectTreeBase::createGroupEffect() {
+    std::cout << "Create group effect" << newLine;
+}
+
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     //tree = vt;
 
