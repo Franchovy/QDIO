@@ -156,8 +156,6 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    bool keyPressed(const KeyPress &key) override;
-
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
     void hoverOver(EffectTreeBase* newParent);
@@ -197,6 +195,7 @@ public:
     // ValueTree listener overrides
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
     void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
+
 
     // =================================================================================
     // Setters and getter functions

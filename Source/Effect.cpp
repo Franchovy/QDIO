@@ -505,6 +505,9 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
                 auto lineTree = tree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
                 tree.removeChild(lineTree, &undoManager);
+            } else if (auto e = dynamic_cast<Effect*>(selectedItem.get())) {
+                effectsToDelete.add(e);
+                e->getTree().getParent().removeChild(e->getTree(), &undoManager);
             }
         }
     }
@@ -529,37 +532,12 @@ EffectTreeBase::~EffectTreeBase() {
         tree.removeAllProperties(nullptr);
         decReferenceCountWithoutDeleting();
     }
-
-    /*
-    tree.removeListener(this);
-
-    for (int i = 0; i < tree.getNumChildren(); i++) {
-        tree.getChild(i).removeProperty(IDs::effectTreeBase, nullptr);
-        tree.removeChild(i, nullptr);
-    }
-
-    if (tree.hasProperty(IDs::effectTreeBase)) {
-        incReferenceCount();
-        tree.removeAllProperties(nullptr);
-        decReferenceCountWithoutDeleting();
-    } else {
-        tree.removeAllProperties(nullptr);
-    }
-*/
-
-    // Warning: may be a bad move.
-    /*if (getReferenceCount() > 0) {
-        std::cout << "Warning: Reference count greater than zero. Exceptions may occur" << newLine;
-        resetReferenceCount();
-    }*/
 }
-
 
 
 void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
     int result = m.show();
-
 }
 
 void EffectTreeBase::mouseDown(const MouseEvent &event) {
@@ -583,34 +561,6 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
                 SelectHoverObject::resetHoverObject();
             }
         }
-        /*
-        if (dynamic_cast<LineComponent *>(event.eventComponent)) {
-            // ParentToCheck is the container of possible things to connect to.
-            Component *parentToCheck;
-            if (dynamic_cast<AudioPort *>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent()->getParentComponent();
-            else if (dynamic_cast<InternalConnectionPort *>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent();
-
-            //auto connectPort = portToConnectTo(newEvent, parentToCheck)
-            ConnectionPort::Ptr connectPort;
-            // Get port to connect to (if there is one)
-            auto newEvent = event.getEventRelativeTo(parentToCheck);
-
-            //TODO EffectScene and EffectTree parent under one subclass
-            ValueTree treeToCheck;
-            if (parentToCheck != this)
-                treeToCheck = dynamic_cast<Effect *>(parentToCheck)->getTree();
-            else
-                treeToCheck = tree;
-            connectPort = portToConnectTo(newEvent, treeToCheck);
-
-            if (connectPort != nullptr) {
-                setHoverComponent(connectPort);
-            } else
-                setHoverComponent(nullptr);
-
-        }*/
     }
 }
 
@@ -670,13 +620,6 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
         copy.removeProperty(Effect::IDs::initialised, nullptr);
         copy.removeProperty(Effect::IDs::connections, nullptr);
 
-        // Set position property
-        /*auto pos = Position::fromVar(copy.getProperty(Effect::IDs::pos));
-        copy.setProperty("x", pos.x, nullptr);
-        copy.setProperty("y", pos.y, nullptr);
-
-        copy.removeProperty(Effect::IDs::pos, nullptr);
-*/
         // Store object as ID
         auto ptr = dynamic_cast<Effect*>(tree.getProperty(
                 IDs::effectTreeBase).getObject());
@@ -689,7 +632,6 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
 
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto child = tree.getChild(i);
-            //copy.appendChild(child, nullptr);
 
             if (child.hasType(EFFECT_ID)) {
                 copy.appendChild(storeEffect(child), nullptr);
@@ -728,15 +670,6 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
         }
     }
 
-    std::cout << "Properties" << newLine;
-    for (int i = 0; i < copy.getNumProperties(); i++) {
-        std::cout << copy.getPropertyName(i).toString() << newLine;
-    }
-    std::cout << "Children" << newLine;
-    for (int i = 0; i < copy.getNumChildren(); i++) {
-        std::cout << copy.getChild(i).getType().toString() << newLine;
-    }
-
     return copy;
 }
 
@@ -746,11 +679,7 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
 
     if (loadData.hasType(EFFECT_ID)) {
         copy.copyPropertiesFrom(loadData, nullptr);
-/*
-        // Set position property
-        int x = loadData.getProperty("x");
-        int y = loadData.getProperty("y");
-        copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);*/
+
     }
 
     // Load child effects
@@ -777,8 +706,6 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
         copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
         parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
     }
-
-
 
     // After effects created, add connections.
 
@@ -829,31 +756,6 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
 
 
 }
-
-
-/*void GuiEffect::parentHierarchyChanged() {
-    // Children of parents who receive the change signal should ignore it.
-    if (currentParent == getParentComponent())
-        return;
-
-    if (getParentComponent() == nullptr){
-        setTopLeftPosition(getPosition() + currentParent->getPosition());
-        currentParent = nullptr;
-    } else {
-        if (hasBeenInitialised) {
-            Component* parent = getParentComponent();
-            while (parent != getTopLevelComponent()) {
-                setTopLeftPosition(getPosition() - parent->getPosition());
-                parent = parent->getParentComponent();
-            }
-        }
-        currentParent = getParentComponent();
-    }
-    Component::parentHierarchyChanged();
-}*/
-
-
-
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     //tree = vt;
@@ -1369,6 +1271,7 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
 }
 
 void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
+    std::cout << "Parent changed" << newLine;
     if (treeWhoseParentHasChanged == tree) {
 
     }
@@ -1469,13 +1372,6 @@ void Effect::setPos(Point<int> newPos) {
     tree.setProperty("y", newPos.getY(), &undoManager);
 }
 
-bool Effect::keyPressed(const KeyPress &key) {
-    if (key == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
-        effectsToDelete.add(this);
-        tree.getParent().removeChild(tree, &undoManager);
-    }
-    return EffectTreeBase::keyPressed(key);
-}
 
 void Effect::hoverOver(EffectTreeBase *newParent) {
     if (newParent->getWidth() < getParentWidth() || newParent->getHeight() < getParentHeight()) {

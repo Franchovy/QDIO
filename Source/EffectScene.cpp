@@ -197,13 +197,15 @@ void EffectScene::mouseWheelMove(const juce::MouseEvent &event, const juce::Mous
 
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<Effect*>(c.get()))
-        e->setSelectMode(true);
+    if (auto e = dynamic_cast<Effect*>(c.get())) {
+        SelectHoverObject::addSelectObject(e);
+    }
     c->repaint();
 }
 
 void ComponentSelection::itemDeselected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<Effect*>(c.get()))
-        e->setSelectMode(false);
+    if (auto e = dynamic_cast<Effect*>(c.get())) {
+        SelectHoverObject::removeSelectObject(e);
+    }
     c->repaint();
 }
