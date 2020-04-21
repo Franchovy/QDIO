@@ -18,7 +18,7 @@
 
 class Effect;
 
-
+/*
 struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionLine>>
 {
     static ReferenceCountedArray<ConnectionLine> fromVarArray (const var &v);
@@ -26,7 +26,7 @@ struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionL
     static ConnectionLine::Ptr fromVar (const var &v);
     static var* toVar (const ConnectionLine::Ptr &t);
 
-};
+};*/
 
 /**
  * Base class for Effects and EffectScene
@@ -96,7 +96,8 @@ protected:
 
     PopupMenu createEffectMenu;
     PopupMenu getEffectSelectMenu();
-    void newEffect(String name, int processorID);
+    ValueTree newEffect(String name, int processorID);
+    ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
@@ -120,7 +121,7 @@ protected:
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
-    static void createGroupEffect();
+    void createGroupEffect();
 
     static AudioDeviceManager* deviceManager;
     static AudioProcessorPlayer* processorPlayer;
@@ -132,12 +133,12 @@ protected:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTreeBase)
 };
-
+/*
 struct Position : public VariantConverter<Point<int>>
 {
     static Point<int> fromVar (const var &v);
     static var toVar (const Point<int> &t);
-};
+};*/
 
 /**
  * Effect (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
@@ -181,6 +182,7 @@ public:
 
     ConnectionPort::Ptr checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);
+    bool hasConnection(const ConnectionLine* line);
 
     int getPortID(const ConnectionPort* port);
     AudioPort* getPortFromID(const int id);
