@@ -197,7 +197,6 @@ void ConnectionPort::paint(Graphics &g) {
     }
 }
 
-
 bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
     // Return false if the port is AP and belongs to the same parent
     return !(dynamic_cast<AudioPort *>(other.get())

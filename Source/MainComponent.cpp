@@ -21,7 +21,7 @@ MainComponent::MainComponent()
     // EffectScene component
     setViewedComponent(&main, false);
     addAndMakeVisible(main);
-    setBounds(0,0, 1000, 800);
+    setBounds(0,0, 2000, 1500);
 
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
 

@@ -214,6 +214,9 @@ public:
     AudioProcessorGraph::NodeID getNodeID() const;
     static AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
+    int getNumInputs() const { return inputPorts.size(); }
+    int getNumOutputs() const { return outputPorts.size(); }
+
     bool isIndividual() const { return processor != nullptr; }
 
     struct IDs {

@@ -69,13 +69,15 @@ EffectScene::EffectScene() :
     tree.setProperty(EffectTreeBase::IDs::effectTreeBase, this, nullptr);
     if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
+        if (loadedEffectsData != nullptr) {
 
-        std::cout << loadedEffectsData->toString() << newLine;
-        std::cout << loadedEffectsData->getTagName() << newLine;
+            std::cout << loadedEffectsData->toString() << newLine;
+            std::cout << loadedEffectsData->getTagName() << newLine;
 
-        ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
+            ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
 
-        loadEffect(tree, effectLoadDataTree);
+            loadEffect(tree, effectLoadDataTree);
+        }
     }
 
     appState = neutral;

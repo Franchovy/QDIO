@@ -212,7 +212,8 @@ public:
         hoverBox = Rectangle<int>(0,0,30,30);
         outline = Rectangle<int>(10,10,10,10);
         centrePoint = Point<int>(15,15);
-        setBounds(0,0,30, 30);
+        //setBounds(parent->getX(), parent->getY(), 30, 30);
+        setBounds(0, 0, 30, 30);
     }
 
     bool canConnect(ConnectionPort::Ptr& other) override;

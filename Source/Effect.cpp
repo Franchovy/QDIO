@@ -322,7 +322,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded, ConnectionLine::IDs::ConnectionLineObject);
             line->setVisible(true);
         }
-
+        line->toFront(false);
         connectAudio(*line);
     }
 }
@@ -356,7 +356,11 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
     } else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
         line->setVisible(false);
-        disconnectAudio(*line);
+        std::cout << "Audiograph connection exists?" << newLine;
+        std::cout << audioGraph->isConnectionLegal(line->getAudioConnection()) << newLine;
+        if (audioGraph->isConnected(line->getAudioConnection())) {
+            disconnectAudio(*line);
+        }
     }
 }
 
@@ -516,20 +520,24 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
     std::cout << "Storing: " << tree.getType().toString() << newLine;
 
     if (tree.hasType(EFFECT_ID)) {
+        // Remove unused properties
         copy.removeProperty(Effect::IDs::initialised, nullptr);
         copy.removeProperty(Effect::IDs::connections, nullptr);
 
-        // Store object as ID
-        if (auto ptr = dynamic_cast<Effect*>(tree.getProperty(
+        // Set properties based on object
+        if (auto effect = dynamic_cast<Effect*>(tree.getProperty(
                 IDs::effectTreeBase).getObject())) {
 
             // Set size property
-            copy.setProperty(Effect::IDs::w, ptr->getWidth(), nullptr);
-            std::cout << ptr->getWidth() << " " << ptr->getHeight() << newLine;
-            copy.setProperty(Effect::IDs::h, ptr->getHeight(), nullptr);
+            copy.setProperty(Effect::IDs::w, effect->getWidth(), nullptr);
+            std::cout << effect->getWidth() << " " << effect->getHeight() << newLine;
+            copy.setProperty(Effect::IDs::h, effect->getHeight(), nullptr);
 
-            //copy.removeProperty(IDs::effectTreeBase, nullptr);
-            copy.setProperty("ID", reinterpret_cast<int64>(ptr), nullptr);
+            // Set ID property (for port connections)
+            copy.setProperty("ID", reinterpret_cast<int64>(effect), nullptr);
+
+            copy.setProperty("numInputPorts", effect->getNumInputs(), nullptr);
+            copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);
         } else {
             std::cout << "dat shit is not initialised. do not store" << newLine;
             return ValueTree();
@@ -595,11 +603,9 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
         // Set children of Effectscene, and object property
         auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
 
-        //copy.removeAllProperties(nullptr);
-
         copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
         parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
-        
+
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
@@ -608,12 +614,12 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
             }
         }
     }
-
     // Create effects by adding them to valuetree
-
     else if (loadData.hasType(EFFECT_ID)) {
         copy.copyPropertiesFrom(loadData, nullptr);
         parentTree.appendChild(copy, &undoManager);
+
+
 
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
@@ -624,7 +630,7 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
         }
     }
 
-    // After effects created, add connections.
+    // Add Connections
 
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
@@ -777,11 +783,9 @@ ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPor
 }
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
-    //tree = vt;
-
     if (vt.hasProperty(IDs::processorID)) {
 
-        // Individual processor
+        // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
         int id = vt.getProperty(IDs::processorID);
         switch (id) {
@@ -806,7 +810,19 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
 
         // Create from node:
         setProcessor(node->getProcessor());
-    } else {
+    }
+    // Custom Effect
+    else {
+        int numInputPorts = tree.getProperty("numInputPorts", 0);
+        int numOutputPorts = tree.getProperty("numOutputPorts", 0);
+
+        for (int i = 0; i < numInputPorts; i++) {
+            addPort(getDefaultBus(), true);
+        }
+        for (int i = 0; i < numOutputPorts; i++) {
+            addPort(getDefaultBus(), false);
+        }
+
         // Make edit mode true by default
         setEditMode(true);
     }
@@ -820,36 +836,10 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
         }
     }
 
-    int x = 0;
-    int y = 0;
-    int w = 200;
-    int h = 200;
-    if (tree.hasProperty(IDs::x)) {
-        x = tree.getProperty(IDs::x);
-    }
-    if (tree.hasProperty(IDs::y)) {
-        y = tree.getProperty(IDs::y);
-    }
-    if (tree.hasProperty(IDs::w)) {
-        w = tree.getProperty(IDs::w);
-        w = jlimit(100,1000, w);
-    }
-    if (tree.hasProperty(IDs::h)) {
-        h = tree.getProperty(IDs::h);
-        h = jlimit(100,1000, h);
-    }
-
-    /*for (int i = 0; i < tree.getNumChildren(); i++) {
-        if (tree.getChild(i).hasType(EFFECT_ID)) {
-            if (tree.hasProperty(IDs::initialised)) {
-                std::cout << "Initialised child" << newLine;
-                auto childEffect = getFromTree<Effect>(tree.getChild(i));
-                setBounds(getBounds().getUnion(childEffect->getBoundsInParent()));
-            } else {
-                std::cout << "Uninitialised child" << newLine;
-            }
-        }
-    }*/
+    int x = tree.getProperty(IDs::x, 0);
+    int y = tree.getProperty(IDs::y, 0);
+    int w = tree.getProperty(IDs::w, 200);
+    int h = tree.getProperty(IDs::h, 200);
 
     //Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
     setBounds(x, y, w, h);
@@ -1146,7 +1136,7 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
 
         p->internalPort->setColour(p->portColour, Colours::whitesmoke);
         p->internalPort->setCentrePosition(getLocalPoint(p, p->centrePoint + d));
-        p->internalPort->setVisible(editMode);
+        p->internalPort->setVisible(true);
     } else {
         p->internalPort->setVisible(false);
     }
