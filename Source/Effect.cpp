@@ -356,11 +356,8 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
     } else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
         line->setVisible(false);
-        std::cout << "Audiograph connection exists?" << newLine;
-        std::cout << audioGraph->isConnectionLegal(line->getAudioConnection()) << newLine;
-        if (audioGraph->isConnected(line->getAudioConnection())) {
-            disconnectAudio(*line);
-        }
+
+        disconnectAudio(*line);
     }
 }
 
@@ -976,10 +973,6 @@ void Effect::setProcessor(AudioProcessor *processor) {
     if (numParams > 0) {
         setBounds(getBounds().expanded(40, numParams * 20));
     }
-
-    // Update
-    resized();
-    repaint();
 }
 
 /**
@@ -1146,8 +1139,6 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     }
     addAndMakeVisible(p);
 
-    resized();
-
     if (!isIndividual()) {
         addChildComponent(p->internalPort.get());
         Point<int> d;
@@ -1307,11 +1298,15 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
             int y = treeWhosePropertyHasChanged.getProperty(IDs::y);
             setTopLeftPosition(getX(), y);
         } else if (property == IDs::w) {
-            int w = treeWhosePropertyHasChanged.getProperty(IDs::w);
-            setSize(w, getHeight());
+            if (undoManager.isPerformingUndoRedo()) {
+                int w = tree.getProperty(IDs::w);
+                setSize(w, getHeight());
+            }
         } else if (property == IDs::h) {
-            int h = treeWhosePropertyHasChanged.getProperty(IDs::h);
-            setSize(h, getWidth());
+            if (undoManager.isPerformingUndoRedo()) {
+                int h = tree.getProperty(IDs::h);
+                setSize(h, getWidth());
+            }
         } else if (property == IDs::name) {
             auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
             if (e != nullptr) {
@@ -1344,6 +1339,11 @@ void Effect::resized() {
             tree.setProperty(IDs::h, getHeight(), &undoManager);
         }
     }*/
+
+    if (! undoManager.isPerformingUndoRedo()) {
+        tree.setProperty(IDs::w, getWidth(), &undoManager);
+        tree.setProperty(IDs::h, getHeight(), &undoManager);
+    }
 
     // Position Ports
     inputPortPos = inputPortStartPos;
