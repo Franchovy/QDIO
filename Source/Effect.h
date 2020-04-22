@@ -47,8 +47,8 @@ public:
 
     static void close();
 
-    static ValueTree storeEffect(ValueTree& tree);
-    static void loadEffect(ValueTree& parentTree, ValueTree& loadData);
+    static ValueTree storeEffect(const ValueTree& tree);
+    static void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
 
     void resized() override = 0;
     bool keyPressed(const KeyPress &key) override;

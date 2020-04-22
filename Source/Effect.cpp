@@ -302,6 +302,10 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             // Create new effect
             auto e = new Effect(childWhichHasBeenAdded);
             childWhichHasBeenAdded.setProperty(IDs::effectTreeBase, e, nullptr);
+
+            if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+                parent->addAndMakeVisible(e);
+            }
         }
     } else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
         ConnectionLine* line;
@@ -505,22 +509,31 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
     LineComponent::setDragLine(&dragLine);
 }
 
-ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
+ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
     ValueTree copy(tree.getType());
     copy.copyPropertiesFrom(tree, nullptr);
 
     std::cout << "Storing: " << tree.getType().toString() << newLine;
 
     if (tree.hasType(EFFECT_ID)) {
-        // Recurse for children
         copy.removeProperty(Effect::IDs::initialised, nullptr);
         copy.removeProperty(Effect::IDs::connections, nullptr);
 
         // Store object as ID
-        auto ptr = dynamic_cast<Effect*>(tree.getProperty(
-                IDs::effectTreeBase).getObject());
-        //copy.removeProperty(IDs::effectTreeBase, nullptr);
-        copy.setProperty("ID", reinterpret_cast<int64>(ptr), nullptr);
+        if (auto ptr = dynamic_cast<Effect*>(tree.getProperty(
+                IDs::effectTreeBase).getObject())) {
+
+            // Set size property
+            copy.setProperty(Effect::IDs::w, ptr->getWidth(), nullptr);
+            std::cout << ptr->getWidth() << " " << ptr->getHeight() << newLine;
+            copy.setProperty(Effect::IDs::h, ptr->getHeight(), nullptr);
+
+            //copy.removeProperty(IDs::effectTreeBase, nullptr);
+            copy.setProperty("ID", reinterpret_cast<int64>(ptr), nullptr);
+        } else {
+            std::cout << "dat shit is not initialised. do not store" << newLine;
+            return ValueTree();
+        }
     }
 
     if (tree.hasType(EFFECTSCENE_ID) || tree.hasType(EFFECT_ID)) {
@@ -530,7 +543,11 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
             auto child = tree.getChild(i);
 
             if (child.hasType(EFFECT_ID)) {
-                copy.appendChild(storeEffect(child), nullptr);
+                auto childTreeToStore = storeEffect(child);
+                if (childTreeToStore.isValid()) {
+                    copy.appendChild(childTreeToStore, nullptr);
+                }
+
             }
 
             // Register connection
@@ -570,37 +587,41 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
 }
 
 //todo storageIDs
-void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
+void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
-    if (loadData.hasType(EFFECT_ID)) {
-        copy.copyPropertiesFrom(loadData, nullptr);
+    // Effectscene added first
+    if (loadData.hasType(EFFECTSCENE_ID)) {
+        // Set children of Effectscene, and object property
+        auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
 
-    }
+        //copy.removeAllProperties(nullptr);
 
-    // Load child effects
-
-    if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
+        copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
+        parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
+        
+        // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
             if (child.hasType(EFFECT_ID)) {
-                loadEffect(copy, child);
+                loadEffect(parentTree, child);
             }
         }
     }
 
     // Create effects by adding them to valuetree
 
-    if (loadData.hasType(EFFECT_ID)) {
+    else if (loadData.hasType(EFFECT_ID)) {
+        copy.copyPropertiesFrom(loadData, nullptr);
         parentTree.appendChild(copy, &undoManager);
-    } else if (loadData.hasType(EFFECTSCENE_ID)) {
-        // Set children of Effectscene, and object property
-        auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
 
-        copy.removeAllProperties(nullptr);
-
-        copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
-        parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
+        // Load child effects
+        for (int i = 0; i < loadData.getNumChildren(); i++) {
+            auto child = loadData.getChild(i);
+            if (child.hasType(EFFECT_ID)) {
+                loadEffect(copy, child);
+            }
+        }
     }
 
     // After effects created, add connections.
@@ -649,8 +670,6 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
             }
         }
     }
-
-
 }
 
 void EffectTreeBase::createGroupEffect() {
@@ -793,17 +812,47 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     }
 
     // Set name
-    if (isIndividual()) {
-        tree.setProperty(IDs::name, processor->getName(), nullptr);
-    } else {
-        tree.setProperty(IDs::name, "Effect", nullptr);
+    if (! tree.hasProperty(IDs::name)) {
+        if (isIndividual()) {
+            tree.setProperty(IDs::name, processor->getName(), nullptr);
+        } else {
+            tree.setProperty(IDs::name, "Effect", nullptr);
+        }
     }
 
+    int x = 0;
+    int y = 0;
+    int w = 200;
+    int h = 200;
+    if (tree.hasProperty(IDs::x)) {
+        x = tree.getProperty(IDs::x);
+    }
+    if (tree.hasProperty(IDs::y)) {
+        y = tree.getProperty(IDs::y);
+    }
+    if (tree.hasProperty(IDs::w)) {
+        w = tree.getProperty(IDs::w);
+        w = jlimit(100,1000, w);
+    }
+    if (tree.hasProperty(IDs::h)) {
+        h = tree.getProperty(IDs::h);
+        h = jlimit(100,1000, h);
+    }
 
-    int x = tree.getProperty(IDs::x);
-    int y = tree.getProperty(IDs::y);
+    /*for (int i = 0; i < tree.getNumChildren(); i++) {
+        if (tree.getChild(i).hasType(EFFECT_ID)) {
+            if (tree.hasProperty(IDs::initialised)) {
+                std::cout << "Initialised child" << newLine;
+                auto childEffect = getFromTree<Effect>(tree.getChild(i));
+                setBounds(getBounds().getUnion(childEffect->getBoundsInParent()));
+            } else {
+                std::cout << "Uninitialised child" << newLine;
+            }
+        }
+    }*/
+
     //Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
-    setBounds(x, y, 200,200);
+    setBounds(x, y, w, h);
 
     addAndMakeVisible(resizer);
 
@@ -876,7 +925,8 @@ void Effect::setupMenu() {
 
 Effect::~Effect()
 {
-    std::cout << "Reference count: " << node->getReferenceCount() << newLine;
+    if (node != nullptr)
+        std::cout << "Reference count: " << node->getReferenceCount() << newLine;
     /*while (node->getReferenceCount() > 1) {
         node->decReferenceCount();
     }*/
