@@ -157,6 +157,7 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
             ? outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint
             : outPort->getPosition() + outPort->centrePoint;
 
+
     line = Line<int>(inPos, outPos);
 
     inPort->setOtherPort(outPort);

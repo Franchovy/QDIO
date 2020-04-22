@@ -441,6 +441,16 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
         std::cout << "Redo: " << undoManager.getRedoDescription() << newLine;
         undoManager.redo();
     }
+
+    if ((key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown())
+            && key.getKeyCode() == 's') {
+        std::cout << "Save effects" << newLine;
+
+        /*auto savedState = storeEffect(tree).createXml();
+        std::cout << "Save state: " << savedState->toString() << newLine;
+        getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
+        getAppProperties().getUserSettings()->saveIfNeeded();*/
+    }
 }
 
 EffectTreeBase::~EffectTreeBase() {
@@ -555,7 +565,6 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
                 if (childTreeToStore.isValid()) {
                     copy.appendChild(childTreeToStore, nullptr);
                 }
-
             }
 
             // Register connection
@@ -619,8 +628,6 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
         copy.copyPropertiesFrom(loadData, nullptr);
         parentTree.appendChild(copy, &undoManager);
 
-
-
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
@@ -631,7 +638,6 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
     }
 
     // Add Connections
-
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
@@ -642,35 +648,42 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
                 int64 inPortEffectID = child.getProperty("inPortEffect");
                 int64 outPortEffectID = child.getProperty("outPortEffect");
 
-                auto in = parentTree.getChildWithProperty("ID", inPortEffectID);
-                auto out = parentTree.getChildWithProperty("ID", outPortEffectID);
+                bool inPortIsInternal = child.getProperty("inPortIsInternal");
+                bool outPortIsInternal = child.getProperty("outPortIsInternal");
+
+                ValueTree in;
+                ValueTree out;
+                if (! outPortIsInternal) {
+                    in = parentTree.getChildWithProperty("ID", inPortEffectID);
+                } else {
+                    in = copy.getChildWithProperty("ID", inPortEffectID);
+                }
+                if (! inPortIsInternal) {
+                    out = parentTree.getChildWithProperty("ID", outPortEffectID);
+                } else {
+                    out = copy.getChildWithProperty("ID", outPortEffectID);
+                }
 
                 auto inEffect = getFromTree<Effect>(in);
                 auto outEffect = getFromTree<Effect>(out);
 
-                auto inPortIsInternal = in.getProperty("inPortIsInternal");
-                auto outPortIsInternal = out.getProperty("outPortIsInternal");
+                if (inEffect == NULL || outEffect == NULL) {
+                    return; //todo return bool?
+                }
+
+                auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"), inPortIsInternal);
+                auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"), outPortIsInternal);
+
+                if (inPort == NULL || outPort == NULL) {
+                    return;
+                }
+
+                connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
+                connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
 
                 if (inPortIsInternal || outPortIsInternal) {
-
-                    std::cout << "internal port" << newLine;
-                    //todo
-                    continue;
+                    copy.appendChild(connectionToSet, nullptr);
                 } else {
-                    if (inEffect == NULL || outEffect == NULL) {
-                        return; //todo return bool?
-                    }
-
-                    auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"));
-                    auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"));
-
-                    if (inPort == NULL || outPort == NULL) {
-                        return;
-                    }
-
-                    connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
-                    connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
-
                     parentTree.appendChild(connectionToSet, nullptr);
                 }
             }
@@ -772,6 +785,11 @@ ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPor
     std::cout << "Effect1: " << effect1 << newLine;
 
     if (effect1->getParent() == effect2->getParent()) {
+        if (effect1 == effect2) {
+            //todo fuckin motherfuckin dumbass exception case
+            std::cout << "oh, fuck you.." << newLine;
+        }
+
         dynamic_cast<EffectTreeBase*>(effect1->getParent())->getTree().appendChild(newConnection, &undoManager);
     } else if (effect1->getParent() == effect2) {
         dynamic_cast<EffectTreeBase*>(effect2)->getTree().appendChild(newConnection, &undoManager);
@@ -915,11 +933,12 @@ void Effect::setupMenu() {
 
 Effect::~Effect()
 {
-    if (node != nullptr)
+    if (node != nullptr) {
         std::cout << "Reference count: " << node->getReferenceCount() << newLine;
-    /*while (node->getReferenceCount() > 1) {
-        node->decReferenceCount();
-    }*/
+        while (node->getReferenceCount() > 1) {
+            node->decReferenceCount();
+        }
+    }
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -1443,11 +1462,18 @@ int Effect::getPortID(const ConnectionPort *port) {
     return -1;
 }
 
-AudioPort* Effect::getPortFromID(const int id) {
+ConnectionPort* Effect::getPortFromID(const int id, bool internal) {
+    AudioPort* port;
     if (id < inputPorts.size()) {
-        return inputPorts[id].get();
+        port = inputPorts[id].get();
     } else {
-        return outputPorts[id - inputPorts.size()].get();
+        port = outputPorts[id - inputPorts.size()].get();
+    }
+
+    if (internal) {
+        return port->getInternalConnectionPort().get();
+    } else {
+        return port;
     }
 }
 

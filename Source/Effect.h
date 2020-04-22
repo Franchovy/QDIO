@@ -185,7 +185,7 @@ public:
     bool hasConnection(const ConnectionLine* line);
 
     int getPortID(const ConnectionPort* port);
-    AudioPort* getPortFromID(const int id);
+    ConnectionPort* getPortFromID(const int id, bool internal = false);
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() { return editMode; }
