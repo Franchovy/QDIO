@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "EffectGui.h"
+#include "Parameters.h"
 
 #include "IOEffects.h"
 #include "BaseEffects.h"
@@ -218,6 +219,8 @@ public:
     int getNumOutputs() const { return outputPorts.size(); }
 
     bool isIndividual() const { return processor != nullptr; }
+
+    void saveParameters();
 
     struct IDs {
         static const Identifier EFFECT_ID;

@@ -543,8 +543,12 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
             // Set ID property (for port connections)
             copy.setProperty("ID", reinterpret_cast<int64>(effect), nullptr);
 
+            // Set num ports
             copy.setProperty("numInputPorts", effect->getNumInputs(), nullptr);
             copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);
+
+            // Save parameter info
+
         } else {
             std::cout << "dat shit is not initialised. do not store" << newLine;
             return ValueTree();
@@ -1529,6 +1533,11 @@ bool Effect::hasPort(const ConnectionPort *port) {
 bool Effect::hasConnection(const ConnectionLine *line) {
     return (hasPort(line->getOutPort().get())
         || hasPort(line->getInPort().get()));
+}
+
+void Effect::saveParameters() {
+    // test
+    
 }
 
 /*
