@@ -62,15 +62,10 @@ Parameter::Parameter(AudioProcessorParameter *param)
     addAndMakeVisible(parameterLabel);
 
     param->addListener(this);
-    param->setValueNotifyingHost(0.0f);
 }
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
-    // wot to do with parameterIndex?
-
-    //TODO this is called on audio thread! Use async updater for messages.
-    std::cout << "Parameter index: " << parameterIndex << newLine;
-    std::cout << "Type: " << type << newLine;
+    // This is called on audio thread! Use async updater for messages.
 
     switch (type) {
         case button:
