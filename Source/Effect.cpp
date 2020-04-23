@@ -1073,7 +1073,7 @@ void Effect::setParameters(const AudioProcessorParameterGroup *group) {
 
 void Effect::addParameter(AudioProcessorParameter *param) {
 
-    Parameter* parameterGui = new Parameter(param);
+    auto parameterGui = new Parameter(param);
     addAndMakeVisible(parameterGui);
 
     auto i = parameters->getParameters(false).indexOf(param);

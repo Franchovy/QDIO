@@ -103,7 +103,6 @@ public:
 
 protected:
     String name;
-    ParameterListener parameterListener;
     BusesLayout layout;
 };
 
@@ -119,10 +118,7 @@ public:
     {
         name = "Delay Effect";
         addParameter(&delay);
-        delay.addListener(&parameterListener);
-
         addParameter(&fade);
-        fade.addListener(&parameterListener);
 
         setLayout(1,1);
         startTimer(1000);
@@ -247,12 +243,11 @@ public:
                               NormalisableRange<float>(0.0f, 2.f, 0.001, 1.0f), 1.0f),
                          cutoff("cutoff", "Cutoff",
                               NormalisableRange<float>(0.0f, 1.0f, 0.001f, 0.5f), 0.8f)
-              {
+    {
         name = "Distortion Effect";
         addParameter(&gain);
-        gain.addListener(&parameterListener);
         addParameter(&cutoff);
-        cutoff.addListener(&parameterListener);
+
         setLayout(1,1);
     }
 
