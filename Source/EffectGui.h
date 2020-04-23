@@ -252,6 +252,8 @@ struct ConnectionLine : public SelectHoverObject, public ComponentListener
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
+    void componentParentHierarchyChanged(Component &component) override;
+
     ConnectionLine(ConnectionPort& p1, ConnectionPort& p2);
 
     ~ConnectionLine(){
@@ -336,7 +338,7 @@ struct LineComponent : public GuiObject
 {
     LineComponent()
     {
-        setBounds(0,0,getParentWidth(), getParentHeight());
+        setBounds(0,0,getParentWidth() * 2, getParentHeight() * 2);
     }
 
     void resized() override {

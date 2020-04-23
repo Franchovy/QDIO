@@ -32,6 +32,8 @@ public:
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
     
 private:
+    int deltaX;
+    int deltaY;
 
     void move(int deltaX, int deltaY);
     void timerCallback() override;

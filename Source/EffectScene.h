@@ -60,6 +60,8 @@ public:
         static const Identifier DeviceManager;
     };
 
+    Rectangle<int> view;
+
 private:
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
@@ -71,6 +73,10 @@ private:
     using Node = AudioProcessorGraph::Node;
 
     Image bg;
+    Image bgTile;
+    Image logo;
+    Point<int> tileDelta;
+
 
     PopupMenu mainMenu;
     PopupMenu createEffectMenu;

@@ -122,6 +122,8 @@ void Resizer::mouseDrag(const MouseEvent &event) {
 }
 
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
+    //setBounds(Rectangle<int>(line.getStart(), line.getEnd()));
+
     line.setStart(getLocalPoint(inPort.get(), inPort->centrePoint));
     line.setEnd(getLocalPoint(outPort.get(), outPort->centrePoint));
 
@@ -165,7 +167,13 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
     inPort->getParentComponent()->addComponentListener(this);
     outPort->getParentComponent()->addComponentListener(this);
 
-    setBounds(0,0,getParentWidth(),getParentHeight());
+
+    setBounds(0, 0, getParentWidth()*2, getParentHeight()*2);
+
+}
+
+void ConnectionLine::componentParentHierarchyChanged(Component &component) {
+    ComponentListener::componentParentHierarchyChanged(component);
 }
 
 void ConnectionPort::mouseDown(const MouseEvent &event) {

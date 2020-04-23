@@ -7,6 +7,7 @@
 
   ==============================================================================
 */
+#define DEBUG_APPEARANCE
 
 #include "MainComponent.h"
 
@@ -21,7 +22,17 @@ MainComponent::MainComponent()
     // EffectScene component
     setViewedComponent(&main, false);
     addAndMakeVisible(main);
-    setBounds(0,0, 2000, 1500);
+
+    // Set size to full screen
+
+    auto appArea = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
+#ifdef DEBUG_APPEARANCE
+    appArea = appArea.expanded(-1000, -500);
+#endif
+    setBounds(appArea);
+
+    main.setBounds(getBounds());
+    main.view = getViewArea();
 
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
 
@@ -76,11 +87,10 @@ void MainComponent::timerCallback() {
     auto pos = getMouseXYRelative();
     if (! getBounds().contains(pos))
         return;
-
-    int deltaX = 0;
-    int deltaY = 0;
+    autoScroll(getMouseXYRelative().x, getMouseXYRelative().y, 50, 10);
+/*
     if (pos.x < 150)
-        deltaX = (150 - pos.x) / 2;
+
     else if (pos.x > getWidth() - 150)
         deltaX = (getWidth() - 150 - pos.x) / 2;
 
@@ -90,6 +100,7 @@ void MainComponent::timerCallback() {
         deltaY = (getHeight() - 150 - pos.y) / 2;
 
     move(deltaX, deltaY);
+*/
 
     startTimer(3);
 }

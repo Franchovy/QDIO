@@ -8,7 +8,8 @@ EffectScene::EffectScene() :
 {
     setComponentID("MainWindow");
     setName("MainWindow");
-    setSize(4000, 4000);
+
+
 /*
     // RANDOM LIST TEST
     int list1[] = {1,2,3};
@@ -41,6 +42,8 @@ EffectScene::EffectScene() :
 
 #define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+    bgTile = ImageCache::getFromMemory(BinaryData::bgtile_png, BinaryData::bgtile_pngSize);
+    logo = ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
 
     //========================================================================================
     // MIDI example code
@@ -96,7 +99,12 @@ EffectScene::~EffectScene()
 void EffectScene::paint (Graphics& g)
 {
 #ifdef BACKGROUND_IMAGE
-    g.drawImage(bg, getBounds().toFloat());
+
+    //g.setTiledImageFill(bgTile, 0, 0, 1.0f);
+    //g.fillRect(getBoundsInParent());
+
+    g.drawImage(bg,view.toFloat());
+
 #else
     g.fillAll (Colour(30, 35, 40));
     
@@ -114,7 +122,8 @@ void EffectScene::paint (Graphics& g)
 
 void EffectScene::resized()
 {
-    setBounds(0, 0, 1920, 1080);
+    //tileDelta()
+    repaint();
 }
 
 void EffectScene::mouseDown(const MouseEvent &event) {
@@ -204,6 +213,7 @@ void EffectScene::updateChannels() {
         Effect::updateEffectProcessor(node->getProcessor(), tree);
     }
 }
+
 /*
 void EffectScene::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel) { 
     getParentComponent()->mouseWheelMove(event, wheel);
