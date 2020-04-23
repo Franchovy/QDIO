@@ -1571,7 +1571,8 @@ void Effect::loadParameters(ValueTree parameterValues) {
     for (auto p : parameters->getParameters(false)) {
         if (parameterValues.hasProperty(p->getName(30))){
             float val = parameterValues.getProperty(p->getName(30));
-            p->setValue(val);
+            //p->setValue(val);
+            p->setValueNotifyingHost(val);
         }
     }
 }

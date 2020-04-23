@@ -11,7 +11,8 @@
 #include "Parameters.h"
 
 Parameter::Parameter(AudioProcessorParameter *param)
-    : parameterLabel(param->getName(30), param->getName(30))
+    : referencedParameter(param)
+    , parameterLabel(param->getName(30), param->getName(30))
 {
     setBounds(0, 0, 150, 50);
 
@@ -59,4 +60,26 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
     parameterLabel.setBounds(0, 0, getWidth(), 20);
     addAndMakeVisible(parameterLabel);
+
+    param->addListener(this);
+    param->setValueNotifyingHost(0.0f);
+}
+
+void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
+    // wot to do with parameterIndex?
+
+    //TODO this is called on audio thread! Use async updater for messages.
+    std::cout << "Parameter index: " << parameterIndex << newLine;
+    std::cout << "Type: " << type << newLine;
+
+    switch (type) {
+        case button:
+            break;
+        case combo:
+            break;
+        case slider:
+            auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+            slider->setValue(newValue, dontSendNotification);
+            break;
+    }
 }

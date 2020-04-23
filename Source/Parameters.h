@@ -11,7 +11,7 @@
 #pragma once
 #include <JuceHeader.h>
 
-class Parameter : public Component
+class Parameter : public Component, public AudioProcessorParameter::Listener
 {
 public:
     Parameter(AudioProcessorParameter *param);
@@ -22,9 +22,17 @@ public:
         slider = 2
     } type;
 
+
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
+
+    }
+
 private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
+    AudioProcessorParameter* referencedParameter;
 };
 
 class ButtonListener : public Button::Listener
@@ -44,16 +52,6 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ButtonListener)
 };
 
-class ParameterListener : public AudioProcessorParameter::Listener
-{
-    void parameterValueChanged(int parameterIndex, float newValue) override {
-        //*parameters[parameterIndex] = newValue;
-    }
-
-    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
-
-    }
-};
 
 class ComboListener : public ComboBox::Listener
 {
