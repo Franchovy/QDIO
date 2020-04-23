@@ -548,6 +548,7 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
             copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);
 
             // Save parameter info
+            copy.appendChild(effect->storeParameters(), nullptr);
 
         } else {
             std::cout << "dat shit is not initialised. do not store" << newLine;
@@ -636,6 +637,14 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
                 loadEffect(copy, child);
             }
         }
+
+        // Load parameters
+        auto effect = getFromTree<Effect>(copy);
+        if (effect != nullptr && loadData.getChildWithName("parameters").isValid()) {
+            effect->loadParameters(loadData.getChildWithName("parameters"));
+        }
+
+        //loadData.getChild("parameters")
     }
 
     // Add Connections
@@ -844,6 +853,8 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
 
         // Make edit mode true by default
         setEditMode(true);
+
+        parameters = new AudioProcessorParameterGroup();
     }
 
     // Set name
@@ -1062,6 +1073,14 @@ void Effect::setParameters(const AudioProcessorParameterGroup *group) {
 
 void Effect::addParameter(AudioProcessorParameter *param) {
 
+    Parameter* parameterGui = new Parameter(param);
+    addAndMakeVisible(parameterGui);
+
+    auto i = parameters->getParameters(false).indexOf(param);
+    parameterGui->setTopLeftPosition(60, 70 + i * 50);
+
+    setSize(parameterGui->getWidth() + 50, 50 + parameters->getParameters(false).size() * 50);
+/*
     //todo parent class for dis shit pllssss
     if (param->isBoolean()) {
         // add bool parameter
@@ -1129,7 +1148,7 @@ void Effect::addParameter(AudioProcessorParameter *param) {
         slider->hideTextBox(true);
 
         resize(slider->getWidth() + 100, getHeight());
-    }
+    }*/
 }
 
 
@@ -1535,10 +1554,29 @@ bool Effect::hasConnection(const ConnectionLine *line) {
         || hasPort(line->getInPort().get()));
 }
 
-void Effect::saveParameters() {
-    // test
-    
+ValueTree Effect::storeParameters() {
+    if (parameters == nullptr) {
+        return ValueTree();
+    } else {
+        ValueTree parameterValues("parameters");
+        for (auto p : parameters->getParameters(false)) {
+            parameterValues.setProperty(p->getName(30), p->getValue(), nullptr);
+        }
+        return parameterValues;
+    }
 }
+
+void Effect::loadParameters(ValueTree parameterValues) {
+    auto parameterList = parameters->getParameters(false);
+    for (auto p : parameters->getParameters(false)) {
+        if (parameterValues.hasProperty(p->getName(30))){
+            float val = parameterValues.getProperty(p->getName(30));
+            p->setValue(val);
+        }
+    }
+}
+
+
 
 /*
 

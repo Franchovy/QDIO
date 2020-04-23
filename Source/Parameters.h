@@ -9,7 +9,23 @@
 */
 
 #pragma once
+#include <JuceHeader.h>
 
+class Parameter : public Component
+{
+public:
+    Parameter(AudioProcessorParameter *param);
+
+    enum Type {
+        button = 0,
+        combo = 1,
+        slider = 2
+    } type;
+
+private:
+    Label parameterLabel;
+    std::unique_ptr<Component> parameterComponent;
+};
 
 class ButtonListener : public Button::Listener
 {
@@ -18,6 +34,7 @@ public:
         linkedParameter = parameter;
     }
 
+
     void buttonClicked(Button *button) override {
         linkedParameter->setValue(button->getToggleState());
     }
@@ -25,6 +42,17 @@ public:
 private:
     AudioProcessorParameter* linkedParameter;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ButtonListener)
+};
+
+class ParameterListener : public AudioProcessorParameter::Listener
+{
+    void parameterValueChanged(int parameterIndex, float newValue) override {
+        //*parameters[parameterIndex] = newValue;
+    }
+
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
+
+    }
 };
 
 class ComboListener : public ComboBox::Listener
@@ -48,6 +76,7 @@ class SliderListener : public Slider::Listener
 public:
     explicit SliderListener(AudioProcessorParameter* parameter) : Slider::Listener(){
         linkedParameter = parameter;
+
     }
 
     void sliderValueChanged(Slider *slider) override {
@@ -61,6 +90,8 @@ public:
     void sliderDragEnded(Slider *slider) override {
         linkedParameter->endChangeGesture();
     }
+
+
 private:
     AudioProcessorParameter* linkedParameter;
 

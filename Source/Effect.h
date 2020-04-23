@@ -177,6 +177,9 @@ public:
     };
     NodeAndPort getNode(ConnectionPort::Ptr& port);
 
+    ValueTree storeParameters();
+    void loadParameters(ValueTree parameterValues);
+
     void setParameters(const AudioProcessorParameterGroup* group);
     void addParameter(AudioProcessorParameter* param);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
@@ -219,8 +222,6 @@ public:
     int getNumOutputs() const { return outputPorts.size(); }
 
     bool isIndividual() const { return processor != nullptr; }
-
-    void saveParameters();
 
     struct IDs {
         static const Identifier EFFECT_ID;

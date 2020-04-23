@@ -11,24 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-
-class ParameterListener : public AudioProcessorParameter::Listener
-{
-public:
-    ParameterListener() : AudioProcessorParameter::Listener() {
-
-    }
-
-    void parameterValueChanged(int parameterIndex, float newValue) override {
-        *parameters[parameterIndex] = newValue;
-    }
-
-    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
-
-    }
-
-    Array<std::atomic<float>*> parameters;
-};
+#include "Parameters.h"
 
 /**
  * Slightly more specialised (but still abstract) AudioProcessor. Avoids having all the same
