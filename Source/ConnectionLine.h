@@ -16,9 +16,7 @@
 
 struct LineComponent : public GuiObject
 {
-    LineComponent();
-
-    void resized() override;
+    LineComponent() = default;
 
     void paint(Graphics &g) override;
 
@@ -28,18 +26,14 @@ struct LineComponent : public GuiObject
      */
     void convert(ConnectionPort* port2);
 
-    static LineComponent* getDragLine();
+    void startDrag(ConnectionPort* p1, const MouseEvent& event);
+    void drag(const MouseEvent& event);
+    void release(ConnectionPort* p2);
 
-    static void setDragLine(LineComponent* newLine);
-
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
-
-    ConnectionPort* port1 = nullptr;
+    ConnectionPort* getPort1();
 
 private:
-    static LineComponent* dragLine;
+    ConnectionPort* port1 = nullptr;
 
     Line<int> line;
     Point<int> p1, p2;

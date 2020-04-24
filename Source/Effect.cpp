@@ -109,9 +109,18 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
         }
     }
 
+    ValueTree effectTreeToCheck;
+    if (effectTree.getParent().hasType(EFFECTSCENE_ID)
+            && dynamic_cast<AudioPort*>(event.originalComponent))
+    {
+        effectTreeToCheck = effectTree.getParent();
+    } else {
+        effectTreeToCheck = effectTree;
+    }
+
     // Check children for a match
-    for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e = getFromTree<Effect>(effectTree.getChild(i));
+    for (int i = 0; i < effectTreeToCheck.getNumChildren(); i++) {
+        auto e = getFromTree<Effect>(effectTreeToCheck.getChild(i));
 
         if (e == nullptr)
             continue;
@@ -121,7 +130,7 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
             if (p->getParentComponent() == e)
                 continue;
 
-        auto localPos = e->getLocalPoint(event.eventComponent, event.getPosition());
+        auto localPos = e->getLocalPoint(event.originalComponent, event.getPosition());
 
         if (e->contains(localPos))
         {
@@ -473,6 +482,10 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
     std::cout << "Begin new transaction" << newLine;
     undoManager.beginNewTransaction(getName());
 
+    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        dragLine.startDrag(p, event);
+    }
+
 }
 
 void EffectTreeBase::mouseDrag(const MouseEvent &event) {
@@ -482,6 +495,7 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
     if (event.mods.isLeftButtonDown()) {
         // Line drag
         if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+            //TODO efficiency
             auto port = portToConnectTo(event, tree);
 
             if (port != nullptr) {
@@ -489,16 +503,19 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
             } else {
                 SelectHoverObject::resetHoverObject();
             }
+            dragLine.drag(event);
         }
     }
 }
 
 void EffectTreeBase::mouseUp(const MouseEvent &event) {
-    if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
+    if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
             // Call create on common parent
-            newConnection(port, l->port1);
+            newConnection(port, dragLine.getPort1());
         }
+
+        dragLine.release(nullptr);
     }
 }
 
@@ -509,7 +526,6 @@ EffectTreeBase::EffectTreeBase(const ValueTree &vt) {
         setWantsKeyboardFocus(true);
 
         dragLine.setAlwaysOnTop(true);
-        LineComponent::setDragLine(&dragLine);
 }
 
 EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
@@ -517,7 +533,6 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
     setWantsKeyboardFocus(true);
 
     dragLine.setAlwaysOnTop(true);
-    LineComponent::setDragLine(&dragLine);
 }
 
 ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
@@ -1308,10 +1323,7 @@ void Effect::mouseUp(const MouseEvent &event) {
     /*if (lasso.isVisible())
         lasso.endLasso();*/
 
-    // If component is LineComponent, respond to line drag event
-    else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-        EffectTreeBase::mouseUp(event);
-    }
+    EffectTreeBase::mouseUp(event);
 }
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
