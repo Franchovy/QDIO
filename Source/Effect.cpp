@@ -1290,9 +1290,11 @@ void Effect::mouseUp(const MouseEvent &event) {
 
     if (event.eventComponent == event.originalComponent) {
         if (event.getDistanceFromDragStart() < 10) {
-            if (event.mods.isLeftButtonDown()) {
+            if (event.mods.isLeftButtonDown() && ! event.mods.isCtrlDown()) {
                 addSelectObject(this);
-            } else if (event.mods.isRightButtonDown()) {
+            }
+            if (event.mods.isRightButtonDown() ||
+                       event.mods.isCtrlDown()) {
                 // open menu
                 if (editMode) {
                     callMenu(editMenu);
