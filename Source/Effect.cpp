@@ -663,12 +663,12 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
 
                 ValueTree in;
                 ValueTree out;
-                if (! outPortIsInternal) {
+                if (parentTree.getChildWithProperty("ID", inPortEffectID).isValid()) {
                     in = parentTree.getChildWithProperty("ID", inPortEffectID);
                 } else {
                     in = copy.getChildWithProperty("ID", inPortEffectID);
                 }
-                if (! inPortIsInternal) {
+                if (parentTree.getChildWithProperty("ID", outPortEffectID).isValid()) {
                     out = parentTree.getChildWithProperty("ID", outPortEffectID);
                 } else {
                     out = copy.getChildWithProperty("ID", outPortEffectID);
@@ -691,7 +691,8 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
                 connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
                 connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
 
-                if (inPortIsInternal || outPortIsInternal) {
+                if ((inPortIsInternal || outPortIsInternal)
+                        || (in.getParent() == copy && out.getParent() == copy)) {
                     copy.appendChild(connectionToSet, nullptr);
                 } else {
                     parentTree.appendChild(connectionToSet, nullptr);
@@ -1571,7 +1572,6 @@ void Effect::loadParameters(ValueTree parameterValues) {
     for (auto p : parameters->getParameters(false)) {
         if (parameterValues.hasProperty(p->getName(30))){
             float val = parameterValues.getProperty(p->getName(30));
-            //p->setValue(val);
             p->setValueNotifyingHost(val);
         }
     }
