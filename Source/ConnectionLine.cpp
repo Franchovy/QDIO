@@ -11,7 +11,6 @@
 #include "ConnectionLine.h"
 
 
-LineComponent* LineComponent::dragLine = nullptr;
 
 const Identifier ConnectionLine::IDs::CONNECTION_ID = "connection";
 const Identifier ConnectionLine::IDs::ConnectionLineObject = "connectionLineObject";
@@ -23,47 +22,6 @@ const Identifier ConnectionLine::IDs::AudioConnection = "audioConnection";
 //==============================================================================
 // Line Component methods
 
-/**
- * @param event modified mouseEvent to use mainComponent coords.
- */
-void LineComponent::mouseDown(const MouseEvent &event) {
-    auto thisEvent = event.getEventRelativeTo(this);
-
-    if (port1 = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        p1 = getLocalPoint(port1, port1->centrePoint);
-    }
-
-    p2 = thisEvent.getPosition();
-
-    line.setStart(p1);
-    line.setEnd(p2);
-
-    setVisible(true);
-    repaint();
-
-    getParentComponent()->mouseDown(event);
-}
-
-void LineComponent::mouseDrag(const MouseEvent &event) {
-    auto thisEvent = event.getEventRelativeTo(this);
-    p2 = thisEvent.getPosition();
-
-    line.setEnd(p2);
-    repaint();
-
-    // Pass hover detection to EffectScene
-    getParentComponent()->mouseDrag(thisEvent);
-}
-
-void LineComponent::mouseUp(const MouseEvent &event) {
-    setVisible(false);
-
-    // Pass this event to EffectScene
-    auto eventMain = event.getEventRelativeTo(this).withNewPosition(
-            event.getPosition() - getPosition()
-    );
-    getParentComponent()->mouseUp(eventMain);
-}
 
 void LineComponent::convert(ConnectionPort *port2) {
     if (port1 != nullptr) {
@@ -72,16 +30,10 @@ void LineComponent::convert(ConnectionPort *port2) {
     }
 }
 
-LineComponent::LineComponent() {
 
-}
-
-void LineComponent::resized() {
-    Component::resized();
-}
 
 void LineComponent::paint(Graphics &g) {
-    g.setColour(Colours::navajowhite);
+    g.setColour(Colours::whitesmoke);
     Path p;
     p.addLineSegment(line.toFloat(),1);
     PathStrokeType strokeType(1);
@@ -92,14 +44,77 @@ void LineComponent::paint(Graphics &g) {
     g.strokePath(p, strokeType);
 
     Component::paint(g);
+/*
+    g.setColour(Colours::floralwhite);
+    g.fillRect(getBounds());
+
+    g.setColour(Colours::red);
+    g.fillEllipse(p1.x, p1.y, 10, 10);
+
+    g.setColour(Colours::blue);
+    g.fillEllipse(p2.x, p2.y, 10, 10);*/
 }
 
-LineComponent *LineComponent::getDragLine() {
-    return dragLine;
+void LineComponent::startDrag(ConnectionPort *p, const MouseEvent &event) {
+    port1 = p;
+
+    Component* parent;
+    if (dynamic_cast<AudioPort*>(p)) {
+        parent = p->getParentComponent()->getParentComponent();
+    } else if (dynamic_cast<InternalConnectionPort*>(p)) {
+        parent = p->getParentComponent();
+    }
+    parent->addAndMakeVisible(this);
+
+
+    auto newBounds = Rectangle<int>( parent->getLocalPoint(p, p->centrePoint),
+            parent->getLocalPoint(event.eventComponent, event.getPosition()));
+    setBounds(newBounds);
+
+    p1 = getLocalPoint(p, p->centrePoint);
+    p2 = getLocalPoint(event.eventComponent, event.getPosition());
+    line.setStart(p1);
+    line.setEnd(p2);
+
+    repaint();
 }
 
-void LineComponent::setDragLine(LineComponent *newLine) {
-    dragLine = newLine;
+void LineComponent::drag(const MouseEvent &event) {
+    auto newP2 = getLocalPoint(event.eventComponent, event.getPosition());
+    auto newBounds = Rectangle<int>(p1, newP2) + getPosition();
+    setBounds(newBounds);
+
+    p1 = getLocalPoint(port1, port1->centrePoint);
+    p2 = getLocalPoint(event.eventComponent, event.getPosition());
+    line.setStart(p1);
+    line.setEnd(p2);
+
+    repaint();
+}
+
+void LineComponent::release(ConnectionPort *port2) {
+    /*if (port2 != nullptr)
+    {
+        auto newP2 = getLocalPoint(port2, port2->centrePoint);
+        auto newBounds = Rectangle<int>(p1, newP2) + getPosition();
+        setBounds(newBounds);
+
+        p1 = getLocalPoint(port1, port1->centrePoint);
+        p2 = getLocalPoint(port2, port2->centrePoint);
+        line.setStart(p1);
+        line.setEnd(p2);
+
+        repaint();
+    }*/
+    // clear data
+    port1 = nullptr;
+    p1 = p2 = Point<int>();
+    setVisible(false);
+    repaint();
+}
+
+ConnectionPort *LineComponent::getPort1() {
+    return port1;
 }
 
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
@@ -175,17 +190,4 @@ void ConnectionLine::paint(Graphics &g) {
     }
 
     g.drawLine(line.toFloat(),thiccness);
-}
-
-
-void ConnectionPort::mouseDown(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseDown(event);
-}
-
-void ConnectionPort::mouseDrag(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseDrag(event);
-}
-
-void ConnectionPort::mouseUp(const MouseEvent &event) {
-    LineComponent::getDragLine()->mouseUp(event);
 }

@@ -75,6 +75,18 @@ void ConnectionPort::paint(Graphics &g) {
     }
 }
 
+void ConnectionPort::mouseDown(const MouseEvent &event) {
+    getParentComponent()->mouseDown(event);
+}
+
+void ConnectionPort::mouseDrag(const MouseEvent &event) {
+    getParentComponent()->mouseDrag(event);
+}
+
+void ConnectionPort::mouseUp(const MouseEvent &event) {
+    getParentComponent()->mouseUp(event);
+}
+
 bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
     // Return false if the port is AP and belongs to the same parent
     return !(dynamic_cast<AudioPort *>(other.get())
