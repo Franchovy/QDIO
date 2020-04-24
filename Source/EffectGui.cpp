@@ -169,7 +169,6 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
 
 
     setBounds(0, 0, getParentWidth()*2, getParentHeight()*2);
-
 }
 
 void ConnectionLine::componentParentHierarchyChanged(Component &component) {
