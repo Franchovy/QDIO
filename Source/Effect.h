@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "EffectGui.h"
+#include "ConnectionLine.h"
 #include "Parameters.h"
 
 #include "IOEffects.h"
