@@ -37,14 +37,13 @@ void SelectHoverObject::setHoverComponent(SelectHoverObject::Ptr item) {
     resetHoverObject();
 
     if (item != nullptr) {
-
         item->hoverMode = true;
         hoverComponent = item;
-        item->repaint();
     }
 }
 
 SelectHoverObject::SelectHoverObject() {
+    setRepaintsOnMouseActivity(true);
     if (getName() != "MainWindow") {
         componentsToSelect.add(this);
     }
@@ -69,7 +68,6 @@ SelectHoverObject::~SelectHoverObject() {
 void SelectHoverObject::resetHoverObject() {
     if (hoverComponent != nullptr) {
         hoverComponent->hoverMode = false;
-        hoverComponent->repaint();
         hoverComponent = nullptr;
     }
 }
@@ -92,6 +90,7 @@ void SelectHoverObject::setSelectMode(bool newSelectMode) {
 
 void SelectHoverObject::addSelectObject(const SelectHoverObject::Ptr& item) {
     item->selectMode = true;
+
     item->repaint();
     selected.addToSelection(item);
 }

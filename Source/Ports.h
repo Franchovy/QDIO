@@ -46,9 +46,7 @@ public:
     };
 
 protected:
-    ConnectionPort() {
-        setColour(portColour, Colours::black);
-    };
+    ConnectionPort();
 
     ConnectionPort::Ptr otherPort = nullptr;
 
@@ -65,16 +63,7 @@ class InternalConnectionPort : public ConnectionPort
 public:
     using Ptr = ReferenceCountedObjectPtr<InternalConnectionPort>;
 
-    InternalConnectionPort(AudioPort* parent, bool isInput) : ConnectionPort() {
-        audioPort = parent;
-        this->isInput = isInput;
-
-        hoverBox = Rectangle<int>(0,0,30,30);
-        outline = Rectangle<int>(10,10,10,10);
-        centrePoint = Point<int>(15,15);
-        //setBounds(parent->getX(), parent->getY(), 30, 30);
-        setBounds(0, 0, 30, 30);
-    }
+    InternalConnectionPort(AudioPort* parent, bool isInput);
 
     bool canConnect(ConnectionPort::Ptr& other) override;
     AudioPort* audioPort;

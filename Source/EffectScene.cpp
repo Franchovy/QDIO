@@ -9,6 +9,8 @@ EffectScene::EffectScene() :
     setComponentID("MainWindow");
     setName("MainWindow");
 
+    setBufferedToImage(true);
+    setRepaintsOnMouseActivity(false);
 
 /*
     // RANDOM LIST TEST
@@ -42,8 +44,8 @@ EffectScene::EffectScene() :
 
 #define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
-    bgTile = ImageCache::getFromMemory(BinaryData::bgtile_png, BinaryData::bgtile_pngSize);
-    logo = ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
+    //bgTile = ImageCache::getFromMemory(BinaryData::bgtile_png, BinaryData::bgtile_pngSize);
+    //logo = ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
 
     //========================================================================================
     // MIDI example code
@@ -103,7 +105,8 @@ void EffectScene::paint (Graphics& g)
     //g.setTiledImageFill(bgTile, 0, 0, 1.0f);
     //g.fillRect(getBoundsInParent());
 
-    g.drawImage(bg,view.toFloat());
+    std::cout << "Effectscene paint" << newLine;
+    g.drawImage(bg,getBounds().toFloat());
 
 #else
     g.fillAll (Colour(30, 35, 40));
@@ -123,7 +126,7 @@ void EffectScene::paint (Graphics& g)
 void EffectScene::resized()
 {
     //tileDelta()
-    repaint();
+    //repaint();
 }
 
 void EffectScene::mouseDown(const MouseEvent &event) {

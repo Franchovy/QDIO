@@ -66,8 +66,23 @@ void ConnectionPort::mouseUp(const MouseEvent &event) {
     getParentComponent()->mouseUp(event);
 }
 
+ConnectionPort::ConnectionPort() {
+    setColour(portColour, Colours::black);
+};
+
 bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
     // Return false if the port is AP and belongs to the same parent
     return !(dynamic_cast<AudioPort *>(other.get())
              && this->getParentComponent() == other->getParentComponent());
+}
+
+InternalConnectionPort::InternalConnectionPort(AudioPort *parent, bool isInput) : ConnectionPort() {
+    audioPort = parent;
+    this->isInput = isInput;
+
+    hoverBox = Rectangle<int>(0,0,30,30);
+    outline = Rectangle<int>(10,10,10,10);
+    centrePoint = Point<int>(15,15);
+    //setBounds(parent->getX(), parent->getY(), 30, 30);
+    setBounds(0, 0, 30, 30);
 }

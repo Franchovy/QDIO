@@ -1401,6 +1401,8 @@ void Effect::resized() {
 }
 
 void Effect::paint(Graphics& g) {
+    std::cout << "Effect paint" << newLine;
+
     // Draw outline rectangle
     g.setColour(Colours::black);
     Rectangle<float> outline(10,10,getWidth()-20, getHeight()-20);
