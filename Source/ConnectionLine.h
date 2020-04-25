@@ -10,6 +10,8 @@
 
 #include <JuceHeader.h>
 #include "EffectGui.h"
+#include "Ports.h"
+
 
 #pragma once
 

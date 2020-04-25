@@ -12,6 +12,7 @@
 #include "EffectGui.h"
 #include "ConnectionLine.h"
 #include "Parameters.h"
+#include "Ports.h"
 
 #include "IOEffects.h"
 #include "BaseEffects.h"
