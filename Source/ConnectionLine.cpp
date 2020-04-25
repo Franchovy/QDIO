@@ -44,17 +44,6 @@ void LineComponent::paint(Graphics &g) {
     strokeType.createDashedStroke(p, p, thiccness, 2);
 
     g.strokePath(p, strokeType);
-
-    //Component::paint(g);
-/*
-    g.setColour(Colours::floralwhite);
-    g.fillRect(getBounds());
-
-    g.setColour(Colours::red);
-    g.fillEllipse(p1.x, p1.y, 10, 10);
-
-    g.setColour(Colours::blue);
-    g.fillEllipse(p2.x, p2.y, 10, 10);*/
 }
 
 void LineComponent::startDrag(ConnectionPort *p, const MouseEvent &event) {
@@ -120,10 +109,14 @@ ConnectionPort *LineComponent::getPort1() {
 }
 
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    //setBounds(Rectangle<int>(line.getStart(), line.getEnd()));
+    auto inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
+    auto outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
 
-    line.setStart(getLocalPoint(inPort.get(), inPort->centrePoint));
-    line.setEnd(getLocalPoint(outPort.get(), outPort->centrePoint));
+    auto newBounds = Rectangle<int>(inPos, outPos);
+    setBounds(newBounds);
+
+    line.setStart(getLocalPoint(getParentComponent(), inPos));
+    line.setEnd(getLocalPoint(getParentComponent(), outPos));
 
     repaint();
 }
@@ -159,15 +152,17 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
                   : outPort->getPosition() + outPort->centrePoint;
 
 
-    line = Line<int>(inPos, outPos);
+    auto newBounds = Rectangle<int>(inPos, outPos);
+    setBounds(newBounds);
+
+    line = Line<int>(getLocalPoint(getParentComponent(), inPos),
+            getLocalPoint(getParentComponent(), outPos));
 
     inPort->setOtherPort(outPort);
     outPort->setOtherPort(inPort);
     inPort->getParentComponent()->addComponentListener(this);
     outPort->getParentComponent()->addComponentListener(this);
 
-
-    setBounds(0, 0, getParentWidth()*2, getParentHeight()*2);
 }
 
 void ConnectionLine::componentParentHierarchyChanged(Component &component) {
@@ -182,7 +177,9 @@ ConnectionLine::~ConnectionLine() {
 }
 
 void ConnectionLine::paint(Graphics &g) {
+    Path p;
     int thiccness;
+
     if (hoverMode || selectMode) {
         g.setColour(Colours::blue);
         thiccness = 3;
@@ -191,5 +188,7 @@ void ConnectionLine::paint(Graphics &g) {
         thiccness = 2;
     }
 
-    g.drawLine(line.toFloat(),thiccness);
+    p.addLineSegment(line.toFloat(),thiccness);
+
+    g.fillPath(p);
 }
