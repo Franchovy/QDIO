@@ -10,11 +10,17 @@
 
 #include "Parameters.h"
 
+int MetaParameter::nextParameterID = 0;
+
 Parameter::Parameter(AudioProcessorParameter *param)
     : referencedParameter(param)
     , parameterLabel(param->getName(30), param->getName(30))
 {
     setBounds(0, 0, 150, 50);
+
+    std::cout << "Parameter details: " << newLine;
+    std::cout << "Automatable: " << param->isAutomatable() << newLine;
+    std::cout << "Meta: " << param->isMetaParameter() << newLine;
 
     if (param->isBoolean()) {
         // Button
@@ -78,3 +84,44 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
             break;
     }
 }
+
+
+MetaParameter::MetaParameter(String name)
+        : RangedAudioParameter(name.toUpperCase(), name)
+        , range(0, 1, 0.1f)
+{
+}
+
+float MetaParameter::getValue() const {
+    return 0;
+}
+
+void MetaParameter::setValue(float newValue) {
+
+}
+
+float MetaParameter::getDefaultValue() const {
+    return 0;
+}
+
+float MetaParameter::getValueForText(const String &text) const {
+    return 0;
+}
+
+bool MetaParameter::isAutomatable() const {
+    return true;
+}
+
+bool MetaParameter::isMetaParameter() const {
+    return true;
+}
+
+String MetaParameter::getName(int i) const {
+    return AudioProcessorParameterWithID::getName(i);
+}
+
+const NormalisableRange<float> &MetaParameter::getNormalisableRange() const {
+    return range;
+}
+
+

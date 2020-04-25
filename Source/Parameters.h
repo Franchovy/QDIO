@@ -96,3 +96,27 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SliderListener)
 };
 
+class MetaParameter : public RangedAudioParameter
+{
+public:
+    MetaParameter(String name);
+
+    float getValue() const override;
+
+    void setValue(float newValue) override;
+
+    float getDefaultValue() const override;
+
+    float getValueForText(const String &text) const override;
+
+    bool isAutomatable() const override;
+
+    bool isMetaParameter() const override;
+
+    String getName(int i) const override;
+
+    const NormalisableRange<float> &getNormalisableRange() const override;
+private:
+    static int nextParameterID;
+    NormalisableRange<float> range;
+};

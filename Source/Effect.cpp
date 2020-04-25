@@ -954,17 +954,14 @@ void Effect::setupMenu() {
     editMenu.addItem("Add Output Port", [=](){
         addPort(getDefaultBus(), false); resized();
     });
-/*
 
     PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {
-        addParameter("Slider");
+        addParameter(new MetaParameter("New Parameter"));
     });
-    parameterSubMenu.add
+    editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
 
 
-    editMenu.addItem("Add Parameter")
-    */
     editMenu.addItem("Toggle Edit Mode", [=]() {
         setEditMode(!editMode);
     });
@@ -1106,7 +1103,12 @@ void Effect::addParameter(AudioProcessorParameter *param) {
     auto i = parameters->getParameters(false).indexOf(param);
     parameterGui->setTopLeftPosition(60, 70 + i * 50);
 
-    setSize(parameterGui->getWidth() + 50, 50 + parameters->getParameters(false).size() * 50);
+    auto newBounds = getBounds().getUnion(
+            Rectangle<int>(getX(), getY(),
+                    parameterGui->getWidth() + 50, 50 + parameters->getParameters(false).size() * 50));
+
+
+    setBounds(newBounds);
 /*
     //todo parent class for dis shit pllssss
     if (param->isBoolean()) {
