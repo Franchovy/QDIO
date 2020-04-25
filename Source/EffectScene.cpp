@@ -217,22 +217,16 @@ void EffectScene::updateChannels() {
     }
 }
 
-/*
-void EffectScene::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel) { 
-    getParentComponent()->mouseWheelMove(event, wheel);
-}*/
 
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
     if (auto e = dynamic_cast<Effect*>(c.get())) {
         SelectHoverObject::addSelectObject(e);
     }
-    c->repaint();
 }
 
 void ComponentSelection::itemDeselected(GuiObject::Ptr c) {
     if (auto e = dynamic_cast<Effect*>(c.get())) {
         SelectHoverObject::removeSelectObject(e);
     }
-    c->repaint();
 }

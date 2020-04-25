@@ -5,8 +5,6 @@
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{3656747D-F630-B6A0-87B7-F4E2A08E98F7}" name="Resources">
       <FILE id="DRvEs5" name="background.png" compile="0" resource="1" file="Resources/background.png"/>
-      <FILE id="zn6h6i" name="bg-tile.png" compile="0" resource="1" file="Resources/bg-tile.png"/>
-      <FILE id="n9LH1o" name="logo.png" compile="0" resource="1" file="Resources/logo.png"/>
       <FILE id="H9lxzs" name="close.png" compile="0" resource="1" file="Resources/close.png"/>
       <FILE id="k87fdV" name="settings.png" compile="0" resource="1" file="Resources/settings.png"/>
     </GROUP>
@@ -17,8 +15,6 @@
             file="Source/ConnectionLine.cpp"/>
       <FILE id="NgOKs7" name="ConnectionLine.h" compile="0" resource="0"
             file="Source/ConnectionLine.h"/>
-      <FILE id="WGN5nb" name="Port.cpp" compile="1" resource="0" file="Source/Port.cpp"/>
-      <FILE id="viTs7q" name="Port.h" compile="0" resource="0" file="Source/Port.h"/>
       <FILE id="zIPSEt" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="CK43xB" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
@@ -31,10 +27,6 @@
       <FILE id="md9GHI" name="BaseEffects.h" compile="1" resource="1" file="Source/BaseEffects.h"
             xcodeResource="1"/>
       <FILE id="mbjf0W" name="IDs" compile="0" resource="1" file="Source/IDs"/>
-      <FILE id="zLmarI" name="Effector.cpp" compile="1" resource="1" file="Source/Effector.cpp"
-            xcodeResource="1"/>
-      <FILE id="aUBkgB" name="Effector.h" compile="1" resource="1" file="Source/Effector.h"
-            xcodeResource="1"/>
       <FILE id="NYg3gQ" name="IOEffects.cpp" compile="1" resource="1" file="Source/IOEffects.cpp"
             xcodeResource="1"/>
       <FILE id="QX8rPO" name="IOEffects.h" compile="1" resource="1" file="Source/IOEffects.h"

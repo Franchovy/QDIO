@@ -7,7 +7,7 @@
 
   ==============================================================================
 */
-#define JUCE_ENABLE_REPAINT_DEBUGGING 1
+//#define JUCE_ENABLE_REPAINT_DEBUGGING 1
 
 #pragma once
 

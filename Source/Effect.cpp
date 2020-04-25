@@ -954,6 +954,17 @@ void Effect::setupMenu() {
     editMenu.addItem("Add Output Port", [=](){
         addPort(getDefaultBus(), false); resized();
     });
+/*
+
+    PopupMenu parameterSubMenu;
+    parameterSubMenu.addItem("Add Slider", [=] () {
+        addParameter("Slider");
+    });
+    parameterSubMenu.add
+
+
+    editMenu.addItem("Add Parameter")
+    */
     editMenu.addItem("Toggle Edit Mode", [=]() {
         setEditMode(!editMode);
     });

@@ -14,13 +14,6 @@ SelectHoverObject::Ptr SelectHoverObject::hoverComponent = nullptr;
 ComponentSelection SelectHoverObject::selected;
 ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 
-//==============================================================================
-// Line Component methods
-
-
-//=================================================================================
-// AudioPort methods
-
 
 // ==============================================================================
 // Resizer methods
@@ -44,6 +37,7 @@ void SelectHoverObject::setHoverComponent(SelectHoverObject::Ptr item) {
 
 SelectHoverObject::SelectHoverObject() {
     setRepaintsOnMouseActivity(true);
+
     if (getName() != "MainWindow") {
         componentsToSelect.add(this);
     }
@@ -68,6 +62,7 @@ SelectHoverObject::~SelectHoverObject() {
 void SelectHoverObject::resetHoverObject() {
     if (hoverComponent != nullptr) {
         hoverComponent->hoverMode = false;
+        hoverComponent->repaint();
         hoverComponent = nullptr;
     }
 }

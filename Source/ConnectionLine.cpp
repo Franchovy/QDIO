@@ -45,7 +45,7 @@ void LineComponent::paint(Graphics &g) {
 
     g.strokePath(p, strokeType);
 
-    Component::paint(g);
+    //Component::paint(g);
 /*
     g.setColour(Colours::floralwhite);
     g.fillRect(getBounds());
