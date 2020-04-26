@@ -18,10 +18,6 @@ Parameter::Parameter(AudioProcessorParameter *param)
 {
     setBounds(0, 0, 150, 50);
 
-    std::cout << "Parameter details: " << newLine;
-    std::cout << "Automatable: " << param->isAutomatable() << newLine;
-    std::cout << "Meta: " << param->isMetaParameter() << newLine;
-
     if (referencedParameter->isMetaParameter()) {
         parameterLabel.setEditable(true, true);
         parameterLabel.setWantsKeyboardFocus(true);
@@ -68,10 +64,10 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
     // Set up label
     parameterLabel.setFont(Font(15, Font::FontStyleFlags::bold));
-    parameterLabel.setColour(Label::textColourId, Colours::black);
-
     parameterLabel.setBounds(0, 0, getWidth(), 20);
     addAndMakeVisible(parameterLabel);
+
+    setEditable(param->isMetaParameter());
 
     param->addListener(this);
 }
@@ -89,6 +85,32 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
             slider->setValue(newValue, dontSendNotification);
             break;
     }
+}
+
+void Parameter::setEditable(bool isEditable) {
+    editable = isEditable;
+
+    if (isEditable) {
+        parameterLabel.setEditable(true, true);
+        parameterLabel.setColour(Label::textColourId, Colours::whitesmoke);
+
+        parameterComponent->setInterceptsMouseClicks(false, false);
+    } else {
+        parameterLabel.setEditable(false, false);
+        parameterLabel.setColour(Label::textColourId, Colours::black);
+
+        parameterComponent->setInterceptsMouseClicks(true, true);
+    }
+}
+
+void Parameter::mouseDown(const MouseEvent &event) {
+    dragger.startDraggingComponent(this, event);
+    Component::mouseDown(event);
+}
+
+void Parameter::mouseDrag(const MouseEvent &event) {
+    dragger.dragComponent(this, event, nullptr);
+    Component::mouseDrag(event);
 }
 
 

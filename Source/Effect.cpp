@@ -1065,6 +1065,12 @@ void Effect::setEditMode(bool isEditMode) {
             }
         }
 
+        for (auto c : getChildren()) {
+            if (auto p = dynamic_cast<Parameter*>(c)) {
+                p->setEditable(true);
+            }
+        }
+
         title.setMouseCursor(MouseCursor::IBeamCursor);
         title.setInterceptsMouseClicks(true, true);
 
@@ -1085,6 +1091,12 @@ void Effect::setEditMode(bool isEditMode) {
             for (auto p : l) {
                 p->setColour(0, Colours::black);
                 p->internalPort->setVisible(false);
+            }
+        }
+
+        for (auto c : getChildren()) {
+            if (auto p = dynamic_cast<Parameter*>(c)) {
+                p->setEditable(false);
             }
         }
 

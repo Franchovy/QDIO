@@ -29,12 +29,19 @@ public:
 
     }
 
+    void mouseDown(const MouseEvent &event) override;
 
+    void mouseDrag(const MouseEvent &event) override;
+
+    void setEditable(bool isEditable);
 
 private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
     AudioProcessorParameter* referencedParameter;
+
+    bool editable = false;
+    ComponentDragger dragger;
 };
 
 class ButtonListener : public Button::Listener
