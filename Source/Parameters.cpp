@@ -22,6 +22,12 @@ Parameter::Parameter(AudioProcessorParameter *param)
     std::cout << "Automatable: " << param->isAutomatable() << newLine;
     std::cout << "Meta: " << param->isMetaParameter() << newLine;
 
+    if (referencedParameter->isMetaParameter()) {
+        parameterLabel.setEditable(true, true);
+        parameterLabel.setWantsKeyboardFocus(true);
+        parameterLabel.showEditor();
+    }
+
     if (param->isBoolean()) {
         // Button
         type = button;

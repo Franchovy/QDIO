@@ -85,6 +85,9 @@ void SelectHoverObject::setSelectMode(bool newSelectMode) {
 
 void SelectHoverObject::addSelectObject(const SelectHoverObject::Ptr& item) {
     item->selectMode = true;
+    bool i,j;
+    item->getInterceptsMouseClicks(i , j);
+    std::cout << "Intercepts mouse click?: " << i << j << newLine;
 
     item->repaint();
     selected.addToSelection(item);

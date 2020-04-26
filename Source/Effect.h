@@ -184,7 +184,7 @@ public:
     void loadParameters(ValueTree parameterValues);
 
     void setParameters(const AudioProcessorParameterGroup* group);
-    void addParameter(AudioProcessorParameter* param);
+    Parameter& addParameter(AudioProcessorParameter* param);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
 
     ConnectionPort::Ptr checkPort(Point<int> pos);

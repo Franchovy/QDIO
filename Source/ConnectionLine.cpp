@@ -122,6 +122,12 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
 }
 
 bool ConnectionLine::hitTest(int x, int y) {
+    bool i,j;
+    getInterceptsMouseClicks(i, j);
+    if (! i) {
+        return false;
+    }
+
     auto d1 = line.getStart().getDistanceFrom(Point<int>(x,y));
     auto d2 = line.getEnd().getDistanceFrom(Point<int>(x,y));
     auto d = d1 + d2 - line.getLength();

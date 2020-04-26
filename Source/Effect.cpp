@@ -372,7 +372,15 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
 
 template<class T>
 T *EffectTreeBase::getFromTree(const ValueTree &vt) {
-    return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
+    if (vt.hasProperty(IDs::effectTreeBase)) {
+        // Return effect
+        return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
+    } else if (vt.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
+        // Return connection
+        return dynamic_cast<T*>(vt.getProperty(ConnectionLine::IDs::ConnectionLineObject).getObject());
+    }
+
+
 }
 
 template<class T>
@@ -957,7 +965,8 @@ void Effect::setupMenu() {
 
     PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {
-        addParameter(new MetaParameter("New Parameter"));
+        Parameter& newParam = addParameter(new MetaParameter("New Parameter"));
+        newParam.setCentrePosition(getMouseXYRelative());
     });
     editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
 
@@ -1041,45 +1050,47 @@ void Effect::setEditMode(bool isEditMode) {
 
     // Turn on edit mode
     if (isEditMode) {
-        for (auto c : getChildren()) {
-            c->setAlwaysOnTop(true);
-            if (!dynamic_cast<AudioPort*>(c))
-                c->setInterceptsMouseClicks(true, true);
 
+        // Set child effects and connections to editable
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            auto c = getFromTree<Component>(tree.getChild(i));
+            c->toFront(false);
+            c->setInterceptsMouseClicks(true, true);
         }
+
+        for (auto l : {inputPorts, outputPorts}) {
+            for (auto p : l) {
+                p->setColour(0, Colours::whitesmoke);
+                p->internalPort->setVisible(false);
+            }
+        }
+
         title.setMouseCursor(MouseCursor::IBeamCursor);
         title.setInterceptsMouseClicks(true, true);
 
         title.setColour(title.textColourId, Colours::whitesmoke);
-
-        for (auto p : inputPorts) {
-            p->setColour(0, Colours::whitesmoke);
-        }
-        for (auto p : outputPorts) {
-            p->setColour(0, Colours::whitesmoke);
-        }
-
-        auto size = getBounds().expanded(50);
-        setSize(size.getX(), size.getY());
     }
 
     // Turn off edit mode
-    else if (!isEditMode) {
-        for (auto c : getChildren()) {
-            c->setAlwaysOnTop(false);
-            if (!dynamic_cast<AudioPort*>(c))
-                c->setInterceptsMouseClicks(false, false);
+    else if (! isEditMode) {
+
+        // Make child effects and connections not editable
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            auto c = getFromTree<Component>(tree.getChild(i));
+            c->toBack();
+            c->setInterceptsMouseClicks(false, false);
         }
+
+        for (auto l : {inputPorts, outputPorts}) {
+            for (auto p : l) {
+                p->setColour(0, Colours::black);
+                p->internalPort->setVisible(false);
+            }
+        }
+
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
         title.setColour(title.textColourId, Colours::black);
-
-        for (auto p : inputPorts) {
-            p->setColour(0, Colours::black);
-        }
-        for (auto p : outputPorts) {
-            p->setColour(0, Colours::black);
-        }
     }
 
     editMode = isEditMode;
@@ -1095,7 +1106,7 @@ void Effect::setParameters(const AudioProcessorParameterGroup *group) {
         std::cout << c->getName() << newLine;
 }
 
-void Effect::addParameter(AudioProcessorParameter *param) {
+Parameter& Effect::addParameter(AudioProcessorParameter *param) {
 
     auto parameterGui = new Parameter(param);
     addAndMakeVisible(parameterGui);
@@ -1107,9 +1118,10 @@ void Effect::addParameter(AudioProcessorParameter *param) {
             Rectangle<int>(getX(), getY(),
                     parameterGui->getWidth() + 50, 50 + parameters->getParameters(false).size() * 50));
 
-
     setBounds(newBounds);
-/*
+
+    return *parameterGui;
+/* *
     //todo parent class for dis shit pllssss
     if (param->isBoolean()) {
         // add bool parameter
