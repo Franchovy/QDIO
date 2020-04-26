@@ -14,14 +14,16 @@ int MetaParameter::nextParameterID = 0;
 
 Parameter::Parameter(AudioProcessorParameter *param)
     : referencedParameter(param)
+    , internal(! param->isMetaParameter())
     , parameterLabel(param->getName(30), param->getName(30))
+    , port(std::make_unique<ParameterPort>(param, internal))
 {
-    setBounds(0, 0, 150, 50);
+    setBounds(0, 0, 150, 80);
 
     if (referencedParameter->isMetaParameter()) {
         parameterLabel.setEditable(true, true);
-        parameterLabel.setWantsKeyboardFocus(true);
-        parameterLabel.showEditor();
+        //parameterLabel.setWantsKeyboardFocus(true);
+        //parameterLabel.showEditor();
     }
 
     if (param->isBoolean()) {
@@ -49,8 +51,6 @@ Parameter::Parameter(AudioProcessorParameter *param)
         slider->setName("Slider");
         slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 
-
-
         slider->setTextBoxIsEditable(true);
         slider->setValue(param->getValue());
 
@@ -59,7 +59,6 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
         slider->hideTextBox(false);
         slider->hideTextBox(true);
-
     }
 
     // Set up label
@@ -67,7 +66,11 @@ Parameter::Parameter(AudioProcessorParameter *param)
     parameterLabel.setBounds(0, 0, getWidth(), 20);
     addAndMakeVisible(parameterLabel);
 
-    setEditable(param->isMetaParameter());
+    setEditable(! internal);
+
+    if (! internal) {
+        port->setCentrePosition(getWidth()/2, 0);
+    }
 
     param->addListener(this);
 }
@@ -91,16 +94,23 @@ void Parameter::setEditable(bool isEditable) {
     editable = isEditable;
 
     if (isEditable) {
+        port->setVisible(true);
+
         parameterLabel.setEditable(true, true);
         parameterLabel.setColour(Label::textColourId, Colours::whitesmoke);
 
         parameterComponent->setInterceptsMouseClicks(false, false);
     } else {
+        if (! internal) {
+            port->setVisible(false);
+        }
+
         parameterLabel.setEditable(false, false);
         parameterLabel.setColour(Label::textColourId, Colours::black);
 
         parameterComponent->setInterceptsMouseClicks(true, true);
     }
+    repaint();
 }
 
 void Parameter::mouseDown(const MouseEvent &event) {
@@ -111,6 +121,34 @@ void Parameter::mouseDown(const MouseEvent &event) {
 void Parameter::mouseDrag(const MouseEvent &event) {
     dragger.dragComponent(this, event, nullptr);
     Component::mouseDrag(event);
+}
+
+ParameterPort *Parameter::getPort() {
+    return port.get();
+}
+
+Point<int> Parameter::getPortPosition() {
+    // Default: return 20 above centre-top
+    return Point<int>(getWidth()/2, 0);
+}
+
+bool Parameter::isInternal() {
+    return internal;
+}
+
+void Parameter::paint(Graphics &g) {
+    // Draw outline (edit mode)
+    if (editable) {
+        Path p;
+        g.setColour(Colours::whitesmoke);
+        p.addRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f);
+        PathStrokeType strokeType(2);
+        float thiccness[] = {5, 7};
+        strokeType.createDashedStroke(p, p, thiccness, 2);
+        g.strokePath(p, strokeType);
+    }
+
+    Component::paint(g);
 }
 
 

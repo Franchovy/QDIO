@@ -1130,11 +1130,15 @@ Parameter& Effect::addParameter(AudioProcessorParameter *param) {
             Rectangle<int>(getX(), getY(),
                     parameterGui->getWidth() + 50, 50 + parameters->getParameters(false).size() * 50));
 
-    setBounds(newBounds);
+    setBounds(newBounds); // should always call resized()
 
-    auto paramPort = new ParameterPort(param);
-    addAndMakeVisible(paramPort);
-    paramPort->setCentrePosition(100 + i * 50, getBounds().getHeight());
+    if (parameterGui->isInternal()) {
+        addAndMakeVisible(parameterGui->getPort());
+    } else {
+        parameterGui->addAndMakeVisible(parameterGui->getPort());
+    }
+    resized();
+
 
 
     return *parameterGui;
@@ -1410,16 +1414,6 @@ void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
 }
 
 void Effect::resized() {
-    /*if (! undoManager.isPerformingUndoRedo()) {
-        int w = tree.getProperty(IDs::w);
-        int h = tree.getProperty(IDs::h);
-        if (getWidth() != w) {
-            tree.setProperty(IDs::w, getWidth(), &undoManager);
-        } else if (getHeight() != h) {
-            tree.setProperty(IDs::h, getHeight(), &undoManager);
-        }
-    }*/
-
     if (! undoManager.isPerformingUndoRedo()) {
         tree.setProperty(IDs::w, getWidth(), &undoManager);
         tree.setProperty(IDs::h, getHeight(), &undoManager);
@@ -1441,9 +1435,12 @@ void Effect::resized() {
 
     int i = 0;
     for (auto c : getChildren()) {
-        if (auto paramPort = dynamic_cast<ParameterPort*>(c)) {
-            paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
-            i++;
+        if (auto parameter = dynamic_cast<Parameter*>(c)) {
+            auto paramPort = parameter->getPort();
+            if (parameter->isInternal()) {
+                paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
+                i++;
+            }
         }
     }
 

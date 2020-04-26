@@ -61,7 +61,7 @@ class ParameterPort : public ConnectionPort
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
-    ParameterPort(AudioProcessorParameter* param, bool isExternal = false);
+    ParameterPort(AudioProcessorParameter* param, bool isInternal = false);
 
     bool canConnect(ConnectionPort::Ptr &other) override;
 

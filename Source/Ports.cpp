@@ -96,7 +96,7 @@ bool ParameterPort::canConnect(ConnectionPort::Ptr &other) {
     return false;
 }
 
-ParameterPort::ParameterPort(AudioProcessorParameter *param, bool isExternal)
+ParameterPort::ParameterPort(AudioProcessorParameter *param, bool isInternal)
     : ConnectionPort()
     , linkedParameter(*param)
 {

@@ -10,6 +10,7 @@
 
 #pragma once
 #include <JuceHeader.h>
+#include "Ports.h"
 
 class Parameter : public Component, public AudioProcessorParameter::Listener
 {
@@ -29,16 +30,26 @@ public:
 
     }
 
+    void paint(Graphics& g) override;
+
     void mouseDown(const MouseEvent &event) override;
 
     void mouseDrag(const MouseEvent &event) override;
 
     void setEditable(bool isEditable);
 
+    bool isInternal();
+
+    ParameterPort* getPort();
+    Point<int> getPortPosition();
+
 private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
     AudioProcessorParameter* referencedParameter;
+    std::unique_ptr<ParameterPort> port;
+
+    bool internal = true;
 
     bool editable = false;
     ComponentDragger dragger;
