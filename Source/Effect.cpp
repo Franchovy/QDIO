@@ -1132,6 +1132,11 @@ Parameter& Effect::addParameter(AudioProcessorParameter *param) {
 
     setBounds(newBounds);
 
+    auto paramPort = new ParameterPort(param);
+    addAndMakeVisible(paramPort);
+    paramPort->setCentrePosition(100 + i * 50, getBounds().getHeight());
+
+
     return *parameterGui;
 /* *
     //todo parent class for dis shit pllssss
@@ -1432,6 +1437,14 @@ void Effect::resized() {
         p->setCentrePosition(getWidth() - portIncrement, outputPortPos);
         p->internalPort->setCentrePosition(getWidth() - portIncrement - 50, outputPortPos);
         outputPortPos += portIncrement;
+    }
+
+    int i = 0;
+    for (auto c : getChildren()) {
+        if (auto paramPort = dynamic_cast<ParameterPort*>(c)) {
+            paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
+            i++;
+        }
     }
 
     title.setBounds(30,30,200, title.getFont().getHeight());

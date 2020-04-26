@@ -37,8 +37,10 @@ bool AudioPort::canConnect(ConnectionPort::Ptr& other) {
 
 
 void ConnectionPort::paint(Graphics &g) {
+    g.setColour(Colours::whitesmoke);
+    g.fillRect(outline);
+
     g.setColour(findColour(ColourIDs::portColour));
-    //rectangle.setPosition(10,10);
     g.drawRect(outline,2);
 
     // Hover rectangle
@@ -85,4 +87,24 @@ InternalConnectionPort::InternalConnectionPort(AudioPort *parent, bool isInput) 
     centrePoint = Point<int>(15,15);
     //setBounds(parent->getX(), parent->getY(), 30, 30);
     setBounds(0, 0, 30, 30);
+}
+
+bool ParameterPort::canConnect(ConnectionPort::Ptr &other) {
+    if (auto p = dynamic_cast<ParameterPort*>(other.get())) {
+        return isInput ^ p->isInput;
+    }
+    return false;
+}
+
+ParameterPort::ParameterPort(AudioProcessorParameter *param, bool isExternal)
+    : ConnectionPort()
+    , linkedParameter(*param)
+{
+    hoverBox = Rectangle<int>(0,0,60,60);
+    outline = Rectangle<int>(20,20,20,20);
+    centrePoint = Point<int>(30,30);
+
+    setBounds(0, 0, 60, 60);
+
+    setTooltip(param->getName(30));
 }

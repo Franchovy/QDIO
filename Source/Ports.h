@@ -17,7 +17,7 @@
 /**
  * Base class - port to connect to other ports
  */
-class ConnectionPort : public SelectHoverObject
+class ConnectionPort : public SelectHoverObject, public SettableTooltipClient
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<ConnectionPort>;
@@ -59,7 +59,14 @@ private:
 
 class ParameterPort : public ConnectionPort
 {
-    
+public:
+    using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
+    ParameterPort(AudioProcessorParameter* param, bool isExternal = false);
+
+    bool canConnect(ConnectionPort::Ptr &other) override;
+
+private:
+    AudioProcessorParameter& linkedParameter;
 };
 
 class AudioPort;
