@@ -545,7 +545,15 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
             // Connect up parameters
             auto parameter1 = param1->getParentParameter();
             auto parameter2 = param2->getParentParameter();
-            parameter1->connect(parameter2);
+
+            // Connect external parameter to internal
+            if (parameter1->isInternal()) {
+                parameter2->connect(parameter1);
+            } else {
+                parameter1->connect(parameter2);
+            }
+            auto newLine = new ConnectionLine(*param1, *param2);
+            param1->getDragLineParent()->addAndMakeVisible(newLine);
         }
         else if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get()))
         {
@@ -1155,8 +1163,11 @@ void Effect::setParameters(const AudioProcessorParameterGroup *group) {
         std::cout << c->getName() << newLine;
 }
 
-Parameter& Effect::addParameter(AudioProcessorParameter *param) {
-
+Parameter& Effect::addParameter(AudioProcessorParameter *param)
+{
+    if (param->isMetaParameter()) {
+        audioGraph->addParameter(param);
+    }
     auto parameterGui = new Parameter(param);
     addAndMakeVisible(parameterGui);
 

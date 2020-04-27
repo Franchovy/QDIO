@@ -38,6 +38,7 @@ public:
     void setEditable(bool isEditable);
 
     bool isInternal();
+    NormalisableRange<double> getRange();
 
     ParameterPort* getPort();
     Point<int> getPortPosition();

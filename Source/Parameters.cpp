@@ -104,7 +104,7 @@ void Parameter::setEditable(bool isEditable) {
         parameterLabel.setEditable(true, true);
         parameterLabel.setColour(Label::textColourId, Colours::whitesmoke);
 
-        parameterComponent->setInterceptsMouseClicks(false, false);
+        //parameterComponent->setInterceptsMouseClicks(false, false);
     } else {
         if (! internal) {
             port->setVisible(false);
@@ -113,7 +113,7 @@ void Parameter::setEditable(bool isEditable) {
         parameterLabel.setEditable(false, false);
         parameterLabel.setColour(Label::textColourId, Colours::black);
 
-        parameterComponent->setInterceptsMouseClicks(true, true);
+        //parameterComponent->setInterceptsMouseClicks(true, true);
     }
     repaint();
 }
@@ -156,18 +156,18 @@ void Parameter::paint(Graphics &g) {
     Component::paint(g);
 }
 
+/**
+ * Set this parameter to update another with its value. Also takes on slider
+ * values of other parameter.
+ * @param otherParameter
+ */
 void Parameter::connect(Parameter *otherParameter) {
-    Parameter* internalParam;
-    Parameter* externalParam;
-    if (internal) {
-        internalParam = this;
-        externalParam = otherParameter;
-    } else {
-        externalParam = this;
-        internalParam = otherParameter;
-    }
+    jassert(! internal);
 
     connectedParameter = otherParameter;
+
+    auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+    slider->setNormalisableRange(otherParameter->getRange());
 }
 
 void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarting) {
@@ -182,6 +182,11 @@ void Parameter::setValue(float newVal, bool notifyHost) {
     }
 }
 
+NormalisableRange<double> Parameter::getRange() {
+    auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+
+    return NormalisableRange<double>(slider->getRange(), slider->getInterval());
+}
 
 MetaParameter::MetaParameter(String name)
         : RangedAudioParameter(name.toUpperCase(), name)

@@ -144,13 +144,12 @@ ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
         outPort = &p1;
     }
 
-    auto inPos = dynamic_cast<AudioPort*>(inPort.get()) != nullptr
-                 ? inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint
-                 : inPort->getPosition() + inPort->centrePoint;
-    auto outPos = dynamic_cast<AudioPort*>(outPort.get()) != nullptr
-                  ? outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint
-                  : outPort->getPosition() + outPort->centrePoint;
-
+    auto inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
+                 ? inPort->getPosition() + inPort->centrePoint
+                 : inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint;
+    auto outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
+                  ? outPort->getPosition() + outPort->centrePoint
+                  : outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint;
 
     auto newBounds = Rectangle<int>(inPos, outPos);
     setBounds(newBounds);
