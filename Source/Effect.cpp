@@ -98,30 +98,25 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
 //TODO
 ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
 
-    // Check for self ports
-    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        if (auto e = getFromTree<Effect>(effectTree)) {
-            if (auto returnPort = e->checkPort(e->getLocalPoint(event.eventComponent, event.getPosition()))) {
-                if (p->canConnect(returnPort)) {
-                    return returnPort;
-                }
-            }
-        }
-    }
-
     ValueTree effectTreeToCheck;
-    if (effectTree.getParent().hasType(EFFECTSCENE_ID)
-            && dynamic_cast<AudioPort*>(event.originalComponent))
-    {
-        effectTreeToCheck = effectTree.getParent();
-    }
-    else if (dynamic_cast<ParameterPort*>(event.originalComponent))
+    if (dynamic_cast<AudioPort*>(event.originalComponent) || dynamic_cast<ParameterPort*>(event.originalComponent))
     {
         effectTreeToCheck = effectTree.getParent();
     }
     else
     {
         effectTreeToCheck = effectTree;
+    }
+
+    // Check for self ports
+    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        if (auto e = getFromTree<Effect>(effectTreeToCheck)) {
+            if (auto returnPort = e->checkPort(e->getLocalPoint(event.eventComponent, event.getPosition()))) {
+                if (p->canConnect(returnPort)) {
+                    return returnPort;
+                }
+            }
+        }
     }
 
     // Check children for a match
@@ -964,7 +959,7 @@ void Effect::setupMenu() {
     menu.addItem("Toggle Edit Mode", [=]() {
         setEditMode(!editMode);
     });
-    menu.addItem("Change Effect Image..", [=]() {
+    editMenu.addItem("Change Effect Image..", [=]() {
         FileChooser imgChooser ("Select Effect Image..",
                                 File::getSpecialLocation (File::userHomeDirectory),
                                 "*.jpg;*.png;*.gif");
@@ -1076,12 +1071,15 @@ void Effect::setEditMode(bool isEditMode) {
 
     // Turn on edit mode
     if (isEditMode) {
-
         // Set child effects and connections to editable
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto c = getFromTree<Component>(tree.getChild(i));
             c->toFront(false);
             c->setInterceptsMouseClicks(true, true);
+
+            if (dynamic_cast<Effect*>(c)) {
+                c->setVisible(true);
+            }
         }
 
         for (auto l : {inputPorts, outputPorts}) {
@@ -1106,11 +1104,17 @@ void Effect::setEditMode(bool isEditMode) {
     // Turn off edit mode
     else if (! isEditMode) {
 
+        bool hideEffects = image.isValid();
+        std::cout << "Image valid: " << hideEffects << newLine;
+
         // Make child effects and connections not editable
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto c = getFromTree<Component>(tree.getChild(i));
             c->toBack();
             c->setInterceptsMouseClicks(false, false);
+            if (dynamic_cast<Effect*>(c)) {
+                c->setVisible(! hideEffects);
+            }
         }
 
         for (auto l : {inputPorts, outputPorts}) {

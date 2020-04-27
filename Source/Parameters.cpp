@@ -18,6 +18,10 @@ Parameter::Parameter(AudioProcessorParameter *param)
     , parameterLabel(param->getName(30), param->getName(30))
     , port(std::make_unique<ParameterPort>(param, internal))
 {
+
+    //TODO use parameterListener
+    //param->addListener(this);
+
     if (internal) {
         setBounds(0, 0, 150, 80);
     } else {
