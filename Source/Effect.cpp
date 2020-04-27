@@ -536,26 +536,7 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
 
 void EffectTreeBase::mouseUp(const MouseEvent &event) {
     if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-
-        auto param1 = dynamic_cast<ParameterPort*>(dragLine.getPort1());
-        auto param2 = dynamic_cast<ParameterPort*>(hoverComponent.get());
-
-        if (param1 != nullptr && param2 != nullptr)
-        {
-            // Connect up parameters
-            auto parameter1 = param1->getParentParameter();
-            auto parameter2 = param2->getParentParameter();
-
-            // Connect external parameter to internal
-            if (parameter1->isInternal()) {
-                parameter2->connect(parameter1);
-            } else {
-                parameter1->connect(parameter2);
-            }
-            auto newLine = new ConnectionLine(*param1, *param2);
-            param1->getDragLineParent()->addAndMakeVisible(newLine);
-        }
-        else if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get()))
+        if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get()))
         {
             // Call create on common parent
             newConnection(port, dragLine.getPort1());
@@ -1106,7 +1087,7 @@ void Effect::setEditMode(bool isEditMode) {
         for (auto l : {inputPorts, outputPorts}) {
             for (auto p : l) {
                 p->setColour(0, Colours::whitesmoke);
-                p->internalPort->setVisible(false);
+                p->internalPort->setVisible(true);
             }
         }
 
@@ -1142,6 +1123,7 @@ void Effect::setEditMode(bool isEditMode) {
         for (auto c : getChildren()) {
             if (auto p = dynamic_cast<Parameter*>(c)) {
                 p->setEditable(false);
+                p->setInterceptsMouseClicks(false, true);
             }
         }
 
@@ -1423,8 +1405,46 @@ void Effect::mouseUp(const MouseEvent &event) {
 
     /*if (lasso.isVisible())
         lasso.endLasso();*/
+    if (dynamic_cast<ParameterPort*>(event.originalComponent)) {
+        auto param1 = dynamic_cast<ParameterPort*>(dragLine.getPort1());
+        auto param2 = dynamic_cast<ParameterPort*>(hoverComponent.get());
 
-    EffectTreeBase::mouseUp(event);
+        if (param1 != nullptr && param2 != nullptr) {
+            // Connect up parameters
+            auto parameter1 = getParameterForPort(param1);
+            if (parameter1 == nullptr) {
+                if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
+                    parameter1 = e->getParameterForPort(param1);
+                }
+            }
+
+            auto parameter2 = getParameterForPort(param2);
+            if (parameter2 == nullptr) {
+                if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
+                    parameter2 = e->getParameterForPort(param2);
+                }
+            }
+
+            if (parameter1 == nullptr || parameter2 == nullptr) {
+                dragLine.release(nullptr);
+                return;
+            }
+
+            // Connect external parameter to internal
+            if (parameter1->isInternal()) {
+                parameter2->connect(parameter1);
+            } else {
+                parameter1->connect(parameter2);
+            }
+            auto newConnection = new ConnectionLine(*param1, *param2);
+            param1->getDragLineParent()->addAndMakeVisible(newConnection);
+        } else {
+            dragLine.release(nullptr);
+        }
+    } else {
+        // Call ConnectionPort connect
+        EffectTreeBase::mouseUp(event);
+    }
 }
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
@@ -1493,7 +1513,7 @@ void Effect::resized() {
         if (auto parameter = dynamic_cast<Parameter*>(c)) {
             auto paramPort = parameter->getPort();
             if (parameter->isInternal()) {
-                paramPort->setCentrePosition(100 + i * 5g0, getHeight() - 5);
+                paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
                 i++;
             }
         }
@@ -1693,6 +1713,17 @@ void Effect::loadParameters(ValueTree parameterValues) {
             p->setValueNotifyingHost(val);
         }
     }
+}
+
+Parameter *Effect::getParameterForPort(ParameterPort *port) {
+    for (auto c : getChildren()) {
+        if (auto param = dynamic_cast<Parameter*>(c)) {
+            if (param->getPort() == port) {
+                return param;
+            }
+        }
+    }
+    return nullptr;
 }
 
 

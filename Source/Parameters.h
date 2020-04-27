@@ -32,11 +32,14 @@ public:
     void paint(Graphics& g) override;
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
 
     void setEditable(bool isEditable);
     bool isInternal();
 
-    NormalisableRange<double> getRange();
+    //NormalisableRange<double> getRange();
+
+    AudioProcessorParameter* getParameter();
 
     ParameterPort* getPort();
     Point<int> getPortPosition();
@@ -70,7 +73,6 @@ public:
         linkedParameter = parameter;
     }
 
-
     void buttonClicked(Button *button) override {
         linkedParameter->setValue(button->getToggleState());
     }
@@ -102,7 +104,6 @@ class SliderListener : public Slider::Listener
 public:
     explicit SliderListener(AudioProcessorParameter* parameter) : Slider::Listener(){
         linkedParameter = parameter;
-
     }
 
     void sliderValueChanged(Slider *slider) override {
@@ -144,7 +145,11 @@ public:
     String getName(int i) const override;
 
     const NormalisableRange<float> &getNormalisableRange() const override;
+
+    void setLinkedParameter(AudioProcessorParameter* parameter);
+
 private:
-    static int nextParameterID;
     NormalisableRange<float> range;
+
+    AudioProcessorParameter* linkedParameter;
 };

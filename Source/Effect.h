@@ -187,6 +187,8 @@ public:
     Parameter& addParameter(AudioProcessorParameter* param);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
 
+    Parameter* getParameterForPort(ParameterPort* port);
+
     ConnectionPort* checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);
     bool hasConnection(const ConnectionLine* line);

@@ -121,10 +121,3 @@ Component *ParameterPort::getDragLineParent() {
     return getParentComponent()->getParentComponent();
 }
 
-Parameter *ParameterPort::getParentParameter() {
-    return parent;
-}
-
-void ParameterPort::setParentParameter(Parameter *parentParameter) {
-    parent = parentParameter;
-}

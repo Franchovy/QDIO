@@ -51,7 +51,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
         slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
                                                                paramRange.interval, paramRange.skew));
 
-        SliderListener *listener = new SliderListener(param);
+        auto *listener = new SliderListener(param);
         slider->addListener(listener);
         slider->setName("Slider");
         slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
@@ -133,19 +133,28 @@ void Parameter::mouseDown(const MouseEvent &event) {
     {
         dragger.startDraggingComponent(this, event);
     }
-    Component::mouseDown(event);
+    SelectHoverObject::mouseDown(event);
 }
 
 void Parameter::mouseDrag(const MouseEvent &event) {
     if (event.originalComponent == port.get()) {
-        getParentComponent()->mouseDown(event);
+        getParentComponent()->mouseDrag(event);
     }
     else if (! internal)
     {
         dragger.dragComponent(this, event, nullptr);
     }
-    Component::mouseDrag(event);
+    SelectHoverObject::mouseDrag(event);
 }
+
+void Parameter::mouseUp(const MouseEvent &event) {
+    if (event.originalComponent == port.get()) {
+        getParentComponent()->mouseUp(event);
+    }
+    SelectHoverObject::mouseUp(event);
+}
+
+
 
 ParameterPort *Parameter::getPort() {
     return port.get();
@@ -199,9 +208,12 @@ void Parameter::connect(Parameter *otherParameter) {
     jassert(! internal);
 
     connectedParameter = otherParameter;
+    dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
 
-    auto slider = dynamic_cast<Slider*>(parameterComponent.get());
-    slider->setNormalisableRange(otherParameter->getRange());
+    referencedParameter->setValueNotifyingHost(connectedParameter->getParameter()->getValue());
+
+    /*auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+    slider->setNormalisableRange(otherParameter->getRange());*/
 }
 
 void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarting) {
@@ -216,12 +228,15 @@ void Parameter::setValue(float newVal, bool notifyHost) {
     }
 }
 
-NormalisableRange<double> Parameter::getRange() {
+AudioProcessorParameter *Parameter::getParameter() {
+    return referencedParameter;
+}
+
+/*NormalisableRange<double> Parameter::getRange() {
     auto slider = dynamic_cast<Slider*>(parameterComponent.get());
 
     return NormalisableRange<double>(slider->getRange(), slider->getInterval());
-}
-
+}*/
 
 MetaParameter::MetaParameter(String name)
         : RangedAudioParameter(name.toUpperCase(), name)
@@ -234,7 +249,7 @@ float MetaParameter::getValue() const {
 }
 
 void MetaParameter::setValue(float newValue) {
-
+    linkedParameter->setValueNotifyingHost(newValue);
 }
 
 float MetaParameter::getDefaultValue() const {
@@ -259,6 +274,10 @@ String MetaParameter::getName(int i) const {
 
 const NormalisableRange<float> &MetaParameter::getNormalisableRange() const {
     return range;
+}
+
+void MetaParameter::setLinkedParameter(AudioProcessorParameter *parameter) {
+    linkedParameter = parameter;
 }
 
 

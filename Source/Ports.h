@@ -58,7 +58,6 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionPort)
 };
 
-class Parameter;
 class ParameterPort : public ConnectionPort
 {
 public:
@@ -69,13 +68,8 @@ public:
 
     Component *getDragLineParent() override;
 
-    void setParentParameter(Parameter* parentParameter);
-    Parameter* getParentParameter();
-
 private:
     AudioProcessorParameter& linkedParameter;
-
-    Parameter* parent;
 };
 
 class AudioPort;
