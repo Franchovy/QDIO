@@ -10,7 +10,7 @@
 
 #include "Parameters.h"
 
-int MetaParameter::nextParameterID = 0;
+const Identifier Parameter::IDs::parameterComponent = "parameterObject";
 
 Parameter::Parameter(AudioProcessorParameter *param)
     : referencedParameter(param)
@@ -71,12 +71,17 @@ Parameter::Parameter(AudioProcessorParameter *param)
     if (! internal) {
         port->setCentrePosition(getWidth()/2, 0);
     }
+    port->setParentParameter(this);
 
     param->addListener(this);
 }
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     // This is called on audio thread! Use async updater for messages.
+    if (! internal && connectedParameter != nullptr) {
+        connectedParameter->setValue(newValue);
+    }
+
 
     switch (type) {
         case button:
@@ -149,6 +154,32 @@ void Parameter::paint(Graphics &g) {
     }
 
     Component::paint(g);
+}
+
+void Parameter::connect(Parameter *otherParameter) {
+    Parameter* internalParam;
+    Parameter* externalParam;
+    if (internal) {
+        internalParam = this;
+        externalParam = otherParameter;
+    } else {
+        externalParam = this;
+        internalParam = otherParameter;
+    }
+
+    connectedParameter = otherParameter;
+}
+
+void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarting) {
+
+}
+
+void Parameter::setValue(float newVal, bool notifyHost) {
+    if (notifyHost) {
+        referencedParameter->setValueNotifyingHost(newVal);
+    } else {
+        referencedParameter->setValue(newVal);
+    }
 }
 
 

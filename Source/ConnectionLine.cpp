@@ -49,14 +49,8 @@ void LineComponent::paint(Graphics &g) {
 void LineComponent::startDrag(ConnectionPort *p, const MouseEvent &event) {
     port1 = p;
 
-    Component* parent;
-    if (dynamic_cast<AudioPort*>(p)) {
-        parent = p->getParentComponent()->getParentComponent();
-    } else if (dynamic_cast<InternalConnectionPort*>(p)) {
-        parent = p->getParentComponent();
-    }
+    Component* parent = p->getDragLineParent();
     parent->addAndMakeVisible(this);
-
 
     auto newBounds = Rectangle<int>( parent->getLocalPoint(p, p->centrePoint),
             parent->getLocalPoint(event.eventComponent, event.getPosition()));

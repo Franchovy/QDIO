@@ -117,7 +117,7 @@ protected:
     Point<int> dragDetachFromParentComponent();
 
     static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
-    static ConnectionPort::Ptr portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
+    static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
     static void disconnectAudio(const ConnectionLine& connectionLine);
@@ -187,7 +187,7 @@ public:
     Parameter& addParameter(AudioProcessorParameter* param);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
 
-    ConnectionPort::Ptr checkPort(Point<int> pos);
+    ConnectionPort* checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);
     bool hasConnection(const ConnectionLine* line);
 

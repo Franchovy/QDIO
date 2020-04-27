@@ -10,7 +10,6 @@
 
 #include "Ports.h"
 
-
 AudioPort::AudioPort(bool isInput) : ConnectionPort()
         , internalPort(new InternalConnectionPort(this, !isInput))
 {
@@ -23,16 +22,20 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort()
     this->isInput = isInput;
 }
 
-bool AudioPort::canConnect(ConnectionPort::Ptr& other) {
+bool AudioPort::canConnect(ConnectionPort* other) {
     if (this->isInput == other->isInput)
         return false;
 
     // Connect to AudioPort of mutual parent
-    return (dynamic_cast<AudioPort *>(other.get())
+    return (dynamic_cast<AudioPort *>(other)
             && other->getParentComponent()->getParentComponent() == this->getParentComponent()->getParentComponent())
            // Connect to ICP of containing parent effect
-           || (dynamic_cast<InternalConnectionPort *>(other.get())
+           || (dynamic_cast<InternalConnectionPort *>(other)
                && other->getParentComponent() == this->getParentComponent()->getParentComponent());
+}
+
+Component *AudioPort::getDragLineParent() {
+    return getParentComponent()->getParentComponent();
 }
 
 
@@ -72,9 +75,9 @@ ConnectionPort::ConnectionPort() {
     setColour(portColour, Colours::black);
 };
 
-bool InternalConnectionPort::canConnect(ConnectionPort::Ptr& other) {
+bool InternalConnectionPort::canConnect(ConnectionPort* other) {
     // Return false if the port is AP and belongs to the same parent
-    return !(dynamic_cast<AudioPort *>(other.get())
+    return !(dynamic_cast<AudioPort *>(other)
              && this->getParentComponent() == other->getParentComponent());
 }
 
@@ -89,8 +92,12 @@ InternalConnectionPort::InternalConnectionPort(AudioPort *parent, bool isInput) 
     setBounds(0, 0, 30, 30);
 }
 
-bool ParameterPort::canConnect(ConnectionPort::Ptr &other) {
-    if (auto p = dynamic_cast<ParameterPort*>(other.get())) {
+Component *InternalConnectionPort::getDragLineParent() {
+    return getParentComponent();
+}
+
+bool ParameterPort::canConnect(ConnectionPort* other) {
+    if (auto p = dynamic_cast<ParameterPort*>(other)) {
         return isInput ^ p->isInput;
     }
     return false;
@@ -107,4 +114,16 @@ ParameterPort::ParameterPort(AudioProcessorParameter *param, bool isInternal)
     setBounds(0, 0, 60, 60);
 
     setTooltip(param->getName(30));
+}
+
+Component *ParameterPort::getDragLineParent() {
+    return getParentComponent()->getParentComponent();
+}
+
+Parameter *ParameterPort::getParentParameter() {
+    return parent;
+}
+
+void ParameterPort::setParentParameter(Parameter *parentParameter) {
+    parent = parentParameter;
 }

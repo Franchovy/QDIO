@@ -96,7 +96,7 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
     return nullptr;
 }
 //TODO
-ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
+ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
 
     // Check for self ports
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
@@ -114,29 +114,46 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
             && dynamic_cast<AudioPort*>(event.originalComponent))
     {
         effectTreeToCheck = effectTree.getParent();
-    } else {
+    }
+    else if (dynamic_cast<ParameterPort*>(event.originalComponent))
+    {
+        effectTreeToCheck = effectTree.getParent();
+    }
+    else
+    {
         effectTreeToCheck = effectTree;
     }
 
     // Check children for a match
     for (int i = 0; i < effectTreeToCheck.getNumChildren(); i++) {
-        auto e = getFromTree<Effect>(effectTreeToCheck.getChild(i));
 
-        if (e == nullptr)
-            continue;
+        if (effectTreeToCheck.getChild(i).hasType(EFFECT_ID)) {
+            auto e = getFromTree<Effect>(effectTreeToCheck.getChild(i));
 
-        // Filter self effect if AudioPort
-        if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
-            if (p->getParentComponent() == e)
+            if (e == nullptr)
                 continue;
 
-        auto localPos = e->getLocalPoint(event.originalComponent, event.getPosition());
+            // Filter self effect if AudioPort
+            if (auto p = dynamic_cast<AudioPort *>(event.originalComponent))
+                if (p->getParentComponent() == e)
+                    continue;
 
-        if (e->contains(localPos))
-        {
-            if (auto p = e->checkPort(localPos))
-                if (dynamic_cast<ConnectionPort*>(event.originalComponent)->canConnect(p))
-                    return p;
+            auto localPos = e->getLocalPoint(event.originalComponent, event.getPosition());
+
+            if (e->contains(localPos)) {
+                if (auto p = e->checkPort(localPos))
+                    if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(p))
+                        return p;
+            }
+        } else if (effectTreeToCheck.getChild(i).hasType(PARAMETER_ID)) {
+            auto parameter = getFromTree<Parameter>(effectTreeToCheck.getChild(i));
+
+            auto localPos = parameter->getPort()->getLocalPoint(event.originalComponent, event.getPosition());
+            if (parameter->getPort()->contains(localPos)) {
+                if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(parameter->getPort())) {
+                    return parameter->getPort();
+                }
+            }
         }
     }
 
@@ -378,9 +395,10 @@ T *EffectTreeBase::getFromTree(const ValueTree &vt) {
     } else if (vt.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
         // Return connection
         return dynamic_cast<T*>(vt.getProperty(ConnectionLine::IDs::ConnectionLineObject).getObject());
+    } else if (vt.hasProperty(Parameter::IDs::parameterComponent)) {
+        // Return parameter
+        return dynamic_cast<T*>(vt.getProperty(Parameter::IDs::parameterComponent).getObject());
     }
-
-
 }
 
 template<class T>
@@ -518,7 +536,19 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
 
 void EffectTreeBase::mouseUp(const MouseEvent &event) {
     if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
+
+        auto param1 = dynamic_cast<ParameterPort*>(dragLine.getPort1());
+        auto param2 = dynamic_cast<ParameterPort*>(hoverComponent.get());
+
+        if (param1 != nullptr && param2 != nullptr)
+        {
+            // Connect up parameters
+            auto parameter1 = param1->getParentParameter();
+            auto parameter2 = param2->getParentParameter();
+            parameter1->connect(parameter2);
+        }
+        else if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get()))
+        {
             // Call create on common parent
             newConnection(port, dragLine.getPort1());
         }
@@ -1028,18 +1058,25 @@ void Effect::setProcessor(AudioProcessor *processor) {
  * @param pos relative to this component (no conversion needed here)
  * @return nullptr if no match, ConnectionPort* if found
  */
-ConnectionPort::Ptr Effect::checkPort(Point<int> pos) {
+ConnectionPort* Effect::checkPort(Point<int> pos) {
     for (auto p : inputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
+        {
             return p;
-        else if (p->internalPort->contains(p->internalPort->getLocalPoint(this, pos)))
-            return p->internalPort;
+        } else if (p->getInternalConnectionPort()->contains(
+                p->getInternalConnectionPort()->getLocalPoint(this, pos)))
+        {
+            return p->getInternalConnectionPort().get();
+        }
     }
     for (auto p : outputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
+        {
             return p;
-        else if (p->internalPort->contains(p->internalPort->getLocalPoint(this, pos)))
-            return p->internalPort;
+        } else if (p->getInternalConnectionPort()->contains(p->getInternalConnectionPort()->getLocalPoint(this, pos)))
+        {
+            return p->getInternalConnectionPort().get();
+        }
     }
     return nullptr;
 }
@@ -1134,12 +1171,20 @@ Parameter& Effect::addParameter(AudioProcessorParameter *param) {
 
     if (parameterGui->isInternal()) {
         addAndMakeVisible(parameterGui->getPort());
+
+        /*bool shouldBeVisible = false;
+        if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
+            shouldBeVisible = e->isInEditMode();
+            parameterGui->getPort()->setVisible(shouldBeVisible);
+        }*/
     } else {
         parameterGui->addAndMakeVisible(parameterGui->getPort());
     }
     resized();
 
-
+    ValueTree paramTree(PARAMETER_ID);
+    paramTree.setProperty(Parameter::IDs::parameterComponent, parameterGui, nullptr);
+    tree.appendChild(paramTree, &undoManager);
 
     return *parameterGui;
 /* *

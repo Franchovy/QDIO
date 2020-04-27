@@ -12,7 +12,7 @@
 #include <JuceHeader.h>
 #include "Ports.h"
 
-class Parameter : public Component, public AudioProcessorParameter::Listener
+class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener
 {
 public:
     Parameter(AudioProcessorParameter *param);
@@ -25,10 +25,9 @@ public:
 
 
     void parameterValueChanged(int parameterIndex, float newValue) override;
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
 
-    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
-
-    }
+    void setValue(float newVal, bool notifyHost = true);
 
     void paint(Graphics& g) override;
 
@@ -43,6 +42,12 @@ public:
     ParameterPort* getPort();
     Point<int> getPortPosition();
 
+    void connect(Parameter* otherParameter);
+
+    struct IDs {
+        static const Identifier parameterComponent;
+    };
+
 private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
@@ -50,6 +55,7 @@ private:
     std::unique_ptr<ParameterPort> port;
 
     bool internal = true;
+    Parameter* connectedParameter = nullptr;
 
     bool editable = false;
     ComponentDragger dragger;
