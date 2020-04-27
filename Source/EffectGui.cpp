@@ -67,12 +67,24 @@ void SelectHoverObject::resetHoverObject() {
     }
 }
 
+void SelectHoverObject::setHoverable(bool isHoverable) {
+    hoverable = isHoverable;
+}
+
 void SelectHoverObject::mouseEnter(const MouseEvent &event) {
-    setHoverComponent(this);
+    if (hoverable) {
+        setHoverComponent(this);
+    } else {
+        Component::mouseEnter(event);
+    }
 }
 
 void SelectHoverObject::mouseExit(const MouseEvent &event) {
-    resetHoverObject();
+    if (hoverable) {
+        resetHoverObject();
+    } else {
+        Component::mouseEnter(event);
+    }
 }
 
 void SelectHoverObject::setSelectMode(bool newSelectMode) {
@@ -85,9 +97,6 @@ void SelectHoverObject::setSelectMode(bool newSelectMode) {
 
 void SelectHoverObject::addSelectObject(const SelectHoverObject::Ptr& item) {
     item->selectMode = true;
-    bool i,j;
-    item->getInterceptsMouseClicks(i , j);
-    std::cout << "Intercepts mouse click?: " << i << j << newLine;
 
     item->repaint();
     selected.addToSelection(item);

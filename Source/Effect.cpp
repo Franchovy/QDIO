@@ -1167,6 +1167,7 @@ Parameter& Effect::addParameter(AudioProcessorParameter *param)
 {
     if (param->isMetaParameter()) {
         audioGraph->addParameter(param);
+        // parameters add param (unique ptr)
     }
     auto parameterGui = new Parameter(param);
     addAndMakeVisible(parameterGui);
@@ -1183,11 +1184,9 @@ Parameter& Effect::addParameter(AudioProcessorParameter *param)
     if (parameterGui->isInternal()) {
         addAndMakeVisible(parameterGui->getPort());
 
-        /*bool shouldBeVisible = false;
         if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
-            shouldBeVisible = e->isInEditMode();
-            parameterGui->getPort()->setVisible(shouldBeVisible);
-        }*/
+            parameterGui->getPort()->setVisible(e->isInEditMode());
+        }
     } else {
         parameterGui->addAndMakeVisible(parameterGui->getPort());
     }
@@ -1494,7 +1493,7 @@ void Effect::resized() {
         if (auto parameter = dynamic_cast<Parameter*>(c)) {
             auto paramPort = parameter->getPort();
             if (parameter->isInternal()) {
-                paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
+                paramPort->setCentrePosition(100 + i * 5g0, getHeight() - 5);
                 i++;
             }
         }

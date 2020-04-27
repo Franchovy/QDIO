@@ -18,7 +18,12 @@ Parameter::Parameter(AudioProcessorParameter *param)
     , parameterLabel(param->getName(30), param->getName(30))
     , port(std::make_unique<ParameterPort>(param, internal))
 {
-    setBounds(0, 0, 150, 80);
+    if (internal) {
+        setBounds(0, 0, 150, 80);
+    } else {
+        setBounds(0, 0, 150, 120);
+        outline = Rectangle<int>(10, 20, 130, 90);
+    }
 
     if (referencedParameter->isMetaParameter()) {
         parameterLabel.setEditable(true, true);
@@ -69,9 +74,10 @@ Parameter::Parameter(AudioProcessorParameter *param)
     setEditable(! internal);
 
     if (! internal) {
-        port->setCentrePosition(getWidth()/2, 0);
+        port->setCentrePosition(getWidth()/2, 30);
+        parameterLabel.setTopLeftPosition(15, 55);
+        parameterComponent->setCentrePosition(getWidth()/2, 80);
     }
-    port->setParentParameter(this);
 
     param->addListener(this);
 }
@@ -100,31 +106,44 @@ void Parameter::setEditable(bool isEditable) {
 
     if (isEditable) {
         port->setVisible(true);
+        port->setInterceptsMouseClicks(true, true);
+
+        setHoverable(true);
 
         parameterLabel.setEditable(true, true);
         parameterLabel.setColour(Label::textColourId, Colours::whitesmoke);
-
-        //parameterComponent->setInterceptsMouseClicks(false, false);
     } else {
         if (! internal) {
             port->setVisible(false);
         }
 
+        setHoverable(false);
+
         parameterLabel.setEditable(false, false);
         parameterLabel.setColour(Label::textColourId, Colours::black);
-
-        //parameterComponent->setInterceptsMouseClicks(true, true);
     }
     repaint();
 }
 
 void Parameter::mouseDown(const MouseEvent &event) {
-    dragger.startDraggingComponent(this, event);
+    if (event.originalComponent == port.get()) {
+        getParentComponent()->mouseDown(event);
+    }
+    else if (! internal)
+    {
+        dragger.startDraggingComponent(this, event);
+    }
     Component::mouseDown(event);
 }
 
 void Parameter::mouseDrag(const MouseEvent &event) {
-    dragger.dragComponent(this, event, nullptr);
+    if (event.originalComponent == port.get()) {
+        getParentComponent()->mouseDown(event);
+    }
+    else if (! internal)
+    {
+        dragger.dragComponent(this, event, nullptr);
+    }
     Component::mouseDrag(event);
 }
 
@@ -146,11 +165,26 @@ void Parameter::paint(Graphics &g) {
     if (editable) {
         Path p;
         g.setColour(Colours::whitesmoke);
+        p.addRoundedRectangle(outline, 3.0f);
+        PathStrokeType strokeType(2);
+        float thiccness[] = {5, 7};
+        strokeType.createDashedStroke(p, p, thiccness, 2);
+        g.strokePath(p, strokeType);
+    }
+
+    if (hoverMode) {
+        Path p;
+        g.setColour(Colours::blue);
         p.addRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f);
         PathStrokeType strokeType(2);
         float thiccness[] = {5, 7};
         strokeType.createDashedStroke(p, p, thiccness, 2);
         g.strokePath(p, strokeType);
+    }
+
+    if (selectMode) {
+        g.setColour(Colours::blue);
+        g.drawRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f, 2);
     }
 
     Component::paint(g);
@@ -187,6 +221,7 @@ NormalisableRange<double> Parameter::getRange() {
 
     return NormalisableRange<double>(slider->getRange(), slider->getInterval());
 }
+
 
 MetaParameter::MetaParameter(String name)
         : RangedAudioParameter(name.toUpperCase(), name)

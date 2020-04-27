@@ -30,14 +30,12 @@ public:
     void setValue(float newVal, bool notifyHost = true);
 
     void paint(Graphics& g) override;
-
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
 
     void setEditable(bool isEditable);
-
     bool isInternal();
+
     NormalisableRange<double> getRange();
 
     ParameterPort* getPort();
@@ -60,6 +58,9 @@ private:
 
     bool editable = false;
     ComponentDragger dragger;
+
+    Rectangle<int> outline;
+
 };
 
 class ButtonListener : public Button::Listener

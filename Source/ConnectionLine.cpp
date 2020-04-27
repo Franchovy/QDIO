@@ -61,6 +61,8 @@ void LineComponent::startDrag(ConnectionPort *p, const MouseEvent &event) {
     line.setStart(p1);
     line.setEnd(p2);
 
+    SelectHoverObject::resetHoverObject();
+
     repaint();
 }
 

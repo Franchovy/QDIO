@@ -71,6 +71,7 @@ public:
     static void addSelectObject(const SelectHoverObject::Ptr& item);
     static void removeSelectObject(const SelectHoverObject::Ptr& item);
 
+    void setHoverable(bool isHoverable);
     void setSelectMode(bool newSelectMode);
 
 protected:
@@ -79,6 +80,8 @@ protected:
     static ComponentSelection selected;
 
     static void close();
+
+    bool hoverable = true;
 
     bool hoverMode = false;
     bool selectMode = false;

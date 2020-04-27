@@ -60,6 +60,7 @@ void ConnectionPort::paint(Graphics &g) {
 }
 
 void ConnectionPort::mouseDown(const MouseEvent &event) {
+    std::cout << "mousedown" << newLine;
     getParentComponent()->mouseDown(event);
 }
 
