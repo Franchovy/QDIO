@@ -46,6 +46,7 @@ private:
 
     ImageButton settingsButton;
     SettingsComponent settingsMenu;
+    PopupMenu effectSelectMenu;
 
     ValueTree effectTree;
 

@@ -24,9 +24,9 @@ MainComponent::MainComponent()
     addAndMakeVisible(main);
 
     // Set size to full screen
-
     auto appArea = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
 #ifdef DEBUG_APPEARANCE
+    // Make it smaller
     appArea = appArea.expanded(-900, -500);
 #endif
     setBounds(appArea);
@@ -53,6 +53,8 @@ MainComponent::MainComponent()
         settingsMenu.setVisible(false);
         settingsButton.setVisible(true);
     };
+
+    
 
     deviceManager.addChangeListener(this);
 
