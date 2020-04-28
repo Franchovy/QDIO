@@ -214,7 +214,6 @@ public:
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
     void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
 
-
     // =================================================================================
     // Setters and getter functions
     bool hasProcessor(AudioProcessor* processor);
@@ -239,7 +238,6 @@ public:
         static const Identifier initialised;
         static const Identifier name;
         static const Identifier connections;
-
     };
 
 private:

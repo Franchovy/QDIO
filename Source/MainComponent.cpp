@@ -54,7 +54,16 @@ MainComponent::MainComponent()
         settingsButton.setVisible(true);
     };
 
-    
+    // EffectSelectMenu
+
+
+    effectSelectMenu.setBounds(100, 100, 400, 50);
+    effectSelectMenu.setText("Select Effect");
+    addAndMakeVisible(effectSelectMenu);
+    /*auto menu = effectSelectMenu.getRootMenu();
+    populateEffectMenu(*menu);*/
+
+
 
     deviceManager.addChangeListener(this);
 
@@ -119,6 +128,12 @@ void MainComponent::mouseWheelMove(const juce::MouseEvent &event, const juce::Mo
 
 void MainComponent::resized() { 
     settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
+}
+
+void MainComponent::populateEffectMenu(PopupMenu& menu) {
+    /*auto test = std::unique_ptr<EffectSelectComponent>();
+    menu.addCustomItem(1, std::move(test));*/
+
 }
 
 

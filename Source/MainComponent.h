@@ -15,6 +15,7 @@
 #include "EffectScene.h"
 #include "IDs"
 #include "Settings.h"
+#include "EffectSelectMenu.h"
 
 /**
  * This is the class that contains the main / static stuff. The EffectScene is part of the effect tree,
@@ -39,6 +40,8 @@ private:
     void move(int deltaX, int deltaY);
     void timerCallback() override;
 
+    void populateEffectMenu(PopupMenu& menu);
+
     EffectScene main;
     AudioProcessorGraph& audioGraph;
     AudioDeviceManager& deviceManager;
@@ -46,7 +49,7 @@ private:
 
     ImageButton settingsButton;
     SettingsComponent settingsMenu;
-    PopupMenu effectSelectMenu;
+    EffectSelectMenu effectSelectMenu;
 
     ValueTree effectTree;
 

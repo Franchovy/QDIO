@@ -460,25 +460,30 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
         }
     }
 
-    if ((key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown())
-            && key.getKeyCode() == 'z') {
-        std::cout << "Undo: " << undoManager.getUndoDescription() << newLine;
-        undoManager.undo();
-    } else if ((key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown())
-            && key.getKeyCode() == 'Z') {
-        std::cout << "Redo: " << undoManager.getRedoDescription() << newLine;
-        undoManager.redo();
+    // CTRL
+    if (key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown()) {
+        if (key.getKeyCode() == 'z') {
+            std::cout << "Undo: " << undoManager.getUndoDescription() << newLine;
+            undoManager.undo();
+        } else if ((key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown())
+                   && key.getKeyCode() == 'Z') {
+            std::cout << "Redo: " << undoManager.getRedoDescription() << newLine;
+            undoManager.redo();
+        }
+
+        if (key.getKeyCode() == 's') {
+            std::cout << "Save effects" << newLine;
+/*
+            auto savedState = storeEffect(tree).createXml();
+            std::cout << "Save state: " << savedState->toString() << newLine;
+            getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
+            getAppProperties().getUserSettings()->saveIfNeeded();*/
+        }
     }
 
-    if ((key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown())
-            && key.getKeyCode() == 's') {
-        std::cout << "Save effects" << newLine;
 
-        /*auto savedState = storeEffect(tree).createXml();
-        std::cout << "Save state: " << savedState->toString() << newLine;
-        getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-        getAppProperties().getUserSettings()->saveIfNeeded();*/
-    }
+
+
 }
 
 EffectTreeBase::~EffectTreeBase() {

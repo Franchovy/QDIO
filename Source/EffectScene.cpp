@@ -12,14 +12,6 @@ EffectScene::EffectScene() :
     setBufferedToImage(true);
     setRepaintsOnMouseActivity(false);
 
-/*
-    // RANDOM LIST TEST
-    int list1[] = {1,2,3};
-    int list2[] = {4,5,6};
-    for (auto e : (list1; list2)) {
-        std::cout << e << newLine;
-    }*/
-
     // Set up static members
 
     EffectTreeBase::audioGraph = &audioGraph;
