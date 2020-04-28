@@ -65,15 +65,18 @@ public:
     // TODO
     // static String list getEffects()
     static StringArray getEffectsAvailable() {
-        ValueTree effectLib("EffectLib");
+        StringArray effectList;
 
+        ValueTree effectLib("EffectLib");
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_EFFECT_LIBRARY);
         if (loadedEffectsData != nullptr) {
             effectLib = ValueTree::fromXml(*loadedEffectsData);
-            std::cout << "Stored effects:" << newLine << effectLib.toXmlString() << newLine;
-        }
 
-        
+            for (int i = 0; i < effectLib.getNumChildren(); i++) {
+                effectList.add(effectLib.getChild(i).getProperty("name").toString());
+            }
+        }
+        return effectList;
     }
 
 private:

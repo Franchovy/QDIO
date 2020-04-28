@@ -438,6 +438,12 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
             }
         }
     }
+    if (key.getKeyCode() == 'l') {
+        std::cout << "Available effects: " << newLine;
+        for (auto e : EffectLoader::getEffectsAvailable()) {
+            std::cout << e << newLine;
+        }
+    }
 #endif
 
     if (key.getKeyCode() == KeyPress::spaceKey) {

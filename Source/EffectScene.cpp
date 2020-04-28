@@ -137,28 +137,28 @@ void EffectScene::mouseUp(const MouseEvent &event) {
 
     // Open menu - either right click or left click (for mac)
     if (event.getDistanceFromDragStart() < 10
-                && (event.mods.isRightButtonDown() ||
-                event.mods.isCtrlDown())) {
-            PopupMenu menu;
-            if (selected.getNumSelected() > 0) {
-                menu.addItem(createGroupEffectItem);
+            && (event.mods.isRightButtonDown() ||
+            event.mods.isCtrlDown())) {
+        PopupMenu menu;
+        if (selected.getNumSelected() > 0) {
+            menu.addItem(createGroupEffectItem);
+        }
+        menu.addSubMenu("Create Effect..", createEffectMenu);
+
+        menu.addItem("create ANGERY EFFECT", [=]{
+            auto effectLoaded = EffectLoader::loadEffect("ANGERY EFFECT");
+            if (effectLoaded.isValid()) {
+                effectLoaded.setProperty(Effect::IDs::x, menuPos.x, nullptr);
+                effectLoaded.setProperty(Effect::IDs::y, menuPos.y, nullptr);
+
+                loadEffect(tree, effectLoaded);
+            } else {
+                std::cout << "nigaaaaa" << newLine;
             }
-            menu.addSubMenu("Create Effect..", createEffectMenu);
 
-            menu.addItem("create ANGERY EFFECT", [=]{
-                auto effectLoaded = EffectLoader::loadEffect("ANGERY EFFECT");
-                if (effectLoaded.isValid()) {
-                    effectLoaded.setProperty(Effect::IDs::x, menuPos.x, nullptr);
-                    effectLoaded.setProperty(Effect::IDs::y, menuPos.y, nullptr);
+        });
 
-                    loadEffect(tree, effectLoaded);
-                } else {
-                    std::cout << "nigaaaaa" << newLine;
-                }
-
-            });
-
-            callMenu(menu);
+        callMenu(menu);
     }
 
     EffectTreeBase::mouseUp(event);
