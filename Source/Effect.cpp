@@ -970,7 +970,7 @@ void Effect::setupMenu() {
         PopupMenu::Item saveEffect("Save Effect");
         saveEffect.setAction([=]() {
             auto saveTree = storeEffect(tree);
-            std::cout << saveTree.toXmlString() << newLine;
+            EffectLoader::saveEffect(saveTree);
         });
 
         menu.addItem(saveEffect);

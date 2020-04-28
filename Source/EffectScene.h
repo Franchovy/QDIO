@@ -15,7 +15,7 @@
 
 #include "Effect.h"
 #include "IDs"
-#include "EffectLoader"
+#include "EffectLoader.h"
 
 /**
  *

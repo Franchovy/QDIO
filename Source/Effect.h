@@ -9,7 +9,7 @@
 */
 
 #include <JuceHeader.h>
-#include "EffectLoader"
+#include "EffectLoader.h"
 #include "EffectGui.h"
 #include "ConnectionLine.h"
 #include "Parameters.h"

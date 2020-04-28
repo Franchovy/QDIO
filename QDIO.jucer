@@ -42,7 +42,9 @@
             file="Source/EffectSelectMenu.cpp"/>
       <FILE id="tcNVmT" name="EffectSelectMenu.h" compile="0" resource="0"
             file="Source/EffectSelectMenu.h"/>
-      <FILE id="sveIIp" name="EffectLoader" compile="0" resource="1" file="Source/EffectLoader"/>
+      <FILE id="VQHX24" name="EffectLoader.cpp" compile="1" resource="0"
+            file="Source/EffectLoader.cpp"/>
+      <FILE id="j7tcSe" name="EffectLoader.h" compile="0" resource="0" file="Source/EffectLoader.h"/>
       <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1" file="Source/EffectScene.cpp"
             xcodeResource="1"/>
       <FILE id="kR0kwB" name="EffectScene.h" compile="1" resource="1" file="Source/EffectScene.h"
