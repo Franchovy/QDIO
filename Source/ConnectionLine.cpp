@@ -33,8 +33,6 @@ void LineComponent::convert(ConnectionPort *port2) {
 
 
 void LineComponent::paint(Graphics &g) {
-    std::cout << "LineComponent paint" << newLine;
-
     g.setColour(Colours::whitesmoke);
     Path p;
     p.addLineSegment(line.toFloat(),1);

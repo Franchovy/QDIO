@@ -98,7 +98,6 @@ void EffectScene::paint (Graphics& g)
     //g.setTiledImageFill(bgTile, 0, 0, 1.0f);
     //g.fillRect(getBoundsInParent());
 
-    std::cout << "Effectscene paint" << newLine;
     g.drawImage(bg,getBounds().toFloat());
 
 #else
@@ -145,6 +144,19 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                 menu.addItem(createGroupEffectItem);
             }
             menu.addSubMenu("Create Effect..", createEffectMenu);
+
+            menu.addItem("create ANGERY EFFECT", [=]{
+                auto effectLoaded = EffectLoader::loadEffect("ANGERY EFFECT");
+                if (effectLoaded.isValid()) {
+                    effectLoaded.setProperty(Effect::IDs::x, menuPos.x, nullptr);
+                    effectLoaded.setProperty(Effect::IDs::y, menuPos.y, nullptr);
+
+                    loadEffect(tree, effectLoaded);
+                } else {
+                    std::cout << "nigaaaaa" << newLine;
+                }
+
+            });
 
             callMenu(menu);
     }

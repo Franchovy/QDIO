@@ -36,7 +36,7 @@ public:
             std::cout << "Overwriting effect" << newLine;
             effectLib.removeChild(effectToOverWrite, nullptr);
         }
-        
+
         effectLib.appendChild(storeEffect, nullptr);
 
         auto dataToStore = effectLib.createXml();
@@ -45,13 +45,36 @@ public:
         getAppProperties().getUserSettings()->save();
     }
 
+    static ValueTree loadEffect(String effectName) {
+        ValueTree effectLib("EffectLib");
 
-    // store state code
-    /*auto savedState = storeEffect(tree).createXml();
+        auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_EFFECT_LIBRARY);
+        if (loadedEffectsData != nullptr) {
+            effectLib = ValueTree::fromXml(*loadedEffectsData);
+            std::cout << "Stored effects:" << newLine << effectLib.toXmlString() << newLine;
+        }
 
-    std::cout << "Save state: " << savedState->toString() << newLine;
-    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-    getAppProperties().getUserSettings()->saveIfNeeded();*/
+        auto effectToLoad = effectLib.getChildWithProperty("name", effectName);
+        if (effectToLoad.isValid()) {
+            return effectToLoad;
+        } else {
+            return ValueTree();
+        }
+    }
+
+    // TODO
+    // static String list getEffects()
+    static StringArray getEffectsAvailable() {
+        ValueTree effectLib("EffectLib");
+
+        auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_EFFECT_LIBRARY);
+        if (loadedEffectsData != nullptr) {
+            effectLib = ValueTree::fromXml(*loadedEffectsData);
+            std::cout << "Stored effects:" << newLine << effectLib.toXmlString() << newLine;
+        }
+
+        
+    }
 
 private:
     static const String KEYNAME_EFFECT_LIBRARY;
