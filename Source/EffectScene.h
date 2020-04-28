@@ -15,12 +15,7 @@
 
 #include "Effect.h"
 #include "IDs"
-
-ApplicationProperties& getAppProperties();
-ApplicationCommandManager& getCommandManager();
-
-const String KEYNAME_DEVICE_SETTINGS = "audioDeviceState";
-const String KEYNAME_LOADED_EFFECTS = "loadedEffects";
+#include "EffectLoader"
 
 /**
  *

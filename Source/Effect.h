@@ -9,11 +9,11 @@
 */
 
 #include <JuceHeader.h>
+#include "EffectLoader"
 #include "EffectGui.h"
 #include "ConnectionLine.h"
 #include "Parameters.h"
 #include "Ports.h"
-
 #include "IOEffects.h"
 #include "BaseEffects.h"
 
@@ -95,7 +95,9 @@ protected:
 
     //====================================================================================
     // Menu stuff
-    static void callMenu(PopupMenu& menu);
+    void callMenu(PopupMenu& menu);
+
+    Point<int> menuPos;
 
     PopupMenu createEffectMenu;
     PopupMenu getEffectSelectMenu();

@@ -270,8 +270,8 @@ ValueTree EffectTreeBase::newEffect(String name, int processorID) {
         newEffect.setProperty(Effect::IDs::name, name, nullptr);
     }
 
-    newEffect.setProperty(Effect::IDs::x, getMouseXYRelative().x, nullptr);
-    newEffect.setProperty(Effect::IDs::y, getMouseXYRelative().y, nullptr);
+    newEffect.setProperty(Effect::IDs::x, menuPos.x, nullptr);
+    newEffect.setProperty(Effect::IDs::y, menuPos.y, nullptr);
 
     if (processorID != -1) {
         newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
@@ -473,17 +473,12 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
 
         if (key.getKeyCode() == 's') {
             std::cout << "Save effects" << newLine;
-/*
             auto savedState = storeEffect(tree).createXml();
             std::cout << "Save state: " << savedState->toString() << newLine;
             getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-            getAppProperties().getUserSettings()->saveIfNeeded();*/
+            getAppProperties().getUserSettings()->saveIfNeeded();
         }
     }
-
-
-
-
 }
 
 EffectTreeBase::~EffectTreeBase() {
@@ -502,6 +497,7 @@ EffectTreeBase::~EffectTreeBase() {
 
 void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
+    menuPos = getMouseXYRelative();
     int result = m.show();
 }
 
@@ -962,9 +958,26 @@ void Effect::setupTitle() {
 }
 
 void Effect::setupMenu() {
-    menu.addItem("Toggle Edit Mode", [=]() {
+    PopupMenu::Item toggleEditMode("Toggle Edit Mode");
+    toggleEditMode.setAction([=]() {
         setEditMode(!editMode);
     });
+
+    menu.addItem(toggleEditMode);
+    editMenu.addItem(toggleEditMode);
+
+    if (!isIndividual()) {
+        PopupMenu::Item saveEffect("Save Effect");
+        saveEffect.setAction([=]() {
+            auto saveTree = storeEffect(tree);
+            std::cout << saveTree.toXmlString() << newLine;
+        });
+
+        menu.addItem(saveEffect);
+        editMenu.addItem(saveEffect);
+    }
+
+
     editMenu.addItem("Change Effect Image..", [=]() {
         FileChooser imgChooser ("Select Effect Image..",
                                 File::getSpecialLocation (File::userHomeDirectory),
@@ -976,12 +989,14 @@ void Effect::setupMenu() {
         }
     });
 
-    editMenu.addItem("Add Input Port", [=]() {
+    PopupMenu portSubMenu;
+    portSubMenu.addItem("Add Input Port", [=]() {
         addPort(getDefaultBus(), true); resized();
     });
-    editMenu.addItem("Add Output Port", [=](){
+    portSubMenu.addItem("Add Output Port", [=](){
         addPort(getDefaultBus(), false); resized();
     });
+    editMenu.addSubMenu("Add Port..", portSubMenu);
 
     PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {
@@ -990,10 +1005,6 @@ void Effect::setupMenu() {
     });
     editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
 
-
-    editMenu.addItem("Toggle Edit Mode", [=]() {
-        setEditMode(!editMode);
-    });
 }
 
 Effect::~Effect()
@@ -1404,6 +1415,7 @@ void Effect::mouseUp(const MouseEvent &event) {
             if (event.mods.isRightButtonDown() ||
                        event.mods.isCtrlDown()) {
                 // open menu
+                menuPos = event.getPosition();
                 if (editMode) {
                     callMenu(editMenu);
                 } else {
