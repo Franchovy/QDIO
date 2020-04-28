@@ -43,7 +43,8 @@ EffectScene::EffectScene() :
     tree.addListener(this);
 
 #define BACKGROUND_IMAGE
-    bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+    bg = ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
+    //bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
     //bgTile = ImageCache::getFromMemory(BinaryData::bgtile_png, BinaryData::bgtile_pngSize);
     //logo = ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
 

@@ -27,7 +27,7 @@ MainComponent::MainComponent()
 
     auto appArea = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
 #ifdef DEBUG_APPEARANCE
-    appArea = appArea.expanded(-1000, -500);
+    appArea = appArea.expanded(-900, -500);
 #endif
     setBounds(appArea);
 
