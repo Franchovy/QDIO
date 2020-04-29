@@ -54,16 +54,38 @@ MainComponent::MainComponent()
         settingsButton.setVisible(true);
     };
 
-    // EffectSelectMenu
-
-
     effectSelectMenu.setBounds(100, 100, 400, 50);
     effectSelectMenu.setText("Select Effect");
+
+    effectSelectMenu.onChange = [=] {
+        std::cout << "Selected index: " << effectSelectMenu.getSelectedItemIndex() << newLine;
+
+        auto selectedIndex = effectSelectMenu.getSelectedItemIndex();
+        if (selectedIndex < 0) {
+            std::cout << "useless id" << newLine;
+            std::cout << effectSelectMenu.getSelectedId() << newLine;
+        } else {
+            auto effectToLoad = effectSelectMenu.getItemText(selectedIndex);
+            EffectLoader::loadEffect(effectToLoad);
+
+            auto effectLoaded = EffectLoader::loadEffect(effectToLoad);
+            if (effectLoaded.isValid()) {
+                effectLoaded.setProperty(Effect::IDs::x, main.getMenuPos().getX(), nullptr);
+                effectLoaded.setProperty(Effect::IDs::y, main.getMenuPos().getY(), nullptr);
+
+                main.loadEffect(main.getTree(), effectLoaded);
+            }
+
+            effectSelectMenu.setSelectedItemIndex(0, dontSendNotification);
+            effectSelectMenu.setText("Select Effect");
+        }
+    };
+
+    updateEffectSelectMenu();
+
     addAndMakeVisible(effectSelectMenu);
     /*auto menu = effectSelectMenu.getRootMenu();
     populateEffectMenu(*menu);*/
-
-
 
     deviceManager.addChangeListener(this);
 
@@ -134,6 +156,24 @@ void MainComponent::populateEffectMenu(PopupMenu& menu) {
     /*auto test = std::unique_ptr<EffectSelectComponent>();
     menu.addCustomItem(1, std::move(test));*/
 
+}
+
+void MainComponent::updateEffectSelectMenu() {
+    // EffectSelectMenu
+    effectSelectMenu.clear(dontSendNotification);
+    Image img = ImageCache::getFromMemory(BinaryData::settings_png, BinaryData::settings_pngSize);
+
+    int i = 1;
+    for (auto e : EffectLoader::getEffectsAvailable()) {
+        effectSelectMenu.getRootMenu()->addItem(i++, e, true, false, img);
+    }
+}
+
+void MainComponent::handleCommandMessage(int commandId) {
+    if (commandId == 0) {
+        std::cout << "update effect menu" << newLine;
+        updateEffectSelectMenu();
+    }
 }
 
 

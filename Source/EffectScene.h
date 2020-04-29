@@ -47,6 +47,8 @@ public:
 
     void updateChannels();
 
+    void handleCommandMessage(int commandId) override;
+
     AudioDeviceManager& getDeviceManager() { return deviceManager; }
     AudioProcessorGraph& getAudioGraph() { return audioGraph; }
     AudioProcessorPlayer& getAudioPlayer() { return processorPlayer; }

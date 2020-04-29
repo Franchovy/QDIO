@@ -145,19 +145,6 @@ void EffectScene::mouseUp(const MouseEvent &event) {
         }
         menu.addSubMenu("Create Effect..", createEffectMenu);
 
-        menu.addItem("create ANGERY EFFECT", [=]{
-            auto effectLoaded = EffectLoader::loadEffect("ANGERY EFFECT");
-            if (effectLoaded.isValid()) {
-                effectLoaded.setProperty(Effect::IDs::x, menuPos.x, nullptr);
-                effectLoaded.setProperty(Effect::IDs::y, menuPos.y, nullptr);
-
-                loadEffect(tree, effectLoaded);
-            } else {
-                std::cout << "nigaaaaa" << newLine;
-            }
-
-        });
-
         callMenu(menu);
     }
 
@@ -222,6 +209,11 @@ void EffectScene::updateChannels() {
     }
 }
 
+void EffectScene::handleCommandMessage(int commandId) {
+    if (commandId == 0) {
+        getParentComponent()->postCommandMessage(0);
+    }
+}
 
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {

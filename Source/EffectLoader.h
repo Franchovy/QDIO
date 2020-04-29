@@ -31,7 +31,9 @@ public:
             effectLib = ValueTree::fromXml(*loadedEffectsData);
         }
 
-        auto effectToOverWrite = effectLib.getChildWithName(storeEffect.getType());
+        auto effectToOverWrite = effectLib.getChildWithProperty("name",
+                storeEffect.getProperty("name").toString());
+
         if (effectToOverWrite.isValid()) {
             std::cout << "Overwriting effect" << newLine;
             effectLib.removeChild(effectToOverWrite, nullptr);
@@ -67,15 +69,19 @@ public:
     static StringArray getEffectsAvailable() {
         StringArray effectList;
 
+        std::cout << "Effects available: " << newLine;
+
         ValueTree effectLib("EffectLib");
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_EFFECT_LIBRARY);
         if (loadedEffectsData != nullptr) {
             effectLib = ValueTree::fromXml(*loadedEffectsData);
 
             for (int i = 0; i < effectLib.getNumChildren(); i++) {
+                std::cout << effectLib.getChild(i).getProperty("name").toString() << newLine;
                 effectList.add(effectLib.getChild(i).getProperty("name").toString());
             }
         }
+
         return effectList;
     }
 

@@ -29,10 +29,14 @@ public:
 
     ~MainComponent() override;
 
+    void handleCommandMessage(int commandId) override;
+
     void resized() override;
     void changeListenerCallback(ChangeBroadcaster *source) override;
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
-    
+
+    void updateEffectSelectMenu();
+
 private:
     int deltaX;
     int deltaY;
@@ -49,7 +53,8 @@ private:
 
     ImageButton settingsButton;
     SettingsComponent settingsMenu;
-    EffectSelectMenu effectSelectMenu;
+
+    ComboBox effectSelectMenu;
 
     ValueTree effectTree;
 

@@ -514,7 +514,6 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         dragLine.startDrag(p, event);
     }
-
 }
 
 void EffectTreeBase::mouseDrag(const MouseEvent &event) {
@@ -856,6 +855,10 @@ ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPor
     return newConnection;
 }
 
+Point<int> EffectTreeBase::getMenuPos() const {
+    return menuPos;
+}
+
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     if (vt.hasProperty(IDs::processorID)) {
 
@@ -978,6 +981,7 @@ void Effect::setupMenu() {
             auto saveTree = storeEffect(tree);
             if (saveTree.isValid()) {
                 EffectLoader::saveEffect(saveTree);
+                getParentComponent()->postCommandMessage(0);
             } else {
                 std::cout << "invalid, mothafucka." << newLine;
             }

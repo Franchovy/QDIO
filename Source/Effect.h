@@ -90,6 +90,8 @@ public:
         neutral = 1
     } static appState;
 
+    Point<int> getMenuPos() const;
+
 protected:
     ValueTree tree;
 
