@@ -15,23 +15,29 @@
 class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
 {
 public:
-    InputDeviceEffect() : AudioGraphIOProcessor(AudioGraphIOProcessor::audioInputNode){
-
+    InputDeviceEffect(StringArray choices, int defaultIndex)
+        : AudioGraphIOProcessor(AudioGraphIOProcessor::audioInputNode)
+        , deviceParam("device", "Device", choices, defaultIndex)
+    {
+        addParameter(&deviceParam);
     }
 
     const String getName() const override { return name; }
 
 private:
     const String name = "Input Device";
+    AudioParameterChoice deviceParam;
+
 };
 
 class OutputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor//, private BaseEffect
 {
 public:
-    OutputDeviceEffect() : AudioGraphIOProcessor(AudioGraphIOProcessor::audioOutputNode)
-        //, BaseEffect()
+    OutputDeviceEffect(StringArray choices, int defaultIndex)
+        : AudioGraphIOProcessor(AudioGraphIOProcessor::audioOutputNode)
+        , deviceParam("device", "Device", choices, defaultIndex)
     {
-
+        addParameter(&deviceParam);
     }
 
     void prepareToPlay(double newSampleRate, int estimatedSamplesPerBlock) override {
@@ -58,5 +64,8 @@ public:
     const String getName() const override { return name; }
 private:
     const String name = "Output Device";
+
+    AudioParameterChoice deviceParam;
+    String deviceName;
 };
 

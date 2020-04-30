@@ -865,12 +865,17 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
         int id = vt.getProperty(IDs::processorID);
+
+        auto currentDevice = deviceManager->getCurrentDeviceTypeObject();
+
         switch (id) {
             case 0:
-                newProcessor = std::make_unique<InputDeviceEffect>();
+                newProcessor = std::make_unique<InputDeviceEffect>(currentDevice->getDeviceNames(true),
+                       currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(), true));
                 break;
             case 1:
-                newProcessor = std::make_unique<OutputDeviceEffect>();
+                newProcessor = std::make_unique<OutputDeviceEffect>(currentDevice->getDeviceNames(false),
+                        currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(), false));
                 break;
             case 2:
                 newProcessor = std::make_unique<DistortionEffect>();
