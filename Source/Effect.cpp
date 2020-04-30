@@ -1196,7 +1196,17 @@ Parameter& Effect::addParameter(AudioProcessorParameter *param)
     addAndMakeVisible(parameterGui);
 
     auto i = parameters->getParameters(false).indexOf(param);
-    parameterGui->setTopLeftPosition(60, 70 + i * 50);
+
+    if (parameterGui->type == Parameter::combo) {
+        if (inputPorts.size() > 0) {
+            parameterGui->setTopLeftPosition(70, 80 + i * 50);
+        } else {
+            parameterGui->setTopLeftPosition(40, 80 + i * 50);
+        }
+
+    } else {
+        parameterGui->setTopLeftPosition(60, 70 + i * 50);
+    }
 
     auto newBounds = getBounds().getUnion(
             Rectangle<int>(getX(), getY(),

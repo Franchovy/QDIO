@@ -40,11 +40,25 @@ Parameter::Parameter(AudioProcessorParameter *param)
         type = button;
         parameterComponent = std::make_unique<TextButton>();
 
-    } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
+    } else if (param->isDiscrete() && ! param->getAllValueStrings().isEmpty()) {
         // Combo
         type = combo;
         parameterComponent = std::make_unique<ComboBox>();
+        auto combo = dynamic_cast<ComboBox*>(parameterComponent.get());
 
+        int i = 1;
+        for (auto s : param->getAllValueStrings()) {
+            combo->addItem(s.substring(0, 20), i++);
+        }
+
+        auto *listener = new ComboListener(param);
+        combo->addListener(listener);
+        combo->setName("Combo");
+
+        combo->setSelectedItemIndex(param->getValue());
+
+        combo->setBounds(20, 0, 250, 40);
+        addAndMakeVisible(combo);
     } else {
         // Slider
         type = slider;
@@ -71,16 +85,22 @@ Parameter::Parameter(AudioProcessorParameter *param)
     }
 
     // Set up label
-    parameterLabel.setFont(Font(15, Font::FontStyleFlags::bold));
     parameterLabel.setBounds(0, 0, getWidth(), 20);
+    parameterLabel.setFont(Font(15, Font::FontStyleFlags::bold));
+
     addAndMakeVisible(parameterLabel);
 
     setEditable(! internal);
 
     if (! internal) {
-        port->setCentrePosition(getWidth()/2, 30);
-        parameterLabel.setTopLeftPosition(15, 55);
-        parameterComponent->setCentrePosition(getWidth()/2, 80);
+        if (type == slider) {
+            port->setCentrePosition(getWidth()/2, 30);
+            parameterLabel.setTopLeftPosition(15, 55);
+            parameterComponent->setCentrePosition(getWidth()/2, 80);
+        }
+    }
+    if (type == combo) {
+        parameterLabel.setVisible(false);
     }
 
     param->addListener(this);
@@ -234,6 +254,13 @@ void Parameter::setValue(float newVal, bool notifyHost) {
 
 AudioProcessorParameter *Parameter::getParameter() {
     return referencedParameter;
+}
+
+void Parameter::setActionOnComboSelect(std::function<void()> funct) {
+    if (type == combo) {
+        auto combo = dynamic_cast<ComboBox*>(parameterComponent.get());
+        combo->onChange = funct;
+    }
 }
 
 /*NormalisableRange<double> Parameter::getRange() {

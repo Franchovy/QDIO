@@ -50,6 +50,8 @@ public:
         static const Identifier parameterComponent;
     };
 
+    void setActionOnComboSelect(std::function<void()> funct);
+
 private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
