@@ -142,6 +142,8 @@ ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const V
                         return p;
             }
         } else if (effectTreeToCheck.getChild(i).hasType(PARAMETER_ID)) {
+            jassert(effectTreeToCheck.getChild(i).hasProperty(Parameter::IDs::parameterObject));
+
             auto parameter = getFromTree<Parameter>(effectTreeToCheck.getChild(i));
 
             auto localPos = parameter->getPort()->getLocalPoint(event.originalComponent, event.getPosition());
@@ -304,9 +306,16 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         std::cout << "Add " << getFromTree<Effect>(childWhichHasBeenAdded)->getName() <<  " to " << parentTree.getType().toString() << newLine;
     }
 
+
+
     // ADD EFFECT
     if (childWhichHasBeenAdded.hasType(EFFECT_ID))
     {
+        if (parentTree != tree)
+        {
+            return;
+        }
+
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
                 e->setVisible(true);
@@ -334,6 +343,11 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     // ADD CONNECTION
     else if (childWhichHasBeenAdded.hasType(CONNECTION_ID))
     {
+        if (parentTree != tree)
+        {
+            return;
+        }
+
         ConnectionLine* line;
         // Add connection here
         if (! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
@@ -354,55 +368,94 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     // ADD PARAMETER
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID))
     {
-        auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
-        auto param = parameter->getParameter();
-
-        if (param->isMetaParameter()) {
-            audioGraph->addParameter(param);
-            // parameters add param (unique ptr)
+        // avoid double calls
+        //todo why are new effects not calling with parent == tree? ideally switch to opposite bool statement
+        if (parentTree == tree) {
+            return;
         }
 
-        auto parent = getFromTree<Effect>(parentTree);
 
-        parent->addAndMakeVisible(parameter);
+        if (! childWhichHasBeenAdded.hasProperty(Parameter::IDs::parameterObject)) {
+            // Load new (meta) parameter from data
+            std::cout << childWhichHasBeenAdded.getProperty("name").toString() << newLine;
+            std::cout << "load parameter" << newLine;
 
-        auto parameters = parent->getParameters(false);
-        auto numParameters = parameters.size();
-        auto i = parameters.indexOf(param);
+            MetaParameter* param;
 
-        if (parameter->type == Parameter::combo) {
-            if (parent->getNumInputs() > 0) {
-                parameter->setTopLeftPosition(70, 80 + i * 50);
+            auto paramName = childWhichHasBeenAdded.getProperty("name").toString();
+            param = new MetaParameter(paramName);
+
+            int type = childWhichHasBeenAdded.getProperty("type");
+            switch (type) {
+                case Parameter::Type::slider:
+                    std::cout << "yes very gud" << newLine;
+                    break;
+                case Parameter::Type::combo:
+                    break;
+                case Parameter::Type::button:
+                    break;
+                default:
+                    std::cout << "o no" << newLine;
+            }
+            auto parameter = new Parameter(param);
+            parameter->setName(paramName);
+
+            int x = childWhichHasBeenAdded.getProperty("x");
+            int y = childWhichHasBeenAdded.getProperty("y");
+
+            parameter->setTopLeftPosition(x, y);
+        } else {
+            // Load to existing parameter object
+            auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
+            auto param = parameter->getParameter();
+
+            if (param->isMetaParameter()) {
+                audioGraph->addParameter(param);
+                // parameters add param (unique ptr)
+            }
+
+            auto parent = getFromTree<Effect>(parentTree);
+
+            parent->addAndMakeVisible(parameter);
+
+            auto parameters = parent->getParameters(false);
+            auto numParameters = parameters.size();
+            auto i = parameters.indexOf(param);
+
+            if (parameter->type == Parameter::combo) {
+                if (parent->getNumInputs() > 0) {
+                    parameter->setTopLeftPosition(70, 80 + i * 50);
+                } else {
+                    parameter->setTopLeftPosition(40, 80 + i * 50);
+                }
             } else {
-                parameter->setTopLeftPosition(40, 80 + i * 50);
+                parameter->setTopLeftPosition(60, 70 + i * 50);
             }
 
-        } else {
-            parameter->setTopLeftPosition(60, 70 + i * 50);
-        }
+            auto newBounds = getBounds().getUnion(
+                    Rectangle<int>(getX(), getY(),
+                                   parameter->getWidth() + 50, 50 + numParameters * 50));
 
-        auto newBounds = getBounds().getUnion(
-                Rectangle<int>(getX(), getY(),
-                               parameter->getWidth() + 50, 50 + numParameters * 50));
+            setBounds(newBounds); // should always call resized()
 
-        setBounds(newBounds); // should always call resized()
+            if (parameter->isInternal()) {
+                parent->addAndMakeVisible(parameter->getPort());
 
-        if (parameter->isInternal()) {
-            parent->addAndMakeVisible(parameter->getPort());
-
-            if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
-                parameter->getPort()->setVisible(e->isInEditMode());
+                if (auto e = dynamic_cast<Effect *>(getParentComponent())) {
+                    parameter->getPort()->setVisible(e->isInEditMode());
+                }
+            } else {
+                parameter->addAndMakeVisible(parameter->getPort());
             }
-        } else {
-            parameter->addAndMakeVisible(parameter->getPort());
+            resized();
         }
-        resized();
     }
 }
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
-    std::cout << "VT child removed" << newLine;
+
+    // EFFECT
     if (childWhichHasBeenRemoved.hasType(EFFECT_ID)) {
         if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
             if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
@@ -426,11 +479,18 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
                 e->setVisible(false);
             }
         }
-    } else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
+    }
+    // CONNECTION
+    else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
         line->setVisible(false);
 
         disconnectAudio(*line);
+    }
+    // PARAMETER
+    else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {
+        auto parameter = getFromTree<Parameter>(childWhichHasBeenRemoved);
+        parameter->setVisible(false);
     }
 }
 
@@ -594,7 +654,6 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
             // Call create on common parent
             newConnection(port, dragLine.getPort1());
         }
-
         dragLine.release(nullptr);
     }
 }
@@ -657,15 +716,32 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto child = tree.getChild(i);
 
-            if (child.hasType(EFFECT_ID)) {
+            // Register child effect
+            if (child.hasType(EFFECT_ID))
+            {
                 auto childTreeToStore = storeEffect(child);
                 if (childTreeToStore.isValid()) {
                     copy.appendChild(childTreeToStore, nullptr);
                 }
             }
+            // Register parameter
+            else if (child.hasType(PARAMETER_ID))
+            {
+                auto childObject = getFromTree<Parameter>(child);
+                auto childParam = ValueTree(PARAMETER_ID);
 
+                childParam.setProperty("x", childObject->getX(), nullptr);
+                childParam.setProperty("y", childObject->getY(), nullptr);
+
+                childParam.setProperty("name", childObject->getName(), nullptr);
+                childParam.setProperty("type", childObject->type, nullptr);
+                childParam.setProperty("value", childObject->getParameter()->getValue(), nullptr);
+
+                copy.appendChild(childParam, nullptr);
+            }
             // Register connection
-            if (child.hasType(CONNECTION_ID)) {
+            else if  (child.hasType(CONNECTION_ID))
+            {
                 // Get data to set
                 auto inPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::InPort);
                 auto outPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::OutPort);
@@ -733,11 +809,13 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
             }
         }
 
+/*
         // Load parameters
         auto effect = getFromTree<Effect>(copy);
         if (effect != nullptr && loadData.getChildWithName("parameters").isValid()) {
             effect->loadParameters(loadData.getChildWithName("parameters"));
         }
+*/
 
         //loadData.getChild("parameters")
     }
@@ -746,6 +824,14 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
+
+            if (child.hasType(PARAMETER_ID)) {
+                ValueTree paramChild(PARAMETER_ID);
+                paramChild.copyPropertiesFrom(child, nullptr);
+
+                copy.appendChild(paramChild, nullptr);
+            }
+            // CONNECTION
             if (child.hasType(CONNECTION_ID)) {
                 // Set data
                 ValueTree connectionToSet(CONNECTION_ID);
@@ -1104,7 +1190,7 @@ void Effect::setProcessor(AudioProcessor *processor) {
     int numInputBuses = processor->getBusCount(true );
     int numBuses = numInputBuses + processor->getBusCount(false);
     for (int i = 0; i < numBuses; i++){
-        bool isInput = (i < numInputBuses) ? true : false;
+        bool isInput = i < numInputBuses;
         // Get bus from processor
         auto bus = isInput ? processor->getBus(true, i) :
                    processor->getBus(false, i - numInputBuses);
