@@ -47,7 +47,7 @@ public:
     void connect(Parameter* otherParameter);
 
     struct IDs {
-        static const Identifier parameterComponent;
+        static const Identifier parameterObject;
     };
 
     void setActionOnComboSelect(std::function<void()> funct);

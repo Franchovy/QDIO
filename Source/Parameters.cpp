@@ -10,7 +10,7 @@
 
 #include "Parameters.h"
 
-const Identifier Parameter::IDs::parameterComponent = "parameterObject";
+const Identifier Parameter::IDs::parameterObject = "parameterObject";
 
 Parameter::Parameter(AudioProcessorParameter *param)
     : referencedParameter(param)

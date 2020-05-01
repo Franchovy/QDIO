@@ -190,6 +190,7 @@ public:
     void setParameters(const AudioProcessorParameterGroup* group);
     Parameter& addParameter(AudioProcessorParameter* param);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
+    Array<AudioProcessorParameter*> getParameters(bool recursive);
 
     Parameter* getParameterForPort(ParameterPort* port);
 

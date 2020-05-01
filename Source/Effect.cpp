@@ -304,8 +304,9 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         std::cout << "Add " << getFromTree<Effect>(childWhichHasBeenAdded)->getName() <<  " to " << parentTree.getType().toString() << newLine;
     }
 
-    // if effect has been created already
-    if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
+    // ADD EFFECT
+    if (childWhichHasBeenAdded.hasType(EFFECT_ID))
+    {
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
                 e->setVisible(true);
@@ -329,7 +330,10 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                 parent->addAndMakeVisible(e);
             }
         }
-    } else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
+    }
+    // ADD CONNECTION
+    else if (childWhichHasBeenAdded.hasType(CONNECTION_ID))
+    {
         ConnectionLine* line;
         // Add connection here
         if (! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
@@ -346,6 +350,53 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         }
         line->toFront(false);
         connectAudio(*line);
+    }
+    // ADD PARAMETER
+    else if (childWhichHasBeenAdded.hasType(PARAMETER_ID))
+    {
+        auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
+        auto param = parameter->getParameter();
+
+        if (param->isMetaParameter()) {
+            audioGraph->addParameter(param);
+            // parameters add param (unique ptr)
+        }
+
+        auto parent = getFromTree<Effect>(parentTree);
+
+        parent->addAndMakeVisible(parameter);
+
+        auto parameters = parent->getParameters(false);
+        auto numParameters = parameters.size();
+        auto i = parameters.indexOf(param);
+
+        if (parameter->type == Parameter::combo) {
+            if (parent->getNumInputs() > 0) {
+                parameter->setTopLeftPosition(70, 80 + i * 50);
+            } else {
+                parameter->setTopLeftPosition(40, 80 + i * 50);
+            }
+
+        } else {
+            parameter->setTopLeftPosition(60, 70 + i * 50);
+        }
+
+        auto newBounds = getBounds().getUnion(
+                Rectangle<int>(getX(), getY(),
+                               parameter->getWidth() + 50, 50 + numParameters * 50));
+
+        setBounds(newBounds); // should always call resized()
+
+        if (parameter->isInternal()) {
+            parent->addAndMakeVisible(parameter->getPort());
+
+            if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
+                parameter->getPort()->setVisible(e->isInEditMode());
+            }
+        } else {
+            parameter->addAndMakeVisible(parameter->getPort());
+        }
+        resized();
     }
 }
 
@@ -391,9 +442,9 @@ T *EffectTreeBase::getFromTree(const ValueTree &vt) {
     } else if (vt.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
         // Return connection
         return dynamic_cast<T*>(vt.getProperty(ConnectionLine::IDs::ConnectionLineObject).getObject());
-    } else if (vt.hasProperty(Parameter::IDs::parameterComponent)) {
+    } else if (vt.hasProperty(Parameter::IDs::parameterObject)) {
         // Return parameter
-        return dynamic_cast<T*>(vt.getProperty(Parameter::IDs::parameterComponent).getObject());
+        return dynamic_cast<T*>(vt.getProperty(Parameter::IDs::parameterObject).getObject());
     }
 }
 
@@ -592,7 +643,7 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
             copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);
 
             // Save parameter info
-            copy.appendChild(effect->storeParameters(), nullptr);
+            //copy.appendChild(effect->storeParameters(), nullptr);
 
         } else {
             std::cout << "dat shit is not initialised. do not store" << newLine;
@@ -1178,127 +1229,21 @@ void Effect::setEditMode(bool isEditMode) {
 }
 
 void Effect::setParameters(const AudioProcessorParameterGroup *group) {
-    // Individual
     for (auto param : group->getParameters(false)) {
         addParameter(param);
     }
-    for (auto c : getChildren())
-        std::cout << c->getName() << newLine;
 }
 
 Parameter& Effect::addParameter(AudioProcessorParameter *param)
 {
-    if (param->isMetaParameter()) {
-        audioGraph->addParameter(param);
-        // parameters add param (unique ptr)
-    }
+    ValueTree parameter(PARAMETER_ID);
+
     auto parameterGui = new Parameter(param);
-    addAndMakeVisible(parameterGui);
+    parameter.setProperty(Parameter::IDs::parameterObject, parameterGui, nullptr);
 
-    auto i = parameters->getParameters(false).indexOf(param);
-
-    if (parameterGui->type == Parameter::combo) {
-        if (inputPorts.size() > 0) {
-            parameterGui->setTopLeftPosition(70, 80 + i * 50);
-        } else {
-            parameterGui->setTopLeftPosition(40, 80 + i * 50);
-        }
-
-    } else {
-        parameterGui->setTopLeftPosition(60, 70 + i * 50);
-    }
-
-    auto newBounds = getBounds().getUnion(
-            Rectangle<int>(getX(), getY(),
-                    parameterGui->getWidth() + 50, 50 + parameters->getParameters(false).size() * 50));
-
-    setBounds(newBounds); // should always call resized()
-
-    if (parameterGui->isInternal()) {
-        addAndMakeVisible(parameterGui->getPort());
-
-        if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
-            parameterGui->getPort()->setVisible(e->isInEditMode());
-        }
-    } else {
-        parameterGui->addAndMakeVisible(parameterGui->getPort());
-    }
-    resized();
-
-    ValueTree paramTree(PARAMETER_ID);
-    paramTree.setProperty(Parameter::IDs::parameterComponent, parameterGui, nullptr);
-    tree.appendChild(paramTree, &undoManager);
+    tree.appendChild(parameter, &undoManager);
 
     return *parameterGui;
-/* *
-    //todo parent class for dis shit pllssss
-    if (param->isBoolean()) {
-        // add bool parameter
-        ToggleButton* button = new ToggleButton();
-
-        ButtonListener* listener = new ButtonListener(param);
-        button->addListener(listener);
-        button->setName("Button");
-        button->setBounds(20,50, 100, 40);
-    } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
-        // add combo parameter
-        ComboBox* comboBox = new ComboBox();
-
-        for (auto s : param->getAllValueStrings())
-            comboBox->addItem(s, param->getAllValueStrings().indexOf(s));
-
-        ComboListener* listener = new ComboListener(param);
-
-        comboBox->addListener(listener);
-        comboBox->setName("ComboBox");
-        comboBox->setBounds(20, 50, 100, 40);
-
-        addAndMakeVisible(comboBox);
-    } else if (param->isDiscrete()) {
-        // add int parameter
-        Slider* slider = new Slider();
-        auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
-
-        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                               1, paramRange.skew));
-        SliderListener* listener = new SliderListener(param);
-        slider->addListener(listener);
-        slider->setName("Slider");
-        slider->setBounds(20, 50, 100, 40);
-
-        addAndMakeVisible(slider);
-    } else {
-        // add float parameter
-        Slider* slider = new Slider();
-        auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
-
-        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                               paramRange.interval, paramRange.skew));
-        SliderListener* listener = new SliderListener(param);
-        slider->addListener(listener);
-        slider->setName("Slider");
-        slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
-
-        auto label = new Label(param->getName(30), param->getName(30));
-        label->setFont(Font(15, Font::FontStyleFlags::bold));
-        label->setColour(Label::textColourId, Colours::black);
-
-        slider->setTextBoxIsEditable(true);
-        slider->setValue(param->getValue(), dontSendNotification);
-
-        auto i = parameters->getParameters(false).indexOf(param);
-
-        slider->setBounds(40 , 40 + (i * 70), 100, 70);
-        addAndMakeVisible(slider);
-
-        label->setBounds(slider->getX(), slider->getY() + 5, slider->getWidth(), 20);
-        addAndMakeVisible(label);
-
-        slider->hideTextBox(false);
-        slider->hideTextBox(true);
-
-        resize(slider->getWidth() + 100, getHeight());
-    }*/
 }
 
 
@@ -1774,6 +1719,10 @@ Parameter *Effect::getParameterForPort(ParameterPort *port) {
         }
     }
     return nullptr;
+}
+
+Array<AudioProcessorParameter *> Effect::getParameters(bool recursive) {
+    return parameters->getParameters(recursive);
 }
 
 
