@@ -398,12 +398,20 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                     std::cout << "o no" << newLine;
             }
             auto parameter = new Parameter(param);
+            childWhichHasBeenAdded.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
+
             parameter->setName(paramName);
 
             int x = childWhichHasBeenAdded.getProperty("x");
             int y = childWhichHasBeenAdded.getProperty("y");
 
             parameter->setTopLeftPosition(x, y);
+
+            auto parent = getFromTree<Effect>(parentTree);
+
+            parent->addAndMakeVisible(parameter);
+            parameter->addAndMakeVisible(parameter->getPort());
+            
         } else {
             // Load to existing parameter object
             auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
