@@ -312,10 +312,10 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     // ADD EFFECT
     if (childWhichHasBeenAdded.hasType(EFFECT_ID))
     {
-        if (parentTree != tree)
+        /*if (parentTree != tree)
         {
             return;
-        }
+        }*/
 
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
@@ -370,9 +370,9 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID))
     {
         // Avoid multiple constructor calls
-        if (parentTree != tree) {
+        /*if (parentTree != tree) {
             return;
-        }
+        }*/
 
         auto parent = getFromTree<Effect>(parentTree);
         //todo simplify dis
@@ -405,7 +405,6 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             if (! childWhichHasBeenAdded.hasProperty("x") && ! childWhichHasBeenAdded.hasProperty("y"))
             {
                 auto parameters = parent->getParameters(false);
-                auto numParameters = parameters.size();
                 auto i = parameters.indexOf(param);
 
                 if (parameter->type == Parameter::combo) {
@@ -417,14 +416,18 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                 } else {
                     parameter->setTopLeftPosition(60, 70 + i * 50);
                 }
-                auto newBounds = getBounds().getUnion(
-                        Rectangle<int>(getX(), getY(),
-                                       parameter->getWidth() + 50, 50 + numParameters * 50));
-                setBounds(newBounds); // should always call resized()
-
-                childWhichHasBeenAdded.setProperty("x", parameter->getX(), nullptr);
-                childWhichHasBeenAdded.setProperty("y", parameter->getY(), nullptr);
             }
+        }
+        if (parent->isIndividual()) {
+            auto parameters = parent->getParameters(false);
+            auto numParameters = parameters.size();
+            auto newBounds = getBounds().getUnion(
+                    Rectangle<int>(getX(), getY(),
+                                   parameter->getWidth() + 50, 50 + numParameters * 50));
+            setBounds(newBounds); // should always call resized()
+
+            childWhichHasBeenAdded.setProperty("x", parameter->getX(), nullptr);
+            childWhichHasBeenAdded.setProperty("y", parameter->getY(), nullptr);
         }
 
         // Add parameter component to effect
@@ -1050,7 +1053,17 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
         // Make edit mode true by default
         setEditMode(true);
 
-        parameters = new AudioProcessorParameterGroup();
+        // Load parameters
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            if (tree.getChild(i).hasType(PARAMETER_ID)) {
+                auto name = tree.getChild(i).getProperty("name");
+                auto param = new MetaParameter(name);
+
+                addParameter(param);
+            }
+        }
+
+        //parameters = new AudioProcessorParameterGroup();
     }
 
     // Set name
@@ -1253,11 +1266,13 @@ void Effect::setEditMode(bool isEditMode) {
         // Set child effects and connections to editable
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto c = getFromTree<Component>(tree.getChild(i));
-            c->toFront(false);
-            c->setInterceptsMouseClicks(true, true);
+            if (c != nullptr) {
+                c->toFront(false);
+                c->setInterceptsMouseClicks(true, true);
 
-            if (dynamic_cast<Effect*>(c)) {
-                c->setVisible(true);
+                if (dynamic_cast<Effect*>(c)) {
+                    c->setVisible(true);
+                }
             }
         }
 

@@ -276,7 +276,9 @@ float MetaParameter::getValue() const {
 }
 
 void MetaParameter::setValue(float newValue) {
-    linkedParameter->setValueNotifyingHost(newValue);
+    if (linkedParameter != nullptr) {
+        linkedParameter->setValueNotifyingHost(newValue);
+    }
 }
 
 float MetaParameter::getDefaultValue() const {
