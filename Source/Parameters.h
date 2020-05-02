@@ -34,14 +34,14 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    void setEditable(bool isEditable);
-    bool isInternal();
+    void setEditMode(bool isEditable);
+    bool isInEditMode() const;
 
     //NormalisableRange<double> getRange();
 
     AudioProcessorParameter* getParameter();
 
-    ParameterPort* getPort();
+    ParameterPort* getPort(bool internal);
     Point<int> getPortPosition();
 
     void connect(Parameter* otherParameter);
@@ -56,8 +56,11 @@ private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
     AudioProcessorParameter* referencedParameter;
-    std::unique_ptr<ParameterPort> port;
 
+    std::unique_ptr<ParameterPort> internalPort;
+    std::unique_ptr<ParameterPort> externalPort;
+
+    bool editMode = false;
     bool internal = true;
     Parameter* connectedParameter = nullptr;
 

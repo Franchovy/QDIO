@@ -62,14 +62,11 @@ class ParameterPort : public ConnectionPort
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
-    ParameterPort(AudioProcessorParameter* param, bool isInternal = false);
+    ParameterPort(bool isInternal);
 
     bool canConnect(ConnectionPort* other) override;
 
     Component *getDragLineParent() override;
-
-private:
-    AudioProcessorParameter& linkedParameter;
 };
 
 class AudioPort;

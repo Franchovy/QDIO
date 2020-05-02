@@ -104,17 +104,14 @@ bool ParameterPort::canConnect(ConnectionPort* other) {
     return false;
 }
 
-ParameterPort::ParameterPort(AudioProcessorParameter *param, bool isInternal)
+ParameterPort::ParameterPort(bool isInternal)
     : ConnectionPort()
-    , linkedParameter(*param)
 {
     hoverBox = Rectangle<int>(0,0,60,60);
     outline = Rectangle<int>(20,20,20,20);
     centrePoint = Point<int>(30,30);
 
     setBounds(0, 0, 60, 60);
-
-    setTooltip(param->getName(30));
 }
 
 Component *ParameterPort::getDragLineParent() {

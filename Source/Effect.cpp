@@ -146,10 +146,13 @@ ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const V
 
             auto parameter = getFromTree<Parameter>(effectTreeToCheck.getChild(i));
 
-            auto localPos = parameter->getPort()->getLocalPoint(event.originalComponent, event.getPosition());
-            if (parameter->getPort()->contains(localPos)) {
-                if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(parameter->getPort())) {
-                    return parameter->getPort();
+            bool isInternal = dynamic_cast<ConnectionPort *>(event.originalComponent)->isInput;
+            auto parameterPortToCheck = parameter->getPort(! isInternal);
+
+            auto localPos = parameter->getPort(! isInternal)->getLocalPoint(event.originalComponent, event.getPosition());
+            if (parameterPortToCheck->contains(localPos)) {
+                if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(parameterPortToCheck)) {
+                    return parameterPortToCheck;
                 }
             }
         }
@@ -368,53 +371,31 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     // ADD PARAMETER
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID))
     {
-        // avoid double calls
-        //todo why are new effects not calling with parent == tree? ideally switch to opposite bool statement
-        if (parentTree == tree) {
+        // Avoid multiple constructor calls
+        if (parentTree != tree) {
             return;
         }
 
+        auto parent = getFromTree<Effect>(parentTree);
+        //todo simplify dis
 
+        Parameter* parameter;
         if (! childWhichHasBeenAdded.hasProperty(Parameter::IDs::parameterObject)) {
-            // Load new (meta) parameter from data
-            std::cout << childWhichHasBeenAdded.getProperty("name").toString() << newLine;
-            std::cout << "load parameter" << newLine;
-
-            MetaParameter* param;
-
+            // create parameter object
             auto paramName = childWhichHasBeenAdded.getProperty("name").toString();
-            param = new MetaParameter(paramName);
+            auto param = new MetaParameter(paramName);
 
-            int type = childWhichHasBeenAdded.getProperty("type");
-            switch (type) {
-                case Parameter::Type::slider:
-                    std::cout << "yes very gud" << newLine;
-                    break;
-                case Parameter::Type::combo:
-                    break;
-                case Parameter::Type::button:
-                    break;
-                default:
-                    std::cout << "o no" << newLine;
-            }
-            auto parameter = new Parameter(param);
+            parameter = new Parameter(param);
             childWhichHasBeenAdded.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
 
             parameter->setName(paramName);
 
             int x = childWhichHasBeenAdded.getProperty("x");
             int y = childWhichHasBeenAdded.getProperty("y");
-
             parameter->setTopLeftPosition(x, y);
-
-            auto parent = getFromTree<Effect>(parentTree);
-
-            parent->addAndMakeVisible(parameter);
-            parameter->addAndMakeVisible(parameter->getPort());
-            
         } else {
             // Load to existing parameter object
-            auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
+            parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
             auto param = parameter->getParameter();
 
             if (param->isMetaParameter()) {
@@ -422,41 +403,39 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                 // parameters add param (unique ptr)
             }
 
-            auto parent = getFromTree<Effect>(parentTree);
 
-            parent->addAndMakeVisible(parameter);
+            if (! childWhichHasBeenAdded.hasProperty("x") && ! childWhichHasBeenAdded.hasProperty("y"))
+            {
+                auto parameters = parent->getParameters(false);
+                auto numParameters = parameters.size();
+                auto i = parameters.indexOf(param);
 
-            auto parameters = parent->getParameters(false);
-            auto numParameters = parameters.size();
-            auto i = parameters.indexOf(param);
-
-            if (parameter->type == Parameter::combo) {
-                if (parent->getNumInputs() > 0) {
-                    parameter->setTopLeftPosition(70, 80 + i * 50);
+                if (parameter->type == Parameter::combo) {
+                    if (parent->getNumInputs() > 0) {
+                        parameter->setTopLeftPosition(70, 80 + i * 50);
+                    } else {
+                        parameter->setTopLeftPosition(40, 80 + i * 50);
+                    }
                 } else {
-                    parameter->setTopLeftPosition(40, 80 + i * 50);
+                    parameter->setTopLeftPosition(60, 70 + i * 50);
                 }
-            } else {
-                parameter->setTopLeftPosition(60, 70 + i * 50);
+                auto newBounds = getBounds().getUnion(
+                        Rectangle<int>(getX(), getY(),
+                                       parameter->getWidth() + 50, 50 + numParameters * 50));
+                setBounds(newBounds); // should always call resized()
+
+                childWhichHasBeenAdded.setProperty("x", parameter->getX(), nullptr);
+                childWhichHasBeenAdded.setProperty("y", parameter->getY(), nullptr);
             }
-
-            auto newBounds = getBounds().getUnion(
-                    Rectangle<int>(getX(), getY(),
-                                   parameter->getWidth() + 50, 50 + numParameters * 50));
-
-            setBounds(newBounds); // should always call resized()
-
-            if (parameter->isInternal()) {
-                parent->addAndMakeVisible(parameter->getPort());
-
-                if (auto e = dynamic_cast<Effect *>(getParentComponent())) {
-                    parameter->getPort()->setVisible(e->isInEditMode());
-                }
-            } else {
-                parameter->addAndMakeVisible(parameter->getPort());
-            }
-            resized();
         }
+
+        // Add parameter component to effect
+        parent->addAndMakeVisible(parameter);
+        // Add in/out ports to parameter and parent effect
+        parameter->addChildComponent(parameter->getPort(true));
+        parent->addChildComponent(parameter->getPort(true));
+
+        resized();
     }
 }
 
@@ -1273,7 +1252,7 @@ void Effect::setEditMode(bool isEditMode) {
 
         for (auto c : getChildren()) {
             if (auto p = dynamic_cast<Parameter*>(c)) {
-                p->setEditable(true);
+                p->setEditMode(true);
             }
         }
 
@@ -1308,7 +1287,7 @@ void Effect::setEditMode(bool isEditMode) {
 
         for (auto c : getChildren()) {
             if (auto p = dynamic_cast<Parameter*>(c)) {
-                p->setEditable(false);
+                p->setEditMode(false);
                 p->setInterceptsMouseClicks(false, true);
             }
         }
@@ -1497,38 +1476,32 @@ void Effect::mouseUp(const MouseEvent &event) {
     /*if (lasso.isVisible())
         lasso.endLasso();*/
     if (dynamic_cast<ParameterPort*>(event.originalComponent)) {
-        auto param1 = dynamic_cast<ParameterPort*>(dragLine.getPort1());
-        auto param2 = dynamic_cast<ParameterPort*>(hoverComponent.get());
+        auto port1 = dynamic_cast<ParameterPort*>(dragLine.getPort1());
+        auto port2 = dynamic_cast<ParameterPort*>(hoverComponent.get());
 
-        if (param1 != nullptr && param2 != nullptr) {
-            // Connect up parameters
-            auto parameter1 = getParameterForPort(param1);
-            if (parameter1 == nullptr) {
-                if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
-                    parameter1 = e->getParameterForPort(param1);
-                }
-            }
+        if (port1 != nullptr && port2 != nullptr) {
 
-            auto parameter2 = getParameterForPort(param2);
-            if (parameter2 == nullptr) {
-                if (auto e = dynamic_cast<Effect*>(getParentComponent())) {
-                    parameter2 = e->getParameterForPort(param2);
-                }
-            }
+            // InPort belongs to Internal parameter, but is child of parent effect.
+            auto inPort = port1->isInput ? port2 : port1;
+            auto outPort = port1->isInput ? port1 : port2;
 
-            if (parameter1 == nullptr || parameter2 == nullptr) {
+            // Connect internal Parameter2 to external Parameter1
+            auto e = dynamic_cast<Effect*>(getParentComponent());
+            auto inParameter = e->getParameterForPort(inPort);
+
+            auto outParameter = dynamic_cast<Parameter*>(outPort->getParentComponent());
+
+            if (inParameter == nullptr || outParameter == nullptr) {
+                std::cout << "Failed to connect parameters!" << newLine;
                 dragLine.release(nullptr);
                 return;
             }
 
-            // Connect external parameter to internal
-            if (parameter1->isInternal()) {
-                parameter2->connect(parameter1);
-            } else {
-                parameter1->connect(parameter2);
-            }
-            auto newConnection = new ConnectionLine(*param1, *param2);
-            param1->getDragLineParent()->addAndMakeVisible(newConnection);
+            // Connect
+            outParameter->connect(inParameter);
+
+            auto newConnection = new ConnectionLine(*port1, *port2);
+            port1->getDragLineParent()->addAndMakeVisible(newConnection);
         } else {
             dragLine.release(nullptr);
         }
@@ -1602,11 +1575,10 @@ void Effect::resized() {
     int i = 0;
     for (auto c : getChildren()) {
         if (auto parameter = dynamic_cast<Parameter*>(c)) {
-            auto paramPort = parameter->getPort();
-            if (parameter->isInternal()) {
-                paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
-                i++;
-            }
+            auto paramPort = parameter->getPort(true);
+
+            paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
+            i++;
         }
     }
 
@@ -1664,11 +1636,8 @@ void Effect::paint(Graphics& g) {
 void Effect::reassignNewParent(EffectTreeBase* newParent) {
     auto parent = tree.getParent();
 
-
-
     parent.removeChild(tree, &undoManager);
     newParent->getTree().appendChild(tree, &undoManager);
-
 }
 
 void Effect::setParent(EffectTreeBase &parent) {
@@ -1807,7 +1776,7 @@ void Effect::loadParameters(ValueTree parameterValues) {
 Parameter *Effect::getParameterForPort(ParameterPort *port) {
     for (auto c : getChildren()) {
         if (auto param = dynamic_cast<Parameter*>(c)) {
-            if (param->getPort() == port) {
+            if (param->getPort(true) == port) {
                 return param;
             }
         }

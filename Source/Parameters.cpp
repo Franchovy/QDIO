@@ -14,9 +14,10 @@ const Identifier Parameter::IDs::parameterObject = "parameterObject";
 
 Parameter::Parameter(AudioProcessorParameter *param)
     : referencedParameter(param)
-    , internal(! param->isMetaParameter())
+    , editMode(param->isMetaParameter())
     , parameterLabel(param->getName(30), param->getName(30))
-    , port(std::make_unique<ParameterPort>(param, internal))
+    , internalPort(std::make_unique<ParameterPort>(true))
+    , externalPort(std::make_unique<ParameterPort>(false))
 {
 
     //TODO use parameterListener
@@ -28,6 +29,9 @@ Parameter::Parameter(AudioProcessorParameter *param)
         setBounds(0, 0, 150, 120);
         outline = Rectangle<int>(10, 20, 130, 90);
     }
+
+    // IF EDIT MODE
+    // parameterLabel.setEditMode(true, true);
 
     if (referencedParameter->isMetaParameter()) {
         parameterLabel.setEditable(true, true);
@@ -87,18 +91,21 @@ Parameter::Parameter(AudioProcessorParameter *param)
     // Set up label
     parameterLabel.setBounds(0, 0, getWidth(), 20);
     parameterLabel.setFont(Font(15, Font::FontStyleFlags::bold));
+    parameterLabel.onTextChange = [=] {
+        setName(parameterLabel.getText(true));
+    };
 
     addAndMakeVisible(parameterLabel);
+    addChildComponent(externalPort.get());
 
-    setEditable(! internal);
+    setEditMode(!internal);
 
-    if (! internal) {
-        if (type == slider) {
-            port->setCentrePosition(getWidth()/2, 30);
-            parameterLabel.setTopLeftPosition(15, 55);
-            parameterComponent->setCentrePosition(getWidth()/2, 80);
-        }
+    if (type == slider) {
+        internalPort->setCentrePosition(getWidth() / 2, 30);
+        parameterLabel.setTopLeftPosition(15, 55);
+        parameterComponent->setCentrePosition(getWidth()/2, 80);
     }
+
     if (type == combo) {
         parameterLabel.setVisible(false);
     }
@@ -112,7 +119,6 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
         connectedParameter->setValue(newValue);
     }
 
-
     switch (type) {
         case button:
             break;
@@ -125,32 +131,22 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     }
 }
 
-void Parameter::setEditable(bool isEditable) {
-    editable = isEditable;
+void Parameter::setEditMode(bool isEditable) {
+    // change between editable and non-editable version
+    internalPort->setVisible(isEditable);
+    setHoverable(isEditable);
+    parameterLabel.setEditable(isEditable, isEditable);
 
-    if (isEditable) {
-        port->setVisible(true);
-        port->setInterceptsMouseClicks(true, true);
+    parameterLabel.setColour(Label::textColourId,
+                             (isEditable ? Colours::whitesmoke : Colours::black));
 
-        setHoverable(true);
+    editMode = isEditable;
 
-        parameterLabel.setEditable(true, true);
-        parameterLabel.setColour(Label::textColourId, Colours::whitesmoke);
-    } else {
-        if (! internal) {
-            port->setVisible(false);
-        }
-
-        setHoverable(false);
-
-        parameterLabel.setEditable(false, false);
-        parameterLabel.setColour(Label::textColourId, Colours::black);
-    }
     repaint();
 }
 
 void Parameter::mouseDown(const MouseEvent &event) {
-    if (event.originalComponent == port.get()) {
+    if (event.originalComponent == internalPort.get()) {
         getParentComponent()->mouseDown(event);
     }
     else if (! internal)
@@ -161,7 +157,7 @@ void Parameter::mouseDown(const MouseEvent &event) {
 }
 
 void Parameter::mouseDrag(const MouseEvent &event) {
-    if (event.originalComponent == port.get()) {
+    if (event.originalComponent == internalPort.get()) {
         getParentComponent()->mouseDrag(event);
     }
     else if (! internal)
@@ -172,7 +168,7 @@ void Parameter::mouseDrag(const MouseEvent &event) {
 }
 
 void Parameter::mouseUp(const MouseEvent &event) {
-    if (event.originalComponent == port.get()) {
+    if (event.originalComponent == internalPort.get()) {
         getParentComponent()->mouseUp(event);
     }
     SelectHoverObject::mouseUp(event);
@@ -180,17 +176,13 @@ void Parameter::mouseUp(const MouseEvent &event) {
 
 
 
-ParameterPort *Parameter::getPort() {
-    return port.get();
+ParameterPort *Parameter::getPort(bool internal) {
+    return internal ? internalPort.get() : externalPort.get();
 }
 
 Point<int> Parameter::getPortPosition() {
     // Default: return 20 above centre-top
     return Point<int>(getWidth()/2, 0);
-}
-
-bool Parameter::isInternal() {
-    return internal;
 }
 
 void Parameter::paint(Graphics &g) {
@@ -224,13 +216,11 @@ void Parameter::paint(Graphics &g) {
 }
 
 /**
- * Set this parameter to update another with its value. Also takes on slider
- * values of other parameter.
- * @param otherParameter
+ * Set this parameter to update another with its value.
+ * Also takes on slider values of other parameter and intialises with current value.
+ * @param otherParameter belongs to a lower-down effect.
  */
 void Parameter::connect(Parameter *otherParameter) {
-    jassert(! internal);
-
     connectedParameter = otherParameter;
     dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
 
@@ -263,6 +253,10 @@ void Parameter::setActionOnComboSelect(std::function<void()> funct) {
     }
 }
 
+bool Parameter::isInEditMode() const {
+    return editMode;
+}
+
 /*NormalisableRange<double> Parameter::getRange() {
     auto slider = dynamic_cast<Slider*>(parameterComponent.get());
 
@@ -270,7 +264,7 @@ void Parameter::setActionOnComboSelect(std::function<void()> funct) {
 }*/
 
 MetaParameter::MetaParameter(String name)
-        : RangedAudioParameter(name.toUpperCase(), name)
+        : RangedAudioParameter(name.toLowerCase(), name)
         , range(0, 1, 0.1f)
 {
 }
