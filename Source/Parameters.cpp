@@ -23,7 +23,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
     //TODO use parameterListener
     //param->addListener(this);
 
-    if (internal) {
+    if (! editMode) {
         setBounds(0, 0, 150, 80);
     } else {
         setBounds(0, 0, 150, 120);
@@ -98,8 +98,6 @@ Parameter::Parameter(AudioProcessorParameter *param)
     addAndMakeVisible(parameterLabel);
     addChildComponent(externalPort.get());
 
-    setEditMode(!internal);
-
     if (type == slider) {
         internalPort->setCentrePosition(getWidth() / 2, 30);
         parameterLabel.setTopLeftPosition(15, 55);
@@ -115,7 +113,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     // This is called on audio thread! Use async updater for messages.
-    if (! internal && connectedParameter != nullptr) {
+    if (editMode && connectedParameter != nullptr) {
         connectedParameter->setValue(newValue);
     }
 
@@ -149,7 +147,7 @@ void Parameter::mouseDown(const MouseEvent &event) {
     if (event.originalComponent == internalPort.get()) {
         getParentComponent()->mouseDown(event);
     }
-    else if (! internal)
+    else if (editMode)
     {
         dragger.startDraggingComponent(this, event);
     }
@@ -160,7 +158,7 @@ void Parameter::mouseDrag(const MouseEvent &event) {
     if (event.originalComponent == internalPort.get()) {
         getParentComponent()->mouseDrag(event);
     }
-    else if (! internal)
+    else if (editMode)
     {
         dragger.dragComponent(this, event, nullptr);
     }
@@ -187,7 +185,7 @@ Point<int> Parameter::getPortPosition() {
 
 void Parameter::paint(Graphics &g) {
     // Draw outline (edit mode)
-    if (editable) {
+    if (editMode) {
         Path p;
         g.setColour(Colours::whitesmoke);
         p.addRoundedRectangle(outline, 3.0f);

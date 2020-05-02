@@ -435,6 +435,8 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         parameter->addChildComponent(parameter->getPort(true));
         parent->addChildComponent(parameter->getPort(true));
 
+        parameter->setEditMode(parent->isInEditMode());
+
         resized();
     }
 }

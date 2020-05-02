@@ -61,7 +61,6 @@ private:
     std::unique_ptr<ParameterPort> externalPort;
 
     bool editMode = false;
-    bool internal = true;
     Parameter* connectedParameter = nullptr;
 
     bool editable = false;
