@@ -4,12 +4,19 @@ const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 
 //==============================================================================
 EffectScene::EffectScene() :
-        EffectTreeBase(EFFECTSCENE_ID) {
+        EffectTreeBase(EFFECTSCENE_ID)
+{
     setComponentID("MainWindow");
     setName("MainWindow");
-    setSize(4000, 4000);
+
+    setBufferedToImage(true);
+    setRepaintsOnMouseActivity(false);
 
     // Set up static members
+
+    EffectTreeBase::audioGraph = &audioGraph;
+    EffectTreeBase::processorPlayer = &processorPlayer;
+    EffectTreeBase::deviceManager = &deviceManager;
 
     audioGraph.enableAllBuses();
 
@@ -28,7 +35,10 @@ EffectScene::EffectScene() :
     tree.addListener(this);
 
 #define BACKGROUND_IMAGE
-    bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+    bg = ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
+    //bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
+    //bgTile = ImageCache::getFromMemory(BinaryData::bgtile_png, BinaryData::bgtile_pngSize);
+    //logo = ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
 
     //========================================================================================
     // MIDI example code
@@ -43,36 +53,53 @@ EffectScene::EffectScene() :
 
     //==============================================================================
     // Main component popup menu
-    PopupMenu createEffectSubmenu = getEffectSelectMenu();
-    mainMenu.addSubMenu("Create Effect", createEffectSubmenu);
+    createEffectMenu = getEffectSelectMenu();
+    createGroupEffectItem = PopupMenu::Item("Create Effect with group");
+    createGroupEffectItem.setAction([=] {
+        createGroupEffect();
+    });
+    //mainMenu.addSubMenu("Create Effect", createEffectMenu);
 
     //==============================================================================
     // Load Effects if there are any saved
+    appState = loading;
+
     tree.setProperty(EffectTreeBase::IDs::effectTreeBase, this, nullptr);
     if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
+        if (loadedEffectsData != nullptr) {
 
-        std::cout << loadedEffectsData->toString() << newLine;
-        std::cout << loadedEffectsData->getTagName() << newLine;
+            std::cout << loadedEffectsData->toString() << newLine;
+            std::cout << loadedEffectsData->getTagName() << newLine;
 
-        ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
+            ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
 
-        loadEffect(tree, effectLoadDataTree);
-
-        //tree.appendChild(loadedEffects, nullptr);
+            loadEffect(tree, effectLoadDataTree);
+        }
     }
+
+    appState = neutral;
 }
 
 EffectScene::~EffectScene()
 {
-    tree.removeAllChildren(nullptr);
+    audioGraph.clear();
+    processorPlayer.setProcessor(nullptr);
+    deviceManager.closeAudioDevice();
+
+    undoManager.clearUndoHistory();
 }
 
 //==============================================================================
 void EffectScene::paint (Graphics& g)
 {
 #ifdef BACKGROUND_IMAGE
-    g.drawImage(bg, getBounds().toFloat());
+
+    //g.setTiledImageFill(bgTile, 0, 0, 1.0f);
+    //g.fillRect(getBoundsInParent());
+
+    g.drawImage(bg,getBounds().toFloat());
+
 #else
     g.fillAll (Colour(30, 35, 40));
     
@@ -90,7 +117,8 @@ void EffectScene::paint (Graphics& g)
 
 void EffectScene::resized()
 {
-    setBounds(0, 0, 1920, 1080);
+    //tileDelta()
+    //repaint();
 }
 
 void EffectScene::mouseDown(const MouseEvent &event) {
@@ -107,31 +135,17 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.endLasso();
 
-    /*if (event.mods.isLeftButtonDown()) {
-        // If the component is an effect, respond to move effect event
-        if (auto effect = dynamic_cast<Effect *>(event.originalComponent)) {
-            if (event.getDistanceFromDragStart() < 10) {
-                // Consider this a click and not a drag
-                selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
-                event.eventComponent->repaint();
-            }
-
-            // Scan effect to apply move to
-            auto newParent = effectToMoveTo(event.getEventRelativeTo(this), tree);
-
-            if (auto e = dynamic_cast<Effect *>(newParent))
-                if (!e->isInEditMode())
-                    return;
-            // target is not in edit mode
-            if (effect->getParentComponent() != newParent) {
-                newParent->getTree().appendChild(effect->getTree(), &undoManager);
-            }
-        }
-    }*/
-        
     // Open menu - either right click or left click (for mac)
-    if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
-            callMenu(mainMenu);
+    if (event.getDistanceFromDragStart() < 10
+            && (event.mods.isRightButtonDown() ||
+            event.mods.isCtrlDown())) {
+        PopupMenu menu;
+        if (selected.getNumSelected() > 0) {
+            menu.addItem(createGroupEffectItem);
+        }
+        menu.addSubMenu("Create Effect..", createEffectMenu);
+
+        callMenu(menu);
     }
 
     EffectTreeBase::mouseUp(event);
@@ -150,6 +164,7 @@ void EffectScene::deleteEffect(Effect* e) {
 void EffectScene::storeState() {
     // Save screen state
     //auto savedState = toStorage(tree);
+
     auto savedState = storeEffect(tree).createXml();
 
     std::cout << "Save state: " << savedState->toString() << newLine;
@@ -157,14 +172,58 @@ void EffectScene::storeState() {
     getAppProperties().getUserSettings()->saveIfNeeded();
 }
 
+void EffectScene::updateChannels() {
+    auto defaultInChannel = AudioChannelSet();
+    defaultInChannel.addChannel(AudioChannelSet::ChannelType::left);
+    defaultInChannel.addChannel(AudioChannelSet::ChannelType::right);
+    auto defaultOutChannel = AudioChannelSet();
+    defaultOutChannel.addChannel(AudioChannelSet::ChannelType::left);
+    defaultOutChannel.addChannel(AudioChannelSet::ChannelType::right);
+
+    // Update num ins and outs
+    for (auto node : audioGraph.getNodes()) {
+        //todo dgaf about buses layout. Only channels within buses.
+        // How about a follow-through method that changes channels if possible given port?
+
+        // Set buses layout or whatever
+        auto layout = node->getProcessor()->getBusesLayout();
+
+        auto inputs = deviceManager.getAudioDeviceSetup().inputChannels;
+        auto outputs = deviceManager.getAudioDeviceSetup().outputChannels;
+
+        for (int i = 0; i < inputs.getHighestBit(); i++) {
+            if (inputs[i] == 1) {
+                layout.inputBuses.add(defaultInChannel);
+            }
+        }
+
+        for (int i = 0; i < outputs.getHighestBit(); i++) {
+            if (inputs[i] == 1) {
+                layout.outputBuses.add(defaultOutChannel);
+            }
+        }
+        node->getProcessor()->setBusesLayout(layout);
+
+        // Tell gui to update
+        Effect::updateEffectProcessor(node->getProcessor(), tree);
+    }
+}
+
+void EffectScene::handleCommandMessage(int commandId) {
+    if (commandId == 0) {
+        getParentComponent()->postCommandMessage(0);
+    }
+}
+
+
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<Effect*>(c.get()))
-        e->setSelectMode(true);
-    c->repaint();
+    if (auto e = dynamic_cast<Effect*>(c.get())) {
+        SelectHoverObject::addSelectObject(e);
+    }
 }
 
 void ComponentSelection::itemDeselected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<Effect*>(c.get()))
-        e->setSelectMode(false);
-    c->repaint();
+    if (auto e = dynamic_cast<Effect*>(c.get())) {
+        SelectHoverObject::removeSelectObject(e);
+    }
 }

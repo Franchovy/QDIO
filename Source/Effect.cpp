@@ -8,13 +8,16 @@
   ==============================================================================
 */
 
+#define DEBUG_UTILITIES
+
 #include "Effect.h"
 #include "IDs"
 
 // Static members
-AudioProcessorGraph EffectTreeBase::audioGraph;
-AudioProcessorPlayer EffectTreeBase::processorPlayer;
-AudioDeviceManager EffectTreeBase::deviceManager;
+EffectTreeBase::AppState EffectTreeBase::appState = neutral;
+AudioProcessorGraph* EffectTreeBase::audioGraph = nullptr;
+AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
+AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 LineComponent EffectTreeBase::dragLine;
 
@@ -59,7 +62,6 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
     auto parent = getFromTree<EffectTreeBase>(effectTree);
     if (! parent->contains(parent->getLocalPoint(event.eventComponent, event.getPosition()))) {
         // find new parent
-        std::cout << "Find new parent" << newLine;
         auto parentToCheck = parent->getParent();
         if (parentToCheck != nullptr
                 && parentToCheck->contains(parentToCheck->getLocalPoint(event.eventComponent, event.getPosition())))
@@ -70,34 +72,46 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
         // Check if children match
         for (int i = 0; i < effectTree.getNumChildren(); i++) {
             auto childTree = effectTree.getChild(i);
-            if (childTree.hasType(Effect::IDs::EFFECT_ID)) {
-                auto child = getFromTree<EffectTreeBase>(childTree);
-                auto childEvent = event.getEventRelativeTo(child);
+            if (childTree.hasType(EFFECT_ID)) {
+                auto child = getFromTree<Effect>(childTree);
 
-                if (child != nullptr
-                    && child->contains(childEvent.getPosition())
-                    && child != event.originalComponent) {
-                    // Add any filters here
-                    // Must be in edit mode
-                    if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
+                if (child != nullptr) {
+                    auto childEvent = event.getEventRelativeTo(child);
+                    if (child->contains(childEvent.getPosition())
+                            && child != event.originalComponent) {
+                        // Add any filters here
+                        // Must be in edit mode
+                        if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
 
-                    // Check if there's a match in the children (sending child component coordinates)
-                    if (auto e = effectToMoveTo(childEvent, childTree))
-                        return e;
-                    else
-                        return child;
+                        // Check if there's a match in the children (sending child component coordinates)
+                        if (auto e = effectToMoveTo(childEvent, childTree))
+                            return e;
+                        else
+                            return child;
+                    }
                 }
             }
         }
     }
     return nullptr;
 }
+
 //TODO
-ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
+ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
+
+    ValueTree effectTreeToCheck;
+    if (dynamic_cast<AudioPort*>(event.originalComponent) || dynamic_cast<ParameterPort*>(event.originalComponent))
+    {
+        effectTreeToCheck = effectTree.getParent();
+    }
+    else
+    {
+        effectTreeToCheck = effectTree;
+    }
 
     // Check for self ports
     if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        if (auto e = getFromTree<Effect>(effectTree)) {
+        if (auto e = getFromTree<Effect>(effectTreeToCheck)) {
             if (auto returnPort = e->checkPort(e->getLocalPoint(event.eventComponent, event.getPosition()))) {
                 if (p->canConnect(returnPort)) {
                     return returnPort;
@@ -107,24 +121,40 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
     }
 
     // Check children for a match
-    for (int i = 0; i < effectTree.getNumChildren(); i++) {
-        auto e = getFromTree<Effect>(effectTree.getChild(i));
+    for (int i = 0; i < effectTreeToCheck.getNumChildren(); i++) {
 
-        if (e == nullptr)
-            continue;
+        if (effectTreeToCheck.getChild(i).hasType(EFFECT_ID)) {
+            auto e = getFromTree<Effect>(effectTreeToCheck.getChild(i));
 
-        // Filter self effect if AudioPort
-        if (auto p = dynamic_cast<AudioPort*>(event.originalComponent))
-            if (p->getParentComponent() == e)
+            if (e == nullptr)
                 continue;
 
-        auto localPos = e->getLocalPoint(event.eventComponent, event.getPosition());
+            // Filter self effect if AudioPort
+            if (auto p = dynamic_cast<AudioPort *>(event.originalComponent))
+                if (p->getParentComponent() == e)
+                    continue;
 
-        if (e->contains(localPos))
-        {
-            if (auto p = e->checkPort(localPos))
-                if (dynamic_cast<ConnectionPort*>(event.originalComponent)->canConnect(p))
-                    return p;
+            auto localPos = e->getLocalPoint(event.originalComponent, event.getPosition());
+
+            if (e->contains(localPos)) {
+                if (auto p = e->checkPort(localPos))
+                    if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(p))
+                        return p;
+            }
+        } else if (effectTreeToCheck.getChild(i).hasType(PARAMETER_ID)) {
+            jassert(effectTreeToCheck.getChild(i).hasProperty(Parameter::IDs::parameterObject));
+
+            auto parameter = getFromTree<Parameter>(effectTreeToCheck.getChild(i));
+
+            bool isInternal = dynamic_cast<ConnectionPort *>(event.originalComponent)->isInput;
+            auto parameterPortToCheck = parameter->getPort(! isInternal);
+
+            auto localPos = parameter->getPort(! isInternal)->getLocalPoint(event.originalComponent, event.getPosition());
+            if (parameterPortToCheck->contains(localPos)) {
+                if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(parameterPortToCheck)) {
+                    return parameterPortToCheck;
+                }
+            }
         }
     }
 
@@ -132,66 +162,20 @@ ConnectionPort::Ptr EffectTreeBase::portToConnectTo(const MouseEvent& event, con
     return nullptr;
 }
 
-/**
- * Adds existing effect as child to the effect under the mouse
- * @param event for which the location will determine what effect to add to.
- * @param childEffect effect to add
- */
-/*void EffectTreeBase::addEffect(const MouseEvent& event, const Effect& childEffect, bool addToMain) {
-    auto parentTree = childEffect.getTree().getParent();
-    parentTree.removeChild(childEffect.getTree(), nullptr);
-
-    ValueTree newParent;
-    if (auto newGUIEffect = dynamic_cast<Effect*>(event.eventComponent)){
-        newParent = newGUIEffect->getTree();
-    } else
-        newParent = tree;
-
-    if (newParent == tree) {
-        std::cout << "Change me" << newLine;
-    } else {
-        std::cout << "Don't change me" << newLine;
-    }
-
-
-    newParent.appendChild(childEffect.getTree(), nullptr);
-}*/
-
-/*Effect* EffectTreeBase::createEffect(const AudioProcessorGraph::Node::Ptr& node)
-{
-    if (node != nullptr){
-        // Individual effect from processor
-        return new Effect(event, node->nodeID);
-    }
-    if (selected.getNumSelected() == 0){
-        // Empty effect
-        return new Effect(event);
-    } else if (selected.getNumSelected() > 0){
-        // Create Effect with selected Effects inside
-        Array<const Effect*> effectVTArray;
-        for (auto item : selected.getItemArray()){
-            if (auto e = dynamic_cast<Effect*>(item.get()))
-                effectVTArray.add(e);
-        }
-        selected.deselectAll();
-        return new Effect(event, effectVTArray);
-    }
-}*/
-
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
-        if (!EffectTreeBase::audioGraph.isConnected(connection) &&
-            EffectTreeBase::audioGraph.isConnectionLegal(connection)) {
+        if (!EffectTreeBase::audioGraph->isConnected(connection) &&
+            EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
             // Make audio connection
-            return EffectTreeBase::audioGraph.addConnection(connection);
+            return EffectTreeBase::audioGraph->addConnection(connection);
         }
     }
 }
 
 void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
-        if (audioGraph.isConnected(connection)) {
-            audioGraph.removeConnection(connection);
+        if (audioGraph->isConnected(connection)) {
+            audioGraph->removeConnection(connection);
         }
     }
 }
@@ -212,8 +196,8 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     auto returnArray = Array<AudioProcessorGraph::Connection>();
 
     if (in.isValid && out.isValid) {
-        for (int c = 0; c < jmin(EffectTreeBase::audioGraph.getTotalNumInputChannels(),
-                                 EffectTreeBase::audioGraph.getTotalNumOutputChannels()); c++) {
+        for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(),
+                                 EffectTreeBase::audioGraph->getTotalNumOutputChannels()); c++) {
             AudioProcessorGraph::Connection connection = {{in.node->nodeID,  in.port->bus->getChannelIndexInProcessBlockBuffer(
                     c)},
                                                           {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(
@@ -226,16 +210,12 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
 
 
 void EffectTreeBase::close() {
+    SelectHoverObject::close();
     for (auto e : effectsToDelete) {
         e->getTree().removeAllProperties(nullptr);
     }
 
-    SelectHoverObject::close();
-
     effectsToDelete.clear();
-
-    processorPlayer.setProcessor(nullptr);
-    deviceManager.closeAudioDevice();
 }
 
 Point<int> EffectTreeBase::dragDetachFromParentComponent() {
@@ -259,38 +239,28 @@ void EffectTreeBase::createConnection(ConnectionLine::Ptr line) {
 PopupMenu EffectTreeBase::getEffectSelectMenu() {
     createEffectMenu.addItem("Empty Effect", std::function<void()>(
             [=]{
-                undoManager.beginNewTransaction("New Empty Effect");
-                ValueTree newEffect(Effect::IDs::EFFECT_ID);
-
-                newEffect.setProperty(Effect::IDs::x, getMouseXYRelative().x, nullptr);
-                newEffect.setProperty(Effect::IDs::y, getMouseXYRelative().y, nullptr);
-
-                //newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
-                this->getTree().appendChild(newEffect, &undoManager);
-
-                if (selected.getNumSelected() > 0) {
-                    for (auto s : selected.getItemArray()) {
-                        if (auto e = dynamic_cast<Effect*>(s.get())){
-                            newEffect.appendChild(e->getTree(), &undoManager);
-                        }
-                    }
-                }
+                undoManager.beginNewTransaction("Create Effect");
+                newEffect("Effect", -1);
             }));
     createEffectMenu.addItem("Input Device", std::function<void()>(
             [=]{
+                undoManager.beginNewTransaction("Create Input Effect");
                 newEffect("Input Device", 0);
             }));
     createEffectMenu.addItem("Output Device", std::function<void()>(
             [=]{
+                undoManager.beginNewTransaction("Create Output Effect");
                 newEffect("Output Device", 1);
             }));
     createEffectMenu.addItem("Delay Effect", std::function<void()>(
             [=](){
+                undoManager.beginNewTransaction("Create Delay Effect");
                 newEffect("Delay Effect", 3);
             }
     ));
     createEffectMenu.addItem("Distortion Effect", std::function<void()>(
             [=]{
+                undoManager.beginNewTransaction("Create Distortion Effect");
                 newEffect("Distortion Effect", 2);
             }
     ));
@@ -298,74 +268,57 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
     return createEffectMenu;
 }
 
-void EffectTreeBase::newEffect(String name, int processorID) {
-    undoManager.beginNewTransaction("New " + name);
+ValueTree EffectTreeBase::newEffect(String name, int processorID) {
     ValueTree newEffect(Effect::IDs::EFFECT_ID);
-    newEffect.setProperty(Effect::IDs::x, getMouseXYRelative().x, nullptr);
-    newEffect.setProperty(Effect::IDs::y, getMouseXYRelative().y, nullptr);
 
-    //newEffect.setProperty(Effect::IDs::pos, Position::toVar(getMouseXYRelative()), nullptr);
-    newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
+    if (name.isNotEmpty()){
+        newEffect.setProperty(Effect::IDs::name, name, nullptr);
+    }
+
+    newEffect.setProperty(Effect::IDs::x, menuPos.x, nullptr);
+    newEffect.setProperty(Effect::IDs::y, menuPos.y, nullptr);
+
+    if (processorID != -1) {
+        newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
+    }
 
     this->getTree().appendChild(newEffect, &undoManager);
+    return newEffect;
 }
-
-/*void EffectTreeBase::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    *//*if (tree.hasType(CONNECTION_ID))
-        std::cout << "Type connectionLine" << newLine;
-
-    if (property == IDs::connections) {
-
-
-        for (auto connection : tree) {
-            // Connections removed from activeConnections
-            if (connection->isVisible() && ! activeConnections.contains(ConnectionVar::fromVar(connection))) {
-                std::cout << "Remove connection" << newLine;
-                // Remove from audio
-                disconnectAudio(*connection);
-
-                connection->setVisible(false);
-            }
-            // Connections added to activeConnections
-            else if (! connection->isVisible() && activeConnections.contains(ConnectionVar::fromVar(connection))) {
-                std::cout << "Add connection" << newLine;
-                // Add to audio
-                connectAudio(*connection);
-
-                connection->setVisible(true);
-            } else {
-                std::cout << "Schtruderloooder" << newLine;
-            }
-        }
-
-
-        // Depending on if connection is visible or not, make or remove the audio connections.
-        *//**//*for (auto connection : connections) {
-            // Get connections to make or remove
-            auto audioConnections = getAudioConnection(*connection);
-            for (auto audioConnection : audioConnections) {
-                // If connection is visible it should be created
-                if (connection->isVisible() && ! audioGraph.isConnected(audioConnection)) {
-                    if (audioGraph.isConnectionLegal(audioConnection)) {
-                        audioGraph.addConnection(audioConnection);
-                    }
-                }
-                // If connection is not visible it should be removed
-                else if (! connection->isVisible() && audioGraph.isConnected(audioConnection)) {
-                    audioGraph.removeConnection(audioConnection);
-                }
-            }
-        }*//**//*
+/*
+void EffectTreeBase::newEffect(ValueTree& tree) {
+    int processorID;
+    if (tree.hasProperty(Effect::IDs::processorID)) {
+        processorID = tree.getProperty(Effect::IDs::processorID);
+    } else {
+        processorID = -1;
     }
-*//*
-    //Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
+    String name;
+    if (tree.hasProperty(Effect::IDs::name)) {
+        name = tree.getProperty(Effect::IDs::name);
+    } else {
+        name = "Effect";
+    }
+    newEffect(name, processorID);
+
 }*/
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    std::cout << "VT child added" << newLine;
-    // if effect has been created already
-    if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
+    if (getFromTree<Effect>(childWhichHasBeenAdded) != nullptr) {
+        std::cout << "Add " << getFromTree<Effect>(childWhichHasBeenAdded)->getName() <<  " to " << parentTree.getType().toString() << newLine;
+    }
+
+
+
+    // ADD EFFECT
+    if (childWhichHasBeenAdded.hasType(EFFECT_ID))
+    {
+        if (parentTree != tree)
+        {
+            return;
+        }
+
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
                 e->setVisible(true);
@@ -373,9 +326,8 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
                 if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                     if (!parent->getChildren().contains(e)) {
                         parent->addAndMakeVisible(e);
-                        std::cout << "Pre pos: " << e->getPosition().toString() << newLine;
+
                         e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
-                        std::cout << "Post pos: " << e->getPosition().toString() << newLine;
                     }
                 }
             }
@@ -385,8 +337,20 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             // Create new effect
             auto e = new Effect(childWhichHasBeenAdded);
             childWhichHasBeenAdded.setProperty(IDs::effectTreeBase, e, nullptr);
+
+            if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+                parent->addAndMakeVisible(e);
+            }
         }
-    } else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
+    }
+    // ADD CONNECTION
+    else if (childWhichHasBeenAdded.hasType(CONNECTION_ID))
+    {
+        if (parentTree != tree)
+        {
+            return;
+        }
+
         ConnectionLine* line;
         // Add connection here
         if (! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
@@ -401,32 +365,134 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded, ConnectionLine::IDs::ConnectionLineObject);
             line->setVisible(true);
         }
-
+        line->toFront(false);
         connectAudio(*line);
+    }
+    // ADD PARAMETER
+    else if (childWhichHasBeenAdded.hasType(PARAMETER_ID))
+    {
+        // Avoid multiple constructor calls
+        if (parentTree != tree) {
+            return;
+        }
+
+        auto parent = getFromTree<Effect>(parentTree);
+        //todo simplify dis
+
+        Parameter* parameter;
+        if (! childWhichHasBeenAdded.hasProperty(Parameter::IDs::parameterObject)) {
+            // create parameter object
+            auto paramName = childWhichHasBeenAdded.getProperty("name").toString();
+            auto param = new MetaParameter(paramName);
+
+            parameter = new Parameter(param);
+            childWhichHasBeenAdded.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
+
+            parameter->setName(paramName);
+
+            int x = childWhichHasBeenAdded.getProperty("x");
+            int y = childWhichHasBeenAdded.getProperty("y");
+            parameter->setTopLeftPosition(x, y);
+        } else {
+            // Load to existing parameter object
+            parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
+            auto param = parameter->getParameter();
+
+            if (param->isMetaParameter()) {
+                audioGraph->addParameter(param);
+                // parameters add param (unique ptr)
+            }
+
+
+            if (! childWhichHasBeenAdded.hasProperty("x") && ! childWhichHasBeenAdded.hasProperty("y"))
+            {
+                auto parameters = parent->getParameters(false);
+                auto numParameters = parameters.size();
+                auto i = parameters.indexOf(param);
+
+                if (parameter->type == Parameter::combo) {
+                    if (parent->getNumInputs() > 0) {
+                        parameter->setTopLeftPosition(70, 80 + i * 50);
+                    } else {
+                        parameter->setTopLeftPosition(40, 80 + i * 50);
+                    }
+                } else {
+                    parameter->setTopLeftPosition(60, 70 + i * 50);
+                }
+                auto newBounds = getBounds().getUnion(
+                        Rectangle<int>(getX(), getY(),
+                                       parameter->getWidth() + 50, 50 + numParameters * 50));
+                setBounds(newBounds); // should always call resized()
+
+                childWhichHasBeenAdded.setProperty("x", parameter->getX(), nullptr);
+                childWhichHasBeenAdded.setProperty("y", parameter->getY(), nullptr);
+            }
+        }
+
+        // Add parameter component to effect
+        parent->addAndMakeVisible(parameter);
+        // Add in/out ports to parameter and parent effect
+        parameter->addChildComponent(parameter->getPort(true));
+        parent->addChildComponent(parameter->getPort(true));
+
+        resized();
     }
 }
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
-    std::cout << "VT child removed" << newLine;
+
+    // EFFECT
     if (childWhichHasBeenRemoved.hasType(EFFECT_ID)) {
         if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
             if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+
+                // Remove connections
+                //todo use connections refarray as Effect member for fast access
+                int childrenRemoved = 0; // Used for index-correcting
+                for (int i = 0; (i - childrenRemoved) < parentTree.getNumChildren(); i ++) {
+                    auto child = parentTree.getChild(i - childrenRemoved);
+                    if (child.hasType(CONNECTION_ID)) {
+                        auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
+
+                        if (e->hasConnection(connection)) {
+                            parentTree.removeChild(child, &undoManager);
+                            childrenRemoved++;
+                        }
+                    }
+                }
 
                 parent->removeChildComponent(e);
                 e->setVisible(false);
             }
         }
-    } else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
+    }
+    // CONNECTION
+    else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
         line->setVisible(false);
+
         disconnectAudio(*line);
+    }
+    // PARAMETER
+    else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {
+        auto parameter = getFromTree<Parameter>(childWhichHasBeenRemoved);
+        parameter->setVisible(false);
     }
 }
 
 template<class T>
 T *EffectTreeBase::getFromTree(const ValueTree &vt) {
-    return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
+    if (vt.hasProperty(IDs::effectTreeBase)) {
+        // Return effect
+        return dynamic_cast<T*>(vt.getProperty(IDs::effectTreeBase).getObject());
+    } else if (vt.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
+        // Return connection
+        return dynamic_cast<T*>(vt.getProperty(ConnectionLine::IDs::ConnectionLineObject).getObject());
+    } else if (vt.hasProperty(Parameter::IDs::parameterObject)) {
+        // Return parameter
+        return dynamic_cast<T*>(vt.getProperty(Parameter::IDs::parameterObject).getObject());
+    }
 }
 
 template<class T>
@@ -435,9 +501,11 @@ T *EffectTreeBase::getPropertyFromTree(const ValueTree &vt, Identifier property)
 }
 
 bool EffectTreeBase::keyPressed(const KeyPress &key) {
+
+#ifdef DEBUG_UTILITIES
     if (key.getKeyCode() == 's') {
         std::cout << "Audiograph status: " << newLine;
-        for (auto node : audioGraph.getNodes()) {
+        for (auto node : audioGraph->getNodes()) {
             if (node != nullptr) {
                 std::cout << "node: " << node->nodeID.uid << newLine;
                 std::cout << node->getProcessor()->getName() << newLine;
@@ -446,46 +514,104 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
             }
         }
     }
+    if (key.getKeyCode() == 'p') {
+        std::cout << "Main Position: " << getMouseXYRelative().toString() << newLine;
+        std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
+    }
+    if (key.getKeyCode() == 'e') {
+        if (auto e = dynamic_cast<EffectTreeBase*>(getComponentAt(getMouseXYRelative()))) {
+            auto tree = e->getTree();
+            std::cout << "Properties: " << newLine;
+            for (int i = 0; i < tree.getNumProperties(); i++) {
+                auto property = tree.getPropertyName(i);
+                std::cout << property.toString() << ": " << tree.getProperty(property).toString() << newLine;
+            }
+            if (tree.getNumChildren() > 0) {
+                std::cout << "Children: " << newLine;
+                for (int i = 0; i < tree.getNumChildren(); i++) {
+                    auto child = tree.getChild(i);
+
+                    std::cout << child.getType().toString() << newLine;
+                }
+            }
+        }
+    }
+    if (key.getKeyCode() == 'l') {
+        std::cout << "Available effects: " << newLine;
+        for (auto e : EffectLoader::getEffectsAvailable()) {
+            std::cout << e << newLine;
+        }
+    }
+#endif
+
+    if (key.getKeyCode() == KeyPress::spaceKey) {
+        if (deviceManager->getCurrentAudioDevice()->isPlaying()) {
+            deviceManager->getCurrentAudioDevice()->stop();
+        } else {
+            deviceManager->getCurrentAudioDevice()->start(processorPlayer);
+        }
+    }
+
     if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         for (const auto& selectedItem : selected.getItemArray()) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
                 auto lineTree = tree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
                 tree.removeChild(lineTree, &undoManager);
+            } else if (auto e = dynamic_cast<Effect*>(selectedItem.get())) {
+                effectsToDelete.add(e);
+                e->getTree().getParent().removeChild(e->getTree(), &undoManager);
             }
         }
     }
 
-    if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'z') {
-        std::cout << "Undo: " << undoManager.getUndoDescription() << newLine;
-        undoManager.undo();
-    } else if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'Z') {
-        std::cout << "Redo: " << undoManager.getRedoDescription() << newLine;
-        undoManager.redo();
+    // CTRL
+    if (key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown()) {
+        if (key.getKeyCode() == 'z') {
+            std::cout << "Undo: " << undoManager.getUndoDescription() << newLine;
+            undoManager.undo();
+        } else if ((key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown())
+                   && key.getKeyCode() == 'Z') {
+            std::cout << "Redo: " << undoManager.getRedoDescription() << newLine;
+            undoManager.redo();
+        }
+
+        if (key.getKeyCode() == 's') {
+            std::cout << "Save effects" << newLine;
+            auto savedState = storeEffect(tree).createXml();
+            std::cout << "Save state: " << savedState->toString() << newLine;
+            getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
+            getAppProperties().getUserSettings()->saveIfNeeded();
+        }
     }
 }
 
 EffectTreeBase::~EffectTreeBase() {
-    tree.removeAllProperties(&undoManager);
+    for (int i = 0; i < tree.getNumChildren(); i++) {
 
-    // Warning: may be a bad move.
-    /*if (getReferenceCount() > 0) {
-        std::cout << "Warning: Reference count greater than zero. Exceptions may occur" << newLine;
-        resetReferenceCount();
-    }*/
+        tree.getChild(i).removeProperty(IDs::effectTreeBase, nullptr);
+        tree.removeChild(i, nullptr);
+    }
+    if (getReferenceCount() > 0) {
+        incReferenceCount();
+        tree.removeAllProperties(nullptr);
+        decReferenceCountWithoutDeleting();
+    }
 }
-
 
 
 void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
+    menuPos = getMouseXYRelative();
     int result = m.show();
-
 }
 
 void EffectTreeBase::mouseDown(const MouseEvent &event) {
     std::cout << "Begin new transaction" << newLine;
     undoManager.beginNewTransaction(getName());
 
+    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        dragLine.startDrag(p, event);
+    }
 }
 
 void EffectTreeBase::mouseDrag(const MouseEvent &event) {
@@ -495,6 +621,7 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
     if (event.mods.isLeftButtonDown()) {
         // Line drag
         if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+            //TODO efficiency
             auto port = portToConnectTo(event, tree);
 
             if (port != nullptr) {
@@ -502,62 +629,19 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
             } else {
                 SelectHoverObject::resetHoverObject();
             }
+            dragLine.drag(event);
         }
-        /*
-        if (dynamic_cast<LineComponent *>(event.eventComponent)) {
-            // ParentToCheck is the container of possible things to connect to.
-            Component *parentToCheck;
-            if (dynamic_cast<AudioPort *>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent()->getParentComponent();
-            else if (dynamic_cast<InternalConnectionPort *>(event.originalComponent))
-                parentToCheck = event.originalComponent->getParentComponent();
-
-            //auto connectPort = portToConnectTo(newEvent, parentToCheck)
-            ConnectionPort::Ptr connectPort;
-            // Get port to connect to (if there is one)
-            auto newEvent = event.getEventRelativeTo(parentToCheck);
-
-            //TODO EffectScene and EffectTree parent under one subclass
-            ValueTree treeToCheck;
-            if (parentToCheck != this)
-                treeToCheck = dynamic_cast<Effect *>(parentToCheck)->getTree();
-            else
-                treeToCheck = tree;
-            connectPort = portToConnectTo(newEvent, treeToCheck);
-
-            if (connectPort != nullptr) {
-                setHoverComponent(connectPort);
-            } else
-                setHoverComponent(nullptr);
-
-        }*/
     }
 }
 
 void EffectTreeBase::mouseUp(const MouseEvent &event) {
-    if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-        if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent)) {
+    if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get()))
+        {
             // Call create on common parent
-            auto effect1 = dynamic_cast<EffectTreeBase*>(l->port1->getParentComponent());
-            auto effect2 = dynamic_cast<EffectTreeBase*>(port->getParentComponent());
-
-            auto newConnection = ValueTree(CONNECTION_ID);
-            newConnection.setProperty(ConnectionLine::IDs::InPort, port, nullptr);
-            newConnection.setProperty(ConnectionLine::IDs::OutPort, l->port1, nullptr);
-            //auto newConnection = new ConnectionLine(*port, *l->port1);
-
-            if (effect1->getParent() == effect2->getParent()) {
-                dynamic_cast<EffectTreeBase*>(effect1->getParent())->getTree().appendChild(newConnection, &undoManager);
-            } else if (effect1->getParent() == effect2) {
-                dynamic_cast<EffectTreeBase*>(effect2)->getTree().appendChild(newConnection, &undoManager);
-            } else if (effect2->getParent() == effect1) {
-                dynamic_cast<EffectTreeBase*>(effect1)->getTree().appendChild(newConnection, &undoManager);
-            } else {
-                std::cout << "what is parent???" << newLine;
-                std::cout << "Parent 1: " << l->port1->getParentComponent()->getName() << newLine;
-                std::cout << "Parent 2: " << port->getParentComponent()->getName() << newLine;
-            }
+            newConnection(port, dragLine.getPort1());
         }
+        dragLine.release(nullptr);
     }
 }
 
@@ -568,7 +652,6 @@ EffectTreeBase::EffectTreeBase(const ValueTree &vt) {
         setWantsKeyboardFocus(true);
 
         dragLine.setAlwaysOnTop(true);
-        LineComponent::setDragLine(&dragLine);
 }
 
 EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
@@ -576,31 +659,42 @@ EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
     setWantsKeyboardFocus(true);
 
     dragLine.setAlwaysOnTop(true);
-    LineComponent::setDragLine(&dragLine);
 }
 
-ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
-    ValueTree copy = tree;
+ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
+    ValueTree copy(tree.getType());
+    copy.copyPropertiesFrom(tree, nullptr);
 
     std::cout << "Storing: " << tree.getType().toString() << newLine;
 
     if (tree.hasType(EFFECT_ID)) {
-        // Recurse for children
+        // Remove unused properties
         copy.removeProperty(Effect::IDs::initialised, nullptr);
         copy.removeProperty(Effect::IDs::connections, nullptr);
 
-        // Set position property
-        /*auto pos = Position::fromVar(copy.getProperty(Effect::IDs::pos));
-        copy.setProperty("x", pos.x, nullptr);
-        copy.setProperty("y", pos.y, nullptr);
+        // Set properties based on object
+        if (auto effect = dynamic_cast<Effect*>(tree.getProperty(
+                IDs::effectTreeBase).getObject())) {
 
-        copy.removeProperty(Effect::IDs::pos, nullptr);
-*/
-        // Store object as ID
-        auto ptr = dynamic_cast<Effect*>(tree.getProperty(
-                IDs::effectTreeBase).getObject());
-        //copy.removeProperty(IDs::effectTreeBase, nullptr);
-        copy.setProperty("ID", reinterpret_cast<int64>(ptr), nullptr);
+            // Set size property
+            copy.setProperty(Effect::IDs::w, effect->getWidth(), nullptr);
+            std::cout << effect->getWidth() << " " << effect->getHeight() << newLine;
+            copy.setProperty(Effect::IDs::h, effect->getHeight(), nullptr);
+
+            // Set ID property (for port connections)
+            copy.setProperty("ID", reinterpret_cast<int64>(effect), nullptr);
+
+            // Set num ports
+            copy.setProperty("numInputPorts", effect->getNumInputs(), nullptr);
+            copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);
+
+            // Save parameter info
+            //copy.appendChild(effect->storeParameters(), nullptr);
+
+        } else {
+            std::cout << "dat shit is not initialised. do not store" << newLine;
+            return ValueTree();
+        }
     }
 
     if (tree.hasType(EFFECTSCENE_ID) || tree.hasType(EFFECT_ID)) {
@@ -608,14 +702,33 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
 
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto child = tree.getChild(i);
-            copy.appendChild(child, nullptr);
 
-            if (child.hasType(EFFECT_ID)) {
-                storeEffect(child);
+            // Register child effect
+            if (child.hasType(EFFECT_ID))
+            {
+                auto childTreeToStore = storeEffect(child);
+                if (childTreeToStore.isValid()) {
+                    copy.appendChild(childTreeToStore, nullptr);
+                }
             }
+            // Register parameter
+            else if (child.hasType(PARAMETER_ID))
+            {
+                auto childObject = getFromTree<Parameter>(child);
+                auto childParam = ValueTree(PARAMETER_ID);
 
+                childParam.setProperty("x", childObject->getX(), nullptr);
+                childParam.setProperty("y", childObject->getY(), nullptr);
+
+                childParam.setProperty("name", childObject->getName(), nullptr);
+                childParam.setProperty("type", childObject->type, nullptr);
+                childParam.setProperty("value", childObject->getParameter()->getValue(), nullptr);
+
+                copy.appendChild(childParam, nullptr);
+            }
             // Register connection
-            if (child.hasType(CONNECTION_ID)) {
+            else if  (child.hasType(CONNECTION_ID))
+            {
                 // Get data to set
                 auto inPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::InPort);
                 auto outPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::OutPort);
@@ -642,68 +755,70 @@ ValueTree EffectTreeBase::storeEffect(ValueTree &tree) {
                                             (dynamic_cast<InternalConnectionPort*>(outPortObject) != nullptr), nullptr);
 
                 // Set data to ValueTree
-                child.copyPropertiesFrom(connectionToSet, nullptr);
+                copy.appendChild(connectionToSet, nullptr);
             }
         }
-    }
-
-    std::cout << "Properties" << newLine;
-    for (int i = 0; i < copy.getNumProperties(); i++) {
-        std::cout << copy.getPropertyName(i).toString() << newLine;
-    }
-    std::cout << "Children" << newLine;
-    for (int i = 0; i < copy.getNumChildren(); i++) {
-        std::cout << copy.getChild(i).getType().toString() << newLine;
     }
 
     return copy;
 }
 
 //todo storageIDs
-void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
+void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
-    if (loadData.hasType(EFFECT_ID)) {
-        copy.copyPropertiesFrom(loadData, nullptr);
-/*
-        // Set position property
-        int x = loadData.getProperty("x");
-        int y = loadData.getProperty("y");
-        copy.setProperty(Effect::IDs::pos, Position::toVar(Point<int>(x,y)), nullptr);*/
+    // Effectscene added first
+    if (loadData.hasType(EFFECTSCENE_ID)) {
+        // Set children of Effectscene, and object property
+        auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
+
+        copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
+        parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
+
+        // Load child effects
+        for (int i = 0; i < loadData.getNumChildren(); i++) {
+            auto child = loadData.getChild(i);
+            if (child.hasType(EFFECT_ID)) {
+                loadEffect(parentTree, child);
+            }
+        }
     }
+    // Create effects by adding them to valuetree
+    else if (loadData.hasType(EFFECT_ID)) {
+        copy.copyPropertiesFrom(loadData, nullptr);
+        parentTree.appendChild(copy, &undoManager);
 
-    // Load child effects
-
-    if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
+        // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
             if (child.hasType(EFFECT_ID)) {
                 loadEffect(copy, child);
             }
         }
+
+/*
+        // Load parameters
+        auto effect = getFromTree<Effect>(copy);
+        if (effect != nullptr && loadData.getChildWithName("parameters").isValid()) {
+            effect->loadParameters(loadData.getChildWithName("parameters"));
+        }
+*/
+
+        //loadData.getChild("parameters")
     }
 
-    // Create effects by adding them to valuetree
-
-    if (loadData.hasType(EFFECT_ID)) {
-        parentTree.appendChild(copy, &undoManager);
-    } else if (loadData.hasType(EFFECTSCENE_ID)) {
-        // Set children of Effectscene, and object property
-        auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
-
-        copy.removeAllProperties(nullptr);
-
-        copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
-        parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
-    }
-
-
-
-    // After effects created, add connections.
-
+    // Add Connections
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
+
+            if (child.hasType(PARAMETER_ID)) {
+                ValueTree paramChild(PARAMETER_ID);
+                paramChild.copyPropertiesFrom(child, nullptr);
+
+                copy.appendChild(paramChild, nullptr);
+            }
+            // CONNECTION
             if (child.hasType(CONNECTION_ID)) {
                 // Set data
                 ValueTree connectionToSet(CONNECTION_ID);
@@ -711,83 +826,180 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, ValueTree &loadData) {
                 int64 inPortEffectID = child.getProperty("inPortEffect");
                 int64 outPortEffectID = child.getProperty("outPortEffect");
 
-                auto in = parentTree.getChildWithProperty("ID", inPortEffectID);
-                auto out = parentTree.getChildWithProperty("ID", outPortEffectID);
+                bool inPortIsInternal = child.getProperty("inPortIsInternal");
+                bool outPortIsInternal = child.getProperty("outPortIsInternal");
+
+                ValueTree in;
+                ValueTree out;
+                if (parentTree.getChildWithProperty("ID", inPortEffectID).isValid()) {
+                    in = parentTree.getChildWithProperty("ID", inPortEffectID);
+                } else {
+                    in = copy.getChildWithProperty("ID", inPortEffectID);
+                }
+                if (parentTree.getChildWithProperty("ID", outPortEffectID).isValid()) {
+                    out = parentTree.getChildWithProperty("ID", outPortEffectID);
+                } else {
+                    out = copy.getChildWithProperty("ID", outPortEffectID);
+                }
 
                 auto inEffect = getFromTree<Effect>(in);
                 auto outEffect = getFromTree<Effect>(out);
 
-                auto inPortIsInternal = in.getProperty("inPortIsInternal");
-                auto outPortIsInternal = out.getProperty("outPortIsInternal");
+                if (inEffect == NULL || outEffect == NULL) {
+                    return; //todo return bool?
+                }
 
-                if (inPortIsInternal || outPortIsInternal) {
+                auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"), inPortIsInternal);
+                auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"), outPortIsInternal);
 
-                    std::cout << "internal port" << newLine;
-                    //todo
-                    continue;
+                if (inPort == NULL || outPort == NULL) {
+                    return;
+                }
+
+                connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
+                connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
+
+                if ((inPortIsInternal || outPortIsInternal)
+                        || (in.getParent() == copy && out.getParent() == copy)) {
+                    copy.appendChild(connectionToSet, nullptr);
                 } else {
-                    if (inEffect == NULL || outEffect == NULL) {
-                        return; //todo return bool?
-                    }
-
-                    auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"));
-                    auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"));
-
-                    if (inPort == NULL || outPort == NULL) {
-                        return;
-                    }
-
-                    connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
-                    connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
-
                     parentTree.appendChild(connectionToSet, nullptr);
                 }
             }
         }
     }
-
-
 }
 
+void EffectTreeBase::createGroupEffect() {
+    undoManager.beginNewTransaction("Create Group Effect");
+    // Create new effect
+    auto newEffectTree = newEffect("Effect", -1);
+    auto newE = getFromTree<Effect>(newEffectTree);
+    newE->setSize(300, 300);
 
-/*void GuiEffect::parentHierarchyChanged() {
-    // Children of parents who receive the change signal should ignore it.
-    if (currentParent == getParentComponent())
-        return;
+    // Save any connections to be broken
+    Array<ConnectionLine::Ptr> connectionsToChange;
 
-    if (getParentComponent() == nullptr){
-        setTopLeftPosition(getPosition() + currentParent->getPosition());
-        currentParent = nullptr;
-    } else {
-        if (hasBeenInitialised) {
-            Component* parent = getParentComponent();
-            while (parent != getTopLevelComponent()) {
-                setTopLeftPosition(getPosition() - parent->getPosition());
-                parent = parent->getParentComponent();
+    for (int i = 0; i < tree.getNumChildren(); i++) {
+        auto child = tree.getChild(i);
+        if (child.hasType(CONNECTION_ID)) {
+            auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
+            for (auto s : selected.getItemArray()) {
+                if (auto e = dynamic_cast<Effect*>(s.get())) {
+                    if (e->hasConnection(connection))
+                    {
+                        connectionsToChange.add(connection);
+                    }
+                }
             }
         }
-        currentParent = getParentComponent();
     }
-    Component::parentHierarchyChanged();
-}*/
 
+    // Add effects to new
+    for (auto s : selected.getItemArray()) {
+        if (auto e = dynamic_cast<Effect*>(s.get())) {
+            // Adjust new effect size
+            newE->setBounds(newE->getBounds().getUnion(e->getBounds().expanded(20)));
 
+            //TODO from here
+            auto newEffectPos = newE->getLocalPoint(e->getParentComponent(), e->getPosition());
 
+            // Reassign parent //TODO reassign() + pos change and shit
+            e->getTree().getParent().removeChild(e->getTree(), &undoManager); // Auto-disconnects connections
+            newEffectTree.appendChild(e->getTree(), &undoManager);
+
+            e->setTopLeftPosition(newEffectPos);
+        }
+    }
+    // Add new connections
+    for (auto c : connectionsToChange) {
+        if (! selected.getItemArray().contains(dynamic_cast<Effect*>(c->getOutPort()->getParentComponent()))){
+            // Create connection going from this to outPort parent
+            // Create Output port and internal
+            auto newPort = newE->addPort(Effect::getDefaultBus(), false);
+            // Connect internal
+            auto inConnection = newConnection(c->getInPort(), newPort->internalPort);
+            newEffectTree.appendChild(inConnection, &undoManager);
+            // Connect external
+            auto outConnection = newConnection(c->getOutPort(), newPort);
+            newEffectTree.appendChild(outConnection, &undoManager);
+        } else if (! selected.getItemArray().contains(dynamic_cast<Effect*>(c->getInPort()->getParentComponent()))) {
+            // Create connection going from inPort parent to this
+            // Create Input port and internal
+            auto newPort = newE->addPort(Effect::getDefaultBus(), true);
+            // Connect internal
+            auto inConnection = newConnection(c->getOutPort(), newPort->internalPort);
+            newEffectTree.appendChild(inConnection, &undoManager);
+            // Connect external
+            auto outConnection = newConnection(c->getInPort(), newPort);
+            newEffectTree.appendChild(outConnection, &undoManager);
+        } else {
+            auto connection = newConnection(c->getInPort(), c->getOutPort());
+            tree.appendChild(connection, &undoManager);
+        }
+    }
+
+    selected.deselectAll();
+}
+
+ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPort::Ptr port2) {
+    ConnectionPort::Ptr inPort;
+    ConnectionPort::Ptr outPort;
+    if (port1->isInput) {
+        inPort = port1;
+        outPort = port2;
+    } else {
+        inPort = port2;
+        outPort = port1;
+    }
+
+    // Get port parents - Remember that input port is for output effect and vice versa.
+    auto effect1 = dynamic_cast<Effect*>(outPort->getParentComponent());
+    auto effect2 = dynamic_cast<Effect*>(inPort->getParentComponent());
+
+    auto newConnection = ValueTree(CONNECTION_ID);
+    newConnection.setProperty(ConnectionLine::IDs::InPort, inPort.get(), nullptr);
+    newConnection.setProperty(ConnectionLine::IDs::OutPort, outPort.get(), nullptr);
+    //auto newConnection = new ConnectionLine(*port, *l->port1);
+    std::cout << "Effect1: " << effect1 << newLine;
+
+    if (effect1->getParent() == effect2->getParent()) {
+        if (effect1 == effect2) {
+            //todo fuckin motherfuckin dumbass exception case
+            std::cout << "oh, fuck you.." << newLine;
+        }
+
+        dynamic_cast<EffectTreeBase*>(effect1->getParent())->getTree().appendChild(newConnection, &undoManager);
+    } else if (effect1->getParent() == effect2) {
+        dynamic_cast<EffectTreeBase*>(effect2)->getTree().appendChild(newConnection, &undoManager);
+    } else if (effect2->getParent() == effect1) {
+        dynamic_cast<EffectTreeBase*>(effect1)->getTree().appendChild(newConnection, &undoManager);
+    }
+
+    return newConnection;
+}
+
+Point<int> EffectTreeBase::getMenuPos() const {
+    return menuPos;
+}
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
-    //tree = vt;
-
     if (vt.hasProperty(IDs::processorID)) {
 
-        // Individual processor
+        // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
         int id = vt.getProperty(IDs::processorID);
+
+        auto currentDevice = deviceManager->getCurrentDeviceTypeObject();
+
         switch (id) {
             case 0:
-                newProcessor = std::make_unique<InputDeviceEffect>();
+                newProcessor = std::make_unique<InputDeviceEffect>(currentDevice->getDeviceNames(true),
+                       currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(), true));
                 break;
             case 1:
-                newProcessor = std::make_unique<OutputDeviceEffect>();
+                newProcessor = std::make_unique<OutputDeviceEffect>(currentDevice->getDeviceNames(false),
+                        currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(), false));
                 break;
             case 2:
                 newProcessor = std::make_unique<DistortionEffect>();
@@ -798,27 +1010,47 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
             default:
                 std::cout << "ProcessorID not found." << newLine;
         }
-        node = audioGraph.addNode(move(newProcessor));
+        node = audioGraph->addNode(move(newProcessor));
+
+        node->incReferenceCount();
 
         // Create from node:
         setProcessor(node->getProcessor());
-    } else {
+    }
+    // Custom Effect
+    else {
+        int numInputPorts = tree.getProperty("numInputPorts", 0);
+        int numOutputPorts = tree.getProperty("numOutputPorts", 0);
+
+        for (int i = 0; i < numInputPorts; i++) {
+            addPort(getDefaultBus(), true);
+        }
+        for (int i = 0; i < numOutputPorts; i++) {
+            addPort(getDefaultBus(), false);
+        }
+
         // Make edit mode true by default
         setEditMode(true);
+
+        parameters = new AudioProcessorParameterGroup();
     }
 
     // Set name
-    if (isIndividual()) {
-        tree.setProperty(IDs::name, processor->getName(), nullptr);
-    } else {
-        tree.setProperty(IDs::name, "Effect", nullptr);
+    if (! tree.hasProperty(IDs::name)) {
+        if (isIndividual()) {
+            tree.setProperty(IDs::name, processor->getName(), nullptr);
+        } else {
+            tree.setProperty(IDs::name, "Effect", nullptr);
+        }
     }
 
+    int x = tree.getProperty(IDs::x, 0);
+    int y = tree.getProperty(IDs::y, 0);
+    int w = tree.getProperty(IDs::w, 200);
+    int h = tree.getProperty(IDs::h, 200);
 
-    int x = tree.getProperty(IDs::x);
-    int y = tree.getProperty(IDs::y);
     //Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
-    setBounds(x, y, 200,200);
+    setBounds(x, y, w, h);
 
     addAndMakeVisible(resizer);
 
@@ -855,13 +1087,42 @@ void Effect::setupTitle() {
     };
 
     addAndMakeVisible(title);
+
+    if (! tree.hasProperty(IDs::processorID) && appState != loading) {
+        //title.grabKeyboardFocus();
+        title.setWantsKeyboardFocus(true);
+        title.showEditor();
+    }
 }
 
 void Effect::setupMenu() {
-    menu.addItem("Toggle Edit Mode", [=]() {
+    PopupMenu::Item toggleEditMode("Toggle Edit Mode");
+    toggleEditMode.setAction([=]() {
         setEditMode(!editMode);
     });
-    menu.addItem("Change Effect Image..", [=]() {
+
+    menu.addItem(toggleEditMode);
+    editMenu.addItem(toggleEditMode);
+
+    if (!isIndividual()) {
+        PopupMenu::Item saveEffect("Save Effect");
+        saveEffect.setAction([=]() {
+            auto saveTree = storeEffect(tree);
+            if (saveTree.isValid()) {
+                EffectLoader::saveEffect(saveTree);
+                getParentComponent()->postCommandMessage(0);
+            } else {
+                std::cout << "invalid, mothafucka." << newLine;
+            }
+
+        });
+
+        menu.addItem(saveEffect);
+        editMenu.addItem(saveEffect);
+    }
+
+
+    editMenu.addItem("Change Effect Image..", [=]() {
         FileChooser imgChooser ("Select Effect Image..",
                                 File::getSpecialLocation (File::userHomeDirectory),
                                 "*.jpg;*.png;*.gif");
@@ -872,21 +1133,32 @@ void Effect::setupMenu() {
         }
     });
 
-    editMenu.addItem("Add Input Port", [=]() {
+    PopupMenu portSubMenu;
+    portSubMenu.addItem("Add Input Port", [=]() {
         addPort(getDefaultBus(), true); resized();
     });
-    editMenu.addItem("Add Output Port", [=](){
+    portSubMenu.addItem("Add Output Port", [=](){
         addPort(getDefaultBus(), false); resized();
     });
-    editMenu.addItem("Toggle Edit Mode", [=]() {
-        setEditMode(!editMode);
+    editMenu.addSubMenu("Add Port..", portSubMenu);
+
+    PopupMenu parameterSubMenu;
+    parameterSubMenu.addItem("Add Slider", [=] () {
+        Parameter& newParam = addParameter(new MetaParameter("New Parameter"));
+        newParam.setCentrePosition(getMouseXYRelative());
     });
+    editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
+
 }
 
 Effect::~Effect()
 {
-    // Delete processor from graph
-    audioGraph.removeNode(node->nodeID);
+    if (node != nullptr) {
+        std::cout << "Reference count: " << node->getReferenceCount() << newLine;
+        while (node->getReferenceCount() > 1) {
+            node->decReferenceCount();
+        }
+    }
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -898,14 +1170,14 @@ void Effect::setProcessor(AudioProcessor *processor) {
     node->getProcessor()->setPlayConfigDetails(
             processor->getTotalNumInputChannels(),
             processor->getTotalNumOutputChannels(),
-            audioGraph.getSampleRate(),
-            audioGraph.getBlockSize());
+            audioGraph->getSampleRate(),
+            audioGraph->getBlockSize());
 
     // Set up ports based on processor buses
     int numInputBuses = processor->getBusCount(true );
     int numBuses = numInputBuses + processor->getBusCount(false);
     for (int i = 0; i < numBuses; i++){
-        bool isInput = (i < numInputBuses) ? true : false;
+        bool isInput = i < numInputBuses;
         // Get bus from processor
         auto bus = isInput ? processor->getBus(true, i) :
                    processor->getBus(false, i - numInputBuses);
@@ -924,10 +1196,6 @@ void Effect::setProcessor(AudioProcessor *processor) {
     if (numParams > 0) {
         setBounds(getBounds().expanded(40, numParams * 20));
     }
-
-    // Update
-    resized();
-    repaint();
 }
 
 /**
@@ -935,18 +1203,25 @@ void Effect::setProcessor(AudioProcessor *processor) {
  * @param pos relative to this component (no conversion needed here)
  * @return nullptr if no match, ConnectionPort* if found
  */
-ConnectionPort::Ptr Effect::checkPort(Point<int> pos) {
+ConnectionPort* Effect::checkPort(Point<int> pos) {
     for (auto p : inputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
+        {
             return p;
-        else if (p->internalPort->contains(p->internalPort->getLocalPoint(this, pos)))
-            return p->internalPort;
+        } else if (p->getInternalConnectionPort()->contains(
+                p->getInternalConnectionPort()->getLocalPoint(this, pos)))
+        {
+            return p->getInternalConnectionPort().get();
+        }
     }
     for (auto p : outputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
+        {
             return p;
-        else if (p->internalPort->contains(p->internalPort->getLocalPoint(this, pos)))
-            return p->internalPort;
+        } else if (p->getInternalConnectionPort()->contains(p->getInternalConnectionPort()->getLocalPoint(this, pos)))
+        {
+            return p->getInternalConnectionPort().get();
+        }
     }
     return nullptr;
 }
@@ -957,45 +1232,69 @@ void Effect::setEditMode(bool isEditMode) {
 
     // Turn on edit mode
     if (isEditMode) {
-        for (auto c : getChildren()) {
-            c->setAlwaysOnTop(true);
-            if (!dynamic_cast<AudioPort*>(c))
-                c->setInterceptsMouseClicks(true, true);
+        // Set child effects and connections to editable
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            auto c = getFromTree<Component>(tree.getChild(i));
+            c->toFront(false);
+            c->setInterceptsMouseClicks(true, true);
 
+            if (dynamic_cast<Effect*>(c)) {
+                c->setVisible(true);
+            }
         }
+
+        for (auto l : {inputPorts, outputPorts}) {
+            for (auto p : l) {
+                p->setColour(0, Colours::whitesmoke);
+                p->internalPort->setVisible(true);
+            }
+        }
+
+        for (auto c : getChildren()) {
+            if (auto p = dynamic_cast<Parameter*>(c)) {
+                p->setEditMode(true);
+            }
+        }
+
         title.setMouseCursor(MouseCursor::IBeamCursor);
         title.setInterceptsMouseClicks(true, true);
 
         title.setColour(title.textColourId, Colours::whitesmoke);
-
-        for (auto p : inputPorts) {
-            p->setColour(0, Colours::whitesmoke);
-        }
-        for (auto p : outputPorts) {
-            p->setColour(0, Colours::whitesmoke);
-        }
-
-        auto size = getBounds().expanded(50);
-        setSize(size.getX(), size.getY());
     }
 
     // Turn off edit mode
-    else if (!isEditMode) {
-        for (auto c : getChildren()) {
-            c->setAlwaysOnTop(false);
-            if (!dynamic_cast<AudioPort*>(c))
-                c->setInterceptsMouseClicks(false, false);
+    else if (! isEditMode) {
+
+        bool hideEffects = image.isValid();
+        std::cout << "Image valid: " << hideEffects << newLine;
+
+        // Make child effects and connections not editable
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            auto c = getFromTree<Component>(tree.getChild(i));
+            c->toBack();
+            c->setInterceptsMouseClicks(false, false);
+            if (dynamic_cast<Effect*>(c)) {
+                c->setVisible(! hideEffects);
+            }
         }
+
+        for (auto l : {inputPorts, outputPorts}) {
+            for (auto p : l) {
+                p->setColour(0, Colours::black);
+                p->internalPort->setVisible(false);
+            }
+        }
+
+        for (auto c : getChildren()) {
+            if (auto p = dynamic_cast<Parameter*>(c)) {
+                p->setEditMode(false);
+                p->setInterceptsMouseClicks(false, true);
+            }
+        }
+
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
         title.setColour(title.textColourId, Colours::black);
-
-        for (auto p : inputPorts) {
-            p->setColour(0, Colours::black);
-        }
-        for (auto p : outputPorts) {
-            p->setColour(0, Colours::black);
-        }
     }
 
     editMode = isEditMode;
@@ -1003,98 +1302,33 @@ void Effect::setEditMode(bool isEditMode) {
 }
 
 void Effect::setParameters(const AudioProcessorParameterGroup *group) {
-    // Individual
     for (auto param : group->getParameters(false)) {
         addParameter(param);
     }
-    for (auto c : getChildren())
-        std::cout << c->getName() << newLine;
 }
 
-void Effect::addParameter(AudioProcessorParameter *param) {
+Parameter& Effect::addParameter(AudioProcessorParameter *param)
+{
+    ValueTree parameter(PARAMETER_ID);
 
-    //todo parent class for dis shit pllssss
-    if (param->isBoolean()) {
-        // add bool parameter
-        ToggleButton* button = new ToggleButton();
+    auto parameterGui = new Parameter(param);
+    parameter.setProperty(Parameter::IDs::parameterObject, parameterGui, nullptr);
 
-        ButtonListener* listener = new ButtonListener(param);
-        button->addListener(listener);
-        button->setName("Button");
-        button->setBounds(20,50, 100, 40);
-    } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
-        // add combo parameter
-        ComboBox* comboBox = new ComboBox();
+    tree.appendChild(parameter, &undoManager);
 
-        for (auto s : param->getAllValueStrings())
-            comboBox->addItem(s, param->getAllValueStrings().indexOf(s));
-
-        ComboListener* listener = new ComboListener(param);
-
-        comboBox->addListener(listener);
-        comboBox->setName("ComboBox");
-        comboBox->setBounds(20, 50, 100, 40);
-
-        addAndMakeVisible(comboBox);
-    } else if (param->isDiscrete()) {
-        // add int parameter
-        Slider* slider = new Slider();
-        auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
-
-        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                               1, paramRange.skew));
-        SliderListener* listener = new SliderListener(param);
-        slider->addListener(listener);
-        slider->setName("Slider");
-        slider->setBounds(20, 50, 100, 40);
-
-        addAndMakeVisible(slider);
-    } else {
-        // add float parameter
-        Slider* slider = new Slider();
-        auto paramRange = dynamic_cast<RangedAudioParameter*>(param)->getNormalisableRange();
-
-        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                               paramRange.interval, paramRange.skew));
-        SliderListener* listener = new SliderListener(param);
-        slider->addListener(listener);
-        slider->setName("Slider");
-
-
-        auto label = new Label(param->getName(30), param->getName(30));
-        label->setFont(Font(15, Font::FontStyleFlags::bold));
-        label->setColour(Label::textColourId, Colours::black);
-
-        slider->setTextBoxIsEditable(true);
-        slider->setValue(param->getValue(), dontSendNotification);
-
-        auto i = parameters->getParameters(false).indexOf(param);
-
-        slider->setBounds(40 , 40 + (i * 70), 150, 70);
-        addAndMakeVisible(slider);
-
-        label->setBounds(slider->getX(), slider->getY() + 5, slider->getWidth(), 20);
-        addAndMakeVisible(label);
-
-        slider->hideTextBox(false);
-        slider->hideTextBox(true);
-
-        resize(slider->getWidth() + 100, getHeight());
-    }
+    return *parameterGui;
 }
 
 
-void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
+AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     auto p = isInput ?
-             inputPorts.add(std::make_unique<AudioPort>(isInput)) :
-             outputPorts.add(std::make_unique<AudioPort>(isInput));
+             inputPorts.add(new AudioPort(isInput)) :
+             outputPorts.add(new AudioPort(isInput));
     p->bus = bus;
     if (editMode){
         p->setColour(p->portColour, Colours::whitesmoke);
     }
     addAndMakeVisible(p);
-
-    resized();
 
     if (!isIndividual()) {
         addChildComponent(p->internalPort.get());
@@ -1103,10 +1337,12 @@ void Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
 
         p->internalPort->setColour(p->portColour, Colours::whitesmoke);
         p->internalPort->setCentrePosition(getLocalPoint(p, p->centrePoint + d));
-        p->internalPort->setVisible(editMode);
+        p->internalPort->setVisible(true);
     } else {
         p->internalPort->setVisible(false);
     }
+
+    return p;
 }
 
 
@@ -1153,19 +1389,14 @@ void Effect::mouseDown(const MouseEvent &event) {
     }
 
     if (event.mods.isLeftButtonDown()) {
-        if (editMode) {
-            //TODO make lasso functionality static
-            /*if (event.mods.isLeftButtonDown() && event.originalComponent == this) {
-                lasso.setVisible(true);
-                lasso.beginLasso(event, this);
-            }*/
-        } else {
-            // Drag
-            setAlwaysOnTop(true);
-            if (event.mods.isLeftButtonDown()) {
-                dragger.startDraggingComponent(this, event);
-            }
+        //todo static lasso functionality?
+
+        // Drag
+        setAlwaysOnTop(true);
+        if (event.mods.isLeftButtonDown()) {
+            dragger.startDraggingComponent(this, event);
         }
+
     } else if (event.mods.isRightButtonDown()) {
         // Send info upwards for menu
         //TODO don't do this, call custom menu function
@@ -1200,10 +1431,9 @@ void Effect::mouseDrag(const MouseEvent &event) {
         if (dynamic_cast<Effect*>(event.originalComponent)) {
             // Effect drag
             if (auto newParent = effectToMoveTo(event, tree.getParent())) {
+                std::cout << "new parent: " << newParent->getName() << newLine;
                 if (newParent != getFromTree<Effect>(tree.getParent())) {
-                    tree.getParent().removeChild(tree, &undoManager);
-                    newParent->getTree().appendChild(tree, &undoManager);
-                    //hoverOver(newParent);
+                    reassignNewParent(newParent);
 
                     if (newParent != this) {
                         SelectHoverObject::setHoverComponent(newParent);
@@ -1226,37 +1456,58 @@ void Effect::mouseUp(const MouseEvent &event) {
     setPos(getBoundsInParent().getPosition());
 
     if (event.eventComponent == event.originalComponent) {
-        if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
-            // open menu
-            if (editMode) {
-                callMenu(editMenu);
-            } else {
-                callMenu(menu);
+        if (event.getDistanceFromDragStart() < 10) {
+            if (event.mods.isLeftButtonDown() && ! event.mods.isCtrlDown()) {
+                addSelectObject(this);
             }
-        } else return;
+            if (event.mods.isRightButtonDown() ||
+                       event.mods.isCtrlDown()) {
+                // open menu
+                menuPos = event.getPosition();
+                if (editMode) {
+                    callMenu(editMenu);
+                } else {
+                    callMenu(menu);
+                }
+            }
+        }
     }
 
     /*if (lasso.isVisible())
         lasso.endLasso();*/
+    if (dynamic_cast<ParameterPort*>(event.originalComponent)) {
+        auto port1 = dynamic_cast<ParameterPort*>(dragLine.getPort1());
+        auto port2 = dynamic_cast<ParameterPort*>(hoverComponent.get());
 
-    if (event.mods.isLeftButtonDown()) {
-        // If the component is an effect, respond to move effect event
-        if (Effect *effect = dynamic_cast<Effect *>(event.originalComponent)) {
-            if (event.getDistanceFromDragStart() < 10) {
-                // Consider this a click and not a drag
-                selected.addToSelection(dynamic_cast<GuiObject*>(event.eventComponent));
-                event.eventComponent->repaint();
+        if (port1 != nullptr && port2 != nullptr) {
+
+            // InPort belongs to Internal parameter, but is child of parent effect.
+            auto inPort = port1->isInput ? port2 : port1;
+            auto outPort = port1->isInput ? port1 : port2;
+
+            // Connect internal Parameter2 to external Parameter1
+            auto e = dynamic_cast<Effect*>(getParentComponent());
+            auto inParameter = e->getParameterForPort(inPort);
+
+            auto outParameter = dynamic_cast<Parameter*>(outPort->getParentComponent());
+
+            if (inParameter == nullptr || outParameter == nullptr) {
+                std::cout << "Failed to connect parameters!" << newLine;
+                dragLine.release(nullptr);
+                return;
             }
 
-        }
-        // If component is LineComponent, respond to line drag event
-        else if (auto l = dynamic_cast<LineComponent *>(event.eventComponent)) {
-            EffectTreeBase::mouseUp(event);
-        }
-    }
+            // Connect
+            outParameter->connect(inParameter);
 
-    for (auto i : selected){
-        std::cout << i->getName() << newLine;
+            auto newConnection = new ConnectionLine(*port1, *port2);
+            port1->getDragLineParent()->addAndMakeVisible(newConnection);
+        } else {
+            dragLine.release(nullptr);
+        }
+    } else {
+        // Call ConnectionPort connect
+        EffectTreeBase::mouseUp(event);
     }
 }
 
@@ -1270,38 +1521,42 @@ void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, co
             int y = treeWhosePropertyHasChanged.getProperty(IDs::y);
             setTopLeftPosition(getX(), y);
         } else if (property == IDs::w) {
-            int w = treeWhosePropertyHasChanged.getProperty(IDs::w);
-            setSize(w, getHeight());
+            if (undoManager.isPerformingUndoRedo()) {
+                int w = tree.getProperty(IDs::w);
+                setSize(w, getHeight());
+            }
         } else if (property == IDs::h) {
-            int h = treeWhosePropertyHasChanged.getProperty(IDs::h);
-            setSize(h, getWidth());
+            if (undoManager.isPerformingUndoRedo()) {
+                int h = tree.getProperty(IDs::h);
+                setSize(h, getWidth());
+            }
         } else if (property == IDs::name) {
             auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
-            auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
+            if (e != nullptr) {
+                auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
 
-            e->setName(newName);
-            e->title.setText(newName, sendNotificationAsync);
+                e->setName(newName);
+                e->title.setText(newName, sendNotificationAsync);
+            }
+        } else if (property == EffectTreeBase::IDs::effectTreeBase) {
+            std::cout << "bro wut" << newLine;
         }
     }
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
 
 void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
+    std::cout << "Parent changed" << newLine;
     if (treeWhoseParentHasChanged == tree) {
 
     }
 }
 
 void Effect::resized() {
-    /*if (! undoManager.isPerformingUndoRedo()) {
-        int w = tree.getProperty(IDs::w);
-        int h = tree.getProperty(IDs::h);
-        if (getWidth() != w) {
-            tree.setProperty(IDs::w, getWidth(), &undoManager);
-        } else if (getHeight() != h) {
-            tree.setProperty(IDs::h, getHeight(), &undoManager);
-        }
-    }*/
+    if (! undoManager.isPerformingUndoRedo()) {
+        tree.setProperty(IDs::w, getWidth(), &undoManager);
+        tree.setProperty(IDs::h, getHeight(), &undoManager);
+    }
 
     // Position Ports
     inputPortPos = inputPortStartPos;
@@ -1315,6 +1570,16 @@ void Effect::resized() {
         p->setCentrePosition(getWidth() - portIncrement, outputPortPos);
         p->internalPort->setCentrePosition(getWidth() - portIncrement - 50, outputPortPos);
         outputPortPos += portIncrement;
+    }
+
+    int i = 0;
+    for (auto c : getChildren()) {
+        if (auto parameter = dynamic_cast<Parameter*>(c)) {
+            auto paramPort = parameter->getPort(true);
+
+            paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
+            i++;
+        }
     }
 
     title.setBounds(30,30,200, title.getFont().getHeight());
@@ -1368,6 +1633,13 @@ void Effect::paint(Graphics& g) {
     g.strokePath(outlineRect, outlineStroke);
 }
 
+void Effect::reassignNewParent(EffectTreeBase* newParent) {
+    auto parent = tree.getParent();
+
+    parent.removeChild(tree, &undoManager);
+    newParent->getTree().appendChild(tree, &undoManager);
+}
+
 void Effect::setParent(EffectTreeBase &parent) {
     parent.getTree().appendChild(tree, &undoManager);
 }
@@ -1377,13 +1649,6 @@ void Effect::setPos(Point<int> newPos) {
     tree.setProperty("y", newPos.getY(), &undoManager);
 }
 
-bool Effect::keyPressed(const KeyPress &key) {
-    if (key == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
-        effectsToDelete.add(this);
-        tree.getParent().removeChild(tree, &undoManager);
-    }
-    return EffectTreeBase::keyPressed(key);
-}
 
 void Effect::hoverOver(EffectTreeBase *newParent) {
     if (newParent->getWidth() < getParentWidth() || newParent->getHeight() < getParentHeight()) {
@@ -1417,11 +1682,18 @@ int Effect::getPortID(const ConnectionPort *port) {
     return -1;
 }
 
-AudioPort *Effect::getPortFromID(const int id) {
+ConnectionPort* Effect::getPortFromID(const int id, bool internal) {
+    AudioPort* port;
     if (id < inputPorts.size()) {
-        return inputPorts[id];
+        port = inputPorts[id].get();
     } else {
-        return outputPorts[id - inputPorts.size()];
+        port = outputPorts[id - inputPorts.size()].get();
+    }
+
+    if (internal) {
+        return port->getInternalConnectionPort().get();
+    } else {
+        return port;
     }
 }
 
@@ -1430,6 +1702,95 @@ void Effect::resize(int w, int h) {
     tree.setProperty(IDs::h, h, &undoManager);
 }
 
+bool Effect::hasProcessor(AudioProcessor *processor) {
+    return processor == this->processor;
+}
+
+void Effect::updateEffectProcessor(AudioProcessor *processorToUpdate, ValueTree treeToSearch) {
+    for (int i = 0; i < treeToSearch.getNumChildren(); i++) {
+        if (auto e = getFromTree<Effect>(treeToSearch.getChild(i))) {
+            if (e->hasProcessor(processorToUpdate)) {
+                // update processor gui
+                if (processorToUpdate->getMainBusNumInputChannels() > e->inputPorts.size()) {
+                    auto numPortsToAdd = processorToUpdate->getMainBusNumInputChannels() - e->inputPorts.size();
+                    for (int j = 0; j < numPortsToAdd; j++) {
+                        e->addPort(e->getDefaultBus(), true);
+                    }
+                }
+                if (processorToUpdate->getMainBusNumOutputChannels() < e->outputPorts.size()) {
+                    auto numPortsToAdd = processorToUpdate->getMainBusNumOutputChannels() - e->outputPorts.size();
+                    for (int j = 0; j < numPortsToAdd; j++) {
+                        e->addPort(e->getDefaultBus(), false);
+                    }
+                }
+            } else {
+                //recurse
+                updateEffectProcessor(processorToUpdate, treeToSearch.getChild(i));
+            }
+        }
+    }
+}
+
+bool Effect::hasPort(const ConnectionPort *port) {
+    if (auto p = dynamic_cast<const AudioPort*>(port)) {
+        return (inputPorts.contains(p) || outputPorts.contains(p));
+    } else if (auto p = dynamic_cast<const InternalConnectionPort*>(port)) {
+        for (auto list : {inputPorts, outputPorts}) {
+            for (auto portToCheck : list) {
+                if (portToCheck->internalPort == p) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool Effect::hasConnection(const ConnectionLine *line) {
+    return (hasPort(line->getOutPort().get())
+        || hasPort(line->getInPort().get()));
+}
+
+ValueTree Effect::storeParameters() {
+    if (parameters == nullptr) {
+        return ValueTree();
+    } else {
+        ValueTree parameterValues("parameters");
+        for (auto p : parameters->getParameters(false)) {
+            parameterValues.setProperty(p->getName(30), p->getValue(), nullptr);
+        }
+        return parameterValues;
+    }
+}
+
+void Effect::loadParameters(ValueTree parameterValues) {
+    auto parameterList = parameters->getParameters(false);
+    for (auto p : parameters->getParameters(false)) {
+        if (parameterValues.hasProperty(p->getName(30))){
+            float val = parameterValues.getProperty(p->getName(30));
+            p->setValueNotifyingHost(val);
+        }
+    }
+}
+
+Parameter *Effect::getParameterForPort(ParameterPort *port) {
+    for (auto c : getChildren()) {
+        if (auto param = dynamic_cast<Parameter*>(c)) {
+            if (param->getPort(true) == port) {
+                return param;
+            }
+        }
+    }
+    return nullptr;
+}
+
+Array<AudioProcessorParameter *> Effect::getParameters(bool recursive) {
+    return parameters->getParameters(recursive);
+}
+
+
+
+/*
 
 Point<int> Position::fromVar(const var &v) {
     Array<var>* array = v.getArray();
@@ -1481,3 +1842,4 @@ var* ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
     //var v = t.get();
     return reinterpret_cast<var *>(t.get());
 }
+*/

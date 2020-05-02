@@ -5,12 +5,17 @@
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{3656747D-F630-B6A0-87B7-F4E2A08E98F7}" name="Resources">
       <FILE id="DRvEs5" name="background.png" compile="0" resource="1" file="Resources/background.png"/>
+      <FILE id="hTOHXs" name="bg.png" compile="0" resource="1" file="Resources/bg.png"/>
       <FILE id="H9lxzs" name="close.png" compile="0" resource="1" file="Resources/close.png"/>
       <FILE id="k87fdV" name="settings.png" compile="0" resource="1" file="Resources/settings.png"/>
     </GROUP>
     <GROUP id="{7BA62652-E431-98B6-D8CC-8F9CF98F34BB}" name="Source">
       <FILE id="o4eaDB" name="Settings.cpp" compile="1" resource="0" file="Source/Settings.cpp"/>
       <FILE id="nPIQsD" name="Settings.h" compile="0" resource="0" file="Source/Settings.h"/>
+      <FILE id="MRJa12" name="ConnectionLine.cpp" compile="1" resource="0"
+            file="Source/ConnectionLine.cpp"/>
+      <FILE id="NgOKs7" name="ConnectionLine.h" compile="0" resource="0"
+            file="Source/ConnectionLine.h"/>
       <FILE id="zIPSEt" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="CK43xB" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
@@ -23,16 +28,23 @@
       <FILE id="md9GHI" name="BaseEffects.h" compile="1" resource="1" file="Source/BaseEffects.h"
             xcodeResource="1"/>
       <FILE id="mbjf0W" name="IDs" compile="0" resource="1" file="Source/IDs"/>
-      <FILE id="zLmarI" name="Effector.cpp" compile="1" resource="1" file="Source/Effector.cpp"
-            xcodeResource="1"/>
-      <FILE id="aUBkgB" name="Effector.h" compile="1" resource="1" file="Source/Effector.h"
-            xcodeResource="1"/>
       <FILE id="NYg3gQ" name="IOEffects.cpp" compile="1" resource="1" file="Source/IOEffects.cpp"
             xcodeResource="1"/>
       <FILE id="QX8rPO" name="IOEffects.h" compile="1" resource="1" file="Source/IOEffects.h"
             xcodeResource="1"/>
       <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="1" file="Source/Main.cpp"
             xcodeResource="1"/>
+      <FILE id="NBQqHO" name="Parameters.cpp" compile="1" resource="0" file="Source/Parameters.cpp"/>
+      <FILE id="xjFm5q" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>
+      <FILE id="TbLJLc" name="Ports.cpp" compile="1" resource="0" file="Source/Ports.cpp"/>
+      <FILE id="EK768G" name="Ports.h" compile="0" resource="0" file="Source/Ports.h"/>
+      <FILE id="bwlno4" name="EffectSelectMenu.cpp" compile="1" resource="0"
+            file="Source/EffectSelectMenu.cpp"/>
+      <FILE id="tcNVmT" name="EffectSelectMenu.h" compile="0" resource="0"
+            file="Source/EffectSelectMenu.h"/>
+      <FILE id="VQHX24" name="EffectLoader.cpp" compile="1" resource="0"
+            file="Source/EffectLoader.cpp"/>
+      <FILE id="j7tcSe" name="EffectLoader.h" compile="0" resource="0" file="Source/EffectLoader.h"/>
       <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1" file="Source/EffectScene.cpp"
             xcodeResource="1"/>
       <FILE id="kR0kwB" name="EffectScene.h" compile="1" resource="1" file="Source/EffectScene.h"

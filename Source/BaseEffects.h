@@ -11,24 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-
-class ParameterListener : public AudioProcessorParameter::Listener
-{
-public:
-    ParameterListener() : AudioProcessorParameter::Listener() {
-
-    }
-
-    void parameterValueChanged(int parameterIndex, float newValue) override {
-        *parameters[parameterIndex] = newValue;
-    }
-
-    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
-
-    }
-
-    Array<std::atomic<float>*> parameters;
-};
+#include "Parameters.h"
 
 /**
  * Slightly more specialised (but still abstract) AudioProcessor. Avoids having all the same
@@ -116,7 +99,6 @@ public:
 
 protected:
     String name;
-    ParameterListener parameterListener;
     BusesLayout layout;
 };
 
@@ -126,16 +108,13 @@ class DelayEffect : public BaseEffect, public Timer
 public:
     DelayEffect() : BaseEffect()
                     , delay("length", "Length",
-                          NormalisableRange<float>(0, 2.f, 0.001, 0.5f), 0.1f)
+                          NormalisableRange<float>(0.1f, 1.f, 0.001, 0.5f), 0.3f)
                     , fade("fade", "Fade",
                                  NormalisableRange<float>(0, 1.f, 0.001, 0.95f), 0.9f)
     {
         name = "Delay Effect";
         addParameter(&delay);
-        delay.addListener(&parameterListener);
-
         addParameter(&fade);
-        fade.addListener(&parameterListener);
 
         setLayout(1,1);
         startTimer(1000);
@@ -153,7 +132,6 @@ public:
         newDelayBufferSize = ceil(delay.get() * currentSampleRate );
         if (newDelayBufferSize != delayBufferSize){
             std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
-
 
             delayBuffer.setSize(numChannels, newDelayBufferSize
                     , true, true, true);
@@ -258,15 +236,14 @@ class DistortionEffect : public BaseEffect {
 public:
     DistortionEffect() : BaseEffect(),
                          gain("gain", "Gain",
-                              NormalisableRange<float>(0, 20.f, 0.001, 5.0f), 5.0f),
+                              NormalisableRange<float>(0.0f, 2.f, 0.001, 1.0f), 1.0f),
                          cutoff("cutoff", "Cutoff",
                               NormalisableRange<float>(0.0f, 1.0f, 0.001f, 0.5f), 0.8f)
-              {
+    {
         name = "Distortion Effect";
         addParameter(&gain);
-        gain.addListener(&parameterListener);
         addParameter(&cutoff);
-        cutoff.addListener(&parameterListener);
+
         setLayout(1,1);
     }
 
@@ -281,15 +258,12 @@ public:
 
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override
     {
-        buffer.applyGain(gain);
         for (int c = 0; c < buffer.getNumChannels(); c++) {
             for (int s = 0; s < buffer.getNumSamples(); s++){
-                float sample = buffer.getSample(c, s);
-                if (sample > cutoff) {
-                    buffer.setSample(c,s,cutoff);
-                } else if (sample < -cutoff) {
-                    buffer.setSample(c, s, -cutoff);
-                }
+
+                float sample = jlimit(-cutoff.get(), cutoff.get(), buffer.getSample(c, s) * gain);
+                sample *= gain;
+                buffer.setSample(c, s, sample);
             }
         }
     }

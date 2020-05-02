@@ -9,8 +9,11 @@
 */
 
 #include <JuceHeader.h>
+#include "EffectLoader.h"
 #include "EffectGui.h"
-
+#include "ConnectionLine.h"
+#include "Parameters.h"
+#include "Ports.h"
 #include "IOEffects.h"
 #include "BaseEffects.h"
 
@@ -18,7 +21,7 @@
 
 class Effect;
 
-
+/*
 struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionLine>>
 {
     static ReferenceCountedArray<ConnectionLine> fromVarArray (const var &v);
@@ -26,7 +29,7 @@ struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionL
     static ConnectionLine::Ptr fromVar (const var &v);
     static var* toVar (const ConnectionLine::Ptr &t);
 
-};
+};*/
 
 /**
  * Base class for Effects and EffectScene
@@ -47,8 +50,8 @@ public:
 
     static void close();
 
-    static ValueTree storeEffect(ValueTree& tree);
-    static void loadEffect(ValueTree& parentTree, ValueTree& loadData);
+    static ValueTree storeEffect(const ValueTree& tree);
+    static void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
 
     void resized() override = 0;
     bool keyPressed(const KeyPress &key) override;
@@ -77,16 +80,31 @@ public:
 
 
     static ReferenceCountedArray<Effect> effectsToDelete;
+
+    struct IDs {
+        static const Identifier effectTreeBase;
+    };
+
+    enum AppState {
+        loading = 0,
+        neutral = 1
+    } static appState;
+
+    Point<int> getMenuPos() const;
+
 protected:
     ValueTree tree;
 
     //====================================================================================
     // Menu stuff
-    static void callMenu(PopupMenu& menu);
+    void callMenu(PopupMenu& menu);
+
+    Point<int> menuPos;
 
     PopupMenu createEffectMenu;
     PopupMenu getEffectSelectMenu();
-    void newEffect(String name, int processorID);
+    ValueTree newEffect(String name, int processorID);
+    ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
@@ -103,32 +121,32 @@ protected:
     Point<int> dragDetachFromParentComponent();
 
     static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
-    static ConnectionPort::Ptr portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
+    static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
     static void disconnectAudio(const ConnectionLine& connectionLine);
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
-    static AudioDeviceManager deviceManager;
-    static AudioProcessorPlayer processorPlayer;
-    static AudioProcessorGraph audioGraph;
+    void createGroupEffect();
+
+    static AudioDeviceManager* deviceManager;
+    static AudioProcessorPlayer* processorPlayer;
+    static AudioProcessorGraph* audioGraph;
 
     static UndoManager undoManager;
 
-    struct IDs {
-        static const Identifier effectTreeBase;
-    };
+
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTreeBase)
 };
-
+/*
 struct Position : public VariantConverter<Point<int>>
 {
     static Point<int> fromVar (const var &v);
     static var toVar (const Point<int> &t);
-};
+};*/
 
 /**
  * Effect (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
@@ -154,11 +172,10 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    bool keyPressed(const KeyPress &key) override;
-
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
     void hoverOver(EffectTreeBase* newParent);
+    void reassignNewParent(EffectTreeBase* newParent);
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
@@ -167,14 +184,22 @@ public:
     };
     NodeAndPort getNode(ConnectionPort::Ptr& port);
 
-    void setParameters(const AudioProcessorParameterGroup* group);
-    void addParameter(AudioProcessorParameter* param);
-    void addPort(AudioProcessor::Bus* bus, bool isInput);
+    ValueTree storeParameters();
+    void loadParameters(ValueTree parameterValues);
 
-    ConnectionPort::Ptr checkPort(Point<int> pos);
+    void setParameters(const AudioProcessorParameterGroup* group);
+    Parameter& addParameter(AudioProcessorParameter* param);
+    AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
+    Array<AudioProcessorParameter*> getParameters(bool recursive);
+
+    Parameter* getParameterForPort(ParameterPort* port);
+
+    ConnectionPort* checkPort(Point<int> pos);
+    bool hasPort(const ConnectionPort* port);
+    bool hasConnection(const ConnectionLine* line);
 
     int getPortID(const ConnectionPort* port);
-    AudioPort* getPortFromID(const int id);
+    ConnectionPort* getPortFromID(const int id, bool internal = false);
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() { return editMode; }
@@ -186,6 +211,8 @@ public:
     void resize(int w, int h);
     void setParent(EffectTreeBase& parent);
 
+    static void updateEffectProcessor(AudioProcessor* processorToUpdate, ValueTree treeToSearch);
+
     //CachedValue<Array<var>> pos;
 
     // ValueTree listener overrides
@@ -194,12 +221,14 @@ public:
 
     // =================================================================================
     // Setters and getter functions
-
-    void setProcessor(AudioProcessor* processor);
+    bool hasProcessor(AudioProcessor* processor);
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
-    AudioProcessor::Bus* getDefaultBus() { audioGraph.getBus(true, 0); }
+    static AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
+
+    int getNumInputs() const { return inputPorts.size(); }
+    int getNumOutputs() const { return outputPorts.size(); }
 
     bool isIndividual() const { return processor != nullptr; }
 
@@ -214,19 +243,15 @@ public:
         static const Identifier initialised;
         static const Identifier name;
         static const Identifier connections;
-
     };
 
 private:
     // Used for an individual processor Effect. - does not contain anything else
-    AudioProcessor* processor = nullptr;
-    AudioProcessorGraph::Node::Ptr node = nullptr;
-
-    ReferenceCountedArray<ConnectionLine> connections;
+    void setProcessor(AudioProcessor* processor);
 
     bool editMode = false;
-    OwnedArray<AudioPort> inputPorts;
-    OwnedArray<AudioPort> outputPorts;
+    ReferenceCountedArray<AudioPort> inputPorts;
+    ReferenceCountedArray<AudioPort> outputPorts;
     Label title;
     Image image;
 
@@ -238,6 +263,9 @@ private:
     PopupMenu editMenu;
 
     const AudioProcessorParameterGroup* parameters;
+
+    AudioProcessor* processor = nullptr;
+    AudioProcessorGraph::Node::Ptr node = nullptr;
 
     int portIncrement = 50;
     int inputPortStartPos = 100;
