@@ -789,6 +789,7 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
             }
         }
     }
+
     // Create effects by adding them to valuetree
     else if (loadData.hasType(EFFECT_ID)) {
 
@@ -1000,7 +1001,6 @@ Point<int> EffectTreeBase::getMenuPos() const {
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     if (vt.hasProperty(IDs::processorID)) {
-
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
         int id = vt.getProperty(IDs::processorID);
@@ -1345,6 +1345,15 @@ Parameter& Effect::addParameter(AudioProcessorParameter *param)
     if (existingParamChild.isValid()) {
         parameterGui = new Parameter(param);
         existingParamChild.setProperty(Parameter::IDs::parameterObject, parameterGui, nullptr);
+
+        //Brute-force update child. Fixing this requires model change
+        //todo model change
+        tree.removeChild(existingParamChild, nullptr);
+        tree.appendChild(existingParamChild, nullptr);
+
+        int x = existingParamChild.getProperty("x");
+        int y = existingParamChild.getProperty("y");
+        parameterGui->setTopLeftPosition(x, y);
     } else {
         ValueTree parameter(PARAMETER_ID);
 
