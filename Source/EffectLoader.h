@@ -85,6 +85,27 @@ public:
         return effectList;
     }
 
+    static void clearEffect(String effectName) {
+        ValueTree effectLib("EffectLib");
+
+        auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_EFFECT_LIBRARY);
+        if (loadedEffectsData != nullptr) {
+            effectLib = ValueTree::fromXml(*loadedEffectsData);
+        }
+
+        auto effectToRemove = effectLib.getChildWithProperty("name", effectName);
+
+        if (effectToRemove.isValid()) {
+            std::cout << "Removing effect" << newLine;
+            effectLib.removeChild(effectToRemove, nullptr);
+        }
+
+        auto dataToStore = effectLib.createXml();
+
+        getAppProperties().getUserSettings()->setValue(KEYNAME_EFFECT_LIBRARY, dataToStore.get());
+        getAppProperties().getUserSettings()->save();
+    }
+
 private:
     static const String KEYNAME_EFFECT_LIBRARY;
 };

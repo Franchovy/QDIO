@@ -23,12 +23,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
     //TODO use parameterListener
     //param->addListener(this);
 
-    if (! editMode) {
-        setBounds(0, 0, 150, 80);
-    } else {
-        setBounds(0, 0, 150, 120);
-        outline = Rectangle<int>(10, 20, 130, 90);
-    }
+    outline = Rectangle<int>(10, 20, 130, 90);
 
     // IF EDIT MODE
     // parameterLabel.setEditMode(true, true);
@@ -94,21 +89,27 @@ Parameter::Parameter(AudioProcessorParameter *param)
     parameterLabel.onTextChange = [=] {
         setName(parameterLabel.getText(true));
     };
+    if (param->getName(30).isNotEmpty()) {
+        setName(param->getName(30));
+    }
 
     addAndMakeVisible(parameterLabel);
     addChildComponent(externalPort.get());
-
-    if (type == slider) {
-        internalPort->setCentrePosition(getWidth() / 2, 30);
-        parameterLabel.setTopLeftPosition(15, 55);
-        parameterComponent->setCentrePosition(getWidth()/2, 80);
-    }
 
     if (type == combo) {
         parameterLabel.setVisible(false);
     }
 
     param->addListener(this);
+
+    parameterLabel.setTopLeftPosition(15, 55);
+    parameterComponent->setTopLeftPosition(0,60);
+    /*parameterComponent->setCentrePosition(getWidth() / 2, 80);*/
+    externalPort->setCentrePosition(getWidth() / 2, 30);
+
+    setBounds(0, 0, 150, 120);
+
+    setInterceptsMouseClicks(editMode, true);
 }
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
@@ -131,7 +132,7 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
 
 void Parameter::setEditMode(bool isEditable) {
     // change between editable and non-editable version
-    internalPort->setVisible(isEditable);
+    externalPort->setVisible(isEditable);
     setHoverable(isEditable);
     parameterLabel.setEditable(isEditable, isEditable);
 
@@ -139,6 +140,8 @@ void Parameter::setEditMode(bool isEditable) {
                              (isEditable ? Colours::whitesmoke : Colours::black));
 
     editMode = isEditable;
+
+    setInterceptsMouseClicks(editMode, true);
 
     repaint();
 }
@@ -254,6 +257,7 @@ void Parameter::setActionOnComboSelect(std::function<void()> funct) {
 bool Parameter::isInEditMode() const {
     return editMode;
 }
+
 
 /*NormalisableRange<double> Parameter::getRange() {
     auto slider = dynamic_cast<Slider*>(parameterComponent.get());
