@@ -367,13 +367,15 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         line->toFront(false);
         connectAudio(*line);
     }
+
+    /*
     // ADD PARAMETER
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID))
     {
         // Avoid multiple constructor calls
-        /*if (parentTree != tree) {
+        *//*if (parentTree != tree) {
             return;
-        }*/
+        }*//*
 
         auto parent = getFromTree<Effect>(parentTree);
         //todo simplify dis
@@ -434,7 +436,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         parameter->setEditMode(parent->isInEditMode());
 
         resized();
-    }
+    }*/
 }
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
@@ -790,6 +792,18 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
     // Create effects by adding them to valuetree
     else if (loadData.hasType(EFFECT_ID)) {
         copy.copyPropertiesFrom(loadData, nullptr);
+
+        // Load Parameters
+        for (int i = 0; i < loadData.getNumChildren(); i++) {
+            auto child = loadData.getChild(i);
+            if (child.hasType(PARAMETER_ID)) {
+                ValueTree paramChild(PARAMETER_ID);
+                paramChild.copyPropertiesFrom(child, nullptr);
+
+                copy.appendChild(paramChild, nullptr);
+            }
+        }
+
         parentTree.appendChild(copy, &undoManager);
 
         // Load child effects
@@ -800,16 +814,6 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
                 loadEffect(copy, child);
             }
         }
-
-/*
-        // Load parameters
-        auto effect = getFromTree<Effect>(copy);
-        if (effect != nullptr && loadData.getChildWithName("parameters").isValid()) {
-            effect->loadParameters(loadData.getChildWithName("parameters"));
-        }
-*/
-
-        //loadData.getChild("parameters")
     }
 
     // Add Connections
@@ -817,15 +821,8 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
 
-            // Load Parameters
-            if (child.hasType(PARAMETER_ID)) {
-                ValueTree paramChild(PARAMETER_ID);
-                paramChild.copyPropertiesFrom(child, nullptr);
-
-                copy.appendChild(paramChild, nullptr);
-            }
             // Connection
-            else if (child.hasType(CONNECTION_ID)) {
+            if (child.hasType(CONNECTION_ID)) {
                 // Set data
                 ValueTree connectionToSet(CONNECTION_ID);
 
@@ -1000,8 +997,6 @@ Effect* Effect::createEffect(ValueTree &loadData) {
     //this would not be needed
     effect->tree = loadData;
 
-
-
     if (loadData.hasProperty(IDs::processorID)) {
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
@@ -1046,10 +1041,8 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         // Load parameters
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             if (loadData.getChild(i).hasType(PARAMETER_ID)) {
-                auto name = loadData.getChild(i).getProperty("name");
-                auto param = new MetaParameter(name);
-
-                effect->addParameter(param);
+                auto parameter = effect->loadParameter(effect->tree.getChild(i));
+                effect->tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
             }
         }
     }
@@ -1057,6 +1050,7 @@ Effect* Effect::createEffect(ValueTree &loadData) {
     // Make edit mode true by default
     effect->setEditMode(effect->isIndividual());
 
+    //==============================================================
     // Set name
     if (! loadData.hasProperty(IDs::name)) {
         if (effect->isIndividual()) {
@@ -1066,6 +1060,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         }
     }
 
+    //==============================================================
+    // Set up bounds
+
     int x = loadData.getProperty(IDs::x, 0);
     int y = loadData.getProperty(IDs::y, 0);
     int w = loadData.getProperty(IDs::w, 200);
@@ -1073,8 +1070,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
 
     effect->setBounds(x, y, w, h);
 
-    auto parameters = effect->getParameters(false);
+    // Increase to fit ports and parameters
 
+    auto parameters = effect->getParameters(false);
     Rectangle<int> newBounds = effect->getBounds();
     for (auto p : effect->getParameterChildren()) {
         newBounds = newBounds.getUnion(p->getBoundsInParent()).expanded(10,25);
@@ -1087,7 +1085,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
     // Set new bounds
     effect->setBounds(newBounds);
 
+    //==============================================================
     // Set parent component
+
     auto parentTree = loadData.getParent();
     if (parentTree.isValid()) {
         auto parent = getFromTree<EffectTreeBase>(parentTree);
@@ -1097,7 +1097,7 @@ Effect* Effect::createEffect(ValueTree &loadData) {
     effect->setupMenu();
     effect->setupTitle();
 
-    return nullptr;
+    return effect;
 }
 
 //======================================================================================
@@ -1108,7 +1108,7 @@ Effect::Effect() : EffectTreeBase(EFFECT_ID) {
 }
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
-
+    std::cout << "stop right theah boih" << newLine;
 
     if (vt.hasProperty(IDs::processorID)) {
         // Individual Effect
@@ -1160,10 +1160,8 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
         // Load parameters
         for (int i = 0; i < tree.getNumChildren(); i++) {
             if (tree.getChild(i).hasType(PARAMETER_ID)) {
-                auto name = tree.getChild(i).getProperty("name");
-                auto param = new MetaParameter(name);
-
-                addParameter(param);
+                auto child = tree.getChild(i);
+                loadParameter(child);
             }
         }
 
@@ -1288,8 +1286,9 @@ void Effect::setupMenu() {
 
     PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {
-        Parameter& newParam = addParameter(new MetaParameter("New Parameter"));
-        newParam.setCentrePosition(getMouseXYRelative());
+        Parameter::Ptr newParam = createParameter(new MetaParameter("New Parameter"));
+        newParam->setCentrePosition(getMouseXYRelative());
+
     });
     editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
 
@@ -1337,9 +1336,71 @@ void Effect::setProcessor(AudioProcessor *processor) {
 
     // Create parameters from processor if they don't exist yet.
     if (! tree.getChildWithName(PARAMETER_ID).isValid()) {
-        setParameters(parameters);
+        int i = 80;
+        for (auto param : parameters->getParameters(false)) {
+            auto parameter = createParameter(param);
+            parameter->setCentrePosition(getWidth()/2, i);
+            i += 70;
+            auto parameterTree = tree.getChildWithProperty(Parameter::IDs::parameterObject, parameter);
+            parameterTree.setProperty("x", parameter->getX(), nullptr);
+            parameterTree.setProperty("y", parameter->getY(), nullptr);
+        }
+    } else {
+        // Load parameters
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            if (tree.getChild(i).hasType(PARAMETER_ID)) {
+                auto child = tree.getChild(i);
+                auto parameter = loadParameter(child);
+                tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
+            }
+        }
     }
 }
+
+
+Parameter* Effect::createParameter(AudioProcessorParameter *param) {
+    auto parameter = new Parameter(param);
+    addAndMakeVisible(parameter);
+    addAndMakeVisible(parameter->getPort(true));
+
+    ValueTree parameterTree(PARAMETER_ID);
+    parameterTree.setProperty("name", param->getName(30), nullptr);
+    parameterTree.setProperty("x", parameter->getX(), nullptr);
+    parameterTree.setProperty("y", parameter->getY(), nullptr);
+    parameterTree.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
+
+    tree.appendChild(parameterTree, nullptr);
+
+    return parameter;
+}
+
+/**
+ * Loads parameter from value tree data
+ * @param parameterData This stupid motherfucker is a reference because of the effect tree loading shit.
+ * Fucking hell man. I'm stuck doing this 9-5 and I have no friends. Every day I
+ * think of ways to kill myself. Fuck all this shit man.
+ * @return parameter created
+ */
+Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
+    auto name = parameterData.getProperty("name");
+    auto param = new MetaParameter(name);
+
+    auto parameter = new Parameter(param);
+
+    // Set position
+
+    int x = parameterData.getProperty("x");
+    int y = parameterData.getProperty("y");
+
+    parameter->setTopLeftPosition(x, y);
+
+    // if has connection then connect
+
+    audioGraph->addParameter(param);
+
+    return parameter;
+}
+
 
 /**
  * Get the port at the given location, if there is one
@@ -1450,47 +1511,24 @@ void Effect::setEditMode(bool isEditMode) {
 
 void Effect::setParameters(const AudioProcessorParameterGroup *group) {
     for (auto param : group->getParameters(false)) {
-        addParameter(param);
+        addParameterFromProcessorParam(param);
     }
 }
 
-Parameter& Effect::addParameter(AudioProcessorParameter *param)
-{
+Parameter& Effect::addParameterFromProcessorParam(AudioProcessorParameter *param)
+{/*
     Parameter* parameterGui;
 
     auto paramName = param->getName(30).trim();
 
-    ValueTree existingParamChild;
+    ValueTree parameter(PARAMETER_ID);
 
-    for (auto i = 0; i < tree.getNumChildren(); i++) {
-        auto name = tree.getChild(i).getProperty("name").toString();
-        if (name.compare(paramName) == 0) {
-            existingParamChild = tree.getChild(i);
-        }
-    }
+    parameterGui = new Parameter(param);
+    parameter.setProperty(Parameter::IDs::parameterObject, parameterGui, nullptr);
 
-    if (existingParamChild.isValid()) {
-        parameterGui = new Parameter(param);
-        existingParamChild.setProperty(Parameter::IDs::parameterObject, parameterGui, nullptr);
+    tree.appendChild(parameter, &undoManager);
 
-        //Brute-force update child. Fixing this requires model change
-        //todo model change
-        tree.removeChild(existingParamChild, nullptr);
-        tree.appendChild(existingParamChild, nullptr);
-
-        int x = existingParamChild.getProperty("x");
-        int y = existingParamChild.getProperty("y");
-        parameterGui->setTopLeftPosition(x, y);
-    } else {
-        ValueTree parameter(PARAMETER_ID);
-
-        parameterGui = new Parameter(param);
-        parameter.setProperty(Parameter::IDs::parameterObject, parameterGui, nullptr);
-
-        tree.appendChild(parameter, &undoManager);
-    }
-
-    return *parameterGui;
+    return *parameterGui;*/
 }
 
 
@@ -1961,7 +1999,11 @@ Parameter *Effect::getParameterForPort(ParameterPort *port) {
 }
 
 Array<AudioProcessorParameter *> Effect::getParameters(bool recursive) {
-    return parameters->getParameters(recursive);
+    if (parameters == nullptr) {
+        return Array<AudioProcessorParameter *>();
+    } else {
+        return parameters->getParameters(recursive);
+    }
 }
 
 void Effect::setNode(AudioProcessorGraph::Node::Ptr node) {
@@ -2004,10 +2046,6 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 
     return list;
 }
-
-
-
-
 
 
 

@@ -206,7 +206,11 @@ public:
     void loadParameters(ValueTree parameterValues);
 
     void setParameters(const AudioProcessorParameterGroup* group);
-    Parameter& addParameter(AudioProcessorParameter* param);
+    Parameter& addParameterFromProcessorParam(AudioProcessorParameter* param);
+
+    Parameter* createParameter(AudioProcessorParameter* param);
+    Parameter::Ptr addParameter();
+    Parameter::Ptr loadParameter(ValueTree parameterData);
 
     Array<AudioProcessorParameter*> getParameters(bool recursive);
     Array<Parameter*> getParameterChildren();
@@ -284,7 +288,7 @@ private:
     PopupMenu menu;
     PopupMenu editMenu;
 
-    const AudioProcessorParameterGroup* parameters;
+    const AudioProcessorParameterGroup* parameters = nullptr;
 
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
