@@ -14,6 +14,8 @@ EffectScene::EffectScene() :
 
     // Set up static members
 
+    updater.setUndoManager(undoManager);
+
     EffectTreeBase::audioGraph = &audioGraph;
     EffectTreeBase::processorPlayer = &processorPlayer;
     EffectTreeBase::deviceManager = &deviceManager;

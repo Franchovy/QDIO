@@ -19,17 +19,23 @@
 
 #pragma once
 
-class Effect;
 
-/*
-struct ConnectionVar : public VariantConverter<ReferenceCountedArray<ConnectionLine>>
+class EffectTreeUpdater : public ComponentListener
 {
-    static ReferenceCountedArray<ConnectionLine> fromVarArray (const var &v);
-    static var toVarArray (const ReferenceCountedArray<ConnectionLine> &t);
-    static ConnectionLine::Ptr fromVar (const var &v);
-    static var* toVar (const ConnectionLine::Ptr &t);
+public:
+    EffectTreeUpdater();
 
-};*/
+    void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
+
+    void componentNameChanged(Component &component) override;
+
+    void setUndoManager(UndoManager& um);
+
+private:
+    UndoManager* undoManager;
+};
+
+class Effect;
 
 /**
  * Base class for Effects and EffectScene
@@ -129,6 +135,9 @@ protected:
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
     void createGroupEffect();
+
+    //====================================================================================
+    static EffectTreeUpdater updater; // only needed to add as listener - todo move to manager class
 
     static AudioDeviceManager* deviceManager;
     static AudioProcessorPlayer* processorPlayer;
@@ -289,4 +298,3 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Effect)
 
 };
-

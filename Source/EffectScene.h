@@ -60,6 +60,9 @@ public:
     Rectangle<int> view;
 
 private:
+    // EffectTreeBase static stuff
+    EffectTreeUpdater updater;
+
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
     AudioProcessorGraph audioGraph;

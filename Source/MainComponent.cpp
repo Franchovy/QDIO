@@ -13,7 +13,7 @@
 
 MainComponent::MainComponent()
     : main()
-    , effectTree(EFFECT_ID) // TODO load if existing
+    , effectTree(EFFECT_ID)
     , deviceManager(main.getDeviceManager())
     , audioGraph(main.getAudioGraph())
     , audioPlayer(main.getAudioPlayer())

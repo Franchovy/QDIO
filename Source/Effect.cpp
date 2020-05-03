@@ -20,6 +20,8 @@ AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
 AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 LineComponent EffectTreeBase::dragLine;
+//
+EffectTreeUpdater EffectTreeBase::updater;
 
 ReferenceCountedArray<Effect> EffectTreeBase::effectsToDelete;
 
@@ -993,6 +995,7 @@ Point<int> EffectTreeBase::getMenuPos() const {
 Effect* Effect::createEffect(ValueTree &loadData) {
     auto effect = new Effect();
     loadData.setProperty(EffectTreeBase::IDs::effectTreeBase, effect, nullptr);
+    effect->addComponentListener(&updater);
 
     //this would not be needed
     effect->tree = loadData;
@@ -1079,6 +1082,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
     for (auto p : effect->getPorts()) {
         newBounds = newBounds.getUnion(p->getBoundsInParent());
     }
+    // Fix position
+    newBounds.setPosition(effect->getPosition());
+    // Set new bounds
     effect->setBounds(newBounds);
 
     // Set parent component
@@ -2058,3 +2064,33 @@ var* ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
     return reinterpret_cast<var *>(t.get());
 }
 */
+
+EffectTreeUpdater::EffectTreeUpdater() {
+
+}
+
+void EffectTreeUpdater::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
+    auto effect = dynamic_cast<Effect*>(&component);
+
+    if (wasMoved) {
+        std::cout << "Move update" << newLine;
+        effect->getTree().setProperty(Effect::IDs::x, effect->getX(), undoManager);
+        effect->getTree().setProperty(Effect::IDs::y, effect->getY(), undoManager);
+    }
+    else if (wasResized) {
+        std::cout << "Size update" << newLine;
+        effect->getTree().setProperty(Effect::IDs::w, effect->getWidth(), undoManager);
+        effect->getTree().setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
+    }
+
+    ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
+}
+
+void EffectTreeUpdater::componentNameChanged(Component &component) {
+
+    ComponentListener::componentNameChanged(component);
+}
+
+void EffectTreeUpdater::setUndoManager(UndoManager &um) {
+    undoManager = &um;
+}
