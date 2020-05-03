@@ -159,6 +159,7 @@ struct Position : public VariantConverter<Point<int>>
 class Effect : public EffectTreeBase
 {
 public:
+    Effect();
     explicit Effect(const ValueTree& vt);
 
     void setupTitle();
@@ -188,17 +189,23 @@ public:
         AudioPort* port = nullptr;
         bool isValid = false;
     };
+
     NodeAndPort getNode(ConnectionPort::Ptr& port);
+    void setNode(AudioProcessorGraph::Node::Ptr node);
 
     ValueTree storeParameters();
     void loadParameters(ValueTree parameterValues);
 
     void setParameters(const AudioProcessorParameterGroup* group);
     Parameter& addParameter(AudioProcessorParameter* param);
-    AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
+
     Array<AudioProcessorParameter*> getParameters(bool recursive);
+    Array<Parameter*> getParameterChildren();
 
     Parameter* getParameterForPort(ParameterPort* port);
+
+    AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
+    Array<ConnectionPort*> getPorts(int isInput = -1);
 
     ConnectionPort* checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);

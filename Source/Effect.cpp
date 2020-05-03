@@ -333,12 +333,11 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             // Initialise VT
             childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, &undoManager);
             // Create new effect
-            auto e = new Effect(childWhichHasBeenAdded);
-            childWhichHasBeenAdded.setProperty(IDs::effectTreeBase, e, nullptr);
+            auto e = Effect::createEffect(childWhichHasBeenAdded);
 
-            if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
+            /*if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                 parent->addAndMakeVisible(e);
-            }
+            }*/
         }
     }
     // ADD CONNECTION
@@ -419,13 +418,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             }
         }
         if (parent->isIndividual()) {
-            auto parameters = parent->getParameters(false);
-            auto numParameters = parameters.size();
-            auto newBounds = getBounds().getUnion(
-                    Rectangle<int>(getX(), getY(),
-                                   parameter->getWidth() + 50, 50 + numParameters * 50));
-            setBounds(newBounds); // should always call resized()
-
+            //todo ?????? remove??
             childWhichHasBeenAdded.setProperty("x", parameter->getX(), nullptr);
             childWhichHasBeenAdded.setProperty("y", parameter->getY(), nullptr);
         }
@@ -772,7 +765,6 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
     return copy;
 }
 
-//todo storageIDs
 void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
@@ -999,21 +991,125 @@ Point<int> EffectTreeBase::getMenuPos() const {
 // methods to move to manager class
 
 Effect* Effect::createEffect(ValueTree &loadData) {
+    auto effect = new Effect();
+    loadData.setProperty(EffectTreeBase::IDs::effectTreeBase, effect, nullptr);
+
+    //this would not be needed
+    effect->tree = loadData;
+
+
+
+    if (loadData.hasProperty(IDs::processorID)) {
+        // Individual Effect
+        std::unique_ptr<AudioProcessor> newProcessor;
+        int id = loadData.getProperty(IDs::processorID);
+
+        auto currentDevice = deviceManager->getCurrentDeviceTypeObject();
+
+        switch (id) {
+            case 0:
+                newProcessor = std::make_unique<InputDeviceEffect>(currentDevice->getDeviceNames(true),
+                        currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(),true));
+                break;
+            case 1:
+                newProcessor = std::make_unique<OutputDeviceEffect>(currentDevice->getDeviceNames(false),
+                        currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(),false));
+                break;
+            case 2:
+                newProcessor = std::make_unique<DistortionEffect>();
+                break;
+            case 3:
+                newProcessor = std::make_unique<DelayEffect>();
+                break;
+            default:
+                std::cout << "ProcessorID not found." << newLine;
+        }
+        auto node = audioGraph->addNode(move(newProcessor));
+        effect->setNode(node);
+        // Create from node:
+        effect->setProcessor(node->getProcessor());
+    }
+    else {
+        int numInputPorts = loadData.getProperty("numInputPorts", 0);
+        int numOutputPorts = loadData.getProperty("numOutputPorts", 0);
+
+        for (int i = 0; i < numInputPorts; i++) {
+            effect->addPort(getDefaultBus(), true);
+        }
+        for (int i = 0; i < numOutputPorts; i++) {
+            effect->addPort(getDefaultBus(), false);
+        }
+
+        // Load parameters
+        for (int i = 0; i < loadData.getNumChildren(); i++) {
+            if (loadData.getChild(i).hasType(PARAMETER_ID)) {
+                auto name = loadData.getChild(i).getProperty("name");
+                auto param = new MetaParameter(name);
+
+                effect->addParameter(param);
+            }
+        }
+    }
+
+    // Make edit mode true by default
+    effect->setEditMode(effect->isIndividual());
+
+    // Set name
+    if (! loadData.hasProperty(IDs::name)) {
+        if (effect->isIndividual()) {
+            effect->setName(effect->processor->getName());
+        } else {
+            effect->setName("Effect");
+        }
+    }
+
+    int x = loadData.getProperty(IDs::x, 0);
+    int y = loadData.getProperty(IDs::y, 0);
+    int w = loadData.getProperty(IDs::w, 200);
+    int h = loadData.getProperty(IDs::h, 200);
+
+    effect->setBounds(x, y, w, h);
+
+    auto parameters = effect->getParameters(false);
+
+    Rectangle<int> newBounds = effect->getBounds();
+    for (auto p : effect->getParameterChildren()) {
+        newBounds = newBounds.getUnion(p->getBoundsInParent()).expanded(10,25);
+    }
+    for (auto p : effect->getPorts()) {
+        newBounds = newBounds.getUnion(p->getBoundsInParent());
+    }
+    effect->setBounds(newBounds);
+
+    // Set parent component
+    auto parentTree = loadData.getParent();
+    if (parentTree.isValid()) {
+        auto parent = getFromTree<EffectTreeBase>(parentTree);
+        parent->addAndMakeVisible(effect);
+    }
+
+    effect->setupMenu();
+    effect->setupTitle();
+
     return nullptr;
 }
 
 //======================================================================================
 
+Effect::Effect() : EffectTreeBase(EFFECT_ID) {
+    addAndMakeVisible(resizer);
+    resizer.setAlwaysOnTop(true);
+}
+
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
+
+
     if (vt.hasProperty(IDs::processorID)) {
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
         int id = vt.getProperty(IDs::processorID);
 
         auto currentDevice = deviceManager->getCurrentDeviceTypeObject();
-
-        // Add listener for tree properties
-        tree.addListener(this);
 
         switch (id) {
             case 0:
@@ -1084,6 +1180,16 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
 
     //Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
     setBounds(x, y, w, h);
+
+    // set bounds based on parameters
+    /*auto parameters = parent->getParameters(false);
+    auto numParameters = parameters.size();
+    *//*auto newBounds = getBounds().getUnion(
+            Rectangle<int>(getX(), getY(),
+                           parameter->getWidth() + 50, 50 + numParameters * 50));*//*
+    auto newBounds = getBounds().getUnion(
+            parameter->getBoundsInParent());
+    setBounds(newBounds); // should always call resized()*/
 
     addAndMakeVisible(resizer);
 
@@ -1222,13 +1328,11 @@ void Effect::setProcessor(AudioProcessor *processor) {
 
     // Setup parameters
     parameters = &processor->getParameterTree();
-    setParameters(parameters);
 
-    int numParams = parameters->getParameters(false).size();
-    if (numParams > 0) {
-        setBounds(getBounds().expanded(40, numParams * 20));
+    // Create parameters from processor if they don't exist yet.
+    if (! tree.getChildWithName(PARAMETER_ID).isValid()) {
+        setParameters(parameters);
     }
-    resized();
 }
 
 /**
@@ -1392,7 +1496,9 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     if (editMode){
         p->setColour(p->portColour, Colours::whitesmoke);
     }
+
     addAndMakeVisible(p);
+    resized();
 
     if (!isIndividual()) {
         addChildComponent(p->internalPort.get());
@@ -1851,6 +1957,49 @@ Parameter *Effect::getParameterForPort(ParameterPort *port) {
 Array<AudioProcessorParameter *> Effect::getParameters(bool recursive) {
     return parameters->getParameters(recursive);
 }
+
+void Effect::setNode(AudioProcessorGraph::Node::Ptr node) {
+    this->node = node;
+}
+
+Array<Parameter*> Effect::getParameterChildren() {
+    Array<Parameter*> list;
+    for (auto c : getChildren()) {
+        if (auto p = dynamic_cast<Parameter*>(c)) {
+            list.add(p);
+        }
+    }
+    return list;
+}
+
+
+/**
+ * Returns a list of pointers to ports, according to isInput parameter.
+ * @param isInput
+ * -1 for both input and output ports
+ * 0 for output ports
+ * 1 for input ports
+ * @return list of pointers to ports.
+ */
+Array<ConnectionPort *> Effect::getPorts(int isInput) {
+    Array<ConnectionPort*> list;
+
+    if (isInput <= 0) {
+        for (auto p : outputPorts) {
+            list.add(p);
+        }
+    }
+
+    if (isInput != 0) {
+        for (auto p : inputPorts) {
+            list.add(p);
+        }
+    }
+
+    return list;
+}
+
+
 
 
 
