@@ -285,6 +285,10 @@ ValueTree EffectTreeBase::newEffect(String name, int processorID) {
     }
 
     this->getTree().appendChild(newEffect, &undoManager);
+
+    auto effect = getFromTree<Effect>(newEffect);
+    effect->setEditMode(true);
+
     return newEffect;
 }
 /*
@@ -1336,11 +1340,11 @@ void Effect::setProcessor(AudioProcessor *processor) {
 
     // Create parameters from processor if they don't exist yet.
     if (! tree.getChildWithName(PARAMETER_ID).isValid()) {
-        int i = 80;
+        int i = 0;
         for (auto param : parameters->getParameters(false)) {
             auto parameter = createParameter(param);
             parameter->setTopLeftPosition(100, i);
-            i += 70;
+            i += 50;
             auto parameterTree = tree.getChildWithProperty(Parameter::IDs::parameterObject, parameter);
         }
     } else {

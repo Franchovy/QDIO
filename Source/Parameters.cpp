@@ -258,6 +258,11 @@ bool Parameter::isInEditMode() const {
     return editMode;
 }
 
+void Parameter::moved() {
+    internalPort->setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
+    Component::moved();
+}
+
 
 /*NormalisableRange<double> Parameter::getRange() {
     auto slider = dynamic_cast<Slider*>(parameterComponent.get());

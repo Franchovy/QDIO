@@ -37,6 +37,8 @@ public:
     void setEditMode(bool isEditable);
     bool isInEditMode() const;
 
+    void moved() override;
+
     //NormalisableRange<double> getRange();
 
     AudioProcessorParameter* getParameter();
