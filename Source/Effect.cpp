@@ -1339,11 +1339,9 @@ void Effect::setProcessor(AudioProcessor *processor) {
         int i = 80;
         for (auto param : parameters->getParameters(false)) {
             auto parameter = createParameter(param);
-            parameter->setCentrePosition(getWidth()/2, i);
+            parameter->setTopLeftPosition(100, i);
             i += 70;
             auto parameterTree = tree.getChildWithProperty(Parameter::IDs::parameterObject, parameter);
-            parameterTree.setProperty("x", parameter->getX(), nullptr);
-            parameterTree.setProperty("y", parameter->getY(), nullptr);
         }
     } else {
         // Load parameters
@@ -1387,10 +1385,19 @@ Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
 
     auto parameter = new Parameter(param);
 
+    if (isIndividual()) {
+        parameter->setEditMode(false);
+    }
+
+    addAndMakeVisible(parameter);
+    addAndMakeVisible(parameter->getPort(true));
+
     // Set position
 
     int x = parameterData.getProperty("x");
     int y = parameterData.getProperty("y");
+
+    parameterData.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
 
     parameter->setTopLeftPosition(x, y);
 
@@ -2108,18 +2115,28 @@ EffectTreeUpdater::EffectTreeUpdater() {
 }
 
 void EffectTreeUpdater::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    auto effect = dynamic_cast<Effect*>(&component);
+    if (auto effect = dynamic_cast<Effect*>(&component)) {
+        if (wasMoved) {
+            std::cout << "Effect move update" << newLine;
+            effect->getTree().setProperty(Effect::IDs::x, effect->getX(), undoManager);
+            effect->getTree().setProperty(Effect::IDs::y, effect->getY(), undoManager);
+        }
+        else if (wasResized) {
+            std::cout << "Effect size update" << newLine;
+            effect->getTree().setProperty(Effect::IDs::w, effect->getWidth(), undoManager);
+            effect->getTree().setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
+        }
+    } else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
+        auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
+        if (wasMoved) {
+            std::cout << "Parameter move update" << newLine;
+            auto parameterTree = effect->getTree().getChildWithProperty(Parameter::IDs::parameterObject, parameter);
+            parameterTree.setProperty("x", component.getX(), nullptr);
+            parameterTree.setProperty("y", component.getY(), nullptr);
+        }
+    }
 
-    if (wasMoved) {
-        std::cout << "Move update" << newLine;
-        effect->getTree().setProperty(Effect::IDs::x, effect->getX(), undoManager);
-        effect->getTree().setProperty(Effect::IDs::y, effect->getY(), undoManager);
-    }
-    else if (wasResized) {
-        std::cout << "Size update" << newLine;
-        effect->getTree().setProperty(Effect::IDs::w, effect->getWidth(), undoManager);
-        effect->getTree().setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
-    }
+
 
     ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
 }
@@ -2131,4 +2148,11 @@ void EffectTreeUpdater::componentNameChanged(Component &component) {
 
 void EffectTreeUpdater::setUndoManager(UndoManager &um) {
     undoManager = &um;
+}
+
+void EffectTreeUpdater::componentChildrenChanged(Component &component) {
+    for (auto c : component.getChildren()) {
+        c->addComponentListener(this);
+    }
+    ComponentListener::componentChildrenChanged(component);
 }

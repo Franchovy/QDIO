@@ -31,6 +31,8 @@ public:
 
     void setUndoManager(UndoManager& um);
 
+    void componentChildrenChanged(Component &component) override;
+
 private:
     UndoManager* undoManager;
 };
