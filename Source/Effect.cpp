@@ -795,20 +795,6 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
 
     // Create effects by adding them to valuetree
     else if (loadData.hasType(EFFECT_ID)) {
-
-        // Load child effects
-        for (int i = 0; i < loadData.getNumChildren(); i++) {
-            auto child = loadData.getChild(i);
-
-            // Load Parameters
-            if (child.hasType(PARAMETER_ID)) {
-                ValueTree paramChild(PARAMETER_ID);
-                paramChild.copyPropertiesFrom(child, nullptr);
-
-                copy.appendChild(paramChild, nullptr);
-            }
-        }
-
         copy.copyPropertiesFrom(loadData, nullptr);
         parentTree.appendChild(copy, &undoManager);
 
@@ -837,8 +823,15 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
 
+            // Load Parameters
+            if (child.hasType(PARAMETER_ID)) {
+                ValueTree paramChild(PARAMETER_ID);
+                paramChild.copyPropertiesFrom(child, nullptr);
+
+                copy.appendChild(paramChild, nullptr);
+            }
             // Connection
-            if (child.hasType(CONNECTION_ID)) {
+            else if (child.hasType(CONNECTION_ID)) {
                 // Set data
                 ValueTree connectionToSet(CONNECTION_ID);
 
@@ -1001,6 +994,15 @@ ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPor
 Point<int> EffectTreeBase::getMenuPos() const {
     return menuPos;
 }
+
+//======================================================================================
+// methods to move to manager class
+
+Effect* Effect::createEffect(ValueTree &loadData) {
+    return nullptr;
+}
+
+//======================================================================================
 
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     if (vt.hasProperty(IDs::processorID)) {
@@ -1849,6 +1851,8 @@ Parameter *Effect::getParameterForPort(ParameterPort *port) {
 Array<AudioProcessorParameter *> Effect::getParameters(bool recursive) {
     return parameters->getParameters(recursive);
 }
+
+
 
 
 

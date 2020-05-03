@@ -174,6 +174,12 @@ public:
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
+    //========================================================
+    // Methods to be moved to other "manager" class
+    static Effect* createEffect(ValueTree& loadData);
+
+    //========================================================
+
     void hoverOver(EffectTreeBase* newParent);
     void reassignNewParent(EffectTreeBase* newParent);
 
