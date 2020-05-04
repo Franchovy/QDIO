@@ -356,10 +356,10 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
     // ADD CONNECTION
     else if (childWhichHasBeenAdded.hasType(CONNECTION_ID))
     {
-        if (parentTree != tree)
+        /*if (parentTree != tree)
         {
             return;
-        }
+        }*/
 
         ConnectionLine* line;
         // Add connection here
@@ -1088,7 +1088,7 @@ Effect* Effect::createEffect(ValueTree &loadData) {
 
     auto parameters = effect->getParameters(false);
     Rectangle<int> newBounds = effect->getBounds();
-    for (auto p : effect->getParameterChildren()) {
+    for (auto p : effect->parameterArray) {
         newBounds = newBounds.getUnion(p->getBoundsInParent()).expanded(10,25);
     }
     for (auto p : effect->getPorts()) {
@@ -1414,13 +1414,14 @@ Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
         audioGraph->addParameter(param);
     }
 
-    auto parameter = new Parameter(param);
+    Parameter::Ptr parameter = new Parameter(param);
+    parameterArray.add(parameter);
 
     if (isIndividual()) {
         parameter->setEditMode(false);
     }
 
-    addAndMakeVisible(parameter);
+    addAndMakeVisible(parameter.get());
     addAndMakeVisible(parameter->getPort(true));
 
     // Set position
@@ -1434,12 +1435,12 @@ Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
         param->setValueNotifyingHost(value);
     }
 
-    parameterData.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
+    parameterData.setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
 
     parameter->setTopLeftPosition(x, y);
 
-    // if has connection then connect
 
+    // if has connection then connect
 
 
     return parameter;

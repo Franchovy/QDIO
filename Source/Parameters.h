@@ -15,7 +15,9 @@
 class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener
 {
 public:
-    Parameter(AudioProcessorParameter *param);
+    using Ptr = ReferenceCountedObjectPtr<Parameter>;
+
+    explicit Parameter(AudioProcessorParameter *param);
 
     enum Type {
         button = 0,

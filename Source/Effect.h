@@ -291,6 +291,7 @@ private:
     PopupMenu editMenu;
 
     const AudioProcessorParameterGroup* parameters = nullptr;
+    ReferenceCountedArray<Parameter> parameterArray;
 
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
