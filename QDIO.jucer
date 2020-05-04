@@ -32,6 +32,8 @@
             xcodeResource="1"/>
       <FILE id="QX8rPO" name="IOEffects.h" compile="1" resource="1" file="Source/IOEffects.h"
             xcodeResource="1"/>
+      <FILE id="GJ5h2L" name="DSPEffects.cpp" compile="1" resource="0" file="Source/DSPEffects.cpp"/>
+      <FILE id="bN3huF" name="DSPEffects.h" compile="0" resource="0" file="Source/DSPEffects.h"/>
       <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="1" file="Source/Main.cpp"
             xcodeResource="1"/>
       <FILE id="NBQqHO" name="Parameters.cpp" compile="1" resource="0" file="Source/Parameters.cpp"/>
