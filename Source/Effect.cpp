@@ -1372,6 +1372,11 @@ void Effect::setProcessor(AudioProcessor *processor) {
 
 Parameter* Effect::createParameter(AudioProcessorParameter *param) {
     auto parameter = new Parameter(param);
+
+    if (param->isMetaParameter()) {
+        audioGraph->addParameter(param);
+    }
+
     addAndMakeVisible(parameter);
     addAndMakeVisible(parameter->getPort(true));
 

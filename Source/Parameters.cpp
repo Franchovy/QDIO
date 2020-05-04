@@ -84,7 +84,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
     }
 
     // Set up label
-    parameterLabel.setBounds(0, 0, getWidth(), 20);
+    parameterLabel.setBounds(10, 30, getWidth(), 20);
     parameterLabel.setFont(Font(15, Font::FontStyleFlags::bold));
     parameterLabel.onTextChange = [=] {
         setName(parameterLabel.getText(true));
@@ -274,6 +274,7 @@ MetaParameter::MetaParameter(String name)
         : RangedAudioParameter(name.toLowerCase(), name)
         , range(0, 1, 0.1f)
 {
+    linkedParameter = nullptr;
 }
 
 float MetaParameter::getValue() const {
