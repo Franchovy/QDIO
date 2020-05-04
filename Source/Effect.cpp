@@ -12,6 +12,7 @@
 
 #include "Effect.h"
 #include "IDs"
+#include "DSPEffects.h"
 
 // Static members
 EffectTreeBase::AppState EffectTreeBase::appState = neutral;
@@ -254,16 +255,22 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
                 undoManager.beginNewTransaction("Create Output Effect");
                 newEffect("Output Device", 1);
             }));
+    createEffectMenu.addItem("Distortion Effect", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction("Create Distortion Effect");
+                newEffect("Distortion Effect", 2);
+            }
+    ));
     createEffectMenu.addItem("Delay Effect", std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Delay Effect");
                 newEffect("Delay Effect", 3);
             }
     ));
-    createEffectMenu.addItem("Distortion Effect", std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Distortion Effect");
-                newEffect("Distortion Effect", 2);
+    createEffectMenu.addItem("Reverb Effect", std::function<void()>(
+            [=](){
+                undoManager.beginNewTransaction("Create Reverb Effect");
+                newEffect("Reverb Effect", 4);
             }
     ));
 
@@ -1023,6 +1030,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
             case 3:
                 newProcessor = std::make_unique<DelayEffect>();
                 break;
+            case 4:
+                newProcessor = std::make_unique<ReverbEffect>();
+                break;
             default:
                 std::cout << "ProcessorID not found." << newLine;
         }
@@ -1385,7 +1395,18 @@ Parameter* Effect::createParameter(AudioProcessorParameter *param) {
  */
 Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
     auto name = parameterData.getProperty("name");
-    auto param = new MetaParameter(name);
+
+    AudioProcessorParameter* param = nullptr;
+
+    if (isIndividual()) {
+        for(auto p : getParameters(false)) {
+            if (p->getName(30).compare(name) == 0) {
+                param = p;
+            }
+        }
+    } else {
+        param = new MetaParameter(name);
+    }
 
     auto parameter = new Parameter(param);
 

@@ -17,7 +17,7 @@ class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
 public:
     InputDeviceEffect(StringArray choices, int defaultIndex)
         : AudioGraphIOProcessor(AudioGraphIOProcessor::audioInputNode)
-        , deviceParam("device", "Device", choices, defaultIndex)
+        , deviceParam("inputdevice", "Device", choices, defaultIndex)
     {
         addParameter(&deviceParam);
     }
@@ -35,7 +35,7 @@ class OutputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor//, 
 public:
     OutputDeviceEffect(StringArray choices, int defaultIndex)
         : AudioGraphIOProcessor(AudioGraphIOProcessor::audioOutputNode)
-        , deviceParam("device", "Device", choices, defaultIndex)
+        , deviceParam("outputdevice", "Device", choices, defaultIndex)
     {
         addParameter(&deviceParam);
     }
