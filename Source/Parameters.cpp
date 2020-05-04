@@ -84,7 +84,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
     }
 
     // Set up label
-    parameterLabel.setBounds(10, 30, getWidth(), 20);
+    parameterLabel.setBounds(10, 30, 200, 20);
     parameterLabel.setFont(Font(15, Font::FontStyleFlags::bold));
     parameterLabel.onTextChange = [=] {
         setName(parameterLabel.getText(true));
@@ -103,8 +103,8 @@ Parameter::Parameter(AudioProcessorParameter *param)
     param->addListener(this);
 
     parameterLabel.setTopLeftPosition(15, 55);
+    parameterLabel.setColour(Label::textColourId, Colours::black);
     parameterComponent->setTopLeftPosition(0,60);
-    /*parameterComponent->setCentrePosition(getWidth() / 2, 80);*/
     externalPort->setCentrePosition(getWidth() / 2, 30);
 
     setBounds(0, 0, 150, 120);
@@ -262,7 +262,6 @@ void Parameter::moved() {
     internalPort->setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
     Component::moved();
 }
-
 
 /*NormalisableRange<double> Parameter::getRange() {
     auto slider = dynamic_cast<Slider*>(parameterComponent.get());

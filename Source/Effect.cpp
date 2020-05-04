@@ -1411,6 +1411,7 @@ Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
         }
     } else {
         param = new MetaParameter(name);
+        audioGraph->addParameter(param);
     }
 
     auto parameter = new Parameter(param);
@@ -1427,13 +1428,19 @@ Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
     int x = parameterData.getProperty("x");
     int y = parameterData.getProperty("y");
 
+    // Set value
+    if (parameterData.hasProperty("value")) {
+        float value = parameterData.getProperty("value");
+        param->setValueNotifyingHost(value);
+    }
+
     parameterData.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
 
     parameter->setTopLeftPosition(x, y);
 
     // if has connection then connect
 
-    audioGraph->addParameter(param);
+
 
     return parameter;
 }
