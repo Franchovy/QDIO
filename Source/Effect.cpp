@@ -1078,7 +1078,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         }
     }
 
-    auto numProcessorParameters = effect->parameters->getParameters(false).size();
+
+    auto numProcessorParameters = effect->parameters == nullptr
+            ? 0 : effect->parameters->getParameters(false).size();
     auto numTreeParameters = parameterChildren.size();
 
     // If there are processor parameters not registered in tree
@@ -1345,8 +1347,8 @@ void Effect::setupMenu() {
         auto newParam = createParameter(new MetaParameter("New Parameter"));
         newParam.setProperty("x", getMouseXYRelative().getX(), nullptr);
         newParam.setProperty("y", getMouseXYRelative().getY(), nullptr);
+        tree.appendChild(newParam, &undoManager);
         loadParameter(newParam);
-        //newParam->setCentrePosition(getMouseXYRelative());
     });
     editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
 
