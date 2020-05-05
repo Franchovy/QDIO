@@ -221,23 +221,6 @@ void EffectTreeBase::close() {
     effectsToDelete.clear();
 }
 
-Point<int> EffectTreeBase::dragDetachFromParentComponent() {
-    auto newPos = getPosition() + getParentComponent()->getPosition();
-    auto parentParent = getParentComponent()->getParentComponent();
-    getParentComponent()->removeChildComponent(this);
-    parentParent->addAndMakeVisible(this);
-
-    for (auto c : getChildren())
-        std::cout << "Child position: " << c->getPosition().toString() << newLine;
-
-    return newPos;
-}
-
-void EffectTreeBase::createConnection(ConnectionLine::Ptr line) {
-    // Add connection to this object
-
-
-}
 
 PopupMenu EffectTreeBase::getEffectSelectMenu() {
     createEffectMenu.addItem("Empty Effect", std::function<void()>(
@@ -298,38 +281,11 @@ ValueTree EffectTreeBase::newEffect(String name, int processorID) {
 
     return newEffect;
 }
-/*
-void EffectTreeBase::newEffect(ValueTree& tree) {
-    int processorID;
-    if (tree.hasProperty(Effect::IDs::processorID)) {
-        processorID = tree.getProperty(Effect::IDs::processorID);
-    } else {
-        processorID = -1;
-    }
-    String name;
-    if (tree.hasProperty(Effect::IDs::name)) {
-        name = tree.getProperty(Effect::IDs::name);
-    } else {
-        name = "Effect";
-    }
-    newEffect(name, processorID);
-
-}*/
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    if (getFromTree<Effect>(childWhichHasBeenAdded) != nullptr) {
-        std::cout << "Add " << getFromTree<Effect>(childWhichHasBeenAdded)->getName() <<  " to " << parentTree.getType().toString() << newLine;
-    }
-
     // ADD EFFECT
-    if (childWhichHasBeenAdded.hasType(EFFECT_ID))
-    {
-        /*if (parentTree != tree)
-        {
-            return;
-        }*/
-
+    if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
                 e->setVisible(true);
@@ -348,107 +304,30 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
 
             // Create new effect
             auto e = Effect::createEffect(childWhichHasBeenAdded);
-
-            /*if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
-                parent->addAndMakeVisible(e);
-            }*/
         }
     }
-    // ADD CONNECTION
-    else if (childWhichHasBeenAdded.hasType(CONNECTION_ID))
-    {
-        /*if (parentTree != tree)
-        {
-            return;
-        }*/
-
-        ConnectionLine* line;
+        // ADD CONNECTION
+    else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
+        ConnectionLine *line;
         // Add connection here
-        if (! childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
+        if (!childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
             auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
 
 
             line = new ConnectionLine(*inport, *outport);
             childWhichHasBeenAdded.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
-            addAndMakeVisible(line);
+
+            auto parent = getFromTree<EffectTreeBase>(parentTree);
+            parent->addAndMakeVisible(line);
         } else {
-            line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded, ConnectionLine::IDs::ConnectionLineObject);
+            line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
+                                                       ConnectionLine::IDs::ConnectionLineObject);
             line->setVisible(true);
         }
         line->toFront(false);
         connectAudio(*line);
     }
-
-    /*
-    // ADD PARAMETER
-    else if (childWhichHasBeenAdded.hasType(PARAMETER_ID))
-    {
-        // Avoid multiple constructor calls
-        *//*if (parentTree != tree) {
-            return;
-        }*//*
-
-        auto parent = getFromTree<Effect>(parentTree);
-        //todo simplify dis
-
-        Parameter* parameter;
-        if (! childWhichHasBeenAdded.hasProperty(Parameter::IDs::parameterObject)) {
-            // create parameter object
-            auto paramName = childWhichHasBeenAdded.getProperty("name").toString();
-            auto param = new MetaParameter(paramName);
-
-            parameter = new Parameter(param);
-            childWhichHasBeenAdded.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
-
-            parameter->setName(paramName);
-
-            int x = childWhichHasBeenAdded.getProperty("x");
-            int y = childWhichHasBeenAdded.getProperty("y");
-            parameter->setTopLeftPosition(x, y);
-        } else {
-            // Load to existing parameter object
-            parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
-            auto param = parameter->getParameter();
-
-            if (param->isMetaParameter()) {
-                audioGraph->addParameter(param);
-                // parameters add param (unique ptr)
-            }
-
-
-            if (! childWhichHasBeenAdded.hasProperty("x") && ! childWhichHasBeenAdded.hasProperty("y"))
-            {
-                auto parameters = parent->getParameters(false);
-                auto i = parameters.indexOf(param);
-
-                if (parameter->type == Parameter::combo) {
-                    if (parent->getNumInputs() > 0) {
-                        parameter->setTopLeftPosition(70, 80 + i * 50);
-                    } else {
-                        parameter->setTopLeftPosition(40, 80 + i * 50);
-                    }
-                } else {
-                    parameter->setTopLeftPosition(60, 70 + i * 50);
-                }
-            }
-        }
-        if (parent->isIndividual()) {
-            //todo ?????? remove??
-            childWhichHasBeenAdded.setProperty("x", parameter->getX(), nullptr);
-            childWhichHasBeenAdded.setProperty("y", parameter->getY(), nullptr);
-        }
-
-        // Add parameter component to effect
-        parent->addAndMakeVisible(parameter);
-        // Add in/out ports to parameter and parent effect
-        parameter->addChildComponent(parameter->getPort(true));
-        parent->addChildComponent(parameter->getPort(true));
-
-        parameter->setEditMode(parent->isInEditMode());
-
-        resized();
-    }*/
 }
 
 void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
@@ -975,8 +854,6 @@ ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPor
     auto newConnection = ValueTree(CONNECTION_ID);
     newConnection.setProperty(ConnectionLine::IDs::InPort, inPort.get(), nullptr);
     newConnection.setProperty(ConnectionLine::IDs::OutPort, outPort.get(), nullptr);
-    //auto newConnection = new ConnectionLine(*port, *l->port1);
-    std::cout << "Effect1: " << effect1 << newLine;
 
     if (effect1->getParent() == effect2->getParent()) {
         if (effect1 == effect2) {
@@ -1135,33 +1012,20 @@ Effect* Effect::createEffect(ValueTree &loadData) {
 
     // Increase to fit ports and parameters
 
-    //auto position = Point<int>(x,y);
-    //auto bounds = Rectangle<int>(x, y, w, h);
-
-
     for (auto p : parameterChildren) {
         auto parameter = getFromTree<Parameter>(p);
         auto parameterBounds = parameter->getBounds();
 
         w = jmax(parameterBounds.getX() + parameterBounds.getWidth() + 10, w);
         h = jmax(parameterBounds.getY() + parameterBounds.getHeight() + 25, h);
-
-        //bounds = bounds.getUnion(parameterBounds.expanded(10, 25));
     }
+
     for (auto p : effect->getPorts()) {
         auto portBounds = p->getBounds();
 
         w = jmax(portBounds.getX() + portBounds.getWidth(), w);
         h = jmax(portBounds.getY() + portBounds.getHeight(), h);
-
-
-        //bounds = bounds.getUnion(p->getBoundsInParent());
     }
-/*
-
-    // Fix position
-    bounds.setPosition(position);
-*/
 
     // Set new bounds
     effect->setBounds(x, y, w, h);
@@ -1181,121 +1045,6 @@ Effect::Effect() : EffectTreeBase(EFFECT_ID) {
     addAndMakeVisible(resizer);
     resizer.setAlwaysOnTop(true);
 }
-
-/*
-Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
-    std::cout << "stop right theah boih" << newLine;
-
-    if (vt.hasProperty(IDs::processorID)) {
-        // Individual Effect
-        std::unique_ptr<AudioProcessor> newProcessor;
-        int id = vt.getProperty(IDs::processorID);
-
-        auto currentDevice = deviceManager->getCurrentDeviceTypeObject();
-
-        switch (id) {
-            case 0:
-                newProcessor = std::make_unique<InputDeviceEffect>(currentDevice->getDeviceNames(true),
-                       currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(), true));
-                break;
-            case 1:
-                newProcessor = std::make_unique<OutputDeviceEffect>(currentDevice->getDeviceNames(false),
-                        currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(), false));
-                break;
-            case 2:
-                newProcessor = std::make_unique<DistortionEffect>();
-                break;
-            case 3:
-                newProcessor = std::make_unique<DelayEffect>();
-                break;
-            default:
-                std::cout << "ProcessorID not found." << newLine;
-        }
-        node = audioGraph->addNode(move(newProcessor));
-
-        node->incReferenceCount();
-
-        // Create from node:
-        setProcessor(node->getProcessor());
-    }
-    // Custom Effect
-    else {
-        int numInputPorts = tree.getProperty("numInputPorts", 0);
-        int numOutputPorts = tree.getProperty("numOutputPorts", 0);
-
-        for (int i = 0; i < numInputPorts; i++) {
-            addPort(getDefaultBus(), true);
-        }
-        for (int i = 0; i < numOutputPorts; i++) {
-            addPort(getDefaultBus(), false);
-        }
-
-        // Make edit mode true by default
-        setEditMode(true);
-
-        // Load parameters
-        for (int i = 0; i < tree.getNumChildren(); i++) {
-            if (tree.getChild(i).hasType(PARAMETER_ID)) {
-                auto child = tree.getChild(i);
-                loadParameter(child);
-            }
-        }
-
-        //parameters = new AudioProcessorParameterGroup();
-    }
-
-    // Set name
-    if (! tree.hasProperty(IDs::name)) {
-        if (isIndividual()) {
-            tree.setProperty(IDs::name, processor->getName(), nullptr);
-        } else {
-            tree.setProperty(IDs::name, "Effect", nullptr);
-        }
-    }
-
-    int x = tree.getProperty(IDs::x, 0);
-    int y = tree.getProperty(IDs::y, 0);
-    int w = tree.getProperty(IDs::w, 200);
-    int h = tree.getProperty(IDs::h, 200);
-
-    //Point<int> newPos = Position::fromVar(tree.getProperty(IDs::pos));
-    setBounds(x, y, w, h);
-
-    // set bounds based on parameters
-    */
-/*auto parameters = parent->getParameters(false);
-    auto numParameters = parameters.size();
-    *//*
-*/
-/*auto newBounds = getBounds().getUnion(
-            Rectangle<int>(getX(), getY(),
-                           parameter->getWidth() + 50, 50 + numParameters * 50));*//*
-*/
-/*
-    auto newBounds = getBounds().getUnion(
-            parameter->getBoundsInParent());
-    setBounds(newBounds); // should always call resized()*//*
-
-
-    addAndMakeVisible(resizer);
-
-    // Set tree properties
-
-    // Position
-    //pos.referTo(tree, IDs::pos, &undoManager);
-    setPos(getPosition());
-
-    // Set parent component
-    auto parentTree = vt.getParent();
-    if (parentTree.isValid()) {
-        auto parent = getFromTree<EffectTreeBase>(parentTree);
-        parent->addAndMakeVisible(this);
-    }
-
-    setupTitle();
-    setupMenu();
-}
-*/
 
 void Effect::setupTitle() {
     Font titleFont(20, Font::FontStyleFlags::bold);

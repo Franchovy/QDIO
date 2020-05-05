@@ -54,8 +54,6 @@ public:
 
     ~EffectTreeBase() override;
 
-    void createConnection(ConnectionLine::Ptr line);
-
     static void close();
 
     static ValueTree storeEffect(const ValueTree& tree);
@@ -64,7 +62,6 @@ public:
     void resized() override = 0;
     bool keyPressed(const KeyPress &key) override;
 
-    //void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
@@ -125,9 +122,7 @@ protected:
     //====================================================================================
     // Hover identifier and management
     static LineComponent dragLine;
-
-    Point<int> dragDetachFromParentComponent();
-
+    
     static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
     static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
@@ -152,12 +147,6 @@ protected:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTreeBase)
 };
-/*
-struct Position : public VariantConverter<Point<int>>
-{
-    static Point<int> fromVar (const var &v);
-    static var toVar (const Point<int> &t);
-};*/
 
 /**
  * Effect (ValueTree) is an encapsulator for individual or combinations of AudioProcessors
@@ -171,7 +160,6 @@ class Effect : public EffectTreeBase
 {
 public:
     Effect();
-    //explicit Effect(const ValueTree& vt);
 
     void setupTitle();
     void setupMenu();
