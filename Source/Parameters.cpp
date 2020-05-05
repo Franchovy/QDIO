@@ -56,7 +56,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
         combo->setSelectedItemIndex(param->getValue());
 
-        combo->setBounds(20, 0, 250, 40);
+        combo->setBounds(20, 60, 250, 40);
         addAndMakeVisible(combo);
     } else {
         // Slider
@@ -76,7 +76,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
         slider->setTextBoxIsEditable(true);
         slider->setValue(param->getValue());
 
-        slider->setBounds(0, 0, 100, 70);
+        slider->setBounds(0, 60, 100, 70);
         addAndMakeVisible(slider);
 
         slider->hideTextBox(false);
@@ -104,7 +104,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
     parameterLabel.setTopLeftPosition(15, 55);
     parameterLabel.setColour(Label::textColourId, Colours::black);
-    parameterComponent->setTopLeftPosition(0,60);
+    //parameterComponent->setTopLeftPosition(0,60);
     externalPort->setCentrePosition(getWidth() / 2, 30);
 
     setBounds(0, 0, 150, 120);

@@ -1051,14 +1051,6 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         for (int i = 0; i < numOutputPorts; i++) {
             effect->addPort(getDefaultBus(), false);
         }
-
-        // Load parameters
-        for (int i = 0; i < loadData.getNumChildren(); i++) {
-            if (loadData.getChild(i).hasType(PARAMETER_ID)) {
-                auto parameter = effect->loadParameter(effect->tree.getChild(i));
-                effect->tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
-            }
-        }
     }
 
     // Make edit mode true by default
@@ -1075,29 +1067,49 @@ Effect* Effect::createEffect(ValueTree &loadData) {
     }
 
     //==============================================================
-    // Set up bounds
+    // Set up parameters
 
-    int x = loadData.getProperty(IDs::x, 0);
-    int y = loadData.getProperty(IDs::y, 0);
-    int w = loadData.getProperty(IDs::w, 200);
-    int h = loadData.getProperty(IDs::h, 200);
+    // Get parameter children already existing to add
+    Array<ValueTree> parameterChildren;
 
-    effect->setBounds(x, y, w, h);
-
-    // Increase to fit ports and parameters
-
-    auto parameters = effect->getParameters(false);
-    Rectangle<int> newBounds = effect->getBounds();
-    for (auto p : effect->parameterArray) {
-        newBounds = newBounds.getUnion(p->getBoundsInParent()).expanded(10,25);
+    for (int i = 0; i < loadData.getNumChildren(); i++) {
+        if (loadData.getChild(i).hasType(PARAMETER_ID)) {
+            parameterChildren.add(loadData.getChild(i));
+        }
     }
-    for (auto p : effect->getPorts()) {
-        newBounds = newBounds.getUnion(p->getBoundsInParent());
+
+    auto numProcessorParameters = effect->parameters->getParameters(false).size();
+    auto numTreeParameters = parameterChildren.size();
+
+    // If there are processor parameters not registered in tree
+    if (numProcessorParameters > numTreeParameters) {
+        // Iterate through processor parameters
+        for (int i = 0; i < numProcessorParameters; i++) {
+            auto processorParam = effect->parameters->getParameters(false)[i];
+            // If parameter doesn't already exist in tree
+            if (! loadData.getChildWithProperty("name", processorParam->getName(30)).isValid()) {
+                auto parameterVT = effect->createParameter(processorParam);
+
+                // Set position
+                auto x = effect->inputPorts.size() > 0 ? 60 : 30;
+                auto y = 30 + i * 50;
+
+                parameterVT.setProperty("x", x, nullptr);
+                parameterVT.setProperty("y", y, nullptr);
+
+                // Add parameterVT to tree
+                effect->tree.appendChild(parameterVT, nullptr);
+            }
+        }
     }
-    // Fix position
-    newBounds.setPosition(effect->getPosition());
-    // Set new bounds
-    effect->setBounds(newBounds);
+
+    // Load parameters from tree
+    for (int i = 0; i < loadData.getNumChildren(); i++) {
+        if (loadData.getChild(i).hasType(PARAMETER_ID)) {
+            auto parameter = effect->loadParameter(effect->tree.getChild(i));
+            effect->tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
+        }
+    }
 
     //==============================================================
     // Set parent component
@@ -1107,6 +1119,34 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         auto parent = getFromTree<EffectTreeBase>(parentTree);
         parent->addAndMakeVisible(effect);
     }
+
+    //==============================================================
+    // Set up bounds
+
+    int x = loadData.getProperty(IDs::x, 0);
+    int y = loadData.getProperty(IDs::y, 0);
+    int w = loadData.getProperty(IDs::w, 200);
+    int h = loadData.getProperty(IDs::h, 200);
+
+    // Increase to fit ports and parameters
+
+    auto bounds = Rectangle<int>(x, y, w, h);
+
+//    // Fix position
+//    bounds.setPosition(effect->getPosition());
+
+    auto parameters = effect->getParameters(false);
+    for (auto p : effect->parameterArray) {
+        bounds = bounds.getUnion(p->getBoundsInParent().expanded(10, 25));
+    }
+    for (auto p : effect->getPorts()) {
+        bounds = bounds.getUnion(p->getBoundsInParent());
+    }
+    // Set new bounds
+    effect->setBounds(bounds);
+
+    //==============================================================
+    // Set up other stuff
 
     effect->setupMenu();
     effect->setupTitle();
@@ -1300,9 +1340,11 @@ void Effect::setupMenu() {
 
     PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {
-        Parameter::Ptr newParam = createParameter(new MetaParameter("New Parameter"));
-        newParam->setCentrePosition(getMouseXYRelative());
-
+        auto newParam = createParameter(new MetaParameter("New Parameter"));
+        newParam.setProperty("x", getMouseXYRelative().getX(), nullptr);
+        newParam.setProperty("y", getMouseXYRelative().getY(), nullptr);
+        loadParameter(newParam);
+        //newParam->setCentrePosition(getMouseXYRelative());
     });
     editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
 
@@ -1347,7 +1389,7 @@ void Effect::setProcessor(AudioProcessor *processor) {
 
     // Setup parameters
     parameters = &processor->getParameterTree();
-
+/*
     // Create parameters from processor if they don't exist yet.
     if (! tree.getChildWithName(PARAMETER_ID).isValid()) {
         int i = 0;
@@ -1366,29 +1408,15 @@ void Effect::setProcessor(AudioProcessor *processor) {
                 tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
             }
         }
-    }
+    }*/
 }
 
 
-Parameter* Effect::createParameter(AudioProcessorParameter *param) {
-    auto parameter = new Parameter(param);
-
-    if (param->isMetaParameter()) {
-        audioGraph->addParameter(param);
-    }
-
-    addAndMakeVisible(parameter);
-    addAndMakeVisible(parameter->getPort(true));
-
+ValueTree Effect::createParameter(AudioProcessorParameter *param) {
     ValueTree parameterTree(PARAMETER_ID);
     parameterTree.setProperty("name", param->getName(30), nullptr);
-    parameterTree.setProperty("x", parameter->getX(), nullptr);
-    parameterTree.setProperty("y", parameter->getY(), nullptr);
-    parameterTree.setProperty(Parameter::IDs::parameterObject, parameter, nullptr);
 
-    tree.appendChild(parameterTree, nullptr);
-
-    return parameter;
+    return parameterTree;
 }
 
 /**

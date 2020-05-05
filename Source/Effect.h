@@ -210,8 +210,7 @@ public:
     void setParameters(const AudioProcessorParameterGroup* group);
     Parameter& addParameterFromProcessorParam(AudioProcessorParameter* param);
 
-    Parameter* createParameter(AudioProcessorParameter* param);
-    Parameter::Ptr addParameter();
+    ValueTree createParameter(AudioProcessorParameter* param);
     Parameter::Ptr loadParameter(ValueTree parameterData);
 
     Array<AudioProcessorParameter*> getParameters(bool recursive);
