@@ -41,7 +41,8 @@ public:
 
     void moved() override;
 
-    //NormalisableRange<double> getRange();
+    bool isConnected();
+    Parameter* getConnectedParameter();
 
     AudioProcessorParameter* getParameter();
 

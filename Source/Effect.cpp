@@ -611,15 +611,20 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
             // Register parameter
             else if (child.hasType(PARAMETER_ID))
             {
-                auto childObject = getFromTree<Parameter>(child);
+                auto childParamObject = getFromTree<Parameter>(child);
                 auto childParam = ValueTree(PARAMETER_ID);
 
-                childParam.setProperty("x", childObject->getX(), nullptr);
-                childParam.setProperty("y", childObject->getY(), nullptr);
+                childParam.setProperty("x", childParamObject->getX(), nullptr);
+                childParam.setProperty("y", childParamObject->getY(), nullptr);
 
-                childParam.setProperty("name", childObject->getName(), nullptr);
-                childParam.setProperty("type", childObject->type, nullptr);
-                childParam.setProperty("value", childObject->getParameter()->getValue(), nullptr);
+                childParam.setProperty("name", childParamObject->getName(), nullptr);
+                childParam.setProperty("type", childParamObject->type, nullptr);
+                childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
+
+                if (childParamObject->isConnected()) {
+                    childParam.setProperty("connectedParam",
+                            childParamObject->getConnectedParameter()->getName(), nullptr);
+                }
 
                 copy.appendChild(childParam, nullptr);
             }
@@ -711,6 +716,23 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
+
+            // Connect parameters
+            if (child.hasType(PARAMETER_ID)) {
+                if (child.hasProperty("connectedParam")) {
+                    auto connectedParamName = child.getProperty("connectedParam");
+
+                    ValueTree paramToConnect(PARAMETER_ID);
+                    for (int i = 0; i < loadData.getNumChildren(); i++) {
+                        auto c = loadData.getChild(i).getChildWithProperty("name", connectedParamName);
+                        if (c.isValid()) {
+                            auto thisParam = getFromTree<Parameter>(child);
+                            auto toConnectParam = getFromTree<Parameter>(c);
+                            thisParam->connect(toConnectParam);
+                        }
+                    }
+                }
+            }
 
             // Connection
             if (child.hasType(CONNECTION_ID)) {

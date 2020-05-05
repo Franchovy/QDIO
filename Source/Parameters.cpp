@@ -148,7 +148,7 @@ void Parameter::setEditMode(bool isEditable) {
 }
 
 void Parameter::mouseDown(const MouseEvent &event) {
-    if (event.originalComponent == internalPort.get()) {
+    if (event.originalComponent == externalPort.get()) {
         getParentComponent()->mouseDown(event);
     }
     else if (editMode)
@@ -159,7 +159,7 @@ void Parameter::mouseDown(const MouseEvent &event) {
 }
 
 void Parameter::mouseDrag(const MouseEvent &event) {
-    if (event.originalComponent == internalPort.get()) {
+    if (event.originalComponent == externalPort.get()) {
         getParentComponent()->mouseDrag(event);
     }
     else if (editMode)
@@ -170,7 +170,7 @@ void Parameter::mouseDrag(const MouseEvent &event) {
 }
 
 void Parameter::mouseUp(const MouseEvent &event) {
-    if (event.originalComponent == internalPort.get()) {
+    if (event.originalComponent == externalPort.get()) {
         getParentComponent()->mouseUp(event);
     }
     SelectHoverObject::mouseUp(event);
@@ -263,6 +263,16 @@ void Parameter::moved() {
     internalPort->setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
     Component::moved();
 }
+
+bool Parameter::isConnected() {
+    return connectedParameter != nullptr;
+}
+
+Parameter* Parameter::getConnectedParameter() {
+    return connectedParameter;
+}
+
+
 
 /*NormalisableRange<double> Parameter::getRange() {
     auto slider = dynamic_cast<Slider*>(parameterComponent.get());
