@@ -111,6 +111,8 @@ ParameterPort::ParameterPort(bool isInternal)
     outline = Rectangle<int>(20,20,20,20);
     centrePoint = Point<int>(30,30);
 
+    isInput = isInternal;
+
     setBounds(0, 0, 60, 60);
 }
 

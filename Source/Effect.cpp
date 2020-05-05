@@ -717,12 +717,12 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
 
+
             // Connect parameters
             if (child.hasType(PARAMETER_ID)) {
                 if (child.hasProperty("connectedParam")) {
                     auto connectedParamName = child.getProperty("connectedParam");
 
-                    ValueTree paramToConnect(PARAMETER_ID);
                     for (int i = 0; i < loadData.getNumChildren(); i++) {
                         auto c = loadData.getChild(i).getChildWithProperty("name", connectedParamName);
                         if (c.isValid()) {
@@ -1561,11 +1561,13 @@ void Effect::mouseUp(const MouseEvent &event) {
             auto inPort = port1->isInput ? port2 : port1;
             auto outPort = port1->isInput ? port1 : port2;
 
-            // Connect internal Parameter2 to external Parameter1
-            auto e = dynamic_cast<Effect*>(getParentComponent());
-            auto inParameter = e->getParameterForPort(inPort);
 
-            auto outParameter = dynamic_cast<Parameter*>(outPort->getParentComponent());
+            // Connect internal Parameter2 to external Parameter1
+            auto e = dynamic_cast<Effect*>(outPort->getParentComponent());
+            // Internal port belongs to the external parameter & vice versa
+            auto inParameter = e->getParameterForPort(outPort);
+
+            auto outParameter = dynamic_cast<Parameter*>(inPort->getParentComponent());
 
             if (inParameter == nullptr || outParameter == nullptr) {
                 std::cout << "Failed to connect parameters!" << newLine;
