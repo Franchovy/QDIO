@@ -618,7 +618,7 @@ EffectTreeBase::~EffectTreeBase() {
 
 void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
-    menuPos = getMouseXYRelative();
+    menuPos = getTopLevelComponent()->getMouseXYRelative();
     int result = m.show();
 }
 
@@ -1130,10 +1130,8 @@ Effect* Effect::createEffect(ValueTree &loadData) {
 
     // Increase to fit ports and parameters
 
+    auto position = Point<int>(x,y);
     auto bounds = Rectangle<int>(x, y, w, h);
-
-//    // Fix position
-//    bounds.setPosition(effect->getPosition());
 
     auto parameters = effect->getParameters(false);
     for (auto p : effect->parameterArray) {
@@ -1142,6 +1140,10 @@ Effect* Effect::createEffect(ValueTree &loadData) {
     for (auto p : effect->getPorts()) {
         bounds = bounds.getUnion(p->getBoundsInParent());
     }
+
+    // Fix position
+    bounds.setPosition(position);
+
     // Set new bounds
     effect->setBounds(bounds);
 
