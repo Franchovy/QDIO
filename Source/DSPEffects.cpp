@@ -19,7 +19,7 @@ DSPEffect::DSPEffect()
 
 ReverbEffect::ReverbEffect()
     : DSPEffect()
-    , roomSize("roomsize", "Room Size",
+    , roomSize("size", "Size",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.7f)
     , strength("strength", "Strength",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f)
