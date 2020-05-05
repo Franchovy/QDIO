@@ -585,8 +585,8 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
             copy.setProperty("numInputPorts", effect->getNumInputs(), nullptr);
             copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);
 
-            // Save parameter info
-            //copy.appendChild(effect->storeParameters(), nullptr);
+            // Set edit mode
+            copy.setProperty("editMode", effect->isInEditMode(), nullptr);
 
         } else {
             std::cout << "dat shit is not initialised. do not store" << newLine;
@@ -931,8 +931,14 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         }
     }
 
-    // Make edit mode true by default
-    effect->setEditMode(effect->isIndividual());
+    //==============================================================
+    // Set edit mode
+    if (loadData.hasProperty("editMode")) {
+        bool editMode = loadData.getProperty("editMode");
+        effect->setEditMode(editMode);
+    } else {
+        effect->setEditMode(! effect->isIndividual());
+    }
 
     //==============================================================
     // Set name
@@ -956,7 +962,6 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         }
     }
 
-
     auto numProcessorParameters = effect->parameters == nullptr
             ? 0 : effect->parameters->getParameters(false).size();
     auto numTreeParameters = parameterChildren.size();
@@ -971,12 +976,11 @@ Effect* Effect::createEffect(ValueTree &loadData) {
                 auto parameterVT = effect->createParameter(processorParam);
 
                 // Set position
-                auto x = effect->inputPorts.size() > 0 ? 60 : 30;
+                auto x = (effect->inputPorts.size()) > 0 ? 60 : 30;
                 auto y = 30 + i * 50;
 
                 parameterVT.setProperty("x", x, nullptr);
                 parameterVT.setProperty("y", y, nullptr);
-
 
                 // Add parameterVT to tree
                 parameterChildren.add(parameterVT);
@@ -1062,7 +1066,7 @@ void Effect::setupTitle() {
 
     addAndMakeVisible(title);
 
-    if (! tree.hasProperty(IDs::processorID) && appState != loading) {
+    if (editMode && appState != loading) {
         //title.grabKeyboardFocus();
         title.setWantsKeyboardFocus(true);
         title.showEditor();
@@ -1082,13 +1086,15 @@ void Effect::setupMenu() {
         PopupMenu::Item saveEffect("Save Effect");
         saveEffect.setAction([=]() {
             auto saveTree = storeEffect(tree);
+
+            saveTree.setProperty("editMode", false, nullptr);
+
             if (saveTree.isValid()) {
                 EffectLoader::saveEffect(saveTree);
                 getParentComponent()->postCommandMessage(0);
             } else {
                 std::cout << "invalid, mothafucka." << newLine;
             }
-
         });
 
         menu.addItem(saveEffect);
