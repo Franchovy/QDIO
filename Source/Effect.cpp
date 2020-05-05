@@ -345,6 +345,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         } else {
             // Initialise VT
             childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, &undoManager);
+
             // Create new effect
             auto e = Effect::createEffect(childWhichHasBeenAdded);
 
@@ -1099,7 +1100,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
                 parameterVT.setProperty("x", x, nullptr);
                 parameterVT.setProperty("y", y, nullptr);
 
+
                 // Add parameterVT to tree
+                parameterChildren.add(parameterVT);
                 effect->tree.appendChild(parameterVT, nullptr);
             }
         }
@@ -1132,22 +1135,36 @@ Effect* Effect::createEffect(ValueTree &loadData) {
 
     // Increase to fit ports and parameters
 
-    auto position = Point<int>(x,y);
-    auto bounds = Rectangle<int>(x, y, w, h);
+    //auto position = Point<int>(x,y);
+    //auto bounds = Rectangle<int>(x, y, w, h);
 
-    auto parameters = effect->getParameters(false);
-    for (auto p : effect->parameterArray) {
-        bounds = bounds.getUnion(p->getBoundsInParent().expanded(10, 25));
+
+    for (auto p : parameterChildren) {
+        auto parameter = getFromTree<Parameter>(p);
+        auto parameterBounds = parameter->getBounds();
+
+        w = jmax(parameterBounds.getX() + parameterBounds.getWidth() + 10, w);
+        h = jmax(parameterBounds.getY() + parameterBounds.getHeight() + 25, h);
+
+        //bounds = bounds.getUnion(parameterBounds.expanded(10, 25));
     }
     for (auto p : effect->getPorts()) {
-        bounds = bounds.getUnion(p->getBoundsInParent());
+        auto portBounds = p->getBounds();
+
+        w = jmax(portBounds.getX() + portBounds.getWidth(), w);
+        h = jmax(portBounds.getY() + portBounds.getHeight(), h);
+
+
+        //bounds = bounds.getUnion(p->getBoundsInParent());
     }
+/*
 
     // Fix position
     bounds.setPosition(position);
+*/
 
     // Set new bounds
-    effect->setBounds(bounds);
+    effect->setBounds(x, y, w, h);
 
     //==============================================================
     // Set up other stuff
@@ -1165,6 +1182,7 @@ Effect::Effect() : EffectTreeBase(EFFECT_ID) {
     resizer.setAlwaysOnTop(true);
 }
 
+/*
 Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     std::cout << "stop right theah boih" << newLine;
 
@@ -1244,14 +1262,20 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     setBounds(x, y, w, h);
 
     // set bounds based on parameters
-    /*auto parameters = parent->getParameters(false);
+    */
+/*auto parameters = parent->getParameters(false);
     auto numParameters = parameters.size();
-    *//*auto newBounds = getBounds().getUnion(
+    *//*
+*/
+/*auto newBounds = getBounds().getUnion(
             Rectangle<int>(getX(), getY(),
                            parameter->getWidth() + 50, 50 + numParameters * 50));*//*
+*/
+/*
     auto newBounds = getBounds().getUnion(
             parameter->getBoundsInParent());
-    setBounds(newBounds); // should always call resized()*/
+    setBounds(newBounds); // should always call resized()*//*
+
 
     addAndMakeVisible(resizer);
 
@@ -1271,6 +1295,7 @@ Effect::Effect(const ValueTree& vt) : EffectTreeBase(vt) {
     setupTitle();
     setupMenu();
 }
+*/
 
 void Effect::setupTitle() {
     Font titleFont(20, Font::FontStyleFlags::bold);
@@ -1335,10 +1360,12 @@ void Effect::setupMenu() {
 
     PopupMenu portSubMenu;
     portSubMenu.addItem("Add Input Port", [=]() {
-        addPort(getDefaultBus(), true); resized();
+        addPort(getDefaultBus(), true);
+        resized();
     });
     portSubMenu.addItem("Add Output Port", [=](){
-        addPort(getDefaultBus(), false); resized();
+        addPort(getDefaultBus(), false);
+        resized();
     });
     editMenu.addSubMenu("Add Port..", portSubMenu);
 
@@ -1391,28 +1418,8 @@ void Effect::setProcessor(AudioProcessor *processor) {
         addPort(bus, isInput);
     }
 
-    // Setup parameters
+    // Save AudioProcessorParameterGroup
     parameters = &processor->getParameterTree();
-/*
-    // Create parameters from processor if they don't exist yet.
-    if (! tree.getChildWithName(PARAMETER_ID).isValid()) {
-        int i = 0;
-        for (auto param : parameters->getParameters(false)) {
-            auto parameter = createParameter(param);
-            parameter->setTopLeftPosition(100, i);
-            i += 50;
-            auto parameterTree = tree.getChildWithProperty(Parameter::IDs::parameterObject, parameter);
-        }
-    } else {
-        // Load parameters
-        for (int i = 0; i < tree.getNumChildren(); i++) {
-            if (tree.getChild(i).hasType(PARAMETER_ID)) {
-                auto child = tree.getChild(i);
-                auto parameter = loadParameter(child);
-                tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
-            }
-        }
-    }*/
 }
 
 
@@ -1451,6 +1458,8 @@ Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
 
     if (isIndividual()) {
         parameter->setEditMode(false);
+    } else {
+        parameter->setEditMode(editMode);
     }
 
     addAndMakeVisible(parameter.get());
@@ -1619,7 +1628,6 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     }
 
     addAndMakeVisible(p);
-    resized();
 
     if (!isIndividual()) {
         addChildComponent(p->internalPort.get());

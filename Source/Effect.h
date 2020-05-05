@@ -171,7 +171,7 @@ class Effect : public EffectTreeBase
 {
 public:
     Effect();
-    explicit Effect(const ValueTree& vt);
+    //explicit Effect(const ValueTree& vt);
 
     void setupTitle();
     void setupMenu();

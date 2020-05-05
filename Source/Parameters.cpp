@@ -105,9 +105,10 @@ Parameter::Parameter(AudioProcessorParameter *param)
     parameterLabel.setTopLeftPosition(15, 55);
     parameterLabel.setColour(Label::textColourId, Colours::black);
     //parameterComponent->setTopLeftPosition(0,60);
-    externalPort->setCentrePosition(getWidth() / 2, 30);
 
     setBounds(0, 0, 150, 120);
+
+    externalPort->setCentrePosition(75, 30);
 
     setInterceptsMouseClicks(editMode, true);
 }
