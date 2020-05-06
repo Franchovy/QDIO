@@ -67,6 +67,7 @@ private:
 
     bool editMode = false;
     Parameter* connectedParameter = nullptr;
+    bool isConnectedTo = false;
 
     bool editable = false;
     ComponentDragger dragger;

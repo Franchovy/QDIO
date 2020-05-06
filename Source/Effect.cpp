@@ -314,7 +314,6 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
 
-
             line = new ConnectionLine(*inport, *outport);
             childWhichHasBeenAdded.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
 
@@ -377,24 +376,26 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
         auto parameter = getFromTree<Parameter>(childWhichHasBeenRemoved);
         parameter->setVisible(false);
 
-        // REMOVE PARAMETER CONNECTION - tough to navigate:
+        // REMOVE PARAMETER CONNECTION
+        //todo
         // if parameter has external connection connected then remove connection from parentTree
-        // if parameter has internal connection connected then remove connection from parentTree parent
-
-        //TODO parameter->isConnectedTo() for if it's connected to externally
-
         /*if (parameter->isConnected()) {
-            //parameter->getConnectedParameter();
             for (int i = 0; i < parentTree.getNumChildren(); i++) {
                 auto child = parentTree.getChild(i);
                 if (child.hasType(CONNECTION_ID)) {
                     auto connection = getFromTree<ConnectionLine>(child);
-                    if (connection->getInPort()->getParentComponent() == parameter) {
-
+                    if (connection->getInPort() == parameter->getPort(false)
+                        || connection->getOutPort() == parameter->getPort(false))
+                    {
+                        child.getParent().removeChild(child, &undoManager);
                     }
                 }
             }
         }*/
+
+        //todo
+        // if parameter has internal connection connected then remove connection from parentTree parent
+
     }
 }
 

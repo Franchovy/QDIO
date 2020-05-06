@@ -223,6 +223,7 @@ void Parameter::paint(Graphics &g) {
  */
 void Parameter::connect(Parameter *otherParameter) {
     connectedParameter = otherParameter;
+    otherParameter->isConnectedTo = true;
     dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
 
     referencedParameter->setValueNotifyingHost(connectedParameter->getParameter()->getValue());
