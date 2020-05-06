@@ -300,7 +300,7 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
             }
         } else {
             // Initialise VT
-            childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, &undoManager);
+            childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
 
             // Create new effect
             auto e = Effect::createEffect(childWhichHasBeenAdded);
@@ -327,6 +327,13 @@ void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &child
         }
         line->toFront(false);
         connectAudio(*line);
+    }
+        // PARAMETER
+    else if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
+        auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
+        if (parameter != nullptr) {
+            parameter->setVisible(true);
+        }
     }
 }
 
@@ -369,6 +376,25 @@ void EffectTreeBase::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &chi
     else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {
         auto parameter = getFromTree<Parameter>(childWhichHasBeenRemoved);
         parameter->setVisible(false);
+
+        // REMOVE PARAMETER CONNECTION - tough to navigate:
+        // if parameter has external connection connected then remove connection from parentTree
+        // if parameter has internal connection connected then remove connection from parentTree parent
+
+        //TODO parameter->isConnectedTo() for if it's connected to externally
+
+        /*if (parameter->isConnected()) {
+            //parameter->getConnectedParameter();
+            for (int i = 0; i < parentTree.getNumChildren(); i++) {
+                auto child = parentTree.getChild(i);
+                if (child.hasType(CONNECTION_ID)) {
+                    auto connection = getFromTree<ConnectionLine>(child);
+                    if (connection->getInPort()->getParentComponent() == parameter) {
+
+                    }
+                }
+            }
+        }*/
     }
 }
 
@@ -450,6 +476,7 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
     }
 
     if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
+        undoManager.beginNewTransaction("Delete");
         for (const auto& selectedItem : selected.getItemArray()) {
             if (auto l = dynamic_cast<ConnectionLine*>(selectedItem.get())) {
                 auto lineTree = tree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
@@ -457,6 +484,10 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
             } else if (auto e = dynamic_cast<Effect*>(selectedItem.get())) {
                 effectsToDelete.add(e);
                 e->getTree().getParent().removeChild(e->getTree(), &undoManager);
+            } else if (auto p = dynamic_cast<Parameter*>(selectedItem.get())) {
+                auto effectParent = dynamic_cast<Effect*>(p->getParentComponent());
+                auto paramTree = effectParent->getTree().getChildWithProperty(Parameter::IDs::parameterObject, p);
+                effectParent->getTree().removeChild(paramTree, &undoManager);
             }
         }
         selected.deselectAll();
@@ -669,6 +700,8 @@ ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
 void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
+    //auto undoManagerToUse = appState == loading ? nullptr : &undoManager;
+
     // Effectscene added first
     if (loadData.hasType(EFFECTSCENE_ID)) {
         // Set children of Effectscene, and object property
@@ -701,7 +734,7 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
             }
         }
 
-        parentTree.appendChild(copy, &undoManager);
+        parentTree.appendChild(copy, nullptr);
 
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
@@ -1162,6 +1195,7 @@ void Effect::setupMenu() {
 
     PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {
+        undoManager.beginNewTransaction("Add slider parameter");
         auto newParam = createParameter(new MetaParameter("New Parameter"));
         newParam.setProperty("x", getMouseXYRelative().getX(), nullptr);
         newParam.setProperty("y", getMouseXYRelative().getY(), nullptr);

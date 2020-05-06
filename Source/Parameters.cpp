@@ -201,19 +201,16 @@ void Parameter::paint(Graphics &g) {
         g.strokePath(p, strokeType);
     }
 
-    if (hoverMode) {
+    g.setColour(Colours::blue);
+    if (selectMode) {
+        g.drawRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f, 3);
+    } else if (hoverMode) {
         Path p;
-        g.setColour(Colours::blue);
         p.addRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f);
-        PathStrokeType strokeType(2);
-        float thiccness[] = {5, 7};
+        PathStrokeType strokeType(3);
+        float thiccness[] = {5, 5};
         strokeType.createDashedStroke(p, p, thiccness, 2);
         g.strokePath(p, strokeType);
-    }
-
-    if (selectMode) {
-        g.setColour(Colours::blue);
-        g.drawRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f, 2);
     }
 
     Component::paint(g);

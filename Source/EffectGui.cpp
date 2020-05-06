@@ -120,6 +120,7 @@ void SelectHoverObject::mouseDown(const MouseEvent &event) {
 
 void SelectHoverObject::mouseUp(const MouseEvent &event) {
     if (event.getDistanceFromDragStart() < 10) {
+
         if (selectMode) {
             removeSelectObject(this);
         } else {
