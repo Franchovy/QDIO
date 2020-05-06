@@ -158,8 +158,12 @@ public:
 
     void setLinkedParameter(AudioProcessorParameter* parameter);
 
+    String newID(String name);
+
 private:
     NormalisableRange<float> range;
 
     AudioProcessorParameter* linkedParameter = nullptr;
+
+    static int currentID;
 };

@@ -12,6 +12,8 @@
 
 const Identifier Parameter::IDs::parameterObject = "parameterObject";
 
+int MetaParameter::currentID = 0;
+
 Parameter::Parameter(AudioProcessorParameter *param)
     : referencedParameter(param)
     , editMode(param->isMetaParameter())
@@ -281,7 +283,7 @@ Parameter* Parameter::getConnectedParameter() {
 }*/
 
 MetaParameter::MetaParameter(String name)
-        : RangedAudioParameter(name.toLowerCase(), name)
+        : RangedAudioParameter(newID(name), name)
         , range(0, 1, 0.1f)
 {
     linkedParameter = nullptr;
@@ -323,6 +325,10 @@ const NormalisableRange<float> &MetaParameter::getNormalisableRange() const {
 
 void MetaParameter::setLinkedParameter(AudioProcessorParameter *parameter) {
     linkedParameter = parameter;
+}
+
+String MetaParameter::newID(String name) {
+    return name + String(currentID++);
 }
 
 
