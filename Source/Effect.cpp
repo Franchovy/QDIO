@@ -459,6 +459,7 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
                 e->getTree().getParent().removeChild(e->getTree(), &undoManager);
             }
         }
+        selected.deselectAll();
     }
 
     // CTRL
