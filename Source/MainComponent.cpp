@@ -7,7 +7,7 @@
 
   ==============================================================================
 */
-#define DEBUG_APPEARANCE
+//#define DEBUG_APPEARANCE
 
 #include "MainComponent.h"
 
