@@ -1357,6 +1357,8 @@ void Effect::setEditMode(bool isEditMode) {
 
                 if (dynamic_cast<Effect*>(c)) {
                     c->setVisible(true);
+                } else if (dynamic_cast<ConnectionLine*>(c)) {
+                    c->setVisible(true);
                 }
             }
         }
@@ -1383,8 +1385,8 @@ void Effect::setEditMode(bool isEditMode) {
     // Turn off edit mode
     else if (! isEditMode) {
 
-        bool hideEffects = image.isValid();
-        std::cout << "Image valid: " << hideEffects << newLine;
+//        bool hideEffects //= image.isValid();
+        //std::cout << "Image valid: " << hideEffects << newLine;
 
         // Make child effects and connections not editable
         for (int i = 0; i < tree.getNumChildren(); i++) {
@@ -1393,7 +1395,9 @@ void Effect::setEditMode(bool isEditMode) {
                 c->toBack();
                 c->setInterceptsMouseClicks(false, false);
                 if (dynamic_cast<Effect*>(c)) {
-                    c->setVisible(! hideEffects);
+                    c->setVisible(false);
+                } else if (dynamic_cast<ConnectionLine*>(c)) {
+                    c->setVisible(false);
                 }
             }
         }
