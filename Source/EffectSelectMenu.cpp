@@ -11,3 +11,15 @@
 #include "EffectSelectMenu.h"
 
 
+void EffectSelectMenu::mouseDown(const MouseEvent &event) {
+
+    ComboBox::mouseDown(event);
+}
+
+void EffectSelectMenu::mouseDrag(const MouseEvent &event) {
+    ComboBox::mouseDrag(event);
+}
+
+void EffectSelectMenu::mouseUp(const MouseEvent &event) {
+    ComboBox::mouseUp(event);
+}

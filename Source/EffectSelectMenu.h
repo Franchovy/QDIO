@@ -9,3 +9,15 @@
 */
 
 #pragma once
+
+#include <JuceHeader.h>
+
+class EffectSelectMenu : public ComboBox
+{
+public:
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
+};
