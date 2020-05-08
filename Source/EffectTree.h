@@ -17,10 +17,8 @@
 class EffectTree : public ValueTree::Listener, public ComponentListener
 {
 public:
-    EffectTree();
+    EffectTree(EffectTreeBase* effectScene);
     ~EffectTree();
-
-    void setUndoManager(UndoManager& um);
 
     // Create new - from ValueTree data
     Effect* loadEffect(ValueTree tree);
@@ -31,6 +29,13 @@ public:
     ValueTree newEffect(String name, Point<int> pos, int processorID);
     ValueTree newParameter();
 
+
+    ValueTree storeEffect(const ValueTree& tree);
+    void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
+
+    void loadUserState();
+    void storeAll();
+
     // Add and remove ValueTree functions (undoable)
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
@@ -40,8 +45,13 @@ public:
     void componentNameChanged(Component &component) override;
     void componentChildrenChanged(Component &component) override;
 
-    ValueTree getTree(EffectTreeBase* effect);
 
+    // Convenience methods
+    ValueTree getTree(EffectTreeBase* effect);
+    template<class T>
+    static T* getFromTree(const ValueTree& vt);
+    template <class T>
+    static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
 
 
 private:

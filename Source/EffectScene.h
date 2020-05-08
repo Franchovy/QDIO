@@ -12,7 +12,7 @@
 
 #include <JuceHeader.h>
 #include <BinaryData.h>
-m 
+
 #include "Effect.h"
 #include "EffectTree.h"
 #include "IDs"
@@ -38,15 +38,16 @@ public:
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
     
     void mouseDown(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
     void mouseUp(const MouseEvent &event) override;
 
     bool keyPressed(const KeyPress &key) override;
 
-    void deleteEffect(Effect* e);
-
     void storeState();
 
-    void updateChannels();
+    //void updateChannels();
 
     void handleCommandMessage(int commandId) override;
 

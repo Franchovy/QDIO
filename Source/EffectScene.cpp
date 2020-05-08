@@ -4,7 +4,8 @@ const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 
 //==============================================================================
 EffectScene::EffectScene() :
-        EffectTreeBase(EFFECTSCENE_ID)
+        EffectTreeBase(),
+        updater(this)
 {
     setComponentID("MainWindow");
     setName("MainWindow");
@@ -13,7 +14,6 @@ EffectScene::EffectScene() :
     setRepaintsOnMouseActivity(false);
 
     // Set up static members
-
     updater.setUndoManager(undoManager);
 
     EffectTreeBase::audioGraph = &audioGraph;
@@ -34,7 +34,7 @@ EffectScene::EffectScene() :
     addChildComponent(lasso);
 
     // Manage EffectsTree
-    tree.addListener(this);
+
 
 #define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
@@ -61,26 +61,6 @@ EffectScene::EffectScene() :
         createGroupEffect();
     });
     //mainMenu.addSubMenu("Create Effect", createEffectMenu);
-
-    //==============================================================================
-    // Load Effects if there are any saved
-    appState = loading;
-
-    tree.setProperty(EffectTreeBase::IDs::effectTreeBase, this, nullptr);
-    if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
-        auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
-        if (loadedEffectsData != nullptr) {
-
-            std::cout << loadedEffectsData->toString() << newLine;
-            std::cout << loadedEffectsData->getTagName() << newLine;
-
-            ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
-
-            loadEffect(tree, effectLoadDataTree);
-        }
-    }
-
-    appState = neutral;
 }
 
 EffectScene::~EffectScene()
@@ -123,17 +103,8 @@ void EffectScene::resized()
     //repaint();
 }
 
-void EffectScene::mouseDown(const MouseEvent &event) {
-    if (event.mods.isLeftButtonDown() && event.originalComponent == this){
-        lasso.setVisible(true);
-        lasso.beginLasso(event, this);
-    }
-    EffectTreeBase::mouseDown(event);
-}
-
 
 void EffectScene::mouseUp(const MouseEvent &event) {
-    // TODO implement all of this locally
     if (lasso.isVisible())
         lasso.endLasso();
 
@@ -153,28 +124,27 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     EffectTreeBase::mouseUp(event);
 }
 
+void EffectScene::mouseDrag(const MouseEvent &event) {
+
+    EffectTreeBase::mouseDrag(event);
+}
+
+void EffectScene::mouseDown(const MouseEvent &event) {
+
+    EffectTreeBase::mouseDown(event);
+}
+
 bool EffectScene::keyPressed(const KeyPress &key)
 {
-    std::cout << "Key press: " << key.getKeyCode() << newLine;
-    EffectTreeBase::keyPressed(key);
+
 }
 
-void EffectScene::deleteEffect(Effect* e) {
-    delete e;
-}
 
 void EffectScene::storeState() {
-    // Save screen state
-    //auto savedState = toStorage(tree);
-
-    auto savedState = storeEffect(tree).createXml();
-
-    std::cout << "Save state: " << savedState->toString() << newLine;
-    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-    getAppProperties().getUserSettings()->saveIfNeeded();
+    updater.storeAll();
 }
 
-void EffectScene::updateChannels() {
+/*void EffectScene::updateChannels() {
     auto defaultInChannel = AudioChannelSet();
     defaultInChannel.addChannel(AudioChannelSet::ChannelType::left);
     defaultInChannel.addChannel(AudioChannelSet::ChannelType::right);
@@ -209,14 +179,13 @@ void EffectScene::updateChannels() {
         // Tell gui to update
         Effect::updateEffectProcessor(node->getProcessor(), tree);
     }
-}
+}*/
 
 void EffectScene::handleCommandMessage(int commandId) {
     if (commandId == 0) {
         getParentComponent()->postCommandMessage(0);
     }
 }
-
 
 void ComponentSelection::itemSelected(GuiObject::Ptr c) {
     if (auto e = dynamic_cast<Effect*>(c.get())) {

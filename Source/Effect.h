@@ -35,15 +35,8 @@ public:
 
     static void close();
 
-    static ValueTree storeEffect(const ValueTree& tree);
-    static void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
-
     void resized() override = 0;
     bool keyPressed(const KeyPress &key) override;
-
-    void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
-    void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
-                               int indexFromWhichChildWasRemoved) override;
 
     void mouseDown(const MouseEvent& event) override;
     void mouseDrag(const MouseEvent& event) override;
@@ -51,6 +44,13 @@ public:
 
     //===================================================================
 
+    static void disconnectAudio(const ConnectionLine& connectionLine);
+    static bool connectAudio(const ConnectionLine& connectionLine);
+    static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
+
+    //===================================================================
+
+    static UndoManager& getUndoManager() { return undoManager; }
     static AudioDeviceManager* getDeviceManager() {return deviceManager;}
     static AudioProcessorGraph* getAudioGraph() {return audioGraph;}
 
@@ -60,11 +60,7 @@ public:
 */
     EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(getParentComponent()); }
 
-    template<class T>
-    static T* getFromTree(const ValueTree& vt);
 
-    template <class T>
-    static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
 
     struct IDs {
         static const Identifier effectTreeBase;
@@ -101,9 +97,6 @@ protected:
     static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
 
-    static void disconnectAudio(const ConnectionLine& connectionLine);
-    static bool connectAudio(const ConnectionLine& connectionLine);
-    static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
     void createGroupEffect();
 
