@@ -57,29 +57,7 @@ MainComponent::MainComponent()
     effectSelectMenu.setBounds(100, 100, 400, 50);
     effectSelectMenu.setText("Select Effect");
 
-    effectSelectMenu.onChange = [=] {
-        std::cout << "Selected index: " << effectSelectMenu.getSelectedItemIndex() << newLine;
-
-        auto selectedIndex = effectSelectMenu.getSelectedItemIndex();
-        if (selectedIndex < 0) {
-            std::cout << "useless id" << newLine;
-            std::cout << effectSelectMenu.getSelectedId() << newLine;
-        } else {
-            auto effectToLoad = effectSelectMenu.getItemText(selectedIndex);
-            EffectLoader::loadEffect(effectToLoad);
-
-            auto effectLoaded = EffectLoader::loadEffect(effectToLoad);
-            if (effectLoaded.isValid()) {
-                effectLoaded.setProperty(Effect::IDs::x, main.getMenuPos().getX(), nullptr);
-                effectLoaded.setProperty(Effect::IDs::y, main.getMenuPos().getY(), nullptr);
-
-                main.loadEffect(main.getTree(), effectLoaded);
-            }
-
-            effectSelectMenu.setSelectedItemIndex(0, dontSendNotification);
-            effectSelectMenu.setText("Select Effect");
-        }
-    };
+    effectSelectMenu.onChange =
 
     updateEffectSelectMenu();
 

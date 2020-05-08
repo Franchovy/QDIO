@@ -46,14 +46,15 @@ public:
     bool keyPressed(const KeyPress &key) override;
 
     void storeState();
-
-    //void updateChannels();
+    void loadEffect(ValueTree)
 
     void handleCommandMessage(int commandId) override;
 
     AudioDeviceManager& getDeviceManager() { return deviceManager; }
     AudioProcessorGraph& getAudioGraph() { return audioGraph; }
     AudioProcessorPlayer& getAudioPlayer() { return processorPlayer; }
+
+    static EffectScene* getScene() { return instance; }
 
     struct IDs {
         static const Identifier DeviceManager;
@@ -62,6 +63,8 @@ public:
     Rectangle<int> view;
 
 private:
+    static EffectScene* instance;
+
     // EffectTreeBase static stuff
     EffectTree updater;
 

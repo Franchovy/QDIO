@@ -366,7 +366,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
                         auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
 
                         if (e->hasConnection(connection)) {
-                            parentTree.removeChild(child, &undoManager);
+                            parentTree.removeChild(child, undoManager);
                             childrenRemoved++;
                         }
                     }
@@ -382,7 +382,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
         line->setVisible(false);
 
-        disconnectAudio(*line);
+        EffectTreeBase::disconnectAudio(*line);
     }
         // PARAMETER
     else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {
@@ -560,9 +560,9 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     // Effectscene added first
     if (loadData.hasType(EFFECTSCENE_ID)) {
         // Set children of Effectscene, and object property
-        auto effectSceneObject = parentTree.getProperty(IDs::effectTreeBase);
+        auto effectSceneObject = parentTree.getProperty(EffectTreeBase::IDs::effectTreeBase);
 
-        copy.setProperty(IDs::effectTreeBase, effectSceneObject, nullptr);
+        copy.setProperty(EffectTreeBase::IDs::effectTreeBase, effectSceneObject, nullptr);
         parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
 
         // Load child effects

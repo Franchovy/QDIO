@@ -12,12 +12,15 @@
 
 #include <JuceHeader.h>
 
+#include "EffectLoader.h"
+#include "EffectScene.h"
+
 class EffectSelectMenu : public ComboBox
 {
 public:
+    EffectSelectMenu();
+
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
 };

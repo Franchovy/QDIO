@@ -91,7 +91,7 @@ protected:
     static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
     static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
-    
+
     void createGroupEffect();
 
     //====================================================================================

@@ -21,10 +21,6 @@ AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
 AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 LineComponent EffectTreeBase::dragLine;
-//
-EffectTree EffectTreeBase::updater;
-
-ReferenceCountedArray<Effect> EffectTreeBase::effectsToDelete;
 
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
@@ -61,7 +57,7 @@ SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
 }
 
 EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
-    // Check if event is leaving parent
+    /*// Check if event is leaving parent
     auto parent = getFromTree<EffectTreeBase>(effectTree);
     if (! parent->contains(parent->getLocalPoint(event.eventComponent, event.getPosition()))) {
         // find new parent
@@ -95,13 +91,13 @@ EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const Va
                 }
             }
         }
-    }
+    }*/
     return nullptr;
 }
 
 //TODO
 ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
-
+/*
     ValueTree effectTreeToCheck;
     if (dynamic_cast<AudioPort*>(event.originalComponent) || dynamic_cast<ParameterPort*>(event.originalComponent))
     {
@@ -159,7 +155,7 @@ ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const V
                 }
             }
         }
-    }
+    }*/
 
     // If nothing is found return nullptr
     return nullptr;
@@ -382,7 +378,7 @@ void Effect::setupMenu() {
     menu.addItem(toggleEditMode);
     editMenu.addItem(toggleEditMode);
 
-    if (!isIndividual()) {
+    /*if (!isIndividual()) {
         PopupMenu::Item saveEffect("Save Effect");
         saveEffect.setAction([=]() {
             auto saveTree = storeEffect(tree);
@@ -399,7 +395,7 @@ void Effect::setupMenu() {
 
         menu.addItem(saveEffect);
         editMenu.addItem(saveEffect);
-    }
+    }*/
 
 
     editMenu.addItem("Change Effect Image..", [=]() {
@@ -424,7 +420,7 @@ void Effect::setupMenu() {
     });
     editMenu.addSubMenu("Add Port..", portSubMenu);
 
-    PopupMenu parameterSubMenu;
+    /*PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {
         undoManager.beginNewTransaction("Add slider parameter");
         auto newParam = createParameter(new MetaParameter("New Parameter"));
@@ -434,7 +430,7 @@ void Effect::setupMenu() {
         loadParameter(newParam);
     });
     editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
-
+*/
 }
 
 Effect::~Effect()
@@ -579,17 +575,16 @@ void Effect::setEditMode(bool isEditMode) {
     // Turn on edit mode
     if (isEditMode) {
         // Set child effects and connections to editable
-        for (int i = 0; i < tree.getNumChildren(); i++) {
-            auto c = getFromTree<Component>(tree.getChild(i));
-            if (c != nullptr) {
-                c->toFront(false);
-                c->setInterceptsMouseClicks(true, true);
+        for (int i = 0; i < getNumChildComponents(); i++) {
+            auto c = getChildComponent(i);
 
-                if (dynamic_cast<Effect*>(c)) {
-                    c->setVisible(true);
-                } else if (dynamic_cast<ConnectionLine*>(c)) {
-                    c->setVisible(true);
-                }
+            c->toFront(false);
+            c->setInterceptsMouseClicks(true, true);
+
+            if (dynamic_cast<Effect*>(c)) {
+                c->setVisible(true);
+            } else if (dynamic_cast<ConnectionLine*>(c)) {
+                c->setVisible(true);
             }
         }
 
@@ -619,16 +614,15 @@ void Effect::setEditMode(bool isEditMode) {
         //std::cout << "Image valid: " << hideEffects << newLine;
 
         // Make child effects and connections not editable
-        for (int i = 0; i < tree.getNumChildren(); i++) {
-            auto c = getFromTree<Component>(tree.getChild(i));
-            if (c != nullptr) {
-                c->toBack();
-                c->setInterceptsMouseClicks(false, false);
-                if (dynamic_cast<Effect*>(c)) {
-                    c->setVisible(false);
-                } else if (dynamic_cast<ConnectionLine*>(c)) {
-                    c->setVisible(false);
-                }
+        for (int i = 0; i < getNumChildComponents(); i++) {
+            auto c = getChildComponent(i);
+
+            c->toBack();
+            c->setInterceptsMouseClicks(false, false);
+            if (dynamic_cast<Effect*>(c)) {
+                c->setVisible(false);
+            } else if (dynamic_cast<ConnectionLine*>(c)) {
+                c->setVisible(false);
             }
         }
 

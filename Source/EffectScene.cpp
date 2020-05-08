@@ -1,6 +1,7 @@
 #include "EffectScene.h"
 
 const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
+EffectScene* EffectScene::instance = nullptr;
 
 //==============================================================================
 EffectScene::EffectScene() :
@@ -14,6 +15,7 @@ EffectScene::EffectScene() :
     setRepaintsOnMouseActivity(false);
 
     // Set up static members
+    instance = this;
 
     EffectTreeBase::audioGraph = &audioGraph;
     EffectTreeBase::processorPlayer = &processorPlayer;
@@ -111,19 +113,18 @@ void EffectScene::mouseDown(const MouseEvent &event) {
         return;
     }
 
-    if (event.mods.isLeftButtonDown()) {
-        //todo static lasso functionality?
-
-        // Drag
-        setAlwaysOnTop(true);
+    if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
         if (event.mods.isLeftButtonDown()) {
-            dragger.startDraggingComponent(this, event);
-        }
+            //todo static lasso functionality?
 
-    } else if (event.mods.isRightButtonDown()) {
-        // Send info upwards for menu
-        //TODO don't do this, call custom menu function
-        getParentComponent()->mouseDown(event);
+            // Drag
+            effect->setAlwaysOnTop(true);
+            effect->dragger.startDraggingComponent(this, event);
+        } else if (event.mods.isRightButtonDown()) {
+            // Send info upwards for menu
+            //TODO don't do this, call custom menu function
+            getParentComponent()->mouseDown(event);
+        }
     }
 
     std::cout << "Begin new transaction" << newLine;
@@ -135,8 +136,8 @@ void EffectScene::mouseDown(const MouseEvent &event) {
 }
 
 void EffectScene::mouseDrag(const MouseEvent &event) {
-    if (event.eventComponent == this) {
-        dragger.dragComponent(this, event, &constrainer);
+    if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
+        effect->dragger.dragComponent(this, event, &effect->constrainer);
 
         // Manual constraint
         auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
@@ -151,7 +152,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
                 newY = newPos.y;
             }
 */
-        setTopLeftPosition(newX, newY);
+        effect->setTopLeftPosition(newX, newY);
     }
 
     /*if (lasso.isVisible())
@@ -159,6 +160,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
     if (event.mods.isLeftButtonDown()) {
         if (dynamic_cast<Effect*>(event.originalComponent)) {
             // Effect drag
+            /*
             if (auto newParent = effectToMoveTo(event, tree.getParent())) {
                 std::cout << "new parent: " << newParent->getName() << newLine;
                 if (newParent != getFromTree<Effect>(tree.getParent())) {
@@ -173,7 +175,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
                         SelectHoverObject::resetHoverObject();
                     }
                 }
-            }
+            }*/
         } else if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
             // Line Drag
             if (lasso.isVisible())
@@ -183,7 +185,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
                 // Line drag
                 if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
                     //TODO efficiency
-                    auto port = portToConnectTo(event, tree);
+                    auto port = nullptr;// portToConnectTo(event, tree);
 
                     if (port != nullptr) {
                         SelectHoverObject::setHoverComponent(port);
@@ -360,10 +362,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
         if (key.getKeyCode() == 's') {
             std::cout << "Save effects" << newLine;
-            auto savedState = storeEffect(tree).createXml();
-            std::cout << "Save state: " << savedState->toString() << newLine;
-            getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-            getAppProperties().getUserSettings()->saveIfNeeded();
+            updater.storeAll();
         }
     }
 }
