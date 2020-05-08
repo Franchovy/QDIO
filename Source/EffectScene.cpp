@@ -67,6 +67,7 @@ EffectScene::EffectScene() :
 EffectScene::~EffectScene()
 {
     instance = nullptr;
+    //todo remove this ptr from EffectTree before destructor.
 
     audioGraph.clear();
     processorPlayer.setProcessor(nullptr);
