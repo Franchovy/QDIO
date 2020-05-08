@@ -20,29 +20,7 @@
 #pragma once
 
 class Effect;
-class EffectTreeBase;
 
-
-class EffectTree : public ComponentListener
-{
-public:
-    EffectTree();
-
-    void setUndoManager(UndoManager& um);
-
-    Effect* createEffect(ValueTree& loadData);
-
-    void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
-    void componentNameChanged(Component &component) override;
-    void componentChildrenChanged(Component &component) override;
-
-    ValueTree getTree(EffectTreeBase* effect);
-
-private:
-    ValueTree tree;
-
-    UndoManager* undoManager;
-};
 
 /**
  * Base class for Effects and EffectScene
@@ -53,11 +31,7 @@ private:
 class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
 {
 public:
-    explicit EffectTreeBase(const ValueTree &vt);
-
-    explicit EffectTreeBase(Identifier id);
-
-    ~EffectTreeBase() override;
+    EffectTreeBase();
 
     static void close();
 
@@ -77,8 +51,8 @@ public:
 
     //===================================================================
 
-    static AudioDeviceManager* getDeviceManager() const {return deviceManager;}
-    static AudioProcessorGraph* getAudioGraph() const {return audioGraph;}
+    static AudioDeviceManager* getDeviceManager() {return deviceManager;}
+    static AudioProcessorGraph* getAudioGraph() {return audioGraph;}
 
 /*
     ValueTree& getTree() { return tree; }
@@ -86,15 +60,11 @@ public:
 */
     EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(getParentComponent()); }
 
-
     template<class T>
     static T* getFromTree(const ValueTree& vt);
 
     template <class T>
     static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
-
-
-    static ReferenceCountedArray<Effect> effectsToDelete;
 
     struct IDs {
         static const Identifier effectTreeBase;
@@ -105,8 +75,6 @@ public:
         neutral = 1
     } static appState;
 
-    Point<int> getMenuPos() const;
-
 protected:
     //ValueTree tree;
 
@@ -114,12 +82,8 @@ protected:
     // Menu stuff
     void callMenu(PopupMenu& menu);
 
-    Point<int> menuPos;
-
     PopupMenu createEffectMenu;
     PopupMenu getEffectSelectMenu();
-    ValueTree newEffect(String name, int processorID);
-    ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
@@ -144,7 +108,6 @@ protected:
     void createGroupEffect();
 
     //====================================================================================
-    static EffectTree updater; // only needed to add as listener - todo move to manager class
 
     static AudioDeviceManager* deviceManager;
     static AudioProcessorPlayer* processorPlayer;
@@ -182,8 +145,6 @@ public:
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
-    void hoverOver(EffectTreeBase* newParent);
-    void reassignNewParent(EffectTreeBase* newParent);
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
@@ -225,7 +186,6 @@ public:
 
     // Undoable actions
     void setPos(Point<int> newPos);
-    void resize(int w, int h);
     void setParent(EffectTreeBase& parent);
 
     static void updateEffectProcessor(AudioProcessor* processorToUpdate, ValueTree treeToSearch);

@@ -12,8 +12,9 @@
 
 #include <JuceHeader.h>
 #include <BinaryData.h>
-
+m 
 #include "Effect.h"
+#include "EffectTree.h"
 #include "IDs"
 #include "EffectLoader.h"
 

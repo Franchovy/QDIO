@@ -214,11 +214,7 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
 
 void EffectTreeBase::close() {
     SelectHoverObject::close();
-    for (auto e : effectsToDelete) {
-        e->getTree().removeAllProperties(nullptr);
-    }
 
-    effectsToDelete.clear();
 }
 
 
@@ -260,27 +256,7 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
     return createEffectMenu;
 }
 
-ValueTree EffectTreeBase::newEffect(String name, int processorID) {
-    ValueTree newEffect(Effect::IDs::EFFECT_ID);
 
-    if (name.isNotEmpty()){
-        newEffect.setProperty(Effect::IDs::name, name, nullptr);
-    }
-
-    newEffect.setProperty(Effect::IDs::x, menuPos.x, nullptr);
-    newEffect.setProperty(Effect::IDs::y, menuPos.y, nullptr);
-
-    if (processorID != -1) {
-        newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
-    }
-
-    this->getTree().appendChild(newEffect, &undoManager);
-
-    auto effect = getFromTree<Effect>(newEffect);
-    effect->setEditMode(true);
-
-    return newEffect;
-}
 
 
 void EffectTreeBase::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
@@ -515,19 +491,6 @@ bool EffectTreeBase::keyPressed(const KeyPress &key) {
     }
 }
 
-EffectTreeBase::~EffectTreeBase() {
-    for (int i = 0; i < tree.getNumChildren(); i++) {
-
-        tree.getChild(i).removeProperty(IDs::effectTreeBase, nullptr);
-        tree.removeChild(i, nullptr);
-    }
-    if (getReferenceCount() > 0) {
-        incReferenceCount();
-        tree.removeAllProperties(nullptr);
-        decReferenceCountWithoutDeleting();
-    }
-}
-
 
 void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
@@ -575,21 +538,10 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
     }
 }
 
-EffectTreeBase::EffectTreeBase(const ValueTree &vt) {
-        tree = vt;
-        tree.setProperty(IDs::effectTreeBase, this, nullptr);
-
-        setWantsKeyboardFocus(true);
-
+EffectTreeBase::EffectTreeBase() {
         dragLine.setAlwaysOnTop(true);
 }
 
-EffectTreeBase::EffectTreeBase(Identifier id) : tree(id) {
-    tree.setProperty(IDs::effectTreeBase, this, nullptr);
-    setWantsKeyboardFocus(true);
-
-    dragLine.setAlwaysOnTop(true);
-}
 
 ValueTree EffectTreeBase::storeEffect(const ValueTree &tree) {
     ValueTree copy(tree.getType());
@@ -834,6 +786,7 @@ void EffectTreeBase::loadEffect(ValueTree &parentTree, const ValueTree &loadData
     }
 }
 
+/*
 void EffectTreeBase::createGroupEffect() {
     undoManager.beginNewTransaction("Create Group Effect");
     // Create new effect
@@ -905,217 +858,11 @@ void EffectTreeBase::createGroupEffect() {
 
     selected.deselectAll();
 }
-
-ValueTree EffectTreeBase::newConnection(ConnectionPort::Ptr port1, ConnectionPort::Ptr port2) {
-    ConnectionPort::Ptr inPort;
-    ConnectionPort::Ptr outPort;
-    if (port1->isInput) {
-        inPort = port1;
-        outPort = port2;
-    } else {
-        inPort = port2;
-        outPort = port1;
-    }
-
-    // Get port parents - Remember that input port is for output effect and vice versa.
-    auto effect1 = dynamic_cast<Effect*>(outPort->getParentComponent());
-    auto effect2 = dynamic_cast<Effect*>(inPort->getParentComponent());
-
-    auto newConnection = ValueTree(CONNECTION_ID);
-    newConnection.setProperty(ConnectionLine::IDs::InPort, inPort.get(), nullptr);
-    newConnection.setProperty(ConnectionLine::IDs::OutPort, outPort.get(), nullptr);
-
-    if (effect1->getParent() == effect2->getParent()) {
-        if (effect1 == effect2) {
-            //todo fuckin motherfuckin dumbass exception case
-            std::cout << "oh, fuck you.." << newLine;
-        }
-
-        dynamic_cast<EffectTreeBase*>(effect1->getParent())->getTree().appendChild(newConnection, &undoManager);
-    } else if (effect1->getParent() == effect2) {
-        dynamic_cast<EffectTreeBase*>(effect2)->getTree().appendChild(newConnection, &undoManager);
-    } else if (effect2->getParent() == effect1) {
-        dynamic_cast<EffectTreeBase*>(effect1)->getTree().appendChild(newConnection, &undoManager);
-    }
-
-    return newConnection;
-}
-
-Point<int> EffectTreeBase::getMenuPos() const {
-    return menuPos;
-}
-
-//======================================================================================
-// methods to move to manager class
-
-Effect* EffectTree::createEffect(ValueTree &loadData) {
-    auto effect = new Effect();
-    loadData.setProperty(EffectTreeBase::IDs::effectTreeBase, effect, nullptr);
-    effect->addComponentListener(this);
-
-    //this would not be needed
-    //effect->tree = loadData;
-
-    if (loadData.hasProperty(Effect::IDs::processorID)) {
-        // Individual Effect
-        std::unique_ptr<AudioProcessor> newProcessor;
-        int id = loadData.getProperty(Effect::IDs::processorID);
-
-        auto currentDeviceType = EffectTreeBase::getDeviceManager()->getCurrentDeviceTypeObject();
-        auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
-
-        switch (id) {
-            case 0:
-                newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
-                                                                   currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
-                break;
-            case 1:
-                newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
-                                                                    currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
-                break;
-            case 2:
-                newProcessor = std::make_unique<DistortionEffect>();
-                break;
-            case 3:
-                newProcessor = std::make_unique<DelayEffect>();
-                break;
-            case 4:
-                newProcessor = std::make_unique<ReverbEffect>();
-                break;
-            default:
-                std::cout << "ProcessorID not found." << newLine;
-        }
-        auto node = EffectTreeBase::getAudioGraph()->addNode(move(newProcessor));
-        effect->setNode(node);
-        // Create from node:
-        effect->setProcessor(node->getProcessor());
-    }
-    else {
-        int numInputPorts = loadData.getProperty("numInputPorts", 0);
-        int numOutputPorts = loadData.getProperty("numOutputPorts", 0);
-
-        for (int i = 0; i < numInputPorts; i++) {
-            effect->addPort(Effect::getDefaultBus(), true);
-        }
-        for (int i = 0; i < numOutputPorts; i++) {
-            effect->addPort(Effect::getDefaultBus(), false);
-        }
-    }
-
-    //==============================================================
-    // Set edit mode
-    if (loadData.hasProperty("editMode")) {
-        bool editMode = loadData.getProperty("editMode");
-        effect->setEditMode(editMode);
-    } else {
-        effect->setEditMode(! effect->isIndividual());
-    }
-
-    //==============================================================
-    // Set name
-    if (! loadData.hasProperty(Effect::IDs::name)) {
-        if (effect->isIndividual()) {
-            effect->setName(effect->getProcessor()->getName());
-        } else {
-            effect->setName("Effect");
-        }
-    }
-
-    //==============================================================
-    // Set up parameters
-
-    // Get parameter children already existing to add
-    Array<ValueTree> parameterChildren;
-
-    for (int i = 0; i < loadData.getNumChildren(); i++) {
-        if (loadData.getChild(i).hasType(PARAMETER_ID)) {
-            parameterChildren.add(loadData.getChild(i));
-        }
-    }
-
-    auto numProcessorParameters = effect->getParameters(false).size();
-    auto numTreeParameters = parameterChildren.size();
-
-    // If there are processor parameters not registered in tree
-    if (numProcessorParameters > numTreeParameters) {
-        // Iterate through processor parameters
-        for (int i = 0; i < numProcessorParameters; i++) {
-            auto processorParam = effect->getParameters(false)[i];
-            // If parameter doesn't already exist in tree
-            if (! loadData.getChildWithProperty("name", processorParam->getName(30)).isValid()) {
-                auto parameterVT = effect->createParameter(processorParam);
-
-                // Set position
-                auto x = (effect->getNumInputs()) > 0 ? 60 : 30;
-                auto y = 30 + i * 50;
-
-                parameterVT.setProperty("x", x, nullptr);
-                parameterVT.setProperty("y", y, nullptr);
-
-                // Add parameterVT to tree
-                parameterChildren.add(parameterVT);
-                effect->tree.appendChild(parameterVT, nullptr);
-            }
-        }
-    }
-
-    // Load parameters from tree
-    for (int i = 0; i < loadData.getNumChildren(); i++) {
-        if (loadData.getChild(i).hasType(PARAMETER_ID)) {
-            auto parameter = effect->loadParameter(effect->tree.getChild(i));
-            effect->tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
-        }
-    }
-
-    //==============================================================
-    // Set parent component
-
-    auto parentTree = loadData.getParent();
-    if (parentTree.isValid()) {
-        auto parent = getFromTree<EffectTreeBase>(parentTree);
-        parent->addAndMakeVisible(effect);
-    }
-
-    //==============================================================
-    // Set up bounds
-
-    int x = loadData.getProperty(IDs::x, 0);
-    int y = loadData.getProperty(IDs::y, 0);
-    int w = loadData.getProperty(IDs::w, 200);
-    int h = loadData.getProperty(IDs::h, 200);
-
-    // Increase to fit ports and parameters
-
-    for (auto p : parameterChildren) {
-        auto parameter = getFromTree<Parameter>(p);
-        auto parameterBounds = parameter->getBounds();
-
-        w = jmax(parameterBounds.getX() + parameterBounds.getWidth() + 10, w);
-        h = jmax(parameterBounds.getY() + parameterBounds.getHeight() + 25, h);
-    }
-
-    for (auto p : effect->getPorts()) {
-        auto portBounds = p->getBounds();
-
-        w = jmax(portBounds.getX() + portBounds.getWidth(), w);
-        h = jmax(portBounds.getY() + portBounds.getHeight(), h);
-    }
-
-    // Set new bounds
-    effect->setBounds(x, y, w, h);
-
-    //==============================================================
-    // Set up other stuff
-
-    effect->setupMenu();
-    effect->setupTitle();
-
-    return effect;
-}
+*/
 
 //======================================================================================
 
-Effect::Effect() : EffectTreeBase(EFFECT_ID) {
+Effect::Effect() {
     addAndMakeVisible(resizer);
     resizer.setAlwaysOnTop(true);
 }
@@ -1125,13 +872,13 @@ void Effect::setupTitle() {
     title.setFont(titleFont);
 
     title.setEditable(true);
-    title.setText(tree.getProperty(IDs::name), dontSendNotification);
+    title.setText(getName(), dontSendNotification);
     title.setBounds(25, 20, 200, title.getFont().getHeight());
 
     title.onTextChange = [=]{
         // Name change undoable action
         undoManager.beginNewTransaction("Name change to: " + title.getText(true));
-        tree.setProperty(IDs::name, title.getText(true), &undoManager);
+        setName(title.getText(true));
     };
 
     addAndMakeVisible(title);
@@ -1562,7 +1309,10 @@ void Effect::mouseDrag(const MouseEvent &event) {
             if (auto newParent = effectToMoveTo(event, tree.getParent())) {
                 std::cout << "new parent: " << newParent->getName() << newLine;
                 if (newParent != getFromTree<Effect>(tree.getParent())) {
-                    reassignNewParent(newParent);
+                    auto parent = tree.getParent();
+
+                    parent.removeChild(tree, &undoManager);
+                    newParent->getTree().appendChild(tree, &undoManager);
 
                     if (newParent != this) {
                         SelectHoverObject::setHoverComponent(newParent);
@@ -1641,6 +1391,7 @@ void Effect::mouseUp(const MouseEvent &event) {
         EffectTreeBase::mouseUp(event);
     }
 }
+/*
 
 void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     std::cout << "VT property changed: " << property.toString() << newLine;
@@ -1682,13 +1433,9 @@ void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
 
     }
 }
+*/
 
 void Effect::resized() {
-    if (! undoManager.isPerformingUndoRedo()) {
-        tree.setProperty(IDs::w, getWidth(), &undoManager);
-        tree.setProperty(IDs::h, getHeight(), &undoManager);
-    }
-
     // Position Ports
     inputPortPos = inputPortStartPos;
     outputPortPos = outputPortStartPos;
@@ -1764,33 +1511,6 @@ void Effect::paint(Graphics& g) {
     g.strokePath(outlineRect, outlineStroke);
 }
 
-void Effect::reassignNewParent(EffectTreeBase* newParent) {
-    auto parent = tree.getParent();
-
-    parent.removeChild(tree, &undoManager);
-    newParent->getTree().appendChild(tree, &undoManager);
-}
-
-void Effect::setParent(EffectTreeBase &parent) {
-    parent.getTree().appendChild(tree, &undoManager);
-}
-
-void Effect::setPos(Point<int> newPos) {
-    tree.setProperty("x", newPos.getX(), &undoManager);
-    tree.setProperty("y", newPos.getY(), &undoManager);
-}
-
-
-void Effect::hoverOver(EffectTreeBase *newParent) {
-    if (newParent->getWidth() < getParentWidth() || newParent->getHeight() < getParentHeight()) {
-        auto newSize = getBounds().expanded(-20);
-        resize(newSize.getX(), newSize.getY());
-    } else {
-        auto newSize = getBounds().expanded(20);
-        resize(newSize.getX(), newSize.getY());
-    }
-}
-
 int Effect::getPortID(const ConnectionPort *port) {
     if (auto p = dynamic_cast<const AudioPort*>(port)) {
         if (inputPorts.contains(p)) {
@@ -1828,10 +1548,6 @@ ConnectionPort* Effect::getPortFromID(const int id, bool internal) {
     }
 }
 
-void Effect::resize(int w, int h) {
-    tree.setProperty(IDs::w, w, &undoManager);
-    tree.setProperty(IDs::h, h, &undoManager);
-}
 
 bool Effect::hasProcessor(AudioProcessor *processor) {
     return processor == this->processor;
@@ -2020,53 +1736,3 @@ var* ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
 }
 */
 
-EffectTree::EffectTree() {
-
-}
-
-void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    if (auto effect = dynamic_cast<Effect*>(&component)) {
-        if (wasMoved) {
-            std::cout << "Effect move update" << newLine;
-            effect->getTree().setProperty(Effect::IDs::x, effect->getX(), undoManager);
-            effect->getTree().setProperty(Effect::IDs::y, effect->getY(), undoManager);
-        }
-        else if (wasResized) {
-            std::cout << "Effect size update" << newLine;
-            effect->getTree().setProperty(Effect::IDs::w, effect->getWidth(), undoManager);
-            effect->getTree().setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
-        }
-    } else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
-        auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
-        if (wasMoved) {
-            std::cout << "Parameter move update" << newLine;
-            auto parameterTree = effect->getTree().getChildWithProperty(Parameter::IDs::parameterObject, parameter);
-            parameterTree.setProperty("x", component.getX(), nullptr);
-            parameterTree.setProperty("y", component.getY(), nullptr);
-        }
-    }
-
-
-
-    ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
-}
-
-void EffectTree::componentNameChanged(Component &component) {
-
-    ComponentListener::componentNameChanged(component);
-}
-
-void EffectTree::setUndoManager(UndoManager &um) {
-    undoManager = &um;
-}
-
-void EffectTree::componentChildrenChanged(Component &component) {
-    for (auto c : component.getChildren()) {
-        c->addComponentListener(this);
-    }
-    ComponentListener::componentChildrenChanged(component);
-}
-
-ValueTree EffectTree::getTree(EffectTreeBase *effect) {
-    return tree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, effect);
-}
