@@ -28,27 +28,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuiObject)
 };
 
-/**
- * SelectedItemSet for Component* class, with
- * itemSelected/itemDeselected overrides. That is all.
- */
-class ComponentSelection : public SelectedItemSet<GuiObject::Ptr>
-{
-public:
-    ComponentSelection() = default;
-    ~ComponentSelection() = default;
-
-    void clear() {
-        SelectedItemSet<GuiObject::Ptr>::deselectAll();
-    }
-
-    void itemSelected(GuiObject::Ptr type) override;
-    void itemDeselected(GuiObject::Ptr type) override;
-
-private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
-};
-
+class ComponentSelection;
 
 class SelectHoverObject : public GuiObject
 {
@@ -62,7 +42,6 @@ public:
     void mouseExit(const MouseEvent &event) override;
 
     void mouseDown(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
 
     static void setHoverComponent(SelectHoverObject::Ptr item);
@@ -88,6 +67,28 @@ protected:
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectHoverObject)
+};
+
+
+/**
+ * SelectedItemSet for Component* class, with
+ * itemSelected/itemDeselected overrides. That is all.
+ */
+class ComponentSelection : public SelectedItemSet<SelectHoverObject::Ptr>
+{
+public:
+    ComponentSelection() = default;
+    ~ComponentSelection() = default;
+
+    void clear() {
+        SelectedItemSet<SelectHoverObject::Ptr>::deselectAll();
+    }
+
+    void itemSelected(SelectHoverObject::Ptr type) override;
+    void itemDeselected(SelectHoverObject::Ptr object) override;
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComponentSelection)
 };
 
 

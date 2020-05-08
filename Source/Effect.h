@@ -28,7 +28,7 @@ class Effect;
  * Convenience functions for tree navigation,
  * Data for saving and loading state,
  */
-class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<GuiObject::Ptr>
+class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<SelectHoverObject::Ptr>
 {
 public:
     EffectTreeBase();
@@ -81,9 +81,9 @@ protected:
     LassoComponent<GuiObject::Ptr> lasso;
     bool intersectMode = true;
 
-    void findLassoItemsInArea (Array <GuiObject::Ptr>& results, const Rectangle<int>& area) override;
+    void findLassoItemsInArea (Array <SelectHoverObject::Ptr>& results, const Rectangle<int>& area) override;
+    SelectedItemSet<SelectHoverObject::Ptr>& getLassoSelection() override;
 
-    SelectedItemSet<GuiObject::Ptr>& getLassoSelection() override;
     //====================================================================================
     // Hover identifier and management
     static LineComponent dragLine;
@@ -91,8 +91,7 @@ protected:
     static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
     static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
     //====================================================================================
-
-
+    
     void createGroupEffect();
 
     //====================================================================================

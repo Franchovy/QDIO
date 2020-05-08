@@ -129,3 +129,14 @@ void SelectHoverObject::mouseUp(const MouseEvent &event) {
     }
     Component::mouseUp(event);
 }
+
+void ComponentSelection::itemSelected(SelectHoverObject::Ptr object){
+    SelectHoverObject::addSelectObject(object);
+    SelectedItemSet::itemSelected(object);
+}
+
+void ComponentSelection::itemDeselected(SelectHoverObject::Ptr object) {
+    SelectHoverObject::removeSelectObject(object);
+    SelectedItemSet::itemDeselected(object);
+}
+

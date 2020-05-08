@@ -41,7 +41,7 @@ const Identifier Effect::IDs::connections = "connections";
 const Identifier Effect::IDs::EFFECT_ID = "effect";
 
 
-void EffectTreeBase::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const Rectangle<int> &area) {
+void EffectTreeBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results, const Rectangle<int> &area) {
     for (auto c : componentsToSelect) {
         if (!intersectMode) {
             if (area.contains(c->getBoundsInParent())) {
@@ -55,7 +55,7 @@ void EffectTreeBase::findLassoItemsInArea(Array<GuiObject::Ptr> &results, const 
     }
 }
 
-SelectedItemSet<GuiObject::Ptr>& EffectTreeBase::getLassoSelection() {
+SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
     selected.clear();
     return selected;
 }

@@ -416,14 +416,4 @@ void EffectScene::handleCommandMessage(int commandId) {
     }
 }
 
-void ComponentSelection::itemSelected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<Effect*>(c.get())) {
-        SelectHoverObject::addSelectObject(e);
-    }
-}
 
-void ComponentSelection::itemDeselected(GuiObject::Ptr c) {
-    if (auto e = dynamic_cast<Effect*>(c.get())) {
-        SelectHoverObject::removeSelectObject(e);
-    }
-}
