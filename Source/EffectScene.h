@@ -46,7 +46,6 @@ public:
     bool keyPressed(const KeyPress &key) override;
 
     void storeState();
-    void loadEffect(ValueTree)
 
     void handleCommandMessage(int commandId) override;
 
@@ -61,6 +60,9 @@ public:
     };
 
     Rectangle<int> view;
+
+    // Menu stuff
+    PopupMenu getEffectSelectMenu();
 
 private:
     static EffectScene* instance;

@@ -57,7 +57,6 @@ MainComponent::MainComponent()
     effectSelectMenu.setBounds(100, 100, 400, 50);
     effectSelectMenu.setText("Select Effect");
 
-    effectSelectMenu.onChange =
 
     updateEffectSelectMenu();
 

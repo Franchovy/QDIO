@@ -56,22 +56,63 @@ EffectScene::EffectScene() :
 
     //==============================================================================
     // Main component popup menu
-    createEffectMenu = getEffectSelectMenu();
+    /*createEffectMenu = getEffectSelectMenu();
     createGroupEffectItem = PopupMenu::Item("Create Effect with group");
     createGroupEffectItem.setAction([=] {
         createGroupEffect();
-    });
+    });*/
     //mainMenu.addSubMenu("Create Effect", createEffectMenu);
 }
 
 EffectScene::~EffectScene()
 {
+    instance = nullptr;
+
     audioGraph.clear();
     processorPlayer.setProcessor(nullptr);
     deviceManager.closeAudioDevice();
 
     undoManager.clearUndoHistory();
 }
+
+PopupMenu EffectScene::getEffectSelectMenu() {
+    createEffectMenu.addItem("Empty Effect", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction("Create Effect");
+                updater.newEffect("Effect", getMouseXYRelative(), -1);
+            }));
+    createEffectMenu.addItem("Input Device", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction("Create Input Effect");
+                updater.newEffect("Input Device", getMouseXYRelative(), 0);
+            }));
+    createEffectMenu.addItem("Output Device", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction("Create Output Effect");
+                updater.newEffect("Output Device", getMouseXYRelative(), 1);
+            }));
+    createEffectMenu.addItem("Distortion Effect", std::function<void()>(
+            [=]{
+                undoManager.beginNewTransaction("Create Distortion Effect");
+                updater.newEffect("Distortion Effect", getMouseXYRelative(), 2);
+            }
+    ));
+    createEffectMenu.addItem("Delay Effect", std::function<void()>(
+            [=](){
+                undoManager.beginNewTransaction("Create Delay Effect");
+                updater.newEffect("Delay Effect", getMouseXYRelative(), 3);
+            }
+    ));
+    createEffectMenu.addItem("Reverb Effect", std::function<void()>(
+            [=](){
+                undoManager.beginNewTransaction("Create Reverb Effect");
+                updater.newEffect("Reverb Effect", getMouseXYRelative(), 4);
+            }
+    ));
+
+    return createEffectMenu;
+}
+
 
 //==============================================================================
 void EffectScene::paint (Graphics& g)
@@ -227,11 +268,11 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                 if (event.mods.isRightButtonDown() ||
                     event.mods.isCtrlDown()) {
                     // open menu
-                    menuPos = event.getPosition();
+                    //menuPos = event.getPosition();
                     if (effect->isInEditMode()) {
-                        callMenu(editMenu);
+                        //callMenu(editMenu);
                     } else {
-                        callMenu(menu);
+                        //callMenu(menu);
                     }
                 }
             }

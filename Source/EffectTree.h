@@ -47,6 +47,7 @@ public:
     void componentChildrenChanged(Component &component) override;
 
 
+
     // Convenience methods
     ValueTree getTree(EffectTreeBase* effect);
     template<class T>

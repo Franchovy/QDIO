@@ -73,9 +73,6 @@ protected:
     // Menu stuff
     void callMenu(PopupMenu& menu);
 
-    PopupMenu createEffectMenu;
-    PopupMenu getEffectSelectMenu();
-
     //====================================================================================
     // Lasso stuff (todo: simplify)
     LassoComponent<GuiObject::Ptr> lasso;

@@ -214,43 +214,6 @@ void EffectTreeBase::close() {
 }
 
 
-PopupMenu EffectTreeBase::getEffectSelectMenu() {
-    createEffectMenu.addItem("Empty Effect", std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Effect");
-                newEffect("Effect", -1);
-            }));
-    createEffectMenu.addItem("Input Device", std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Input Effect");
-                newEffect("Input Device", 0);
-            }));
-    createEffectMenu.addItem("Output Device", std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Output Effect");
-                newEffect("Output Device", 1);
-            }));
-    createEffectMenu.addItem("Distortion Effect", std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Distortion Effect");
-                newEffect("Distortion Effect", 2);
-            }
-    ));
-    createEffectMenu.addItem("Delay Effect", std::function<void()>(
-            [=](){
-                undoManager.beginNewTransaction("Create Delay Effect");
-                newEffect("Delay Effect", 3);
-            }
-    ));
-    createEffectMenu.addItem("Reverb Effect", std::function<void()>(
-            [=](){
-                undoManager.beginNewTransaction("Create Reverb Effect");
-                newEffect("Reverb Effect", 4);
-            }
-    ));
-
-    return createEffectMenu;
-}
 
 
 
@@ -258,7 +221,7 @@ PopupMenu EffectTreeBase::getEffectSelectMenu() {
 
 void EffectTreeBase::callMenu(PopupMenu& m) {
     // Execute result
-    menuPos = getTopLevelComponent()->getMouseXYRelative();
+    //menuPos = getTopLevelComponent()->getMouseXYRelative();
     int result = m.show();
 }
 
