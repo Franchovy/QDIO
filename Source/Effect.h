@@ -19,25 +19,30 @@
 
 #pragma once
 
+class Effect;
+class EffectTreeBase;
 
-class EffectTreeUpdater : public ComponentListener
+
+class EffectTree : public ComponentListener
 {
 public:
-    EffectTreeUpdater();
-
-    void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
-
-    void componentNameChanged(Component &component) override;
+    EffectTree();
 
     void setUndoManager(UndoManager& um);
 
+    Effect* createEffect(ValueTree& loadData);
+
+    void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
+    void componentNameChanged(Component &component) override;
     void componentChildrenChanged(Component &component) override;
 
+    ValueTree getTree(EffectTreeBase* effect);
+
 private:
+    ValueTree tree;
+
     UndoManager* undoManager;
 };
-
-class Effect;
 
 /**
  * Base class for Effects and EffectScene
@@ -72,10 +77,15 @@ public:
 
     //===================================================================
 
+    static AudioDeviceManager* getDeviceManager() const {return deviceManager;}
+    static AudioProcessorGraph* getAudioGraph() const {return audioGraph;}
+
+/*
     ValueTree& getTree() { return tree; }
     const ValueTree& getTree() const {return tree; }
+*/
+    EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(getParentComponent()); }
 
-    EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(tree.getParent().getProperty(IDs::effectTreeBase).getObject()); }
 
     template<class T>
     static T* getFromTree(const ValueTree& vt);
@@ -98,7 +108,7 @@ public:
     Point<int> getMenuPos() const;
 
 protected:
-    ValueTree tree;
+    //ValueTree tree;
 
     //====================================================================================
     // Menu stuff
@@ -134,15 +144,13 @@ protected:
     void createGroupEffect();
 
     //====================================================================================
-    static EffectTreeUpdater updater; // only needed to add as listener - todo move to manager class
+    static EffectTree updater; // only needed to add as listener - todo move to manager class
 
     static AudioDeviceManager* deviceManager;
     static AudioProcessorPlayer* processorPlayer;
     static AudioProcessorGraph* audioGraph;
 
     static UndoManager undoManager;
-
-
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTreeBase)
@@ -173,12 +181,6 @@ public:
     void mouseUp(const MouseEvent &event) override;
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
-
-    //========================================================
-    // Methods to be moved to other "manager" class
-    static Effect* createEffect(ValueTree& loadData);
-
-    //========================================================
 
     void hoverOver(EffectTreeBase* newParent);
     void reassignNewParent(EffectTreeBase* newParent);
@@ -236,6 +238,8 @@ public:
 
     // =================================================================================
     // Setters and getter functions
+    void setProcessor(AudioProcessor* processor);
+    AudioProcessor* getProcessor() const {return processor;}
     bool hasProcessor(AudioProcessor* processor);
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
@@ -261,9 +265,6 @@ public:
     };
 
 private:
-    // Used for an individual processor Effect. - does not contain anything else
-    void setProcessor(AudioProcessor* processor);
-
     bool editMode = false;
     ReferenceCountedArray<AudioPort> inputPorts;
     ReferenceCountedArray<AudioPort> outputPorts;

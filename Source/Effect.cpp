@@ -22,7 +22,7 @@ AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
 LineComponent EffectTreeBase::dragLine;
 //
-EffectTreeUpdater EffectTreeBase::updater;
+EffectTree EffectTreeBase::updater;
 
 ReferenceCountedArray<Effect> EffectTreeBase::effectsToDelete;
 
@@ -948,29 +948,30 @@ Point<int> EffectTreeBase::getMenuPos() const {
 //======================================================================================
 // methods to move to manager class
 
-Effect* Effect::createEffect(ValueTree &loadData) {
+Effect* EffectTree::createEffect(ValueTree &loadData) {
     auto effect = new Effect();
     loadData.setProperty(EffectTreeBase::IDs::effectTreeBase, effect, nullptr);
-    effect->addComponentListener(&updater);
+    effect->addComponentListener(this);
 
     //this would not be needed
-    effect->tree = loadData;
+    //effect->tree = loadData;
 
-    if (loadData.hasProperty(IDs::processorID)) {
+    if (loadData.hasProperty(Effect::IDs::processorID)) {
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
-        int id = loadData.getProperty(IDs::processorID);
+        int id = loadData.getProperty(Effect::IDs::processorID);
 
-        auto currentDevice = deviceManager->getCurrentDeviceTypeObject();
+        auto currentDeviceType = EffectTreeBase::getDeviceManager()->getCurrentDeviceTypeObject();
+        auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
 
         switch (id) {
             case 0:
-                newProcessor = std::make_unique<InputDeviceEffect>(currentDevice->getDeviceNames(true),
-                        currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(),true));
+                newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
+                                                                   currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
                 break;
             case 1:
-                newProcessor = std::make_unique<OutputDeviceEffect>(currentDevice->getDeviceNames(false),
-                        currentDevice->getIndexOfDevice(deviceManager->getCurrentAudioDevice(),false));
+                newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
+                                                                    currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
                 break;
             case 2:
                 newProcessor = std::make_unique<DistortionEffect>();
@@ -984,7 +985,7 @@ Effect* Effect::createEffect(ValueTree &loadData) {
             default:
                 std::cout << "ProcessorID not found." << newLine;
         }
-        auto node = audioGraph->addNode(move(newProcessor));
+        auto node = EffectTreeBase::getAudioGraph()->addNode(move(newProcessor));
         effect->setNode(node);
         // Create from node:
         effect->setProcessor(node->getProcessor());
@@ -994,10 +995,10 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         int numOutputPorts = loadData.getProperty("numOutputPorts", 0);
 
         for (int i = 0; i < numInputPorts; i++) {
-            effect->addPort(getDefaultBus(), true);
+            effect->addPort(Effect::getDefaultBus(), true);
         }
         for (int i = 0; i < numOutputPorts; i++) {
-            effect->addPort(getDefaultBus(), false);
+            effect->addPort(Effect::getDefaultBus(), false);
         }
     }
 
@@ -1012,9 +1013,9 @@ Effect* Effect::createEffect(ValueTree &loadData) {
 
     //==============================================================
     // Set name
-    if (! loadData.hasProperty(IDs::name)) {
+    if (! loadData.hasProperty(Effect::IDs::name)) {
         if (effect->isIndividual()) {
-            effect->setName(effect->processor->getName());
+            effect->setName(effect->getProcessor()->getName());
         } else {
             effect->setName("Effect");
         }
@@ -1032,21 +1033,20 @@ Effect* Effect::createEffect(ValueTree &loadData) {
         }
     }
 
-    auto numProcessorParameters = effect->parameters == nullptr
-            ? 0 : effect->parameters->getParameters(false).size();
+    auto numProcessorParameters = effect->getParameters(false).size();
     auto numTreeParameters = parameterChildren.size();
 
     // If there are processor parameters not registered in tree
     if (numProcessorParameters > numTreeParameters) {
         // Iterate through processor parameters
         for (int i = 0; i < numProcessorParameters; i++) {
-            auto processorParam = effect->parameters->getParameters(false)[i];
+            auto processorParam = effect->getParameters(false)[i];
             // If parameter doesn't already exist in tree
             if (! loadData.getChildWithProperty("name", processorParam->getName(30)).isValid()) {
                 auto parameterVT = effect->createParameter(processorParam);
 
                 // Set position
-                auto x = (effect->inputPorts.size()) > 0 ? 60 : 30;
+                auto x = (effect->getNumInputs()) > 0 ? 60 : 30;
                 auto y = 30 + i * 50;
 
                 parameterVT.setProperty("x", x, nullptr);
@@ -2020,11 +2020,11 @@ var* ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
 }
 */
 
-EffectTreeUpdater::EffectTreeUpdater() {
+EffectTree::EffectTree() {
 
 }
 
-void EffectTreeUpdater::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
+void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
     if (auto effect = dynamic_cast<Effect*>(&component)) {
         if (wasMoved) {
             std::cout << "Effect move update" << newLine;
@@ -2051,18 +2051,22 @@ void EffectTreeUpdater::componentMovedOrResized(Component &component, bool wasMo
     ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
 }
 
-void EffectTreeUpdater::componentNameChanged(Component &component) {
+void EffectTree::componentNameChanged(Component &component) {
 
     ComponentListener::componentNameChanged(component);
 }
 
-void EffectTreeUpdater::setUndoManager(UndoManager &um) {
+void EffectTree::setUndoManager(UndoManager &um) {
     undoManager = &um;
 }
 
-void EffectTreeUpdater::componentChildrenChanged(Component &component) {
+void EffectTree::componentChildrenChanged(Component &component) {
     for (auto c : component.getChildren()) {
         c->addComponentListener(this);
     }
     ComponentListener::componentChildrenChanged(component);
+}
+
+ValueTree EffectTree::getTree(EffectTreeBase *effect) {
+    return tree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, effect);
 }

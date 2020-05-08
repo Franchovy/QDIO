@@ -61,7 +61,7 @@ public:
 
 private:
     // EffectTreeBase static stuff
-    EffectTreeUpdater updater;
+    EffectTree updater;
 
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
