@@ -36,11 +36,6 @@ public:
     static void close();
 
     void resized() override = 0;
-    bool keyPressed(const KeyPress &key) override;
-
-    void mouseDown(const MouseEvent& event) override;
-    void mouseDrag(const MouseEvent& event) override;
-    void mouseUp(const MouseEvent& event) override;
 
     //===================================================================
 
@@ -132,9 +127,6 @@ public:
 
     void resized() override;
     void paint(Graphics& g) override;
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
@@ -147,12 +139,6 @@ public:
 
     NodeAndPort getNode(ConnectionPort::Ptr& port);
     void setNode(AudioProcessorGraph::Node::Ptr node);
-
-    ValueTree storeParameters();
-    void loadParameters(ValueTree parameterValues);
-
-    void setParameters(const AudioProcessorParameterGroup* group);
-    Parameter& addParameterFromProcessorParam(AudioProcessorParameter* param);
 
     ValueTree createParameter(AudioProcessorParameter* param);
     Parameter::Ptr loadParameter(ValueTree parameterData);
@@ -174,20 +160,6 @@ public:
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() { return editMode; }
-    // ================================================================================
-    // Effect tree data
-
-    // Undoable actions
-    void setPos(Point<int> newPos);
-    void setParent(EffectTreeBase& parent);
-
-    static void updateEffectProcessor(AudioProcessor* processorToUpdate, ValueTree treeToSearch);
-
-    //CachedValue<Array<var>> pos;
-
-    // ValueTree listener overrides
-    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
-    void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
 
     // =================================================================================
     // Setters and getter functions
@@ -217,6 +189,9 @@ public:
         static const Identifier connections;
     };
 
+    ComponentDragger dragger;
+    ComponentBoundsConstrainer constrainer;
+
 private:
     bool editMode = false;
     ReferenceCountedArray<AudioPort> inputPorts;
@@ -225,8 +200,6 @@ private:
     Image image;
 
     Resizer resizer;
-    ComponentDragger dragger;
-    ComponentBoundsConstrainer constrainer;
 
     PopupMenu menu;
     PopupMenu editMenu;

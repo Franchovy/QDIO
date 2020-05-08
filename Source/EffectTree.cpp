@@ -707,3 +707,19 @@ template<class T>
 T *EffectTree::getPropertyFromTree(const ValueTree &vt, Identifier property) {
     return dynamic_cast<T*>(vt.getProperty(property).getObject());
 }
+
+void EffectTree::remove(SelectHoverObject *c) {
+    //todo delete functionality
+    // vt->remove(undoable)
+    /*if (auto l = dynamic_cast<ConnectionLine*>(c)) {
+        auto lineTree = tree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
+        tree.removeChild(lineTree, &undoManager);
+    } else if (auto e = dynamic_cast<Effect*>(c)) {
+        effectsToDelete.add(e);
+        e->getTree().getParent().removeChild(e->getTree(), &undoManager);
+    } else if (auto p = dynamic_cast<Parameter*>(c)) {
+        auto effectParent = dynamic_cast<Effect*>(p->getParentComponent());
+        auto paramTree = effectParent->getTree().getChildWithProperty(Parameter::IDs::parameterObject, p);
+        effectParent->getTree().removeChild(paramTree, &undoManager);
+    }*/
+}

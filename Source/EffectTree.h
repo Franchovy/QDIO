@@ -29,6 +29,7 @@ public:
     ValueTree newEffect(String name, Point<int> pos, int processorID);
     ValueTree newParameter();
 
+    void remove(SelectHoverObject* c);
 
     ValueTree storeEffect(const ValueTree& tree);
     void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
