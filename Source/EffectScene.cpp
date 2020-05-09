@@ -58,12 +58,6 @@ EffectScene::EffectScene()
     //==============================================================================
     // Main component popup menu
 
-    PopupMenu::Item testItem("test");
-    testItem.action = [=]{
-        std::cout << "Poop" << newLine;
-    };
-    addMenuItem(0, testItem);
-
     setupCreateEffectMenu();
 
     /*createGroupEffectItem = PopupMenu::Item("Create Effect with group");
@@ -92,34 +86,40 @@ void EffectScene::setupCreateEffectMenu() {
     createEffectMenu->addItem("Empty Effect", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Effect");
-                updater.newEffect("Effect", getMouseXYRelative(), -1);
+                auto effectVT = updater.newEffect("Effect", getMouseXYRelative());
+                updater.loadEffect(effectVT);
             }));
     createEffectMenu->addItem("Input Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Input Effect");
-                updater.newEffect("Input Device", getMouseXYRelative(), 0);
+                auto effectVT = updater.newEffect("Input Device", getMouseXYRelative(), 0);
+                updater.loadEffect(effectVT);
             }));
     createEffectMenu->addItem("Output Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Output Effect");
-                updater.newEffect("Output Device", getMouseXYRelative(), 1);
+                auto effectVT = updater.newEffect("Output Device", getMouseXYRelative(), 1);
+                updater.loadEffect(effectVT);
             }));
     createEffectMenu->addItem("Distortion Effect", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Distortion Effect");
-                updater.newEffect("Distortion Effect", getMouseXYRelative(), 2);
+                auto effectVT = updater.newEffect("Distortion Effect", getMouseXYRelative(), 2);
+                updater.loadEffect(effectVT);
             }
     ));
     createEffectMenu->addItem("Delay Effect", std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Delay Effect");
-                updater.newEffect("Delay Effect", getMouseXYRelative(), 3);
+                auto effectVT = updater.newEffect("Delay Effect", getMouseXYRelative(), 3);
+                updater.loadEffect(effectVT);
             }
     ));
     createEffectMenu->addItem("Reverb Effect", std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Reverb Effect");
-                updater.newEffect("Reverb Effect", getMouseXYRelative(), 4);
+                auto effectVT = updater.newEffect("Reverb Effect", getMouseXYRelative(), 4);
+                updater.loadEffect(effectVT);
             }
     ));
 

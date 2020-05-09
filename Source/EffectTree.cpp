@@ -21,6 +21,7 @@ EffectTree::EffectTree(EffectTreeBase* effectScene)
 
 
 Effect* EffectTree::loadEffect(ValueTree tree) {
+    effectTree.appendChild(tree, undoManager);
     auto effect = new Effect();
     tree.setProperty(EffectTreeBase::IDs::effectTreeBase, effect, nullptr);
     effect->addComponentListener(this);

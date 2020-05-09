@@ -26,7 +26,7 @@ public:
 
     // Create new methods - constructs ValueTree Data needed
     ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
-    ValueTree newEffect(String name, Point<int> pos, int processorID);
+    ValueTree newEffect(String name, Point<int> pos, int processorID = -1);
     ValueTree newParameter();
 
     void remove(SelectHoverObject* c);
