@@ -4,9 +4,10 @@ const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 EffectScene* EffectScene::instance = nullptr;
 
 //==============================================================================
-EffectScene::EffectScene() :
-        EffectTreeBase(),
-        updater(this)
+EffectScene::EffectScene()
+        : EffectTreeBase()
+        , MenuItem(1)
+        , updater(this)
 {
     setComponentID("MainWindow");
     setName("MainWindow");
@@ -56,8 +57,16 @@ EffectScene::EffectScene() :
 
     //==============================================================================
     // Main component popup menu
-    /*createEffectMenu = getEffectSelectMenu();
-    createGroupEffectItem = PopupMenu::Item("Create Effect with group");
+
+    PopupMenu::Item testItem("test");
+    testItem.action = [=]{
+        std::cout << "Poop" << newLine;
+    };
+    addMenuItem(0, testItem);
+
+    setupCreateEffectMenu();
+
+    /*createGroupEffectItem = PopupMenu::Item("Create Effect with group");
     createGroupEffectItem.setAction([=] {
         createGroupEffect();
     });*/
@@ -76,42 +85,48 @@ EffectScene::~EffectScene()
     undoManager.clearUndoHistory();
 }
 
-PopupMenu EffectScene::getEffectSelectMenu() {
-    createEffectMenu.addItem("Empty Effect", std::function<void()>(
+void EffectScene::setupCreateEffectMenu() {
+
+    std::unique_ptr<PopupMenu> createEffectMenu = std::make_unique<PopupMenu>();
+
+    createEffectMenu->addItem("Empty Effect", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Effect");
                 updater.newEffect("Effect", getMouseXYRelative(), -1);
             }));
-    createEffectMenu.addItem("Input Device", std::function<void()>(
+    createEffectMenu->addItem("Input Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Input Effect");
                 updater.newEffect("Input Device", getMouseXYRelative(), 0);
             }));
-    createEffectMenu.addItem("Output Device", std::function<void()>(
+    createEffectMenu->addItem("Output Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Output Effect");
                 updater.newEffect("Output Device", getMouseXYRelative(), 1);
             }));
-    createEffectMenu.addItem("Distortion Effect", std::function<void()>(
+    createEffectMenu->addItem("Distortion Effect", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Distortion Effect");
                 updater.newEffect("Distortion Effect", getMouseXYRelative(), 2);
             }
     ));
-    createEffectMenu.addItem("Delay Effect", std::function<void()>(
+    createEffectMenu->addItem("Delay Effect", std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Delay Effect");
                 updater.newEffect("Delay Effect", getMouseXYRelative(), 3);
             }
     ));
-    createEffectMenu.addItem("Reverb Effect", std::function<void()>(
+    createEffectMenu->addItem("Reverb Effect", std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Reverb Effect");
                 updater.newEffect("Reverb Effect", getMouseXYRelative(), 4);
             }
     ));
 
-    return createEffectMenu;
+    PopupMenu::Item createEffectMenuItem("Create effect..");
+    createEffectMenuItem.subMenu = std::move(createEffectMenu);
+
+    addMenuItem(0, createEffectMenuItem);
 }
 
 
@@ -249,13 +264,8 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     if (event.getDistanceFromDragStart() < 10
         && (event.mods.isRightButtonDown() ||
             event.mods.isCtrlDown())) {
-        PopupMenu menu;
-        if (selected.getNumSelected() > 0) {
-            menu.addItem(createGroupEffectItem);
-        }
-        menu.addSubMenu("Create Effect..", createEffectMenu);
 
-        callMenu(menu);
+        callMenu(0);
     }
 
     if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
@@ -271,9 +281,9 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                     // open menu
                     //menuPos = event.getPosition();
                     if (effect->isInEditMode()) {
-                        //callMenu(editMenu);
+                        effect->callMenu(effect->editMenu);
                     } else {
-                        //callMenu(menu);
+                        effect->callMenu(effect->menu);
                     }
                 }
             }

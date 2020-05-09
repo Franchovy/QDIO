@@ -16,6 +16,7 @@
 #include "Ports.h"
 #include "IOEffects.h"
 #include "BaseEffects.h"
+#include "MenuItem.h"
 
 #pragma once
 
@@ -71,7 +72,7 @@ protected:
 
     //====================================================================================
     // Menu stuff
-    void callMenu(PopupMenu& menu);
+    //void callMenu(PopupMenu& menu);
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
@@ -111,7 +112,7 @@ private:
  * The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
  */
 
-class Effect : public EffectTreeBase
+class Effect : public EffectTreeBase, public MenuItem
 {
 public:
     Effect();
@@ -188,6 +189,11 @@ public:
     ComponentDragger dragger;
     ComponentBoundsConstrainer constrainer;
 
+    enum menu {
+        editMenu = 0,
+        menu = 1
+    };
+
 private:
     bool editMode = false;
     ReferenceCountedArray<AudioPort> inputPorts;
@@ -196,9 +202,6 @@ private:
     Image image;
 
     Resizer resizer;
-
-    PopupMenu menu;
-    PopupMenu editMenu;
 
     const AudioProcessorParameterGroup* parameters = nullptr;
     ReferenceCountedArray<Parameter> parameterArray;

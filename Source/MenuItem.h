@@ -17,9 +17,9 @@ class MenuItem
 public:
     MenuItem(int numMenus);
 
-    void addItem(int menuIndex, PopupMenu::Item newItem);
+    void addMenuItem(int menuIndex, PopupMenu::Item newItem);
     int callMenu(int menuIndex);
 
 private:
-    Array<PopupMenu> menus;
+    OwnedArray<PopupMenu> menus;
 };

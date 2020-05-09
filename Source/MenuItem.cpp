@@ -12,14 +12,15 @@
 
 MenuItem::MenuItem(int numMenus) {
     for (int i = 0; i < numMenus; i++) {
-        menus.add(PopupMenu());
+        menus.add(std::make_unique<PopupMenu>());
     }
 }
 
-void MenuItem::addItem(int menuIndex, PopupMenu::Item newItem) {
-    menus[menuIndex].addItem(newItem);
+void MenuItem::addMenuItem(int menuIndex, PopupMenu::Item newItem) {
+    menus[menuIndex]->addItem(newItem);
 }
 
 int MenuItem::callMenu(int menuIndex) {
-    return menus[menuIndex].show();
+    int result = menus[menuIndex]->show();
+    return result;
 }

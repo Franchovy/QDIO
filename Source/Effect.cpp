@@ -214,20 +214,6 @@ void EffectTreeBase::close() {
 }
 
 
-
-
-
-
-
-void EffectTreeBase::callMenu(PopupMenu& m) {
-    // Execute result
-    //menuPos = getTopLevelComponent()->getMouseXYRelative();
-    int result = m.show();
-}
-
-
-
-
 /*
 void EffectTreeBase::createGroupEffect() {
     undoManager.beginNewTransaction("Create Group Effect");
@@ -304,7 +290,8 @@ void EffectTreeBase::createGroupEffect() {
 
 //======================================================================================
 
-Effect::Effect() {
+Effect::Effect() : MenuItem(2)
+{
     addAndMakeVisible(resizer);
     resizer.setAlwaysOnTop(true);
 }
@@ -334,13 +321,44 @@ void Effect::setupTitle() {
 
 void Effect::setupMenu() {
     PopupMenu::Item toggleEditMode("Toggle Edit Mode");
-    toggleEditMode.setAction([=]() {
+    PopupMenu::Item changeEffectImage("Change Effect Image..");
+
+    std::unique_ptr<PopupMenu> portSubMenu = std::make_unique<PopupMenu>();
+    PopupMenu::Item portSubMenuItem("Add Port..");
+
+
+
+    toggleEditMode.setAction([=] {
         setEditMode(!editMode);
     });
 
-    menu.addItem(toggleEditMode);
-    editMenu.addItem(toggleEditMode);
+    changeEffectImage.setAction([=] {
+        FileChooser imgChooser ("Select Effect Image..",
+                                File::getSpecialLocation (File::userHomeDirectory),
+                                "*.jpg;*.png;*.gif");
+        if (imgChooser.browseForFileToOpen())
+        {
+            image = ImageFileFormat::loadFrom(imgChooser.getResult());
+        }
+    });
 
+    portSubMenu->addItem("Add Input Port", [=]() {
+        addPort(getDefaultBus(), true);
+        resized();
+    });
+    portSubMenu->addItem("Add Output Port", [=](){
+        addPort(getDefaultBus(), false);
+        resized();
+    });
+    portSubMenuItem.subMenu = std::move(portSubMenu);
+
+
+    addMenuItem(editMenu, toggleEditMode);
+    addMenuItem(menu, toggleEditMode);
+    addMenuItem(editMenu, changeEffectImage);
+    addMenuItem(editMenu, portSubMenuItem);
+
+    //todo move to class that can access
     /*if (!isIndividual()) {
         PopupMenu::Item saveEffect("Save Effect");
         saveEffect.setAction([=]() {
@@ -359,29 +377,6 @@ void Effect::setupMenu() {
         menu.addItem(saveEffect);
         editMenu.addItem(saveEffect);
     }*/
-
-
-    editMenu.addItem("Change Effect Image..", [=]() {
-        FileChooser imgChooser ("Select Effect Image..",
-                                File::getSpecialLocation (File::userHomeDirectory),
-                                "*.jpg;*.png;*.gif");
-
-        if (imgChooser.browseForFileToOpen())
-        {
-            image = ImageFileFormat::loadFrom(imgChooser.getResult());
-        }
-    });
-
-    PopupMenu portSubMenu;
-    portSubMenu.addItem("Add Input Port", [=]() {
-        addPort(getDefaultBus(), true);
-        resized();
-    });
-    portSubMenu.addItem("Add Output Port", [=](){
-        addPort(getDefaultBus(), false);
-        resized();
-    });
-    editMenu.addSubMenu("Add Port..", portSubMenu);
 
     /*PopupMenu parameterSubMenu;
     parameterSubMenu.addItem("Add Slider", [=] () {

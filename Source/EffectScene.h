@@ -17,12 +17,12 @@
 #include "EffectTree.h"
 #include "IDs"
 #include "EffectLoader.h"
+#include "MenuItem.h"
 
 /**
  *
  */
-class EffectScene   :
-        public EffectTreeBase
+class EffectScene : public EffectTreeBase, public MenuItem
 {
 public:
 
@@ -38,9 +38,7 @@ public:
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
     
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
 
     bool keyPressed(const KeyPress &key) override;
@@ -62,7 +60,7 @@ public:
     Rectangle<int> view;
 
     // Menu stuff
-    PopupMenu getEffectSelectMenu();
+    void setupCreateEffectMenu();
 
 private:
     static EffectScene* instance;
@@ -83,12 +81,6 @@ private:
     Image bgTile;
     Image logo;
     Point<int> tileDelta;
-
-
-    PopupMenu mainMenu;
-    PopupMenu createEffectMenu;
-    PopupMenu::Item createGroupEffectItem;
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EffectScene)
 };
