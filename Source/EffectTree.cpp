@@ -244,6 +244,10 @@ ValueTree EffectTree::newConnection(ConnectionPort::Ptr port1, ConnectionPort::P
 
 void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
     if (auto effect = dynamic_cast<Effect*>(&component)) {
+        if (! getTree(effect).isValid()) {
+            return;
+        }
+
         if (wasMoved) {
             std::cout << "Effect move update" << newLine;
             getTree(effect).setProperty(Effect::IDs::x, effect->getX(), undoManager);
@@ -256,6 +260,10 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
         }
     } else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
         auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
+        if (! getTree(effect).isValid()) {
+            return;
+        }
+
         if (wasMoved) {
             std::cout << "Parameter move update" << newLine;
             auto parameterTree = getTree(effect).getChildWithProperty(Parameter::IDs::parameterObject, parameter);
@@ -313,10 +321,7 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
             }
         } else {
             // Initialise VT
-            childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
-
-            // Create new effect
-            auto e = loadEffect(childWhichHasBeenAdded);
+            //childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
         }
     }
         // ADD CONNECTION

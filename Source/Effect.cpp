@@ -981,6 +981,21 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
     return list;
 }
 
+void Effect::mouseDrag(const MouseEvent &event) {
+    Component::mouseDrag(event);
+    getParentComponent()->mouseDrag(event);
+}
+
+void Effect::mouseDown(const MouseEvent &event) {
+    SelectHoverObject::mouseDown(event);
+    getParentComponent()->mouseDown(event);
+}
+
+void Effect::mouseUp(const MouseEvent &event) {
+    SelectHoverObject::mouseUp(event);
+    getParentComponent()->mouseUp(event);
+}
+
 
 
 /*

@@ -127,6 +127,11 @@ public:
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
+    void mouseDrag(const MouseEvent &event) override;
+
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;

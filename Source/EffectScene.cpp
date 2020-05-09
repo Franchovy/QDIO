@@ -260,31 +260,28 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     if (lasso.isVisible())
         lasso.endLasso();
 
-    // Open menu - either right click or left click (for mac)
-    if (event.getDistanceFromDragStart() < 10
-        && (event.mods.isRightButtonDown() ||
-            event.mods.isCtrlDown())) {
-
-        callMenu(0);
-    }
-
-    if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
+    if (event.originalComponent == this) {
+        // Open menu - either right click or left click (for mac)
+        if (event.getDistanceFromDragStart() < 10
+            && (event.mods.isRightButtonDown() ||
+                event.mods.isCtrlDown())) {
+            callMenu(0);
+        }
+    } else if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
         setAlwaysOnTop(false);
 
-        if (event.eventComponent == event.originalComponent) {
-            if (event.getDistanceFromDragStart() < 10) {
-                if (event.mods.isLeftButtonDown() && !event.mods.isCtrlDown()) {
-                    addSelectObject(this);
-                }
-                if (event.mods.isRightButtonDown() ||
-                    event.mods.isCtrlDown()) {
-                    // open menu
-                    //menuPos = event.getPosition();
-                    if (effect->isInEditMode()) {
-                        effect->callMenu(effect->editMenu);
-                    } else {
-                        effect->callMenu(effect->menu);
-                    }
+        if (event.getDistanceFromDragStart() < 10) {
+            if (event.mods.isLeftButtonDown() && !event.mods.isCtrlDown()) {
+                addSelectObject(this);
+            }
+            if (event.mods.isRightButtonDown() ||
+                event.mods.isCtrlDown()) {
+                // open menu
+                //menuPos = event.getPosition();
+                if (effect->isInEditMode()) {
+                    effect->callMenu(effect->editMenu);
+                } else {
+                    effect->callMenu(effect->menu);
                 }
             }
         }
