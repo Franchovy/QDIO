@@ -402,7 +402,6 @@ bool EffectScene::keyPressed(const KeyPress &key)
     if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         undoManager.beginNewTransaction("Delete");
 
-
         for (const auto& selectedItem : selected.getItemArray()) {
             updater.remove(selectedItem.get());
         }

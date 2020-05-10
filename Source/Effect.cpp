@@ -786,14 +786,18 @@ void Effect::paint(Graphics& g) {
     hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
     PathStrokeType strokeType(3);
 
-    if (hoverMode) {
+
+    if (selectMode) {
+        strokeType.createStrokedPath(hoverRectangle, hoverRectangle);
+    } else if (hoverMode) {
         float thiccness[] = {5, 7};
         strokeType.createDashedStroke(hoverRectangle, hoverRectangle, thiccness, 2);
-    } else if (selectMode)
-        strokeType.createStrokedPath(hoverRectangle, hoverRectangle);
+    }
 
-    if (selectMode || hoverMode)
+
+    if (selectMode || hoverMode) {
         g.strokePath(hoverRectangle, strokeType);
+    }
 
     g.setColour(Colours::whitesmoke);
     if (!editMode) {

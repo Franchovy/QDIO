@@ -318,6 +318,12 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
             if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
                 e->setVisible(true);
+
+                // Remove from effectsToDelete
+                if (effectsToDelete.contains(e)) {
+                    effectsToDelete.removeObject(e);
+                }
+
                 // Adjust pos
                 if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
                     if (!parent->getChildren().contains(e)) {
@@ -391,6 +397,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
 
                 parent->removeChildComponent(e);
                 e->setVisible(false);
+                effectsToDelete.add(e);
             }
         }
     }
@@ -705,8 +712,9 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
             }
         }
     }
-
-    loadEffect(copy);
+    if (copy.getType() == EFFECT_ID) {
+        loadEffect(copy);
+    }
 }
 
 
@@ -730,17 +738,16 @@ T *EffectTree::getPropertyFromTree(const ValueTree &vt, Identifier property) {
 }
 
 void EffectTree::remove(SelectHoverObject *c) {
-    //todo delete functionality
-    // vt->remove(undoable)
-    /*if (auto l = dynamic_cast<ConnectionLine*>(c)) {
-        auto lineTree = tree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
-        tree.removeChild(lineTree, &undoManager);
+    if (auto l = dynamic_cast<ConnectionLine*>(c)) {
+        auto parentTree = getTree(dynamic_cast<EffectTreeBase*>(l->getParentComponent()));
+        auto lineTree = parentTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
+        parentTree.removeChild(lineTree, undoManager);
     } else if (auto e = dynamic_cast<Effect*>(c)) {
-        effectsToDelete.add(e);
-        e->getTree().getParent().removeChild(e->getTree(), &undoManager);
+        auto effectTree = getTree(e);
+        effectTree.getParent().removeChild(effectTree, undoManager);
     } else if (auto p = dynamic_cast<Parameter*>(c)) {
-        auto effectParent = dynamic_cast<Effect*>(p->getParentComponent());
-        auto paramTree = effectParent->getTree().getChildWithProperty(Parameter::IDs::parameterObject, p);
-        effectParent->getTree().removeChild(paramTree, &undoManager);
-    }*/
+        auto parentTree = getTree(dynamic_cast<Effect*>(p->getParentComponent()));
+        auto paramTree = parentTree.getChildWithProperty(Parameter::IDs::parameterObject, p);
+        parentTree.removeChild(paramTree, undoManager);
+    }
 }
