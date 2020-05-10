@@ -810,6 +810,8 @@ void Effect::paint(Graphics& g) {
         g.setColour(Colours::black);
     }
     g.strokePath(outlineRect, outlineStroke);
+
+
 }
 
 int Effect::getPortID(const ConnectionPort *port) {

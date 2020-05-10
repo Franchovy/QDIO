@@ -62,7 +62,7 @@ SelectHoverObject::~SelectHoverObject() {
 void SelectHoverObject::resetHoverObject() {
     if (hoverComponent != nullptr) {
         hoverComponent->hoverMode = false;
-        hoverComponent->repaint();
+        //hoverComponent->repaint();
         hoverComponent = nullptr;
     }
 }
@@ -98,13 +98,13 @@ void SelectHoverObject::setSelectMode(bool newSelectMode) {
 void SelectHoverObject::addSelectObject(const SelectHoverObject::Ptr& item) {
     item->selectMode = true;
 
-    item->repaint();
+    //item->repaint();
     selected.addToSelection(item);
 }
 
 void SelectHoverObject::removeSelectObject(const SelectHoverObject::Ptr& item) {
     item->selectMode = false;
-    item->repaint();
+    //item->repaint();
     selected.deselect(item);
 }
 

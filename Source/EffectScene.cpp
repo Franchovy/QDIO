@@ -12,7 +12,8 @@ EffectScene::EffectScene()
     setComponentID("MainWindow");
     setName("MainWindow");
 
-    setBufferedToImage(true);
+    setBufferedToImage(false);
+    setPaintingIsUnclipped(false);
     setRepaintsOnMouseActivity(false);
 
     // Set up static members
@@ -153,6 +154,8 @@ void EffectScene::paint (Graphics& g)
     
     g.drawText("QDIO",getWidth()/2-50, getHeight()/2-50, 100, 100, Justification::centred);
 #endif
+
+    Component::paint(g);
 }
 
 void EffectScene::resized()
