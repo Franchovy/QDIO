@@ -66,6 +66,7 @@ EffectScene::EffectScene()
         createGroupEffect();
     });*/
     //mainMenu.addSubMenu("Create Effect", createEffectMenu);
+    updater.loadUserState();
 }
 
 EffectScene::~EffectScene()

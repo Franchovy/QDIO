@@ -700,6 +700,8 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
             }
         }
     }
+
+    loadEffect(copy);
 }
 
 
