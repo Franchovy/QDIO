@@ -527,9 +527,6 @@ ConnectionPort* Effect::checkPort(Point<int> pos) {
 }
 
 void Effect::setEditMode(bool isEditMode) {
-    if (isIndividual())
-        return;
-
     // Turn on edit mode
     if (isEditMode) {
         // Set child effects and connections to editable
@@ -574,6 +571,10 @@ void Effect::setEditMode(bool isEditMode) {
         // Make child effects and connections not editable
         for (int i = 0; i < getNumChildComponents(); i++) {
             auto c = getChildComponent(i);
+
+            if (dynamic_cast<Resizer*>(c)) {
+                continue;
+            }
 
             c->toBack();
             c->setInterceptsMouseClicks(false, false);

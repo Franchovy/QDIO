@@ -120,7 +120,7 @@ public:
     }
 
     void parentHierarchyChanged() override {
-        setCentrePosition(getParentComponent()->getWidth(), getParentComponent()->getHeight());
+        setPosition();
         Component::parentHierarchyChanged();
     }
 
@@ -128,8 +128,12 @@ public:
     {
     }
 
+    void setPosition() {
+        setTopLeftPosition(getParentComponent()->getWidth() - getWidth(), getParentComponent()->getHeight() - getHeight());
+    }
+
     void parentSizeChanged() override {
-        setCentrePosition(getParentWidth(), getParentHeight());
+        setPosition();
         Component::parentSizeChanged();
     }
 
