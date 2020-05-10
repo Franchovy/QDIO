@@ -302,6 +302,8 @@ void Effect::setupTitle() {
 
     title.setEditable(true);
     title.setText(getName(), dontSendNotification);
+
+    addAndMakeVisible(title);
     title.setBounds(25, 20, 200, title.getFont().getHeight());
 
     title.onTextChange = [=]{
@@ -310,7 +312,6 @@ void Effect::setupTitle() {
         setName(title.getText(true));
     };
 
-    addAndMakeVisible(title);
 
     if (editMode && appState != loading) {
         //title.grabKeyboardFocus();
@@ -403,7 +404,6 @@ Effect::~Effect()
 
 // Processor hasEditor? What to do if processor is a predefined plugin
 void Effect::setProcessor(AudioProcessor *processor) {
-    setEditMode(false);
     this->processor = processor;
 
     // Processor settings (how best to do this?)

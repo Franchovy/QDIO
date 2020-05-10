@@ -89,6 +89,8 @@ Effect* EffectTree::loadEffect(ValueTree tree) {
         } else {
             effect->setName("Effect");
         }
+    } else {
+        effect->setName(tree.getProperty(Effect::IDs::name).toString());
     }
 
     //==============================================================
@@ -327,7 +329,10 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
             }
         } else {
             // Initialise VT
-            //childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
+            /*childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
+            auto parent = getFromTree<EffectTreeBase>(parentTree);
+            auto effect = getFromTree<Effect>(effectTree);
+            parent->addAndMakeVisible(effect);*/
         }
     }
         // ADD CONNECTION
