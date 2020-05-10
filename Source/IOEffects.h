@@ -22,6 +22,10 @@ public:
         addParameter(&deviceParam);
     }
 
+    ~InputDeviceEffect() {
+        deviceParam.sendValueChangedMessageToListeners(0.0);
+    }
+
     const String getName() const override { return name; }
 
 private:

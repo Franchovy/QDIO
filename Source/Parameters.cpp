@@ -272,6 +272,9 @@ Parameter* Parameter::getConnectedParameter() {
     return connectedParameter;
 }
 
+void Parameter::removeListeners() {
+    referencedParameter->removeListener(this);
+}
 
 
 /*NormalisableRange<double> Parameter::getRange() {

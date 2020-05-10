@@ -394,12 +394,19 @@ void Effect::setupMenu() {
 
 Effect::~Effect()
 {
-    if (node != nullptr) {
+    audioGraph->removeAllChangeListeners();
+
+    for (auto p : parameterArray) {
+        // Remove listeners
+        p->removeListeners();
+    }
+
+    /*if (node != nullptr) {
         std::cout << "Reference count: " << node->getReferenceCount() << newLine;
         while (node->getReferenceCount() > 1) {
             node->decReferenceCount();
         }
-    }
+    }*/
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin

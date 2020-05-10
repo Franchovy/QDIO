@@ -77,7 +77,9 @@ EffectScene::~EffectScene()
     instance = nullptr;
     //todo remove this ptr from EffectTree before destructor.
 
-    audioGraph.clear();
+    /*audioGraph.clear();
+    jassert(! audioGraph.getParameters().isEmpty());*/
+
     processorPlayer.setProcessor(nullptr);
     deviceManager.closeAudioDevice();
 
@@ -183,7 +185,7 @@ void EffectScene::mouseDown(const MouseEvent &event) {
 
             // Drag
             effect->setAlwaysOnTop(true);
-            effect->dragger.startDraggingComponent(this, event);
+            effect->dragger.startDraggingComponent(effect, event);
         } else if (event.mods.isRightButtonDown()) {
             // Send info upwards for menu
             //TODO don't do this, call custom menu function
@@ -201,21 +203,12 @@ void EffectScene::mouseDown(const MouseEvent &event) {
 
 void EffectScene::mouseDrag(const MouseEvent &event) {
     if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
-        effect->dragger.dragComponent(this, event, &effect->constrainer);
-
+        //todo dragger belonging to effectScene
+        effect->dragger.dragComponent(effect, event, nullptr);
         // Manual constraint
-        auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
-        auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
-/*
+        auto newX = jlimit<int>(0, effect->getParentWidth() - effect->getWidth(), effect->getX());
+        auto newY = jlimit<int>(0, effect->getParentHeight() - effect->getHeight(), effect->getY());
 
-        if (newX != getX() || newY != getY())
-            if (event.x<-(getWidth() / 2) || event.y<-(getHeight() / 2) ||
-                                                     event.x>(getWidth() * 3 / 2) || event.y>(getHeight() * 3 / 2)) {
-                auto newPos = dragDetachFromParentComponent();
-                newX = newPos.x;
-                newY = newPos.y;
-            }
-*/
         effect->setTopLeftPosition(newX, newY);
     }
 

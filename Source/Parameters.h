@@ -57,6 +57,8 @@ public:
 
     void setActionOnComboSelect(std::function<void()> funct);
 
+    void removeListeners();
+
 private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
