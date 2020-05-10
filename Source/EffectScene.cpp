@@ -12,8 +12,8 @@ EffectScene::EffectScene()
     setComponentID("MainWindow");
     setName("MainWindow");
 
-    setBufferedToImage(false);
-    setPaintingIsUnclipped(false);
+    setBufferedToImage(true);
+    //setPaintingIsUnclipped(false);
     setRepaintsOnMouseActivity(false);
 
     // Set up static members
