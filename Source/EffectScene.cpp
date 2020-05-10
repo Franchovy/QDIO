@@ -261,11 +261,22 @@ void EffectScene::mouseUp(const MouseEvent &event) {
         lasso.endLasso();
 
     if (event.originalComponent == this) {
-        // Open menu - either right click or left click (for mac)
-        if (event.getDistanceFromDragStart() < 10
-            && (event.mods.isRightButtonDown() ||
-                event.mods.isCtrlDown())) {
-            callMenu(0);
+        // Click on effectscene
+        if (event.getDistanceFromDragStart() < 10)
+        {
+            if (event.mods.isLeftButtonDown()) {
+                // Remove selection
+                // Don't deselect if shift or ctrl is held.
+                if (! event.mods.isCtrlDown()
+                        && ! event.mods.isShiftDown())
+                {
+                    selected.deselectAll();
+                }
+            } else if (event.mods.isRightButtonDown()
+                    || event.mods.isCtrlDown())
+            {
+                callMenu(0);
+            }
         }
     } else if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
         setAlwaysOnTop(false);
@@ -395,6 +406,11 @@ bool EffectScene::keyPressed(const KeyPress &key)
         for (const auto& selectedItem : selected.getItemArray()) {
             updater.remove(selectedItem.get());
         }
+        selected.deselectAll();
+    }
+
+    if (key.getKeyCode() == KeyPress::escapeKey)
+    {
         selected.deselectAll();
     }
 
