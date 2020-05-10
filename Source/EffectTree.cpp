@@ -299,7 +299,13 @@ ValueTree EffectTree::getTree(EffectTreeBase *effect) {
 EffectTree::~EffectTree() {
     // Remove references to RefCountedObjects
     effectsToDelete.clear(); // effect references stored in toDelete array
+
+    auto effectScene = effectTree.getProperty(EffectTreeBase::IDs::effectTreeBase).getObject();
+    effectScene->incReferenceCount();
+
     effectTree = ValueTree(); // clear ValueTree
+
+    effectScene->decReferenceCountWithoutDeleting();
 }
 
 
