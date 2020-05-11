@@ -76,7 +76,7 @@ protected:
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
-    LassoComponent<GuiObject::Ptr> lasso;
+    LassoComponent<SelectHoverObject::Ptr> lasso;
     bool intersectMode = true;
 
     void findLassoItemsInArea (Array <SelectHoverObject::Ptr>& results, const Rectangle<int>& area) override;

@@ -193,6 +193,11 @@ void EffectScene::mouseDown(const MouseEvent &event) {
         }
     }
 
+    if (event.originalComponent == this) {
+        lasso.setVisible(true);
+        lasso.beginLasso(event, this);
+    }
+
     std::cout << "Begin new transaction" << newLine;
     undoManager.beginNewTransaction(getName());
 
@@ -212,8 +217,10 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
         effect->setTopLeftPosition(newX, newY);
     }
 
-    /*if (lasso.isVisible())
-        lasso.dragLasso(event);*/
+    if (lasso.isVisible()) {
+        lasso.dragLasso(event);
+    }
+
     if (event.mods.isLeftButtonDown()) {
         if (dynamic_cast<Effect*>(event.originalComponent)) {
             // Effect drag
@@ -257,8 +264,10 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
 }
 
 void EffectScene::mouseUp(const MouseEvent &event) {
-    if (lasso.isVisible())
+    if (lasso.isVisible()) {
         lasso.endLasso();
+    }
+
 
     if (event.originalComponent == this) {
         // Click on effectscene
