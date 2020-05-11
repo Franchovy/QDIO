@@ -101,9 +101,6 @@ void SelectHoverObject::removeSelectObject(const SelectHoverObject::Ptr& item) {
 }
 
 void SelectHoverObject::close() {
-    for (auto c : componentsToSelect) {
-        componentsToSelect.removeObject(c);
-    }
     componentsToSelect.clear();
     selected.clear();
     hoverComponent = nullptr;
