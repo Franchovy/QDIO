@@ -46,7 +46,7 @@ private:
 
     void populateEffectMenu(PopupMenu& menu);
 
-    std::unique_ptr<EffectScene> main;
+    EffectScene main;
     AudioProcessorGraph& audioGraph;
     AudioDeviceManager& deviceManager;
     AudioProcessorPlayer& audioPlayer;

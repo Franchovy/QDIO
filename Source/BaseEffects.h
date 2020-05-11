@@ -107,14 +107,15 @@ class DelayEffect : public BaseEffect, public Timer
 {
 public:
     DelayEffect() : BaseEffect()
-                    , delay("length", "Length",
-                          NormalisableRange<float>(0.1f, 1.f, 0.001, 0.5f), 0.3f)
-                    , fade("fade", "Fade",
-                                 NormalisableRange<float>(0, 1.f, 0.001, 0.95f), 0.9f)
+                    , delay(new AudioParameterFloat("length", "Length",
+                          NormalisableRange<float>(0.1f, 1.f, 0.001, 0.5f), 0.3f))
+                    , fade(new AudioParameterFloat("fade", "Fade",
+                                 NormalisableRange<float>(0, 1.f, 0.001, 0.95f), 0.9f))
     {
         name = "Delay Effect";
-        addParameter(&delay);
-        addParameter(&fade);
+
+        addParameter(delay);
+        addParameter(fade);
 
         setLayout(1,1);
         startTimer(1000);
@@ -125,11 +126,11 @@ public:
      */
     void timerCallback() override {
         // TODO fix crashing
-        if (fadeVal != fade.get()) {
-            fadeVal = fade.get();
+        if (fadeVal != fade->get()) {
+            fadeVal = fade->get();
         }
 
-        newDelayBufferSize = ceil(delay.get() * currentSampleRate );
+        newDelayBufferSize = ceil(delay->get() * currentSampleRate );
         if (newDelayBufferSize != delayBufferSize){
             std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
 
@@ -150,19 +151,19 @@ public:
         numChannels = jmax(getMainBusNumInputChannels(), getMainBusNumOutputChannels());
 
         // init buffer
-        delayBuffer.setSize(numChannels,ceil(delay.range.end * sampleRate)
+        delayBuffer.setSize(numChannels,ceil(delay->range.end * sampleRate)
                 , false, true, false);
 
-        std::cout << "max size: " <<  delay.range.end * sampleRate << newLine;
+        std::cout << "max size: " <<  delay->range.end * sampleRate << newLine;
 
-        delayBufferSize = ceil( delay.get() * sampleRate );
+        delayBufferSize = ceil( delay->get() * sampleRate );
         delayBufferPt = 1;
 
         delayBuffer.setSize(numChannels, delayBufferSize
                 , true, false, true);
         delayBuffer.clear();
 
-        fadeVal = fade.get();
+        fadeVal = fade->get();
     }
 
     void releaseResources() override {
@@ -215,8 +216,8 @@ public:
     }
 
 private:
-    AudioParameterFloat delay;
-    AudioParameterFloat fade;
+    AudioParameterFloat* delay;
+    AudioParameterFloat* fade;
     std::atomic<float> fadeVal;
     //std::atomic<float> delayVal;
     AudioBuffer<float> delayBuffer;

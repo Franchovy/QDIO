@@ -37,6 +37,8 @@ const Identifier Effect::IDs::connections = "connections";
 const Identifier Effect::IDs::EFFECT_ID = "effect";
 
 
+
+
 void EffectTreeBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results, const Rectangle<int> &area) {
     for (auto c : componentsToSelect) {
         if (!intersectMode) {
@@ -394,11 +396,13 @@ void Effect::setupMenu() {
 
 Effect::~Effect()
 {
-    audioGraph->removeAllChangeListeners();
+    //audioGraph->removeAllChangeListeners();
 
     for (auto p : parameterArray) {
         // Remove listeners
         p->removeListeners();
+        removeChildComponent(p);
+        removeChildComponent(p->getPort(true));
     }
 
     /*if (node != nullptr) {

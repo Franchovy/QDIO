@@ -44,7 +44,7 @@ SelectHoverObject::SelectHoverObject() {
 }
 
 SelectHoverObject::~SelectHoverObject() {
-    if (getReferenceCount() > 0) {
+    /*if (getReferenceCount() > 0) {
         componentsToSelect.removeObject(this);
 
         if (hoverComponent == this) {
@@ -56,7 +56,7 @@ SelectHoverObject::~SelectHoverObject() {
         if (getReferenceCount() > 0) {
             std::cout << "shit gonna hit the fan!!" << newLine;
         }
-    }
+    }*/
 }
 
 void SelectHoverObject::resetHoverObject() {
@@ -101,6 +101,9 @@ void SelectHoverObject::removeSelectObject(const SelectHoverObject::Ptr& item) {
 }
 
 void SelectHoverObject::close() {
+    for (auto c : componentsToSelect) {
+        componentsToSelect.removeObject(c);
+    }
     componentsToSelect.clear();
     selected.clear();
     hoverComponent = nullptr;

@@ -8,9 +8,11 @@
   ==============================================================================
 */
 
-#pragma once
 #include <JuceHeader.h>
 #include "Ports.h"
+
+
+#pragma once
 
 class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener
 {
@@ -18,6 +20,8 @@ public:
     using Ptr = ReferenceCountedObjectPtr<Parameter>;
 
     explicit Parameter(AudioProcessorParameter *param);
+
+    ~Parameter() override;
 
     enum Type {
         button = 0,
@@ -64,8 +68,8 @@ private:
     std::unique_ptr<Component> parameterComponent;
     AudioProcessorParameter* referencedParameter;
 
-    std::unique_ptr<ParameterPort> internalPort;
-    std::unique_ptr<ParameterPort> externalPort;
+    ParameterPort internalPort;
+    ParameterPort externalPort;
 
     bool editMode = false;
     Parameter* connectedParameter = nullptr;

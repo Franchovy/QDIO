@@ -12,16 +12,16 @@
 #include "MainComponent.h"
 
 MainComponent::MainComponent()
-    : main(std::make_unique<EffectScene>())
+    : main()
     , effectTree(EFFECT_ID)
-    , deviceManager(main->getDeviceManager())
-    , audioGraph(main->getAudioGraph())
-    , audioPlayer(main->getAudioPlayer())
+    , deviceManager(main.getDeviceManager())
+    , audioGraph(main.getAudioGraph())
+    , audioPlayer(main.getAudioPlayer())
     , settingsMenu(deviceManager)
 {
     // EffectScene component
-    setViewedComponent(main.get(), false);
-    addAndMakeVisible(main.get());
+    setViewedComponent(&main, false);
+    addAndMakeVisible(&main);
 
     // Set size to full screen
     auto appArea = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
@@ -31,8 +31,8 @@ MainComponent::MainComponent()
 #endif
     setBounds(appArea);
 
-    main->setBounds(getBounds());
-    main->view = getViewArea();
+    main.setBounds(getBounds());
+    main.view = getViewArea();
 
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
 
@@ -70,20 +70,14 @@ MainComponent::MainComponent()
 }
 
 MainComponent::~MainComponent() {
-    main->storeState();
+    main.storeState();
 
-    auto audioState = main->getDeviceManager().createStateXml();
+    auto audioState = main.getDeviceManager().createStateXml();
 
     getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
     getAppProperties().getUserSettings()->saveIfNeeded();
 
-    /*main.incReferenceCount();
-    std::cout << "Are child still active?" << newLine;
-    for (int i = 0; i < main.getTree().getNumChildren(); i++) {
-        std::cout << main.getTree().getChild(i).hasProperty(EffectTreeBase::IDs::effectTreeBase) << newLine;
-    }*/
     EffectTreeBase::close();
-    //main.decReferenceCountWithoutDeleting();
 }
 
 void MainComponent::move(int deltaX, int deltaY) {

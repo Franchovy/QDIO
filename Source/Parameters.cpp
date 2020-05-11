@@ -18,8 +18,8 @@ Parameter::Parameter(AudioProcessorParameter *param)
     : referencedParameter(param)
     , editMode(param->isMetaParameter())
     , parameterLabel(param->getName(30), param->getName(30))
-    , internalPort(std::make_unique<ParameterPort>(true))
-    , externalPort(std::make_unique<ParameterPort>(false))
+    , internalPort(true)
+    , externalPort(false)
 {
 
     //TODO use parameterListener
@@ -96,7 +96,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
     }
 
     addAndMakeVisible(parameterLabel);
-    addChildComponent(externalPort.get());
+    addChildComponent(externalPort);
 
     if (type == combo) {
         parameterLabel.setVisible(false);
@@ -110,7 +110,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
     setBounds(0, 0, 150, 120);
 
-    externalPort->setCentrePosition(75, 30);
+    externalPort.setCentrePosition(75, 30);
 
     setInterceptsMouseClicks(editMode, true);
 }
@@ -135,7 +135,7 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
 
 void Parameter::setEditMode(bool isEditable) {
     // change between editable and non-editable version
-    externalPort->setVisible(isEditable);
+    externalPort.setVisible(isEditable);
     setHoverable(isEditable);
     parameterLabel.setEditable(isEditable, isEditable);
 
@@ -150,7 +150,7 @@ void Parameter::setEditMode(bool isEditable) {
 }
 
 void Parameter::mouseDown(const MouseEvent &event) {
-    if (event.originalComponent == externalPort.get()) {
+    if (event.originalComponent == &externalPort) {
         getParentComponent()->mouseDown(event);
     }
     else if (editMode)
@@ -161,7 +161,7 @@ void Parameter::mouseDown(const MouseEvent &event) {
 }
 
 void Parameter::mouseDrag(const MouseEvent &event) {
-    if (event.originalComponent == externalPort.get()) {
+    if (event.originalComponent == &externalPort) {
         getParentComponent()->mouseDrag(event);
     }
     else if (editMode)
@@ -172,7 +172,7 @@ void Parameter::mouseDrag(const MouseEvent &event) {
 }
 
 void Parameter::mouseUp(const MouseEvent &event) {
-    if (event.originalComponent == externalPort.get()) {
+    if (event.originalComponent == &externalPort) {
         getParentComponent()->mouseUp(event);
     }
     SelectHoverObject::mouseUp(event);
@@ -181,7 +181,7 @@ void Parameter::mouseUp(const MouseEvent &event) {
 
 
 ParameterPort *Parameter::getPort(bool internal) {
-    return internal ? internalPort.get() : externalPort.get();
+    return internal ? &internalPort : &externalPort;
 }
 
 Point<int> Parameter::getPortPosition() {
@@ -260,7 +260,7 @@ bool Parameter::isInEditMode() const {
 }
 
 void Parameter::moved() {
-    internalPort->setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
+   internalPort.setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
     Component::moved();
 }
 
@@ -274,6 +274,10 @@ Parameter* Parameter::getConnectedParameter() {
 
 void Parameter::removeListeners() {
     referencedParameter->removeListener(this);
+}
+
+Parameter::~Parameter() {
+
 }
 
 
