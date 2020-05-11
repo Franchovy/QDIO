@@ -52,7 +52,7 @@ void EffectTreeBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results
 }
 
 SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
-    selected.clear();
+    deselectAll();
     return selected;
 }
 

@@ -26,7 +26,7 @@ void Resizer::mouseDrag(const MouseEvent &event) {
     Component::mouseDrag(event);
 }
 
-void SelectHoverObject::setHoverComponent(SelectHoverObject::Ptr item) {
+void SelectHoverObject::setHoverObject(SelectHoverObject::Ptr item) {
     resetHoverObject();
 
     if (item != nullptr) {
@@ -73,7 +73,7 @@ void SelectHoverObject::setHoverable(bool isHoverable) {
 
 void SelectHoverObject::mouseEnter(const MouseEvent &event) {
     if (hoverable) {
-        setHoverComponent(this);
+        setHoverObject(this);
     } else {
         Component::mouseEnter(event);
     }
@@ -84,14 +84,6 @@ void SelectHoverObject::mouseExit(const MouseEvent &event) {
         resetHoverObject();
     } else {
         Component::mouseEnter(event);
-    }
-}
-
-void SelectHoverObject::setSelectMode(bool newSelectMode) {
-    if (newSelectMode) {
-        addSelectObject(this);
-    } else {
-        removeSelectObject(this);
     }
 }
 
@@ -128,6 +120,23 @@ void SelectHoverObject::mouseUp(const MouseEvent &event) {
         }
     }
     Component::mouseUp(event);
+}
+
+void SelectHoverObject::deselectAll() {
+    selected.deselectAll();
+    repaint();
+}
+
+ReferenceCountedArray<SelectHoverObject> SelectHoverObject::getSelected() {
+    ReferenceCountedArray<SelectHoverObject> itemArray;
+    for (const auto& item : selected.getItemArray()) {
+        itemArray.add(item);
+    }
+    return itemArray;
+}
+
+SelectHoverObject *SelectHoverObject::getHoverObject() {
+    return hoverComponent.get();
 }
 
 void ComponentSelection::itemSelected(SelectHoverObject::Ptr object){

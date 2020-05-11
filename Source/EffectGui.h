@@ -44,28 +44,34 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    static void setHoverComponent(SelectHoverObject::Ptr item);
+    static SelectHoverObject* getHoverObject();
+    static void setHoverObject(SelectHoverObject::Ptr item);
     static void resetHoverObject();
 
     static void addSelectObject(const SelectHoverObject::Ptr& item);
     static void removeSelectObject(const SelectHoverObject::Ptr& item);
+    void deselectAll();
+
+    ReferenceCountedArray<SelectHoverObject> getSelected();
+
 
     void setHoverable(bool isHoverable);
-    void setSelectMode(bool newSelectMode);
-
-protected:
-    static SelectHoverObject::Ptr hoverComponent;
-    static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
-    static ComponentSelection selected;
 
     static void close();
 
-    bool hoverable = true;
+
+protected:
+    static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
+    static ComponentSelection selected;
 
     bool hoverMode = false;
     bool selectMode = false;
 
 private:
+    static SelectHoverObject::Ptr hoverComponent;
+
+    bool hoverable = true;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectHoverObject)
 };
 
@@ -83,6 +89,8 @@ public:
     void clear() {
         SelectedItemSet<SelectHoverObject::Ptr>::deselectAll();
     }
+
+
 
     void itemSelected(SelectHoverObject::Ptr type) override;
     void itemDeselected(SelectHoverObject::Ptr object) override;

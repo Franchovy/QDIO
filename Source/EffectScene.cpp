@@ -227,7 +227,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
                     newParent->getTree().appendChild(tree, &undoManager);
 
                     if (newParent != this) {
-                        SelectHoverObject::setHoverComponent(newParent);
+                        SelectHoverObject::setHoverObject(newParent);
                     } else {
                         SelectHoverObject::resetHoverObject();
                     }
@@ -245,7 +245,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
                     auto port = nullptr;// portToConnectTo(event, tree);
 
                     if (port != nullptr) {
-                        SelectHoverObject::setHoverComponent(port);
+                        SelectHoverObject::setHoverObject(port);
                     } else {
                         SelectHoverObject::resetHoverObject();
                     }
@@ -270,7 +270,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                 if (! event.mods.isCtrlDown()
                         && ! event.mods.isShiftDown())
                 {
-                    selected.deselectAll();
+                    deselectAll();
                 }
             } else if (event.mods.isRightButtonDown()
                     || event.mods.isCtrlDown())
@@ -298,7 +298,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
         }
     } else if (dynamic_cast<ParameterPort *>(event.originalComponent)) {
         auto port1 = dynamic_cast<ParameterPort *>(dragLine.getPort1());
-        auto port2 = dynamic_cast<ParameterPort *>(hoverComponent.get());
+        auto port2 = dynamic_cast<ParameterPort *>(getHoverObject());
 
         if (port1 != nullptr && port2 != nullptr) {
 
@@ -331,7 +331,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
     } else {
         // Call ConnectionPort connect
         if (dynamic_cast<ConnectionPort *>(event.originalComponent)) {
-            if (auto port = dynamic_cast<ConnectionPort *>(hoverComponent.get())) {
+            if (auto port = dynamic_cast<ConnectionPort *>(getHoverObject())) {
                 // Call create on common parent
                 updater.newConnection(port, dragLine.getPort1());
             }
@@ -402,15 +402,15 @@ bool EffectScene::keyPressed(const KeyPress &key)
     if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         undoManager.beginNewTransaction("Delete");
 
-        for (const auto& selectedItem : selected.getItemArray()) {
-            updater.remove(selectedItem.get());
+        for (const auto& selectedItem : getSelected()) {
+            updater.remove(selectedItem);
         }
-        selected.deselectAll();
+        deselectAll();
     }
 
     if (key.getKeyCode() == KeyPress::escapeKey)
     {
-        selected.deselectAll();
+        deselectAll();
     }
 
     // CTRL
