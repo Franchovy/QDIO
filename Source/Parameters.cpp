@@ -280,6 +280,10 @@ Parameter::~Parameter() {
 
 }
 
+bool Parameter::canDragInto(SelectHoverObject *other) {
+    return false;
+}
+
 
 /*NormalisableRange<double> Parameter::getRange() {
     auto slider = dynamic_cast<Slider*>(parameterComponent.get());

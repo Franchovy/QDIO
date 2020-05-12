@@ -133,6 +133,8 @@ public:
 
     void mouseUp(const MouseEvent &event) override;
 
+    bool canDragInto(SelectHoverObject *other) override;
+
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
         AudioPort* port = nullptr;

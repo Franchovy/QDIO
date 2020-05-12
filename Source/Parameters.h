@@ -63,6 +63,8 @@ public:
 
     void removeListeners();
 
+    bool canDragInto(SelectHoverObject *other) override;
+
 private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;

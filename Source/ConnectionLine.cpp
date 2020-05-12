@@ -102,6 +102,7 @@ ConnectionPort *LineComponent::getPort1() {
     return port1;
 }
 
+
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
     auto inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
     auto outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
@@ -191,3 +192,6 @@ void ConnectionLine::paint(Graphics &g) {
 
     g.fillPath(p);
 }
+
+
+

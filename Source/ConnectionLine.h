@@ -16,8 +16,9 @@
 #pragma once
 
 
-struct LineComponent : public GuiObject
+class LineComponent : public GuiObject
 {
+public:
     LineComponent() = default;
 
     void paint(Graphics &g) override;
@@ -103,6 +104,8 @@ public:
         static const Identifier ConnectionLineObject;
         static const Identifier AudioConnection;
     };
+
+    bool canDragInto(SelectHoverObject *other) override;
 
 private:
     Line<int> line;
