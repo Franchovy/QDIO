@@ -56,12 +56,11 @@ public:
 
     static void close();
 
-
     void mouseDrag(const MouseEvent &event) override;
     virtual bool canDragInto(const SelectHoverObject* other) const = 0;
     void startDragHoverDetect();
     void endDragHoverDetect();
-    SelectHoverObject* getDragIntoObject() const;
+    static SelectHoverObject* getDragIntoObject();
 
 protected:
     static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
@@ -77,8 +76,9 @@ private:
     static bool manualHover;
 
     static SelectHoverObject* draggedComponent;
-    static void findDragHovered(SelectHoverObject* currentHoveredComponent);
+    static SelectHoverObject* dragIntoComponent;
 
+    static SelectHoverObject* findDragHovered(SelectHoverObject* objectToCheck);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectHoverObject)
 };

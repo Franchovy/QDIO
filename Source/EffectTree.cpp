@@ -251,12 +251,10 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
         }
 
         if (wasMoved) {
-            std::cout << "Effect move update" << newLine;
             getTree(effect).setProperty(Effect::IDs::x, effect->getX(), undoManager);
             getTree(effect).setProperty(Effect::IDs::y, effect->getY(), undoManager);
         }
         else if (wasResized) {
-            std::cout << "Effect size update" << newLine;
             getTree(effect).setProperty(Effect::IDs::w, effect->getWidth(), undoManager);
             getTree(effect).setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
         }
@@ -267,7 +265,6 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
         }
 
         if (wasMoved) {
-            std::cout << "Parameter move update" << newLine;
             auto parameterTree = getTree(effect).getChildWithProperty(Parameter::IDs::parameterObject, parameter);
             parameterTree.setProperty("x", component.getX(), nullptr);
             parameterTree.setProperty("y", component.getY(), nullptr);

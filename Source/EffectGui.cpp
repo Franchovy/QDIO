@@ -16,6 +16,7 @@ ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 
 bool SelectHoverObject::manualHover = false;
 SelectHoverObject* SelectHoverObject::draggedComponent = nullptr;
+SelectHoverObject* SelectHoverObject::dragIntoComponent = nullptr;
 
 
 // ==============================================================================
@@ -34,7 +35,6 @@ void SelectHoverObject::setHoverObject(SelectHoverObject::Ptr item) {
 
     if (item != nullptr) {
         item->hoverMode = true;
-        std::cout << "hover mode on" << newLine;
         hoverComponent = item;
     }
 }
@@ -107,6 +107,14 @@ void SelectHoverObject::close() {
 }
 
 void SelectHoverObject::mouseDown(const MouseEvent &event) {
+    if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
+        draggedComponent = obj;
+        auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
+        jassert(parent != nullptr);
+        dragIntoComponent = findDragHovered(parent);
+        std::cout << "Start drag: dragIntoComponent: " << ((dragIntoComponent == nullptr) ? "nullptr" : dragIntoComponent->getName()) << newLine;
+    }
+
     Component::mouseDown(event);
 }
 
@@ -149,38 +157,47 @@ void SelectHoverObject::endDragHoverDetect() {
     manualHover = false;
 }
 
-void SelectHoverObject::findDragHovered(SelectHoverObject* currentHoveredComponent) {
-    auto mousePos = currentHoveredComponent->getMouseXYRelative();
-
-    for (auto childComponent : currentHoveredComponent->getChildren()) {
-        if (childComponent->contains(childComponent->getLocalPoint(currentHoveredComponent, mousePos))) {
-            // Checks before call
-            auto childObject = dynamic_cast<SelectHoverObject*>(childComponent);
-            if (childObject == nullptr) {
-                continue;
-            }
-            if (childObject == draggedComponent) {
-                continue;
-            }
-            setHoverObject(childObject);
-            childObject->repaint();
-            findDragHovered(childObject);
-        }
-    }
-}
-
 void SelectHoverObject::mouseDrag(const MouseEvent &event) {
-    if (! hoverComponent->contains(event.getPosition())) {
-        findDragHovered(hoverComponent.get());
+    if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
+        dragIntoComponent = findDragHovered(obj);
+        std::cout << "DragIntoComponent: " << dragIntoComponent->getName() << newLine;
     }
+
     Component::mouseDrag(event);
 }
 
-SelectHoverObject* SelectHoverObject::getDragIntoObject() const {
-    if (hoverComponent == draggedComponent) {
+SelectHoverObject* SelectHoverObject::getDragIntoObject() {
+    return dragIntoComponent;
+}
+
+SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectToCheck) {
+    if (objectToCheck->contains(objectToCheck->getMouseXYRelative())) {
+        // Check if mouse is hovering over children
+        for (auto c : objectToCheck->getChildren()) {
+            if (auto child = dynamic_cast<SelectHoverObject*>(c)) {
+                // Return child if it contains mouse
+                if (child->contains(child->getMouseXYRelative())) {
+                    // Checks
+                    if (child == draggedComponent) {
+                        continue;
+                    }
+
+                    if (objectToCheck->canDragInto(child)) {
+                        return child;
+                    } else {
+                        continue;
+                    }
+                }
+            }
+        }
+        // Return nullptr on no change
         return nullptr;
     } else {
-        return hoverComponent.get();
+        // Return parent if mouse is no longer in this object
+        auto parent = dynamic_cast<SelectHoverObject*>(objectToCheck->getParentComponent());
+
+        jassert(parent != nullptr);
+        return parent;
     }
 }
 
