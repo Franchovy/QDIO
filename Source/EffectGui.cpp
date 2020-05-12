@@ -176,6 +176,14 @@ void SelectHoverObject::mouseDrag(const MouseEvent &event) {
     Component::mouseDrag(event);
 }
 
+SelectHoverObject* SelectHoverObject::getDragIntoObject() const {
+    if (hoverComponent == draggedComponent) {
+        return nullptr;
+    } else {
+        return hoverComponent.get();
+    }
+}
+
 void ComponentSelection::itemSelected(SelectHoverObject::Ptr object){
     SelectHoverObject::addSelectObject(object);
     SelectedItemSet::itemSelected(object);

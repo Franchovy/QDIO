@@ -209,26 +209,36 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
     }
 
     if (event.mods.isLeftButtonDown()) {
-        // Effect drag
-        if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
-            effect->dragger.dragComponent(effect, event, nullptr);
-            // Manual constraint
-            auto newX = jlimit<int>(0, effect->getParentWidth() - effect->getWidth(), effect->getX());
-            auto newY = jlimit<int>(0, effect->getParentHeight() - effect->getHeight(), effect->getY());
+        auto dragIntoObject = SelectHoverObject::getDragIntoObject();
 
-            effect->setTopLeftPosition(newX, newY);
-        }
-        // Line Drag
-        else if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-
-            auto port = nullptr;//todo portToConnectTo(event, tree);
-
-            if (port != nullptr) {
-                SelectHoverObject::setHoverObject(port);
-            } else {
-                SelectHoverObject::resetHoverObject();
+        if (dragIntoObject != nullptr) {
+            if (auto effect = dynamic_cast<Effect*>(dragIntoObject)) {
+                std::cout << "Drag into effect" << newLine;
+            } else if (auto port = dynamic_cast<ConnectionPort*>(dragIntoObject)) {
+                std::cout << "Drag into port" << newLine;
             }
-            dragLine.drag(event);
+        } else {
+            // Effect drag
+            if (auto effect = dynamic_cast<Effect *>(event.originalComponent)) {
+                effect->dragger.dragComponent(effect, event, nullptr);
+                // Manual constraint
+                auto newX = jlimit<int>(0, effect->getParentWidth() - effect->getWidth(), effect->getX());
+                auto newY = jlimit<int>(0, effect->getParentHeight() - effect->getHeight(), effect->getY());
+
+                effect->setTopLeftPosition(newX, newY);
+            }
+                // Line Drag
+            else if (dynamic_cast<ConnectionPort *>(event.originalComponent)) {
+
+                auto port = nullptr;//todo portToConnectTo(event, tree);
+
+                if (port != nullptr) {
+                    SelectHoverObject::setHoverObject(port);
+                } else {
+                    SelectHoverObject::resetHoverObject();
+                }
+                dragLine.drag(event);
+            }
         }
     }
 }

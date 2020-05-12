@@ -58,9 +58,10 @@ public:
 
 
     void mouseDrag(const MouseEvent &event) override;
-    virtual bool canDragInto(SelectHoverObject* other) = 0;
+    virtual bool canDragInto(const SelectHoverObject* other) = 0;
     void startDragHoverDetect();
     void endDragHoverDetect();
+    SelectHoverObject* getDragIntoObject() const;
 
 protected:
     static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
