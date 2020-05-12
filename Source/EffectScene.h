@@ -62,8 +62,6 @@ public:
     // Menu stuff
     void setupCreateEffectMenu();
 
-    //
-
 private:
     static EffectScene* instance;
 
@@ -73,10 +71,6 @@ private:
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
     AudioProcessorGraph audioGraph;
-
-    //=============================================================================
-    // Drag handling
-
 
     //==============================================================================
     // Audio shit

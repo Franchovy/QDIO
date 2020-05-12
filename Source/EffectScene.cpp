@@ -170,16 +170,20 @@ void EffectScene::resized()
     //repaint();
 }
 
-
-
-
 void EffectScene::mouseDown(const MouseEvent &event) {
-    if (dynamic_cast<Resizer*>(event.originalComponent)) {
+
+    // EffectScene
+    if (event.originalComponent == this) {
+        lasso.setVisible(true);
+        lasso.beginLasso(event, this);
+    }
+    // Resizer
+    else if (dynamic_cast<Resizer*>(event.originalComponent)) {
         undoManager.beginNewTransaction("resize");
         return;
     }
-
-    if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
+    // Effect
+    else if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
         if (event.mods.isLeftButtonDown()) {
             //todo static lasso functionality?
 
@@ -193,74 +197,38 @@ void EffectScene::mouseDown(const MouseEvent &event) {
             getParentComponent()->mouseDown(event);
         }
     }
-
-    if (event.originalComponent == this) {
-        lasso.setVisible(true);
-        lasso.beginLasso(event, this);
-    }
-
-    std::cout << "Begin new transaction" << newLine;
-    undoManager.beginNewTransaction(getName());
-
-    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+    // ConnectionPort
+    else if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         dragLine.startDrag(p, event);
     }
 }
 
 void EffectScene::mouseDrag(const MouseEvent &event) {
-    if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
-        //todo dragger belonging to effectScene
-        effect->dragger.dragComponent(effect, event, nullptr);
-        // Manual constraint
-        auto newX = jlimit<int>(0, effect->getParentWidth() - effect->getWidth(), effect->getX());
-        auto newY = jlimit<int>(0, effect->getParentHeight() - effect->getHeight(), effect->getY());
-
-        effect->setTopLeftPosition(newX, newY);
-    }
-
     if (lasso.isVisible()) {
         lasso.dragLasso(event);
     }
 
     if (event.mods.isLeftButtonDown()) {
+        // Effect drag
         if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
-            // Effect drag
+            effect->dragger.dragComponent(effect, event, nullptr);
+            // Manual constraint
+            auto newX = jlimit<int>(0, effect->getParentWidth() - effect->getWidth(), effect->getX());
+            auto newY = jlimit<int>(0, effect->getParentHeight() - effect->getHeight(), effect->getY());
 
-            /*
-            if (auto newParent = effectToMoveTo(event, tree.getParent())) {
-                std::cout << "new parent: " << newParent->getName() << newLine;
-                if (newParent != getFromTree<Effect>(tree.getParent())) {
-                    auto parent = tree.getParent();
+            effect->setTopLeftPosition(newX, newY);
+        }
+        // Line Drag
+        else if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
 
-                    parent.removeChild(tree, &undoManager);
-                    newParent->getTree().appendChild(tree, &undoManager);
+            auto port = nullptr;//todo portToConnectTo(event, tree);
 
-                    if (newParent != this) {
-                        SelectHoverObject::setHoverObject(newParent);
-                    } else {
-                        SelectHoverObject::resetHoverObject();
-                    }
-                }
-            }*/
-        } else if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-            // Line Drag
-            if (lasso.isVisible())
-                lasso.dragLasso(event);
-
-            if (event.mods.isLeftButtonDown()) {
-                // Line drag
-                if (dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-                    //TODO efficiency
-                    auto port = nullptr;// portToConnectTo(event, tree);
-
-                    if (port != nullptr) {
-                        SelectHoverObject::setHoverObject(port);
-                    } else {
-                        SelectHoverObject::resetHoverObject();
-                    }
-                    dragLine.drag(event);
-                }
+            if (port != nullptr) {
+                SelectHoverObject::setHoverObject(port);
+            } else {
+                SelectHoverObject::resetHoverObject();
             }
+            dragLine.drag(event);
         }
     }
 }
@@ -275,25 +243,27 @@ void EffectScene::mouseUp(const MouseEvent &event) {
         // Click on effectscene
         if (event.getDistanceFromDragStart() < 10)
         {
+            // Deselect on effectscene click
             if (event.mods.isLeftButtonDown()) {
-                // Remove selection
                 // Don't deselect if shift or ctrl is held.
                 if (! event.mods.isCtrlDown()
                         && ! event.mods.isShiftDown())
                 {
                     deselectAll();
                 }
-            } else if (event.mods.isRightButtonDown()
+            }
+            // Right mouse click opens menu
+            else if (event.mods.isRightButtonDown()
                     || event.mods.isCtrlDown())
             {
                 callMenu(0);
             }
         }
     } else if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
+        // Mouse click
         if (event.getDistanceFromDragStart() < 10) {
-            if (event.mods.isLeftButtonDown() && !event.mods.isCtrlDown()) {
-                addSelectObject(this);
-            } else if (event.mods.isRightButtonDown() ||
+            // Call menu
+            if (event.mods.isRightButtonDown() ||
                 event.mods.isCtrlDown()) {
                 // open menu
                 //menuPos = event.getPosition();
@@ -302,11 +272,11 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                 } else {
                     effect->callMenu(effect->menu);
                 }
-            } else {
-                // End effect drag
-                setAlwaysOnTop(false);
-                effect->endDragHoverDetect();
             }
+        } else {
+            // End effect drag
+            setAlwaysOnTop(false);
+            effect->endDragHoverDetect();
         }
     } else if (dynamic_cast<ParameterPort *>(event.originalComponent)) {
         auto port1 = dynamic_cast<ParameterPort *>(dragLine.getPort1());
