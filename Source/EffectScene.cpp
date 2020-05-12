@@ -9,8 +9,8 @@ EffectScene::EffectScene()
         , MenuItem(1)
         , updater(this)
 {
-    setComponentID("MainWindow");
-    setName("MainWindow");
+    setComponentID("EffectScene");
+    setName("EffectScene");
 
     setBufferedToImage(true);
     //setPaintingIsUnclipped(false);
@@ -191,6 +191,7 @@ void EffectScene::mouseDown(const MouseEvent &event) {
             effect->setAlwaysOnTop(true);
             effect->dragger.startDraggingComponent(effect, event);
             effect->startDragHoverDetect();
+
         } else if (event.mods.isRightButtonDown()) {
             // Send info upwards for menu
             //TODO don't do this, call custom menu function

@@ -1000,7 +1000,7 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 }
 
 void Effect::mouseDrag(const MouseEvent &event) {
-    Component::mouseDrag(event);
+    SelectHoverObject::mouseDrag(event);
     getParentComponent()->mouseDrag(event);
 }
 

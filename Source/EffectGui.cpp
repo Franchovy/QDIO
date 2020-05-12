@@ -159,8 +159,10 @@ void SelectHoverObject::endDragHoverDetect() {
 
 void SelectHoverObject::mouseDrag(const MouseEvent &event) {
     if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
-        dragIntoComponent = findDragHovered(obj);
-        std::cout << "DragIntoComponent: " << dragIntoComponent->getName() << newLine;
+        auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
+        jassert(parent != nullptr);
+        dragIntoComponent = findDragHovered(parent);
+        std::cout << "Start drag: dragIntoComponent: " << ((dragIntoComponent == nullptr) ? "nullptr" : dragIntoComponent->getName()) << newLine;
     }
 
     Component::mouseDrag(event);
