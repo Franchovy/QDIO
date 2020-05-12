@@ -133,7 +133,7 @@ public:
 
     void mouseUp(const MouseEvent &event) override;
 
-    bool canDragInto(SelectHoverObject *other) override;
+    bool canDragInto(const SelectHoverObject *other) const override;
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
@@ -163,7 +163,7 @@ public:
     ConnectionPort* getPortFromID(const int id, bool internal = false);
 
     void setEditMode(bool isEditMode);
-    bool isInEditMode() { return editMode; }
+    bool isInEditMode() const { return editMode; }
 
     // =================================================================================
     // Setters and getter functions

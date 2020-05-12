@@ -32,9 +32,9 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    bool canDragInto(SelectHoverObject *other) override;
+    bool canDragInto(const SelectHoverObject *other) const override;
 
-    virtual bool canConnect(ConnectionPort* other) = 0;
+    virtual bool canConnect(const ConnectionPort* other) const = 0;
     virtual Component* getDragLineParent() = 0;
 
     bool isInput;
@@ -66,7 +66,7 @@ public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
     ParameterPort(bool isInternal);
 
-    bool canConnect(ConnectionPort* other) override;
+    bool canConnect(const ConnectionPort* other) const override;
 
     Component *getDragLineParent() override;
 };
@@ -81,7 +81,7 @@ public:
 
     Component *getDragLineParent() override;
 
-    bool canConnect(ConnectionPort* other) override;
+    bool canConnect(const ConnectionPort* other) const override;
     AudioPort* audioPort;
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InternalConnectionPort)
@@ -105,7 +105,7 @@ public:
     AudioProcessor::Bus* bus;
     InternalConnectionPort::Ptr internalPort;
 
-    bool canConnect(ConnectionPort* other) override;
+    bool canConnect(const ConnectionPort* other) const override;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)

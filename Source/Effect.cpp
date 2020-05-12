@@ -1014,8 +1014,8 @@ void Effect::mouseUp(const MouseEvent &event) {
     getParentComponent()->mouseUp(event);
 }
 
-bool Effect::canDragInto(SelectHoverObject *other) {
-    auto effect = dynamic_cast<Effect*>(other);
+bool Effect::canDragInto(const SelectHoverObject *other) const {
+    auto effect = dynamic_cast<const Effect*>(other);
     if (effect == nullptr) {
         return false;
     }
@@ -1023,16 +1023,16 @@ bool Effect::canDragInto(SelectHoverObject *other) {
     return (effect->isInEditMode() && ! effect->isIndividual());
 }
 
-bool ConnectionLine::canDragInto(SelectHoverObject *other) {
+bool ConnectionLine::canDragInto(const SelectHoverObject *other) const {
     return false;
 }
 
 
-bool ConnectionPort::canDragInto(SelectHoverObject *other) {
-    if (auto e = dynamic_cast<Effect*>(other)) {
+bool ConnectionPort::canDragInto(const SelectHoverObject *other) const {
+    if (auto e = dynamic_cast<const Effect*>(other)) {
         return (e->isInEditMode() && ! e->isIndividual());
     }
-    if (auto p = dynamic_cast<ConnectionPort*>(other)) {
+    if (auto p = dynamic_cast<const ConnectionPort*>(other)) {
         return canConnect(p);
     }
     return false;

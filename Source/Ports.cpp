@@ -22,15 +22,15 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort()
     this->isInput = isInput;
 }
 
-bool AudioPort::canConnect(ConnectionPort* other) {
+bool AudioPort::canConnect(const ConnectionPort* other) const {
     if (this->isInput == other->isInput)
         return false;
 
     // Connect to AudioPort of mutual parent
-    return (dynamic_cast<AudioPort *>(other)
+    return (dynamic_cast<const AudioPort *>(other)
             && other->getParentComponent()->getParentComponent() == this->getParentComponent()->getParentComponent())
            // Connect to ICP of containing parent effect
-           || (dynamic_cast<InternalConnectionPort *>(other)
+           || (dynamic_cast<const InternalConnectionPort *>(other)
                && other->getParentComponent() == this->getParentComponent()->getParentComponent());
 }
 
@@ -77,9 +77,9 @@ ConnectionPort::ConnectionPort() {
 }
 
 
-bool InternalConnectionPort::canConnect(ConnectionPort* other) {
+bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
     // Return false if the port is AP and belongs to the same parent
-    return !(dynamic_cast<AudioPort *>(other)
+    return !(dynamic_cast<const AudioPort *>(other)
              && this->getParentComponent() == other->getParentComponent());
 }
 
@@ -98,8 +98,8 @@ Component *InternalConnectionPort::getDragLineParent() {
     return getParentComponent();
 }
 
-bool ParameterPort::canConnect(ConnectionPort* other) {
-    if (auto p = dynamic_cast<ParameterPort*>(other)) {
+bool ParameterPort::canConnect(const ConnectionPort* other) const {
+    if (auto p = dynamic_cast<const ParameterPort*>(other)) {
         return isInput ^ p->isInput;
     }
     return false;

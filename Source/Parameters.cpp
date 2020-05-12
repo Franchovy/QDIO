@@ -280,7 +280,7 @@ Parameter::~Parameter() {
 
 }
 
-bool Parameter::canDragInto(SelectHoverObject *other) {
+bool Parameter::canDragInto(const SelectHoverObject *other) const {
     return false;
 }
 

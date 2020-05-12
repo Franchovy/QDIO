@@ -63,7 +63,7 @@ public:
 
     void removeListeners();
 
-    bool canDragInto(SelectHoverObject *other) override;
+    bool canDragInto(const SelectHoverObject *other) const override;
 
 private:
     Label parameterLabel;

@@ -471,8 +471,8 @@ void EffectScene::handleCommandMessage(int commandId) {
     }
 }
 
-bool EffectScene::canDragInto(SelectHoverObject *other) {
-    return (dynamic_cast<Effect*>(other) != nullptr);
+bool EffectScene::canDragInto(const SelectHoverObject *other) const {
+    return (dynamic_cast<const Effect*>(other) != nullptr);
 }
 
 

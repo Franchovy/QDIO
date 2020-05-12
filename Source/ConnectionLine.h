@@ -105,7 +105,7 @@ public:
         static const Identifier AudioConnection;
     };
 
-    bool canDragInto(SelectHoverObject *other) override;
+    bool canDragInto(const SelectHoverObject *other) const override;
 
 private:
     Line<int> line;
