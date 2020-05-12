@@ -44,6 +44,7 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
+    void setHoverable(bool isHoverable);
     static SelectHoverObject* getHoverObject();
     static void setHoverObject(SelectHoverObject::Ptr item);
     static void resetHoverObject();
@@ -51,15 +52,15 @@ public:
     static void addSelectObject(const SelectHoverObject::Ptr& item);
     static void removeSelectObject(const SelectHoverObject::Ptr& item);
     void deselectAll();
-
     ReferenceCountedArray<SelectHoverObject> getSelected();
-
-    void setHoverable(bool isHoverable);
 
     static void close();
 
-    void enterManualHover();
-    void exitManualHover();
+
+    void mouseDrag(const MouseEvent &event) override;
+    virtual bool canDragInto(SelectHoverObject* other) = 0;
+    void startDragHoverDetect();
+    void endDragHoverDetect();
 
 protected:
     static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
@@ -68,11 +69,15 @@ protected:
     bool hoverMode = false;
     bool selectMode = false;
 
+    bool hoverable = true;
+
 private:
     static SelectHoverObject::Ptr hoverComponent;
-
     static bool manualHover;
-    bool hoverable = true;
+
+    static SelectHoverObject* draggedComponent;
+    static void findDragHovered(SelectHoverObject* currentHoveredComponent);
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectHoverObject)
 };

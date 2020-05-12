@@ -15,6 +15,7 @@ ComponentSelection SelectHoverObject::selected;
 ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 
 bool SelectHoverObject::manualHover = false;
+SelectHoverObject* SelectHoverObject::draggedComponent = nullptr;
 
 
 // ==============================================================================
@@ -138,12 +139,41 @@ SelectHoverObject *SelectHoverObject::getHoverObject() {
     return hoverComponent.get();
 }
 
-void SelectHoverObject::enterManualHover() {
+void SelectHoverObject::startDragHoverDetect() {
+    draggedComponent = this;
     manualHover = true;
 }
 
-void SelectHoverObject::exitManualHover() {
+void SelectHoverObject::endDragHoverDetect() {
+    draggedComponent = nullptr;
     manualHover = false;
+}
+
+void SelectHoverObject::findDragHovered(SelectHoverObject* currentHoveredComponent) {
+    auto mousePos = currentHoveredComponent->getMouseXYRelative();
+
+    for (auto childComponent : currentHoveredComponent->getChildren()) {
+        if (childComponent->contains(childComponent->getLocalPoint(currentHoveredComponent, mousePos))) {
+            // Checks before call
+            auto childObject = dynamic_cast<SelectHoverObject*>(childComponent);
+            if (childObject == nullptr) {
+                continue;
+            }
+            if (childObject == draggedComponent) {
+                continue;
+            }
+            setHoverObject(childObject);
+            childObject->repaint();
+            findDragHovered(childObject);
+        }
+    }
+}
+
+void SelectHoverObject::mouseDrag(const MouseEvent &event) {
+    if (! hoverComponent->contains(event.getPosition())) {
+        findDragHovered(hoverComponent.get());
+    }
+    Component::mouseDrag(event);
 }
 
 void ComponentSelection::itemSelected(SelectHoverObject::Ptr object){

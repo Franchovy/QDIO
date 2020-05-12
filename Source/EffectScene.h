@@ -63,7 +63,6 @@ public:
     void setupCreateEffectMenu();
 
     //
-    void findDragHovered();
 
 private:
     static EffectScene* instance;
@@ -74,6 +73,10 @@ private:
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
     AudioProcessorGraph audioGraph;
+
+    //=============================================================================
+    // Drag handling
+
 
     //==============================================================================
     // Audio shit

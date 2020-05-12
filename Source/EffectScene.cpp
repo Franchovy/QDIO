@@ -186,6 +186,7 @@ void EffectScene::mouseDown(const MouseEvent &event) {
             // Drag
             effect->setAlwaysOnTop(true);
             effect->dragger.startDraggingComponent(effect, event);
+            effect->startDragHoverDetect();
         } else if (event.mods.isRightButtonDown()) {
             // Send info upwards for menu
             //TODO don't do this, call custom menu function
@@ -222,8 +223,9 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
     }
 
     if (event.mods.isLeftButtonDown()) {
-        if (dynamic_cast<Effect*>(event.originalComponent)) {
+        if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
             // Effect drag
+
             /*
             if (auto newParent = effectToMoveTo(event, tree.getParent())) {
                 std::cout << "new parent: " << newParent->getName() << newLine;
@@ -288,13 +290,10 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             }
         }
     } else if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
-        setAlwaysOnTop(false);
-
         if (event.getDistanceFromDragStart() < 10) {
             if (event.mods.isLeftButtonDown() && !event.mods.isCtrlDown()) {
                 addSelectObject(this);
-            }
-            if (event.mods.isRightButtonDown() ||
+            } else if (event.mods.isRightButtonDown() ||
                 event.mods.isCtrlDown()) {
                 // open menu
                 //menuPos = event.getPosition();
@@ -303,6 +302,10 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                 } else {
                     effect->callMenu(effect->menu);
                 }
+            } else {
+                // End effect drag
+                setAlwaysOnTop(false);
+                effect->endDragHoverDetect();
             }
         }
     } else if (dynamic_cast<ParameterPort *>(event.originalComponent)) {
@@ -488,9 +491,6 @@ void EffectScene::handleCommandMessage(int commandId) {
     }
 }
 
-void EffectScene::findDragHovered() {
 
-
-}
 
 
