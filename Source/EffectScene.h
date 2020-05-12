@@ -62,6 +62,9 @@ public:
     // Menu stuff
     void setupCreateEffectMenu();
 
+    //
+    void findDragHovered();
+
 private:
     static EffectScene* instance;
 

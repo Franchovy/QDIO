@@ -14,6 +14,8 @@ SelectHoverObject::Ptr SelectHoverObject::hoverComponent = nullptr;
 ComponentSelection SelectHoverObject::selected;
 ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 
+bool SelectHoverObject::manualHover = false;
+
 
 // ==============================================================================
 // Resizer methods
@@ -72,14 +74,14 @@ void SelectHoverObject::setHoverable(bool isHoverable) {
 }
 
 void SelectHoverObject::mouseEnter(const MouseEvent &event) {
-    if (hoverable) {
+    if (hoverable && ! manualHover) {
         setHoverObject(this);
     }
     Component::mouseEnter(event);
 }
 
 void SelectHoverObject::mouseExit(const MouseEvent &event) {
-    if (hoverable) {
+    if (hoverable && ! manualHover) {
         resetHoverObject();
     }
     Component::mouseEnter(event);
@@ -134,6 +136,14 @@ ReferenceCountedArray<SelectHoverObject> SelectHoverObject::getSelected() {
 
 SelectHoverObject *SelectHoverObject::getHoverObject() {
     return hoverComponent.get();
+}
+
+void SelectHoverObject::enterManualHover() {
+    manualHover = true;
+}
+
+void SelectHoverObject::exitManualHover() {
+    manualHover = false;
 }
 
 void ComponentSelection::itemSelected(SelectHoverObject::Ptr object){

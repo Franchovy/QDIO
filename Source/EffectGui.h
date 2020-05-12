@@ -58,6 +58,8 @@ public:
 
     static void close();
 
+    void enterManualHover();
+    void exitManualHover();
 
 protected:
     static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
@@ -69,6 +71,7 @@ protected:
 private:
     static SelectHoverObject::Ptr hoverComponent;
 
+    static bool manualHover;
     bool hoverable = true;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectHoverObject)

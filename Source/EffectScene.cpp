@@ -488,4 +488,9 @@ void EffectScene::handleCommandMessage(int commandId) {
     }
 }
 
+void EffectScene::findDragHovered() {
+
+
+}
+
 
