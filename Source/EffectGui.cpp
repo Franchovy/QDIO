@@ -31,6 +31,7 @@ void SelectHoverObject::setHoverObject(SelectHoverObject::Ptr item) {
 
     if (item != nullptr) {
         item->hoverMode = true;
+        std::cout << "hover mode on" << newLine;
         hoverComponent = item;
     }
 }
@@ -62,7 +63,6 @@ SelectHoverObject::~SelectHoverObject() {
 void SelectHoverObject::resetHoverObject() {
     if (hoverComponent != nullptr) {
         hoverComponent->hoverMode = false;
-        //hoverComponent->repaint();
         hoverComponent = nullptr;
     }
 }
@@ -74,23 +74,20 @@ void SelectHoverObject::setHoverable(bool isHoverable) {
 void SelectHoverObject::mouseEnter(const MouseEvent &event) {
     if (hoverable) {
         setHoverObject(this);
-    } else {
-        Component::mouseEnter(event);
     }
+    Component::mouseEnter(event);
 }
 
 void SelectHoverObject::mouseExit(const MouseEvent &event) {
     if (hoverable) {
         resetHoverObject();
-    } else {
-        Component::mouseEnter(event);
     }
+    Component::mouseEnter(event);
 }
 
 void SelectHoverObject::addSelectObject(const SelectHoverObject::Ptr& item) {
     item->selectMode = true;
 
-    //item->repaint();
     selected.addToSelection(item);
 }
 

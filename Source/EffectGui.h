@@ -54,7 +54,6 @@ public:
 
     ReferenceCountedArray<SelectHoverObject> getSelected();
 
-
     void setHoverable(bool isHoverable);
 
     static void close();

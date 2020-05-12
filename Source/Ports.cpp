@@ -74,7 +74,8 @@ void ConnectionPort::mouseUp(const MouseEvent &event) {
 
 ConnectionPort::ConnectionPort() {
     setColour(portColour, Colours::black);
-};
+}
+
 
 bool InternalConnectionPort::canConnect(ConnectionPort* other) {
     // Return false if the port is AP and belongs to the same parent
