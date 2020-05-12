@@ -113,7 +113,8 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
     line.setStart(getLocalPoint(getParentComponent(), inPos));
     line.setEnd(getLocalPoint(getParentComponent(), outPos));
 
-    repaint();
+    //todo unecessary?
+    //repaint();
 }
 
 bool ConnectionLine::hitTest(int x, int y) {
