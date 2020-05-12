@@ -61,7 +61,7 @@ void LineComponent::startDrag(ConnectionPort *p, const MouseEvent &event) {
 
     SelectHoverObject::resetHoverObject();
 
-    repaint();
+    //repaint();
 }
 
 void LineComponent::drag(const MouseEvent &event) {
@@ -74,7 +74,7 @@ void LineComponent::drag(const MouseEvent &event) {
     line.setStart(p1);
     line.setEnd(p2);
 
-    repaint();
+    //repaint();
 }
 
 void LineComponent::release(ConnectionPort *port2) {
@@ -95,7 +95,7 @@ void LineComponent::release(ConnectionPort *port2) {
     port1 = nullptr;
     p1 = p2 = Point<int>();
     setVisible(false);
-    repaint();
+    //repaint();
 }
 
 ConnectionPort *LineComponent::getPort1() {
