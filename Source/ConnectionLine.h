@@ -73,6 +73,9 @@ public:
 
     bool canConnect(const ConnectionPort* port) const;
 
+    bool canDragInto(const SelectHoverObject *other) const override;
+    bool canDragHover(const SelectHoverObject *other) const override;
+
     ConnectionPort::Ptr getOtherPort(const ConnectionPort::Ptr& port);
     ConnectionPort::Ptr getInPort() const {
         return inPort;
@@ -98,7 +101,7 @@ public:
         static const Identifier AudioConnection;
     };
 
-    bool canDragInto(const SelectHoverObject *other) const override;
+
 
 private:
     AudioProcessorGraph::Connection audioConnection;
@@ -111,5 +114,6 @@ private:
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionLine)
+
 };
 

@@ -63,6 +63,7 @@ public:
     void setupCreateEffectMenu();
 
     bool canDragInto(const SelectHoverObject *other) const override;
+    bool canDragHover(const SelectHoverObject *other) const override;
 
 private:
     static EffectScene* instance;

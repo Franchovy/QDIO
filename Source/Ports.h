@@ -33,6 +33,7 @@ public:
     void mouseUp(const MouseEvent &event) override;
 
     bool canDragInto(const SelectHoverObject *other) const override;
+    bool canDragHover(const SelectHoverObject *other) const override;
 
     virtual bool canConnect(const ConnectionPort* other) const = 0;
     virtual Component* getDragLineParent() = 0;

@@ -182,9 +182,9 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
 
                     if (objectToCheck->canDragInto(child)) {
                         return findDragHovered(child);
-                    }/* else if (objectToCheck->canDragHover(child)) {
+                    } else if (objectToCheck->canDragHover(child)) {
                         return child;
-                    }*/ else {
+                    } else {
                         continue;
                     }
                 }

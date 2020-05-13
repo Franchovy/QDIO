@@ -987,17 +987,22 @@ bool Effect::canDragInto(const SelectHoverObject *other) const {
     return (effect->isInEditMode() && ! effect->isIndividual());
 }
 
-bool ConnectionLine::canDragInto(const SelectHoverObject *other) const {
-    if (auto e = dynamic_cast<const Effect*>(other)) {
-        return (e->isInEditMode() && ! e->isIndividual());
-    }
-    if (auto p = dynamic_cast<const ConnectionPort*>(other)) {
-        return canConnect(p);
-    }
 
+bool Effect::canDragHover(const SelectHoverObject *other) const {
     return false;
 }
 
+bool ConnectionLine::canDragInto(const SelectHoverObject *other) const {
+    return dynamic_cast<const Effect*>(other);
+}
+
+bool ConnectionLine::canDragHover(const SelectHoverObject *other) const {
+    return dynamic_cast<const ConnectionPort*>(other);
+}
+
+bool ConnectionPort::canDragHover(const SelectHoverObject *other) const {
+    return false;
+}
 
 bool ConnectionPort::canDragInto(const SelectHoverObject *other) const {
     return false;
