@@ -318,11 +318,11 @@ void EffectScene::mouseUp(const MouseEvent &event) {
 
 bool EffectScene::keyPressed(const KeyPress &key)
 {
-
+#define DEBUG_UTILITIES
 #ifdef DEBUG_UTILITIES
     if (key.getKeyCode() == 's') {
         std::cout << "Audiograph status: " << newLine;
-        for (auto node : audioGraph->getNodes()) {
+        for (auto node : audioGraph.getNodes()) {
             if (node != nullptr) {
                 std::cout << "node: " << node->nodeID.uid << newLine;
                 std::cout << node->getProcessor()->getName() << newLine;
@@ -335,7 +335,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         std::cout << "Main Position: " << getMouseXYRelative().toString() << newLine;
         std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
     }
-    if (key.getKeyCode() == 'e') {
+    /*if (key.getKeyCode() == 'e') {
         if (auto e = dynamic_cast<EffectTreeBase*>(getComponentAt(getMouseXYRelative()))) {
             auto tree = e->getTree();
             std::cout << "Properties: " << newLine;
@@ -352,7 +352,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
                 }
             }
         }
-    }
+    }*/
     if (key.getKeyCode() == 'l') {
         std::cout << "Available effects: " << newLine;
         for (auto e : EffectLoader::getEffectsAvailable()) {
