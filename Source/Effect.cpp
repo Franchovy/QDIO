@@ -58,110 +58,6 @@ SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
     return selected;
 }
 
-EffectTreeBase* EffectTreeBase::effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree) {
-    /*// Check if event is leaving parent
-    auto parent = getFromTree<EffectTreeBase>(effectTree);
-    if (! parent->contains(parent->getLocalPoint(event.eventComponent, event.getPosition()))) {
-        // find new parent
-        auto parentToCheck = parent->getParent();
-        if (parentToCheck != nullptr
-                && parentToCheck->contains(parentToCheck->getLocalPoint(event.eventComponent, event.getPosition())))
-        {
-            return parentToCheck;
-        }
-    } else {
-        // Check if children match
-        for (int i = 0; i < effectTree.getNumChildren(); i++) {
-            auto childTree = effectTree.getChild(i);
-            if (childTree.hasType(EFFECT_ID)) {
-                auto child = getFromTree<Effect>(childTree);
-
-                if (child != nullptr) {
-                    auto childEvent = event.getEventRelativeTo(child);
-                    if (child->contains(childEvent.getPosition())
-                            && child != event.originalComponent) {
-                        // Add any filters here
-                        // Must be in edit mode
-                        if (!dynamic_cast<Effect *>(child)->isInEditMode()) { continue; }
-
-                        // Check if there's a match in the children (sending child component coordinates)
-                        if (auto e = effectToMoveTo(childEvent, childTree))
-                            return e;
-                        else
-                            return child;
-                    }
-                }
-            }
-        }
-    }*/
-    return nullptr;
-}
-
-//TODO
-ConnectionPort* EffectTreeBase::portToConnectTo(const MouseEvent& event, const ValueTree& effectTree) {
-/*
-    ValueTree effectTreeToCheck;
-    if (dynamic_cast<AudioPort*>(event.originalComponent) || dynamic_cast<ParameterPort*>(event.originalComponent))
-    {
-        effectTreeToCheck = effectTree.getParent();
-    }
-    else
-    {
-        effectTreeToCheck = effectTree;
-    }
-
-    // Check for self ports
-    if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        if (auto e = getFromTree<Effect>(effectTreeToCheck)) {
-            if (auto returnPort = e->checkPort(e->getLocalPoint(event.eventComponent, event.getPosition()))) {
-                if (p->canConnect(returnPort)) {
-                    return returnPort;
-                }
-            }
-        }
-    }
-
-    // Check children for a match
-    for (int i = 0; i < effectTreeToCheck.getNumChildren(); i++) {
-
-        if (effectTreeToCheck.getChild(i).hasType(EFFECT_ID)) {
-            auto e = getFromTree<Effect>(effectTreeToCheck.getChild(i));
-
-            if (e == nullptr)
-                continue;
-
-            // Filter self effect if AudioPort
-            if (auto p = dynamic_cast<AudioPort *>(event.originalComponent))
-                if (p->getParentComponent() == e)
-                    continue;
-
-            auto localPos = e->getLocalPoint(event.originalComponent, event.getPosition());
-
-            if (e->contains(localPos)) {
-                if (auto p = e->checkPort(localPos))
-                    if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(p))
-                        return p;
-            }
-        } else if (effectTreeToCheck.getChild(i).hasType(PARAMETER_ID)) {
-            jassert(effectTreeToCheck.getChild(i).hasProperty(Parameter::IDs::parameterObject));
-
-            auto parameter = getFromTree<Parameter>(effectTreeToCheck.getChild(i));
-
-            bool isInternal = dynamic_cast<ConnectionPort *>(event.originalComponent)->isInput;
-            auto parameterPortToCheck = parameter->getPort(! isInternal);
-
-            auto localPos = parameter->getPort(! isInternal)->getLocalPoint(event.originalComponent, event.getPosition());
-            if (parameterPortToCheck->contains(localPos)) {
-                if (dynamic_cast<ConnectionPort *>(event.originalComponent)->canConnect(parameterPortToCheck)) {
-                    return parameterPortToCheck;
-                }
-            }
-        }
-    }*/
-
-    // If nothing is found return nullptr
-    return nullptr;
-}
 
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
@@ -219,7 +115,7 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
     SelectHoverObject::mouseDown(event);
     // Handle Connection
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        dragLine = new ConnectionLine();
+        dragLine = connections.add(new ConnectionLine());
 
         if (port->isInput) {
             dragLine->setInPort(port);
@@ -229,7 +125,8 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
         //auto parent = (port.isInternal())
 
         getParentComponent()->addAndMakeVisible(dragLine);
-        dragLine->mouseDown(event);
+        getParentComponent()->addMouseListener(dragLine, true);
+        //dragLine->mouseDown(event);
     }
 }
 
@@ -237,7 +134,7 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
     SelectHoverObject::mouseDrag(event);
     // Handle Connection
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        dragLine->mouseDrag(event);
+        //dragLine->mouseDrag(event);
 
         if (auto obj = getDragIntoObject()) {
             if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
@@ -250,8 +147,18 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
 void EffectTreeBase::mouseUp(const MouseEvent &event) {
     SelectHoverObject::mouseUp(event);
     // Handle Connection
-    dragLine->mouseUp(event);
+    //dragLine->mouseUp(event);
+    if (dragLine != nullptr) {
+        // Connection made?
+        auto obj = getDragIntoObject();
+        if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
+            dragLine->setDragPort(port);
+        } else {
+            connections.removeObject(dragLine);
+            // todo actually delete
+        }
 
+    }
 }
 
 /*

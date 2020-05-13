@@ -56,12 +56,13 @@ public:
     void parentHierarchyChanged() override;
 
     ConnectionLine();
+    ~ConnectionLine() override;
 
     void setInPort(ConnectionPort* port);
     void setOutPort(ConnectionPort* port);
     void setDragPort(ConnectionPort* port);
 
-    ~ConnectionLine();
+    void resized() override;
 
     void paint(Graphics &g) override;
     bool hitTest(int x, int y) override;
@@ -99,11 +100,14 @@ public:
     bool canDragInto(const SelectHoverObject *other) const override;
 
 private:
-    Line<int> line;
     AudioProcessorGraph::Connection audioConnection;
 
-    ConnectionPort::Ptr inPort;
-    ConnectionPort::Ptr outPort;
+    Point<int> inPos, outPos;
+    Line<int> line;
+
+    ConnectionPort::Ptr inPort = nullptr;
+    ConnectionPort::Ptr outPort = nullptr;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionLine)
 };

@@ -89,11 +89,11 @@ protected:
     SelectedItemSet<SelectHoverObject::Ptr>& getLassoSelection() override;
 
     //====================================================================================
-    // Hover identifier and management
+    // Connections management
     ConnectionLine* dragLine = nullptr;
 
-    static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
-    static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);
+    ReferenceCountedArray<ConnectionLine> connections;
+
     //====================================================================================
 
     void createGroupEffect();

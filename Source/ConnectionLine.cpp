@@ -21,6 +21,7 @@ const Identifier ConnectionLine::IDs::AudioConnection = "audioConnection";
 
 
 ConnectionLine::ConnectionLine() {
+    setRepaintsOnMouseActivity(true);
     inPort = nullptr;
     outPort = nullptr;
 }
@@ -28,12 +29,12 @@ ConnectionLine::ConnectionLine() {
 void ConnectionLine::setInPort(ConnectionPort *port) {
     jassert(port->isInput);
     inPort = port;
+/*
 
-    auto inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
+    inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
                  ? inPort->getPosition() + inPort->centrePoint
                  : inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint;
-
-    line.setStart(inPos);
+*/
 
     inPort->setOtherPort(outPort);
     inPort->getParentComponent()->addComponentListener(this);
@@ -43,11 +44,12 @@ void ConnectionLine::setOutPort(ConnectionPort *port) {
     jassert(! port->isInput);
     outPort = port;
 
-    auto outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
+/*
+    outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
                   ? outPort->getPosition() + outPort->centrePoint
                   : outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint;
+*/
 
-    line.setEnd(outPos);
 
     outPort->setOtherPort(inPort);
     outPort->getParentComponent()->addComponentListener(this);
@@ -87,12 +89,6 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
     if (outPort != nullptr) {
         outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
     }
-
-    auto newBounds = Rectangle<int>(inPos, outPos);
-    setBounds(newBounds);
-
-    line.setStart(getLocalPoint(getParentComponent(), inPos));
-    line.setEnd(getLocalPoint(getParentComponent(), outPos));
 }
 
 bool ConnectionLine::hitTest(int x, int y) {
@@ -102,9 +98,9 @@ bool ConnectionLine::hitTest(int x, int y) {
         return false;
     }
 
-    auto d1 = line.getStart().getDistanceFrom(Point<int>(x,y));
-    auto d2 = line.getEnd().getDistanceFrom(Point<int>(x,y));
-    auto d = d1 + d2 - line.getLength();
+    auto d1 = inPos.getDistanceFrom(Point<int>(x,y));
+    auto d2 = outPos.getDistanceFrom(Point<int>(x,y));
+    auto d = d1 + d2 - inPos.getDistanceFrom(outPos);
 
     if (d < 3) {
         return true;
@@ -118,25 +114,21 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
     jassert (inPort != nullptr || outPort != nullptr);
     ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
-    Point<int> inPos, outPos;
-    if (port->isInput) {
-        inPos = getLocalPoint(inPort.get(), port->centrePoint);
-        outPos = getLocalPoint(event.eventComponent, event.getPosition());
-    } else {
-        outPos = getLocalPoint(inPort.get(), port->centrePoint);
-        inPos = getLocalPoint(event.eventComponent, event.getPosition());
-    }
+    inPos = getParentComponent()->getLocalPoint(port, port->centrePoint);
+    outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
 
-    line.setStart(inPos);
-    line.setEnd(outPos);
+    setBounds(Rectangle<int>(inPos, outPos));
 
     SelectHoverObject::resetHoverObject();
 }
 
 void ConnectionLine::mouseDrag(const MouseEvent &event) {
-    ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
+    //ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
-    port->setTopLeftPosition(getLocalPoint(event.eventComponent, event.getPosition()));
+    //port->setTopLeftPosition(getLocalPoint(event.eventComponent, event.getPosition()));
+
+    outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
+    setBounds(Rectangle<int>(inPos, outPos));
 
     /*p1 = getLocalPoint(port1, port1->centrePoint);
     p2 = getLocalPoint(event.eventComponent, event.getPosition());
@@ -149,8 +141,10 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
     if (inPort != nullptr && outPort != nullptr) {
         /*inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
         outPos = getLocalPoint(outPort.get(), outPort->centrePoint);*/
-        line.setStart(inPort->getPosition());
-        line.setEnd(outPort->getPosition());
+        inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
+        outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
+        setBounds(Rectangle<int>(inPos, outPos));
+
     } else {
         // Cancel drag
         setVisible(false);
@@ -166,8 +160,16 @@ void ConnectionLine::setDragPort(ConnectionPort *port) {
 
 void ConnectionLine::parentHierarchyChanged() {
     auto parent = getParentComponent();
-    jassert(parent != nullptr);
-    setBounds(parent->getBounds());
+    if (parent != nullptr) {
+        setBounds(parent->getBounds());
+    }
     Component::parentHierarchyChanged();
+}
+
+void ConnectionLine::resized() {
+    line.setStart(getLocalPoint(getParentComponent(), inPos));
+    line.setEnd(getLocalPoint(getParentComponent(), outPos));
+
+    Component::resized();
 }
 
