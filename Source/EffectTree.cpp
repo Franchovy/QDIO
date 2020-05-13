@@ -346,7 +346,10 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
             auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
 
-            line = new ConnectionLine(*inport, *outport);
+            line = new ConnectionLine();
+            line->setInPort(inport);
+            line->setOutPort(outport);
+
             childWhichHasBeenAdded.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
 
             auto parent = getFromTree<EffectTreeBase>(parentTree);
@@ -464,7 +467,7 @@ void EffectTree::storeAll() {
 }
 
 EffectTreeBase::EffectTreeBase() {
-    dragLine.setAlwaysOnTop(true);
+    //dragLine.setAlwaysOnTop(true);
 }
 
 
@@ -643,8 +646,11 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
                             auto thisParam = getFromTree<Parameter>(child);
                             auto toConnectParam = getFromTree<Parameter>(c);
                             thisParam->connect(toConnectParam);
-                            auto newConnection = new ConnectionLine(*thisParam->getPort(false),
-                                                                    *toConnectParam->getPort(true));
+                            auto newConnection = new ConnectionLine();
+
+                            newConnection->setInPort(thisParam->getPort(false));
+                            newConnection->setOutPort(toConnectParam->getPort(true));
+
                             getFromTree<Effect>(copy)->addAndMakeVisible(newConnection);
                         }
                     }

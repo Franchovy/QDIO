@@ -198,10 +198,6 @@ void EffectScene::mouseDown(const MouseEvent &event) {
             getParentComponent()->mouseDown(event);
         }
     }
-    // ConnectionPort
-    else if (auto p = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        dragLine.startDrag(p, event);
-    }
 }
 
 void EffectScene::mouseDrag(const MouseEvent &event) {
@@ -238,7 +234,6 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
                 } else {
                     SelectHoverObject::resetHoverObject();
                 }
-                dragLine.drag(event);
             }
         }
     }
@@ -289,7 +284,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             setAlwaysOnTop(false);
             effect->endDragHoverDetect();
         }
-    } else if (dynamic_cast<ParameterPort *>(event.originalComponent)) {
+    }/* else if (dynamic_cast<ParameterPort *>(event.originalComponent)) {
         auto port1 = dynamic_cast<ParameterPort *>(dragLine.getPort1());
         auto port2 = dynamic_cast<ParameterPort *>(getHoverObject());
 
@@ -330,7 +325,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             }
             dragLine.release(nullptr);
         }
-    }
+    }*/
 }
 
 bool EffectScene::keyPressed(const KeyPress &key)

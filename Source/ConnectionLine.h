@@ -15,6 +15,7 @@
 
 #pragma once
 
+/*
 
 class LineComponent : public GuiObject
 {
@@ -23,15 +24,13 @@ public:
 
     void paint(Graphics &g) override;
 
-    /**
+    */
+/**
      * Updates dragLineTree connection property if connection is successful
      * @param port2
-     */
-    void convert(ConnectionPort* port2);
+     *//*
 
-    void startDrag(ConnectionPort* p1, const MouseEvent& event);
-    void drag(const MouseEvent& event);
-    void release(ConnectionPort* p2);
+    void convert(ConnectionPort* port2);
 
     ConnectionPort* getPort1();
 
@@ -44,6 +43,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LineComponent)
 };
 
+*/
 
 
 class ConnectionLine : public SelectHoverObject, public ComponentListener
@@ -52,42 +52,32 @@ public:
     using Ptr = ReferenceCountedObjectPtr<ConnectionLine>;
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
-
     void componentParentHierarchyChanged(Component &component) override;
 
-    ConnectionLine(ConnectionPort& p1, ConnectionPort& p2);
+    ConnectionLine();
+
+    void setInPort(ConnectionPort* port);
+    void setOutPort(ConnectionPort* port);
+    void setDragPort(ConnectionPort* port);
 
     ~ConnectionLine();
 
     void paint(Graphics &g) override;
-
     bool hitTest(int x, int y) override;
 
+    void mouseDown(const MouseEvent &event) override;
+    void mouseUp(const MouseEvent &event) override;
+    void mouseDrag(const MouseEvent &event) override;
+
+
     ConnectionPort::Ptr getOtherPort(const ConnectionPort::Ptr& port);
-
-    ConnectionPort::Ptr getInPort() {
-        return inPort;
-    }
-
     ConnectionPort::Ptr getInPort() const {
         return inPort;
     }
-
-    ConnectionPort::Ptr getOutPort() {
-        return outPort;
-    }
-
     ConnectionPort::Ptr getOutPort() const {
         return outPort;
     }
 
-    void setInPort(ConnectionPort::Ptr newInPort) {
-        inPort = newInPort;
-    }
-
-    void setOutPort(ConnectionPort::Ptr newOutPort) {
-        outPort = newOutPort;
-    }
 
     void setAudioConnection(AudioProcessorGraph::Connection connection) {
         audioConnection = connection;
@@ -110,6 +100,9 @@ public:
 private:
     Line<int> line;
     AudioProcessorGraph::Connection audioConnection;
+
+    Point<int> inPos;
+    Point<int> outPos;
 
     ConnectionPort::Ptr inPort;
     ConnectionPort::Ptr outPort;

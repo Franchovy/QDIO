@@ -20,7 +20,7 @@ AudioProcessorGraph* EffectTreeBase::audioGraph = nullptr;
 AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
 AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
-LineComponent EffectTreeBase::dragLine;
+//LineComponent EffectTreeBase::dragLine;
 
 
 const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
@@ -219,7 +219,12 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
     SelectHoverObject::mouseDown(event);
     // Handle Connection
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        dragLine = new ConnectionLine();
 
+        //auto parent = (port.isInternal())
+
+        getParentComponent()->addAndMakeVisible(dragLine);
+        dragLine->mouseDown(event);
     }
 }
 
@@ -227,12 +232,21 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
     SelectHoverObject::mouseUp(event);
     // Handle Connection
 
+
 }
 
 void EffectTreeBase::mouseDrag(const MouseEvent &event) {
     SelectHoverObject::mouseDrag(event);
     // Handle Connection
+    if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+        dragLine->mouseDrag(event);
 
+        if (auto obj = getDragIntoObject()) {
+            if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
+                dragLine->setDragPort(port);
+            }
+        }
+    }
 }
 
 

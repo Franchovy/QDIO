@@ -19,87 +19,75 @@ const Identifier ConnectionLine::IDs::OutPort = "outport";
 const Identifier ConnectionLine::IDs::AudioConnection = "audioConnection";
 
 
-//==============================================================================
-// Line Component methods
 
+ConnectionLine::ConnectionLine() {
+    inPort = nullptr;
+    outPort = nullptr;
+}
 
-void LineComponent::convert(ConnectionPort *port2) {
-    if (port1 != nullptr) {
-        // Connect port1 to port2
+void ConnectionLine::setInPort(ConnectionPort *port) {
+    jassert(port->isInput);
+    inPort = port;
 
-    }
+    inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
+                 ? inPort->getPosition() + inPort->centrePoint
+                 : inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint;
+
+    auto newBounds = Rectangle<int>(inPos, outPos);
+    setBounds(newBounds);
+
+    line = Line<int>(getLocalPoint(getParentComponent(), inPos),
+                     getLocalPoint(getParentComponent(), outPos));
+
+    inPort->setOtherPort(outPort);
+    inPort->getParentComponent()->addComponentListener(this);
+}
+
+void ConnectionLine::setOutPort(ConnectionPort *port) {
+    jassert(! port->isInput);
+    outPort = port;
+
+    outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
+                  ? outPort->getPosition() + outPort->centrePoint
+                  : outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint;
+
+    auto newBounds = Rectangle<int>(inPos, outPos);
+    setBounds(newBounds);
+
+    line = Line<int>(getLocalPoint(getParentComponent(), inPos),
+                     getLocalPoint(getParentComponent(), outPos));
+
+    outPort->setOtherPort(inPort);
+    outPort->getParentComponent()->addComponentListener(this);
 }
 
 
+void ConnectionLine::componentParentHierarchyChanged(Component &component) {
+    ComponentListener::componentParentHierarchyChanged(component);
+}
 
-void LineComponent::paint(Graphics &g) {
-    g.setColour(Colours::whitesmoke);
+ConnectionLine::~ConnectionLine() {
+    inPort->setOtherPort(nullptr);
+    outPort->setOtherPort(nullptr);
+    inPort->removeComponentListener(this);
+    outPort->removeComponentListener(this);
+}
+
+void ConnectionLine::paint(Graphics &g) {
     Path p;
-    p.addLineSegment(line.toFloat(),1);
-    PathStrokeType strokeType(1);
+    int thiccness;
 
-    float thiccness[] = {5, 5};
-    strokeType.createDashedStroke(p, p, thiccness, 2);
+    if (hoverMode || selectMode) {
+        g.setColour(Colours::blue);
+        thiccness = 3;
+    } else {
+        g.setColour(Colours::whitesmoke);
+        thiccness = 2;
+    }
 
-    g.strokePath(p, strokeType);
-}
+    p.addLineSegment(line.toFloat(),thiccness);
 
-void LineComponent::startDrag(ConnectionPort *p, const MouseEvent &event) {
-    port1 = p;
-
-    Component* parent = p->getDragLineParent();
-    parent->addAndMakeVisible(this);
-
-    auto newBounds = Rectangle<int>( parent->getLocalPoint(p, p->centrePoint),
-            parent->getLocalPoint(event.eventComponent, event.getPosition()));
-    setBounds(newBounds);
-
-    p1 = getLocalPoint(p, p->centrePoint);
-    p2 = getLocalPoint(event.eventComponent, event.getPosition());
-    line.setStart(p1);
-    line.setEnd(p2);
-
-    SelectHoverObject::resetHoverObject();
-
-    //repaint();
-}
-
-void LineComponent::drag(const MouseEvent &event) {
-    auto newP2 = getLocalPoint(event.eventComponent, event.getPosition());
-    auto newBounds = Rectangle<int>(p1, newP2) + getPosition();
-    setBounds(newBounds);
-
-    p1 = getLocalPoint(port1, port1->centrePoint);
-    p2 = getLocalPoint(event.eventComponent, event.getPosition());
-    line.setStart(p1);
-    line.setEnd(p2);
-
-    //repaint();
-}
-
-void LineComponent::release(ConnectionPort *port2) {
-    /*if (port2 != nullptr)
-    {
-        auto newP2 = getLocalPoint(port2, port2->centrePoint);
-        auto newBounds = Rectangle<int>(p1, newP2) + getPosition();
-        setBounds(newBounds);
-
-        p1 = getLocalPoint(port1, port1->centrePoint);
-        p2 = getLocalPoint(port2, port2->centrePoint);
-        line.setStart(p1);
-        line.setEnd(p2);
-
-        repaint();
-    }*/
-    // clear data
-    port1 = nullptr;
-    p1 = p2 = Point<int>();
-    setVisible(false);
-    //repaint();
-}
-
-ConnectionPort *LineComponent::getPort1() {
-    return port1;
+    g.fillPath(p);
 }
 
 
@@ -136,63 +124,59 @@ bool ConnectionLine::hitTest(int x, int y) {
 }
 
 
-ConnectionLine::ConnectionLine(ConnectionPort &p1, ConnectionPort &p2) {
-    // Remember that input ports are the line output and vice versa
-    if (!p1.isInput) {
-        inPort = &p1;
-        outPort = &p2;
-    } else {
-        inPort = &p2;
-        outPort = &p1;
-    }
+void ConnectionLine::mouseDown(const MouseEvent &event) {
+    jassert (inPort != nullptr || outPort != nullptr);
+    ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
-    auto inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
-                 ? inPort->getPosition() + inPort->centrePoint
-                 : inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint;
-    auto outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
-                  ? outPort->getPosition() + outPort->centrePoint
-                  : outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint;
-
-    auto newBounds = Rectangle<int>(inPos, outPos);
+    auto parent = getParentComponent();
+    auto newBounds = Rectangle<int>( parent->getLocalPoint(port, port->centrePoint),
+                                     parent->getLocalPoint(event.eventComponent, event.getPosition()));
     setBounds(newBounds);
 
-    line = Line<int>(getLocalPoint(getParentComponent(), inPos),
-            getLocalPoint(getParentComponent(), outPos));
-
-    inPort->setOtherPort(outPort);
-    outPort->setOtherPort(inPort);
-    inPort->getParentComponent()->addComponentListener(this);
-    outPort->getParentComponent()->addComponentListener(this);
-
-}
-
-void ConnectionLine::componentParentHierarchyChanged(Component &component) {
-    ComponentListener::componentParentHierarchyChanged(component);
-}
-
-ConnectionLine::~ConnectionLine() {
-    inPort->setOtherPort(nullptr);
-    outPort->setOtherPort(nullptr);
-    inPort->removeComponentListener(this);
-    outPort->removeComponentListener(this);
-}
-
-void ConnectionLine::paint(Graphics &g) {
-    Path p;
-    int thiccness;
-
-    if (hoverMode || selectMode) {
-        g.setColour(Colours::blue);
-        thiccness = 3;
+    if (port->isInput) {
+        inPos = getLocalPoint(inPort.get(), port->centrePoint);
+        outPos = getLocalPoint(event.eventComponent, event.getPosition());
     } else {
-        g.setColour(Colours::whitesmoke);
-        thiccness = 2;
+        outPos = getLocalPoint(inPort.get(), port->centrePoint);
+        inPos = getLocalPoint(event.eventComponent, event.getPosition());
     }
 
-    p.addLineSegment(line.toFloat(),thiccness);
+    line.setStart(inPos);
+    line.setEnd(outPos);
 
-    g.fillPath(p);
+    SelectHoverObject::resetHoverObject();
 }
 
+void ConnectionLine::mouseDrag(const MouseEvent &event) {
+    ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
+    Point<int>* pointToSet = (inPort != nullptr) ? &outPos : &inPos;
+    *pointToSet = getLocalPoint(event.eventComponent, event.getPosition());
 
+    auto newBounds = Rectangle<int>(inPos, outPos) + getPosition();
+    setBounds(newBounds);
+
+    /*p1 = getLocalPoint(port1, port1->centrePoint);
+    p2 = getLocalPoint(event.eventComponent, event.getPosition());
+    line.setStart(p1);
+    line.setEnd(p2);
+*/}
+
+void ConnectionLine::mouseUp(const MouseEvent &event) {
+    if (inPort != nullptr && outPort != nullptr) {
+        inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
+        outPos = getLocalPoint(outPort.get(), outPort->centrePoint);
+        line.setStart(inPos);
+        line.setEnd(outPos);
+    } else {
+        // Cancel drag
+        setVisible(false);
+    }
+}
+
+void ConnectionLine::setDragPort(ConnectionPort *port) {
+    jassert(inPort != nullptr || outPort != nullptr);
+
+    if (inPort == nullptr) inPort = port;
+    if (outPort == nullptr) outPort = port;
+}
 
