@@ -215,6 +215,26 @@ void EffectTreeBase::close() {
 
 }
 
+void EffectTreeBase::mouseDown(const MouseEvent &event) {
+    SelectHoverObject::mouseDown(event);
+    // Handle Connection
+    if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+
+    }
+}
+
+void EffectTreeBase::mouseUp(const MouseEvent &event) {
+    SelectHoverObject::mouseUp(event);
+    // Handle Connection
+
+}
+
+void EffectTreeBase::mouseDrag(const MouseEvent &event) {
+    SelectHoverObject::mouseDrag(event);
+    // Handle Connection
+
+}
+
 
 /*
 void EffectTreeBase::createGroupEffect() {

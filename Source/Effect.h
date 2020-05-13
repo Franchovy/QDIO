@@ -38,6 +38,12 @@ public:
 
     void resized() override = 0;
 
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
     //===================================================================
 
     static void disconnectAudio(const ConnectionLine& connectionLine);
