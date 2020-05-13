@@ -109,7 +109,8 @@ void SelectHoverObject::close() {
 }
 
 void SelectHoverObject::mouseDown(const MouseEvent &event) {
-    std::cout << "mouse down: " << event.eventComponent->getName() << newLine;
+    /** Don't forget to call startDragHoverDetect! **/
+    jassert(draggedComponent != nullptr);
     Component::mouseDown(event);
 }
 
@@ -118,7 +119,12 @@ void SelectHoverObject::mouseDrag(const MouseEvent &event) {
         auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
         jassert(parent != nullptr);
         if (parent != nullptr) {
-            dragIntoComponent = findDragHovered(parent);
+            auto newDragIntoComponent = findDragHovered(parent);
+            if (dragIntoComponent == newDragIntoComponent) {
+                dragIntoComponent = nullptr;
+            } else {
+                dragIntoComponent = newDragIntoComponent;
+            }
         }
     }
 
@@ -135,6 +141,9 @@ void SelectHoverObject::mouseUp(const MouseEvent &event) {
         }
     }
     Component::mouseUp(event);
+
+    /** Don't forget to call endDragHoverDetect! **/
+    jassert(draggedComponent == nullptr);
 }
 
 void SelectHoverObject::deselectAll() {
@@ -180,9 +189,9 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
                         continue;
                     }
 
-                    if (objectToCheck->canDragInto(child)) {
+                    if (draggedComponent->canDragInto(child)) {
                         return findDragHovered(child);
-                    } else if (objectToCheck->canDragHover(child)) {
+                    } else if (draggedComponent->canDragHover(child)) {
                         return child;
                     } else {
                         continue;
@@ -190,8 +199,11 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
                 }
             }
         }
-        // Return nullptr on no change
-        return nullptr;
+        if (draggedComponent->canDragHover(objectToCheck)) {
+            return objectToCheck;
+        } else {
+            return nullptr;
+        }
     } else {
         // Return parent if mouse is no longer in this object
         auto parent = dynamic_cast<SelectHoverObject*>(objectToCheck->getParentComponent());

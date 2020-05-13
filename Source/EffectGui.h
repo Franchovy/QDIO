@@ -58,9 +58,9 @@ public:
 
     void mouseDrag(const MouseEvent &event) override;
 
-    /// "Shall we look inside?"
+    /// "Recurse to check inside"
     virtual bool canDragInto(const SelectHoverObject* other) const = 0;
-    /// "Should this trigger hover?"
+    /// "Return whether this is hoverable"
     virtual bool canDragHover(const SelectHoverObject* other) const = 0;
 
     void startDragHoverDetect();

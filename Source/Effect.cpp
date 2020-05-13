@@ -989,6 +989,9 @@ bool Effect::canDragInto(const SelectHoverObject *other) const {
 
 
 bool Effect::canDragHover(const SelectHoverObject *other) const {
+    if (auto effect = dynamic_cast<const Effect*>(other)) {
+        return (effect->isInEditMode() && ! effect->isIndividual());
+    }
     return false;
 }
 
