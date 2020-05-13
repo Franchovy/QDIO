@@ -189,11 +189,6 @@ void EffectScene::mouseDown(const MouseEvent &event) {
         if (event.mods.isLeftButtonDown()) {
             //todo static lasso functionality?
 
-            // Drag
-            effect->setAlwaysOnTop(true);
-            effect->dragger.startDraggingComponent(effect, event);
-            effect->startDragHoverDetect();
-
         } else if (event.mods.isRightButtonDown()) {
             // Send info upwards for menu
             //TODO don't do this, call custom menu function
@@ -219,12 +214,7 @@ void EffectScene::mouseDrag(const MouseEvent &event) {
         } else {
             // Effect drag
             if (auto effect = dynamic_cast<Effect *>(event.originalComponent)) {
-                effect->dragger.dragComponent(effect, event, nullptr);
-                // Manual constraint
-                auto newX = jlimit<int>(0, effect->getParentWidth() - effect->getWidth(), effect->getX());
-                auto newY = jlimit<int>(0, effect->getParentHeight() - effect->getHeight(), effect->getY());
 
-                effect->setTopLeftPosition(newX, newY);
             }
                 // Line Drag
             else if (dynamic_cast<ConnectionPort *>(event.originalComponent)) {
@@ -281,10 +271,6 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                     effect->callMenu(effect->menu);
                 }
             }
-        } else {
-            // End effect drag
-            setAlwaysOnTop(false);
-            effect->endDragHoverDetect();
         }
     }/* else if (dynamic_cast<ParameterPort *>(event.originalComponent)) {
         auto port1 = dynamic_cast<ParameterPort *>(dragLine.getPort1());

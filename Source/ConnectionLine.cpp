@@ -111,6 +111,7 @@ bool ConnectionLine::hitTest(int x, int y) {
 
 
 void ConnectionLine::mouseDown(const MouseEvent &event) {
+    startDragHoverDetect();
     SelectHoverObject::mouseDown(event.getEventRelativeTo(this));
 
     jassert (inPort != nullptr || outPort != nullptr);
@@ -137,8 +138,10 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
 
     if (auto obj = getDragIntoObject()) {
         if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
-            setHoverObject(port);
-            setDragPort(port);
+            if (canConnect(port)) {
+                setHoverObject(port);
+                setDragPort(port);
+            }
         }
     }
 
@@ -150,6 +153,7 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
 }
 
 void ConnectionLine::mouseUp(const MouseEvent &event) {
+    endDragHoverDetect();
     SelectHoverObject::mouseUp(event.getEventRelativeTo(this));
 
     if (inPort != nullptr && outPort != nullptr) {

@@ -24,8 +24,15 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort()
 }
 
 bool AudioPort::canConnect(const ConnectionPort* other) const {
-    if (this->isInput == other->isInput)
+    // Cannot connect to two of the same type.
+    if (this->isInput == other->isInput) {
         return false;
+    }
+
+    // Cannot connect to same parent.
+    if (this->getParentComponent() == other->getParentComponent()) {
+        return false;
+    }
 
     // Connect to AudioPort of mutual parent
     return (dynamic_cast<const AudioPort *>(other)

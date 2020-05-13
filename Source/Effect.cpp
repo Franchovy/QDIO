@@ -943,6 +943,10 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
+    setAlwaysOnTop(true);
+    dragger.startDraggingComponent(this, event);
+    startDragHoverDetect();
+
     if (event.originalComponent == this) {
         getParentComponent()->mouseDown(event);
     } else {
@@ -953,6 +957,13 @@ void Effect::mouseDown(const MouseEvent &event) {
 void Effect::mouseDrag(const MouseEvent &event) {
     if (event.originalComponent == this) {
         SelectHoverObject::mouseDrag(event);
+
+        dragger.dragComponent(this, event, nullptr);
+        // Manual constraint
+        auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
+        auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
+
+        setTopLeftPosition(newX, newY);
 
         auto dragIntoObject = getDragIntoObject();
         if (dragIntoObject != nullptr) {
@@ -970,6 +981,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
 }
 
 void Effect::mouseUp(const MouseEvent &event) {
+    endDragHoverDetect();
     if (event.originalComponent == this) {
         SelectHoverObject::mouseUp(event);
         getParentComponent()->mouseUp(event);
