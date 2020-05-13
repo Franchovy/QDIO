@@ -111,7 +111,7 @@ bool ConnectionLine::hitTest(int x, int y) {
 
 
 void ConnectionLine::mouseDown(const MouseEvent &event) {
-    SelectHoverObject::mouseDown(event);
+    SelectHoverObject::mouseDown(event.getEventRelativeTo(this));
 
     jassert (inPort != nullptr || outPort != nullptr);
     ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
@@ -125,7 +125,7 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
 }
 
 void ConnectionLine::mouseDrag(const MouseEvent &event) {
-    SelectHoverObject::mouseDrag(event);
+    SelectHoverObject::mouseDrag(event.getEventRelativeTo(this));
 
     //ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
@@ -137,6 +137,7 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
 
     if (auto obj = getDragIntoObject()) {
         if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
+            setHoverObject(port);
             setDragPort(port);
         }
     }
@@ -149,7 +150,7 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
 }
 
 void ConnectionLine::mouseUp(const MouseEvent &event) {
-    SelectHoverObject::mouseUp(event);
+    SelectHoverObject::mouseUp(event.getEventRelativeTo(this));
 
     if (inPort != nullptr && outPort != nullptr) {
         /*inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
@@ -184,5 +185,15 @@ void ConnectionLine::resized() {
     line.setEnd(getLocalPoint(getParentComponent(), outPos));
 
     Component::resized();
+}
+
+bool ConnectionLine::canConnect(const ConnectionPort *port) const {
+    if (inPort != nullptr) {
+        return inPort->canConnect(port);
+    } else if (outPort != nullptr) {
+        return outPort->canConnect(port);
+    }
+    jassertfalse;
+    return false;
 }
 

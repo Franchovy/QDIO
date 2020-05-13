@@ -71,6 +71,7 @@ public:
     void mouseUp(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
 
+    bool canConnect(const ConnectionPort* port) const;
 
     ConnectionPort::Ptr getOtherPort(const ConnectionPort::Ptr& port);
     ConnectionPort::Ptr getInPort() const {

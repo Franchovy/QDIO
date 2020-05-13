@@ -116,6 +116,7 @@ void SelectHoverObject::mouseDown(const MouseEvent &event) {
 void SelectHoverObject::mouseDrag(const MouseEvent &event) {
     if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
         auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
+        jassert(parent != nullptr);
         if (parent != nullptr) {
             dragIntoComponent = findDragHovered(parent);
         }
@@ -180,8 +181,10 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
                     }
 
                     if (objectToCheck->canDragInto(child)) {
+                        return findDragHovered(child);
+                    }/* else if (objectToCheck->canDragHover(child)) {
                         return child;
-                    } else {
+                    }*/ else {
                         continue;
                     }
                 }
