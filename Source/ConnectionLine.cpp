@@ -84,6 +84,9 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
         outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
     }
     setBounds(Rectangle<int>(inPos, outPos));
+
+    line.setStart(getLocalPoint(getParentComponent(), inPos));
+    line.setEnd(getLocalPoint(getParentComponent(), outPos));
 }
 
 bool ConnectionLine::hitTest(int x, int y) {
@@ -124,7 +127,6 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
     SelectHoverObject::mouseDrag(event.getEventRelativeTo(this));
 
     //ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
-
     //port->setTopLeftPosition(getLocalPoint(event.eventComponent, event.getPosition()));
 
     outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
