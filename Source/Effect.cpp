@@ -272,8 +272,6 @@ void Effect::setupMenu() {
     std::unique_ptr<PopupMenu> portSubMenu = std::make_unique<PopupMenu>();
     PopupMenu::Item portSubMenuItem("Add Port..");
 
-
-
     toggleEditMode.setAction([=] {
         setEditMode(!editMode);
     });
@@ -966,7 +964,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
         setTopLeftPosition(newX, newY);
 
         auto dragIntoObject = getDragIntoObject();
-        if (dragIntoObject != nullptr) {
+
+        if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
             std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
             if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
                 setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
