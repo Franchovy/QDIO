@@ -285,8 +285,22 @@ void EffectTree::componentNameChanged(Component &component) {
 }
 
 void EffectTree::componentChildrenChanged(Component &component) {
+    auto effect = dynamic_cast<Effect*>(&component);
+    auto effectTree = getTree(effect);
+    jassert(effectTree.isValid());
+
     for (auto c : component.getChildren()) {
         c->addComponentListener(this);
+
+        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
+            auto lineTree = effectTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, line);
+            if (! lineTree.isValid()) {
+                // Create new Line
+                ValueTree newLineTree(CONNECTION_ID);
+                newLineTree.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
+                effectTree.appendChild(newLineTree, undoManager);
+            }
+        }
     }
     ComponentListener::componentChildrenChanged(component);
 }
