@@ -9,7 +9,7 @@
 */
 
 #include "ConnectionLine.h"
-
+#include "Effect.h"
 
 
 const Identifier ConnectionLine::IDs::CONNECTION_ID = "connection";
@@ -35,9 +35,6 @@ void ConnectionLine::setInPort(ConnectionPort *port) {
                  ? inPort->getPosition() + inPort->centrePoint
                  : inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint;
 */
-
-    inPort->setOtherPort(outPort);
-    inPort->getParentComponent()->addComponentListener(this);
 }
 
 void ConnectionLine::setOutPort(ConnectionPort *port) {
@@ -50,9 +47,6 @@ void ConnectionLine::setOutPort(ConnectionPort *port) {
                   : outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint;
 */
 
-
-    outPort->setOtherPort(inPort);
-    outPort->getParentComponent()->addComponentListener(this);
 }
 
 
@@ -89,6 +83,7 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
     if (outPort != nullptr) {
         outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
     }
+    setBounds(Rectangle<int>(inPos, outPos));
 }
 
 bool ConnectionLine::hitTest(int x, int y) {
@@ -135,7 +130,6 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
     outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
     setBounds(Rectangle<int>(inPos, outPos));
 
-
     if (auto obj = getDragIntoObject()) {
         if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
             if (canConnect(port)) {
@@ -156,13 +150,23 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
     endDragHoverDetect();
     SelectHoverObject::mouseUp(event.getEventRelativeTo(this));
 
+    getParentComponent()->removeMouseListener(this);
+
     if (inPort != nullptr && outPort != nullptr) {
         /*inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
         outPos = getLocalPoint(outPort.get(), outPort->centrePoint);*/
         inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
         outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
+
+        inPort->getParentComponent()->addComponentListener(this);
+        outPort->getParentComponent()->addComponentListener(this);
+        inPort->setOtherPort(outPort);
+        outPort->setOtherPort(inPort);
+
+
         setBounds(Rectangle<int>(inPos, outPos));
 
+        EffectTreeBase::connectAudio(*this);
     } else {
         // Cancel drag
         setVisible(false);
