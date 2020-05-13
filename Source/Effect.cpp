@@ -221,18 +221,16 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         dragLine = new ConnectionLine();
 
+        if (port->isInput) {
+            dragLine->setInPort(port);
+        } else {
+            dragLine->setOutPort(port);
+        }
         //auto parent = (port.isInternal())
 
         getParentComponent()->addAndMakeVisible(dragLine);
         dragLine->mouseDown(event);
     }
-}
-
-void EffectTreeBase::mouseUp(const MouseEvent &event) {
-    SelectHoverObject::mouseUp(event);
-    // Handle Connection
-
-
 }
 
 void EffectTreeBase::mouseDrag(const MouseEvent &event) {
@@ -249,6 +247,12 @@ void EffectTreeBase::mouseDrag(const MouseEvent &event) {
     }
 }
 
+void EffectTreeBase::mouseUp(const MouseEvent &event) {
+    SelectHoverObject::mouseUp(event);
+    // Handle Connection
+    dragLine->mouseUp(event);
+
+}
 
 /*
 void EffectTreeBase::createGroupEffect() {
@@ -1033,29 +1037,40 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
     return list;
 }
 
-void Effect::mouseDrag(const MouseEvent &event) {
-    SelectHoverObject::mouseDrag(event);
-
-    auto dragIntoObject = getDragIntoObject();
-    if (dragIntoObject != nullptr) {
-        std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
-        if (auto newParent = dynamic_cast<EffectTreeBase*>(dragIntoObject)) {
-            setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
-            newParent->addAndMakeVisible(this);
-        }
+void Effect::mouseDown(const MouseEvent &event) {
+    if (event.originalComponent == this) {
+        getParentComponent()->mouseDown(event);
+    } else {
+        EffectTreeBase::mouseDown(event);
     }
-
-    getParentComponent()->mouseDrag(event);
 }
 
-void Effect::mouseDown(const MouseEvent &event) {
+void Effect::mouseDrag(const MouseEvent &event) {
+    if (event.originalComponent == this) {
+        SelectHoverObject::mouseDrag(event);
 
-    getParentComponent()->mouseDown(event);
+        auto dragIntoObject = getDragIntoObject();
+        if (dragIntoObject != nullptr) {
+            std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
+            if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
+                setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
+                newParent->addAndMakeVisible(this);
+            }
+        }
+
+        getParentComponent()->mouseDrag(event);
+    } else {
+        EffectTreeBase::mouseDrag(event);
+    }
 }
 
 void Effect::mouseUp(const MouseEvent &event) {
-    SelectHoverObject::mouseUp(event);
-    getParentComponent()->mouseUp(event);
+    if (event.originalComponent == this) {
+        SelectHoverObject::mouseUp(event);
+        getParentComponent()->mouseUp(event);
+    } else {
+        EffectTreeBase::mouseUp(event);
+    }
 }
 
 bool Effect::canDragInto(const SelectHoverObject *other) const {

@@ -90,7 +90,7 @@ protected:
 
     //====================================================================================
     // Hover identifier and management
-    ConnectionLine* dragLine;
+    ConnectionLine* dragLine = nullptr;
 
     static EffectTreeBase* effectToMoveTo(const MouseEvent& event, const ValueTree& effectTree);
     static ConnectionPort* portToConnectTo(const MouseEvent& event, const ValueTree& effectTree);

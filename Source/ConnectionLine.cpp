@@ -80,17 +80,19 @@ void ConnectionLine::paint(Graphics &g) {
 
 
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    auto inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
-    auto outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
+    Point<int> inPos, outPos;
+    if (inPort != nullptr) {
+        inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
+    }
+    if (outPort != nullptr) {
+        outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
+    }
 
     auto newBounds = Rectangle<int>(inPos, outPos);
     setBounds(newBounds);
 
     line.setStart(getLocalPoint(getParentComponent(), inPos));
     line.setEnd(getLocalPoint(getParentComponent(), outPos));
-
-    //todo unecessary?
-    //repaint();
 }
 
 bool ConnectionLine::hitTest(int x, int y) {
@@ -140,7 +142,8 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
     p2 = getLocalPoint(event.eventComponent, event.getPosition());
     line.setStart(p1);
     line.setEnd(p2);
-*/}
+    */
+}
 
 void ConnectionLine::mouseUp(const MouseEvent &event) {
     if (inPort != nullptr && outPort != nullptr) {
