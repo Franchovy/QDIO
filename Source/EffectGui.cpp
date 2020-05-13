@@ -107,15 +107,18 @@ void SelectHoverObject::close() {
 }
 
 void SelectHoverObject::mouseDown(const MouseEvent &event) {
+
+    Component::mouseDown(event);
+}
+
+void SelectHoverObject::mouseDrag(const MouseEvent &event) {
     if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
-        draggedComponent = obj;
         auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
         jassert(parent != nullptr);
         dragIntoComponent = findDragHovered(parent);
-        std::cout << "Start drag: dragIntoComponent: " << ((dragIntoComponent == nullptr) ? "nullptr" : dragIntoComponent->getName()) << newLine;
     }
 
-    Component::mouseDown(event);
+    Component::mouseDrag(event);
 }
 
 void SelectHoverObject::mouseUp(const MouseEvent &event) {
@@ -155,17 +158,6 @@ void SelectHoverObject::startDragHoverDetect() {
 void SelectHoverObject::endDragHoverDetect() {
     draggedComponent = nullptr;
     manualHover = false;
-}
-
-void SelectHoverObject::mouseDrag(const MouseEvent &event) {
-    if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
-        auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
-        jassert(parent != nullptr);
-        dragIntoComponent = findDragHovered(parent);
-        std::cout << "Start drag: dragIntoComponent: " << ((dragIntoComponent == nullptr) ? "nullptr" : dragIntoComponent->getName()) << newLine;
-    }
-
-    Component::mouseDrag(event);
 }
 
 SelectHoverObject* SelectHoverObject::getDragIntoObject() {

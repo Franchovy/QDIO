@@ -1001,11 +1001,21 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 
 void Effect::mouseDrag(const MouseEvent &event) {
     SelectHoverObject::mouseDrag(event);
+
+    auto dragIntoObject = getDragIntoObject();
+    if (dragIntoObject != nullptr) {
+        std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
+        if (auto newParent = dynamic_cast<EffectTreeBase*>(dragIntoObject)) {
+            setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
+            newParent->addAndMakeVisible(this);
+        }
+    }
+
     getParentComponent()->mouseDrag(event);
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
-    SelectHoverObject::mouseDown(event);
+
     getParentComponent()->mouseDown(event);
 }
 
