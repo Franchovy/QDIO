@@ -52,7 +52,8 @@ public:
     using Ptr = ReferenceCountedObjectPtr<ConnectionLine>;
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
-    void componentParentHierarchyChanged(Component &component) override;
+
+    void parentHierarchyChanged() override;
 
     ConnectionLine();
 
@@ -100,9 +101,6 @@ public:
 private:
     Line<int> line;
     AudioProcessorGraph::Connection audioConnection;
-
-    Point<int> inPos;
-    Point<int> outPos;
 
     ConnectionPort::Ptr inPort;
     ConnectionPort::Ptr outPort;

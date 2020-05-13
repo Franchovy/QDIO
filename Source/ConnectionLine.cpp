@@ -29,15 +29,11 @@ void ConnectionLine::setInPort(ConnectionPort *port) {
     jassert(port->isInput);
     inPort = port;
 
-    inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
+    auto inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
                  ? inPort->getPosition() + inPort->centrePoint
                  : inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint;
 
-    auto newBounds = Rectangle<int>(inPos, outPos);
-    setBounds(newBounds);
-
-    line = Line<int>(getLocalPoint(getParentComponent(), inPos),
-                     getLocalPoint(getParentComponent(), outPos));
+    line.setStart(inPos);
 
     inPort->setOtherPort(outPort);
     inPort->getParentComponent()->addComponentListener(this);
@@ -47,24 +43,16 @@ void ConnectionLine::setOutPort(ConnectionPort *port) {
     jassert(! port->isInput);
     outPort = port;
 
-    outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
+    auto outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
                   ? outPort->getPosition() + outPort->centrePoint
                   : outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint;
 
-    auto newBounds = Rectangle<int>(inPos, outPos);
-    setBounds(newBounds);
-
-    line = Line<int>(getLocalPoint(getParentComponent(), inPos),
-                     getLocalPoint(getParentComponent(), outPos));
+    line.setEnd(outPos);
 
     outPort->setOtherPort(inPort);
     outPort->getParentComponent()->addComponentListener(this);
 }
 
-
-void ConnectionLine::componentParentHierarchyChanged(Component &component) {
-    ComponentListener::componentParentHierarchyChanged(component);
-}
 
 ConnectionLine::~ConnectionLine() {
     inPort->setOtherPort(nullptr);
@@ -128,11 +116,7 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
     jassert (inPort != nullptr || outPort != nullptr);
     ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
-    auto parent = getParentComponent();
-    auto newBounds = Rectangle<int>( parent->getLocalPoint(port, port->centrePoint),
-                                     parent->getLocalPoint(event.eventComponent, event.getPosition()));
-    setBounds(newBounds);
-
+    Point<int> inPos, outPos;
     if (port->isInput) {
         inPos = getLocalPoint(inPort.get(), port->centrePoint);
         outPos = getLocalPoint(event.eventComponent, event.getPosition());
@@ -149,11 +133,8 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
 
 void ConnectionLine::mouseDrag(const MouseEvent &event) {
     ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
-    Point<int>* pointToSet = (inPort != nullptr) ? &outPos : &inPos;
-    *pointToSet = getLocalPoint(event.eventComponent, event.getPosition());
 
-    auto newBounds = Rectangle<int>(inPos, outPos) + getPosition();
-    setBounds(newBounds);
+    port->setTopLeftPosition(getLocalPoint(event.eventComponent, event.getPosition()));
 
     /*p1 = getLocalPoint(port1, port1->centrePoint);
     p2 = getLocalPoint(event.eventComponent, event.getPosition());
@@ -163,10 +144,10 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
 
 void ConnectionLine::mouseUp(const MouseEvent &event) {
     if (inPort != nullptr && outPort != nullptr) {
-        inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
-        outPos = getLocalPoint(outPort.get(), outPort->centrePoint);
-        line.setStart(inPos);
-        line.setEnd(outPos);
+        /*inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
+        outPos = getLocalPoint(outPort.get(), outPort->centrePoint);*/
+        line.setStart(inPort->getPosition());
+        line.setEnd(outPort->getPosition());
     } else {
         // Cancel drag
         setVisible(false);
@@ -178,5 +159,12 @@ void ConnectionLine::setDragPort(ConnectionPort *port) {
 
     if (inPort == nullptr) inPort = port;
     if (outPort == nullptr) outPort = port;
+}
+
+void ConnectionLine::parentHierarchyChanged() {
+    auto parent = getParentComponent();
+    jassert(parent != nullptr);
+    setBounds(parent->getBounds());
+    Component::parentHierarchyChanged();
 }
 
