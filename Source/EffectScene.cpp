@@ -16,6 +16,8 @@ EffectScene::EffectScene()
     //setPaintingIsUnclipped(false);
     setRepaintsOnMouseActivity(false);
 
+    hoverable = false;
+
     // Set up static members
     instance = this;
 

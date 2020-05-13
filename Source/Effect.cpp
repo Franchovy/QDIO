@@ -112,7 +112,8 @@ void EffectTreeBase::close() {
 }
 
 void EffectTreeBase::mouseDown(const MouseEvent &event) {
-    SelectHoverObject::mouseDown(event);
+    //dynamic_cast<SelectHoverObject*>(event.originalComponent)->mouseDown(event);
+    //SelectHoverObject::mouseDown(event);
     // Handle Connection
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         dragLine = connections.add(new ConnectionLine());
@@ -122,30 +123,27 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
         } else {
             dragLine->setOutPort(port);
         }
-        //auto parent = (port.isInternal())
+        auto parent = port->isInternal ? getParentComponent()->getParentComponent() : getParentComponent();
 
-        getParentComponent()->addAndMakeVisible(dragLine);
-        getParentComponent()->addMouseListener(dragLine, true);
+        parent->addAndMakeVisible(dragLine);
+        parent->addMouseListener(dragLine, true);
         //dragLine->mouseDown(event);
     }
 }
 
 void EffectTreeBase::mouseDrag(const MouseEvent &event) {
-    SelectHoverObject::mouseDrag(event);
+    //dynamic_cast<SelectHoverObject*>(event.originalComponent)->mouseDrag(event);
+    //SelectHoverObject::mouseDrag(event);
     // Handle Connection
-    if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+    /*if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         //dragLine->mouseDrag(event);
 
-        if (auto obj = getDragIntoObject()) {
-            if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
-                dragLine->setDragPort(port);
-            }
-        }
-    }
+    }*/
 }
 
 void EffectTreeBase::mouseUp(const MouseEvent &event) {
-    SelectHoverObject::mouseUp(event);
+    //dynamic_cast<SelectHoverObject*>(event.originalComponent)->mouseUp(event);
+    //SelectHoverObject::mouseUp(event);
     // Handle Connection
     //dragLine->mouseUp(event);
     if (dragLine != nullptr) {

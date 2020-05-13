@@ -111,6 +111,8 @@ bool ConnectionLine::hitTest(int x, int y) {
 
 
 void ConnectionLine::mouseDown(const MouseEvent &event) {
+    SelectHoverObject::mouseDown(event);
+
     jassert (inPort != nullptr || outPort != nullptr);
     ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
@@ -123,12 +125,21 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
 }
 
 void ConnectionLine::mouseDrag(const MouseEvent &event) {
+    SelectHoverObject::mouseDrag(event);
+
     //ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
     //port->setTopLeftPosition(getLocalPoint(event.eventComponent, event.getPosition()));
 
     outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
     setBounds(Rectangle<int>(inPos, outPos));
+
+
+    if (auto obj = getDragIntoObject()) {
+        if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
+            setDragPort(port);
+        }
+    }
 
     /*p1 = getLocalPoint(port1, port1->centrePoint);
     p2 = getLocalPoint(event.eventComponent, event.getPosition());
@@ -138,6 +149,8 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
 }
 
 void ConnectionLine::mouseUp(const MouseEvent &event) {
+    SelectHoverObject::mouseUp(event);
+
     if (inPort != nullptr && outPort != nullptr) {
         /*inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
         outPos = getLocalPoint(outPort.get(), outPort->centrePoint);*/

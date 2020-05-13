@@ -75,6 +75,7 @@ void SelectHoverObject::setHoverable(bool isHoverable) {
 }
 
 void SelectHoverObject::mouseEnter(const MouseEvent &event) {
+    std::cout << "Mouse Enter " << event.eventComponent->getName() << newLine;
     if (hoverable && ! manualHover) {
         setHoverObject(this);
     }
@@ -82,6 +83,7 @@ void SelectHoverObject::mouseEnter(const MouseEvent &event) {
 }
 
 void SelectHoverObject::mouseExit(const MouseEvent &event) {
+    std::cout << "Mouse Exit " << event.eventComponent->getName() << newLine;
     if (hoverable && ! manualHover) {
         resetHoverObject();
     }
@@ -107,15 +109,16 @@ void SelectHoverObject::close() {
 }
 
 void SelectHoverObject::mouseDown(const MouseEvent &event) {
-
+    std::cout << "mouse down: " << event.eventComponent->getName() << newLine;
     Component::mouseDown(event);
 }
 
 void SelectHoverObject::mouseDrag(const MouseEvent &event) {
     if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
         auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
-        jassert(parent != nullptr);
-        dragIntoComponent = findDragHovered(parent);
+        if (parent != nullptr) {
+            dragIntoComponent = findDragHovered(parent);
+        }
     }
 
     Component::mouseDrag(event);
