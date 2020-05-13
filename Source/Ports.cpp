@@ -13,6 +13,7 @@
 AudioPort::AudioPort(bool isInput) : ConnectionPort()
         , internalPort(new InternalConnectionPort(this, !isInput))
 {
+    isInternal = false;
 
     hoverBox = Rectangle<int>(0,0,60,60);
     outline = Rectangle<int>(20, 20, 20, 20);
@@ -85,6 +86,7 @@ bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
 InternalConnectionPort::InternalConnectionPort(AudioPort *parent, bool isInput) : ConnectionPort() {
     audioPort = parent;
     this->isInput = isInput;
+    isInternal = true;
 
     hoverBox = Rectangle<int>(0,0,30,30);
     outline = Rectangle<int>(10,10,10,10);
@@ -112,6 +114,7 @@ ParameterPort::ParameterPort(bool isInternal)
     centrePoint = Point<int>(30,30);
 
     isInput = isInternal;
+    this->isInternal = isInternal;
 
     setBounds(0, 0, 60, 60);
 }

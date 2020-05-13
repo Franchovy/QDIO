@@ -38,6 +38,7 @@ public:
     virtual Component* getDragLineParent() = 0;
 
     bool isInput;
+    bool isInternal = false;
 
     void setOtherPort(ConnectionPort::Ptr newPort) { otherPort = newPort; }
     ConnectionPort::Ptr getOtherPort() { return otherPort; }
