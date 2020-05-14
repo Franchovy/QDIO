@@ -286,21 +286,26 @@ void EffectTree::componentNameChanged(Component &component) {
 
 void EffectTree::componentChildrenChanged(Component &component) {
     auto effect = dynamic_cast<Effect*>(&component);
-    auto effectTree = getTree(effect);
-    jassert(effectTree.isValid());
+    if (effect != nullptr) {
+        auto effectTree = getTree(effect);
+        jassert(effectTree.isValid());
 
-    for (auto c : component.getChildren()) {
-        c->addComponentListener(this);
+        for (auto c : component.getChildren()) {
+            c->addComponentListener(this);
 
-        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
-            auto lineTree = effectTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, line);
-            if (! lineTree.isValid()) {
-                // Create new Line
-                ValueTree newLineTree(CONNECTION_ID);
-                newLineTree.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
-                effectTree.appendChild(newLineTree, undoManager);
+            if (auto line = dynamic_cast<ConnectionLine *>(c)) {
+                auto lineTree = effectTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, line);
+                if (!lineTree.isValid()) {
+                    // Create new Line
+                    ValueTree newLineTree(CONNECTION_ID);
+                    newLineTree.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
+                    effectTree.appendChild(newLineTree, undoManager);
+                }
             }
         }
+    } else {
+        //todo handle other types bro.
+        jassertfalse;
     }
     ComponentListener::componentChildrenChanged(component);
 }
@@ -310,8 +315,6 @@ void EffectTree::componentChildrenChanged(Component &component) {
 }*/
 
 ValueTree EffectTree::getTree(GuiObject* component) {
-    auto topLevelComponent = component->getTopLevelComponent();
-
     if (dynamic_cast<EffectTreeBase*>(component)) {
         return effectTree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, component);
     } else if (dynamic_cast<ConnectionLine*>(component)) {
@@ -319,6 +322,30 @@ ValueTree EffectTree::getTree(GuiObject* component) {
     } else if (dynamic_cast<Parameter*>(component)) {
         return effectTree.getChildWithProperty(Parameter::IDs::parameterObject, component);
     }
+
+    return getTree(effectTree, component);
+
+
+    return ValueTree();
+}
+
+ValueTree EffectTree::getTree(ValueTree parent, GuiObject* component) {
+    //Todo general "component" property
+    auto childFound = parent.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, component);
+
+    if (childFound.isValid()) {
+        return childFound;
+    } else {
+        if (auto p = component->getParentComponent()) {
+            if (auto parentComponent = dynamic_cast<GuiObject *>(p)) {
+                auto parentTree = getTree(parent, parentComponent);
+                if (parentTree.isValid()) {
+                    return parentTree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, component);
+                }
+            }
+        }
+    }
+
     return ValueTree();
 }
 
@@ -391,7 +418,7 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         //todo DEBUG why is this called on internal line create, and not on external?
         // separate loading connections (thus connect audio) and unconnected
         // ---> line->connect() ? -- > uses ports and calls audioconnect if needed
-        EffectTreeBase::connectAudio(*line);
+        //EffectTreeBase::connectAudio(*line);
     }
         // PARAMETER
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
