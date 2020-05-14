@@ -305,8 +305,21 @@ void EffectTree::componentChildrenChanged(Component &component) {
     ComponentListener::componentChildrenChanged(component);
 }
 
-ValueTree EffectTree::getTree(EffectTreeBase *effect) {
+/*ValueTree EffectTree::getTree(EffectTreeBase *effect) {
     return effectTree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, effect);
+}*/
+
+ValueTree EffectTree::getTree(GuiObject* component) {
+    auto topLevelComponent = component->getTopLevelComponent();
+
+    if (dynamic_cast<EffectTreeBase*>(component)) {
+        return effectTree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, component);
+    } else if (dynamic_cast<ConnectionLine*>(component)) {
+        return effectTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, component);
+    } else if (dynamic_cast<Parameter*>(component)) {
+        return effectTree.getChildWithProperty(Parameter::IDs::parameterObject, component);
+    }
+    return ValueTree();
 }
 
 EffectTree::~EffectTree() {

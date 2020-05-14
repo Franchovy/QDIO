@@ -49,7 +49,8 @@ public:
 
 
     // Convenience methods
-    ValueTree getTree(EffectTreeBase* effect);
+    //ValueTree getTree(EffectTreeBase* effect);
+    ValueTree getTree(GuiObject* component);
     template<class T>
     static T* getFromTree(const ValueTree& vt);
     template <class T>
