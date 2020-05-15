@@ -20,6 +20,10 @@ public:
     EffectTree(EffectTreeBase* effectScene);
     ~EffectTree();
 
+    struct IDs {
+        static Identifier component;
+    };
+
     // Create new - from ValueTree data
     Effect* loadEffect(ValueTree tree);
 

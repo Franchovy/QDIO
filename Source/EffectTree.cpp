@@ -10,12 +10,13 @@
 
 #include "EffectTree.h"
 
+Identifier EffectTree::IDs::component = "component";
 
 EffectTree::EffectTree(EffectTreeBase* effectScene)
     : effectTree(EFFECTSCENE_ID)
     , undoManager(&effectScene->getUndoManager())
 {
-    effectTree.setProperty(EffectTreeBase::IDs::effectTreeBase, effectScene, nullptr);
+    effectTree.setProperty(IDs::component, effectScene, nullptr);
     effectTree.addListener(this);
 }
 
@@ -23,7 +24,7 @@ EffectTree::EffectTree(EffectTreeBase* effectScene)
 Effect* EffectTree::loadEffect(ValueTree tree) {
     effectTree.appendChild(tree, undoManager);
     auto effect = new Effect();
-    tree.setProperty(EffectTreeBase::IDs::effectTreeBase, effect, nullptr);
+    tree.setProperty(IDs::component, effect, nullptr);
     effect->addComponentListener(this);
 
     if (tree.hasProperty(Effect::IDs::processorID)) {
@@ -135,7 +136,7 @@ Effect* EffectTree::loadEffect(ValueTree tree) {
     for (int i = 0; i < tree.getNumChildren(); i++) {
         if (tree.getChild(i).hasType(PARAMETER_ID)) {
             auto parameter = loadParameter(effect, tree.getChild(i));
-            tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
+            tree.getChild(i).setProperty(IDs::component, parameter.get(), nullptr);
         }
     }
 
@@ -267,7 +268,7 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
             auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
             jassert(effect != nullptr);
 
-            auto parameterTree = getTree(effect).getChildWithProperty(Parameter::IDs::parameterObject, parameter);
+            auto parameterTree = getTree(effect).getChildWithProperty(IDs::component, parameter);
 
             if (wasMoved) {
                 parameterTree.setProperty("x", component.getX(), nullptr);
@@ -296,15 +297,32 @@ void EffectTree::componentChildrenChanged(Component &component) {
         jassert(effectTree.isValid());
 
         for (auto c : component.getChildren()) {
+
+            //todo move
             c->addComponentListener(this);
 
-            if (auto line = dynamic_cast<ConnectionLine *>(c)) {
-                auto lineTree = effectTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, line);
-                if (!lineTree.isValid()) {
-                    // Create new Line
-                    ValueTree newLineTree(CONNECTION_ID);
-                    newLineTree.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
-                    effectTree.appendChild(newLineTree, undoManager);
+            auto child = dynamic_cast<SelectHoverObject*>(c);
+
+            if (child != nullptr) {
+                auto childTree = effectTree.getChildWithProperty(IDs::component, child);
+
+                if (childTree.isValid()) {
+
+                } else {
+                    // Create ConnectionLine tree
+                    if (auto line = dynamic_cast<ConnectionLine *>(c)) {
+                        ValueTree newLineTree(CONNECTION_ID);
+                        newLineTree.setProperty(IDs::component, line, nullptr);
+                        effectTree.appendChild(newLineTree, undoManager);
+                        //c->addComponentListener(this);
+                    }
+                    // Create Parameter Tree
+                    else if (auto parameter = dynamic_cast<Parameter *>(c)) {
+                        ValueTree newParameterTree(PARAMETER_ID);
+                        newParameterTree.setProperty(IDs::component, parameter, nullptr);
+                        effectTree.appendChild(newParameterTree, undoManager);
+                        //c->addComponentListener(this);
+                    }
                 }
             }
         }
@@ -331,16 +349,16 @@ ValueTree Effect::createParameter(AudioProcessorParameter *param) {
 }
 
 /*ValueTree EffectTree::getTree(EffectTreeBase *effect) {
-    return effectTree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, effect);
+    return effectTree.getChildWithProperty(IDs::component, effect);
 }*/
 
 ValueTree EffectTree::getTree(GuiObject* component) {
     if (dynamic_cast<EffectTreeBase*>(component)) {
-        return effectTree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, component);
+        return effectTree.getChildWithProperty(IDs::component, component);
     } else if (dynamic_cast<ConnectionLine*>(component)) {
-        return effectTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, component);
+        return effectTree.getChildWithProperty(IDs::component, component);
     } else if (dynamic_cast<Parameter*>(component)) {
-        return effectTree.getChildWithProperty(Parameter::IDs::parameterObject, component);
+        return effectTree.getChildWithProperty(IDs::component, component);
     }
 
     return getTree(effectTree, component);
@@ -351,7 +369,7 @@ ValueTree EffectTree::getTree(GuiObject* component) {
 
 ValueTree EffectTree::getTree(ValueTree parent, GuiObject* component) {
     //Todo general "component" property
-    auto childFound = parent.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, component);
+    auto childFound = parent.getChildWithProperty(IDs::component, component);
 
     if (childFound.isValid()) {
         return childFound;
@@ -360,7 +378,7 @@ ValueTree EffectTree::getTree(ValueTree parent, GuiObject* component) {
             if (auto parentComponent = dynamic_cast<GuiObject *>(p)) {
                 auto parentTree = getTree(parent, parentComponent);
                 if (parentTree.isValid()) {
-                    return parentTree.getChildWithProperty(EffectTreeBase::IDs::effectTreeBase, component);
+                    return parentTree.getChildWithProperty(IDs::component, component);
                 }
             }
         }
@@ -373,7 +391,7 @@ EffectTree::~EffectTree() {
     // Remove references to RefCountedObjects
     effectsToDelete.clear(); // effect references stored in toDelete array
 
-    auto effectScene = effectTree.getProperty(EffectTreeBase::IDs::effectTreeBase).getObject();
+    auto effectScene = effectTree.getProperty(IDs::component).getObject();
     effectScene->incReferenceCount();
 
     effectTree = ValueTree(); // clear ValueTree
@@ -416,7 +434,7 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
     else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
         ConnectionLine *line;
         // Add connection here
-        if (!childWhichHasBeenAdded.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
+        if (!childWhichHasBeenAdded.hasProperty(IDs::component)) {
             auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
 
@@ -424,13 +442,13 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
             line->setInPort(inport);
             line->setOutPort(outport);
 
-            childWhichHasBeenAdded.setProperty(ConnectionLine::IDs::ConnectionLineObject, line, nullptr);
+            childWhichHasBeenAdded.setProperty(IDs::component, line, nullptr);
 
             auto parent = getFromTree<EffectTreeBase>(parentTree);
             parent->addAndMakeVisible(line);
         } else {
             line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
-                                                       ConnectionLine::IDs::ConnectionLineObject);
+                                                       IDs::component);
             line->setVisible(true);
         }
         line->toFront(false);
@@ -464,7 +482,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
                 for (int i = 0; (i - childrenRemoved) < parentTree.getNumChildren(); i ++) {
                     auto child = parentTree.getChild(i - childrenRemoved);
                     if (child.hasType(CONNECTION_ID)) {
-                        auto connection = getPropertyFromTree<ConnectionLine>(child, ConnectionLine::IDs::ConnectionLineObject);
+                        auto connection = getPropertyFromTree<ConnectionLine>(child, IDs::component);
 
                         if (e->hasConnection(connection)) {
                             parentTree.removeChild(child, undoManager);
@@ -481,7 +499,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
     }
         // CONNECTION
     else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
-        auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, ConnectionLine::IDs::ConnectionLineObject);
+        auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, IDs::component);
         line->setVisible(false);
 
         EffectTreeBase::disconnectAudio(*line);
@@ -576,7 +594,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
 
         // Set properties based on object
         if (auto effect = dynamic_cast<Effect*>(tree.getProperty(
-                EffectTreeBase::IDs::effectTreeBase).getObject())) {
+                IDs::component).getObject())) {
 
             // Set size property
             copy.setProperty(Effect::IDs::w, effect->getWidth(), nullptr);
@@ -600,7 +618,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
     }
 
     if (tree.hasType(EFFECTSCENE_ID) || tree.hasType(EFFECT_ID)) {
-        copy.removeProperty(EffectTreeBase::IDs::effectTreeBase, nullptr);
+        copy.removeProperty(IDs::component, nullptr);
 
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto child = tree.getChild(i);
@@ -678,9 +696,9 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     // Effectscene added first
     if (loadData.hasType(EFFECTSCENE_ID)) {
         // Set children of Effectscene, and object property
-        auto effectSceneObject = parentTree.getProperty(EffectTreeBase::IDs::effectTreeBase);
+        auto effectSceneObject = parentTree.getProperty(IDs::component);
 
-        copy.setProperty(EffectTreeBase::IDs::effectTreeBase, effectSceneObject, nullptr);
+        copy.setProperty(IDs::component, effectSceneObject, nullptr);
         parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
 
         // Load child effects
@@ -852,7 +870,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         param->setValueNotifyingHost(value);
     }
 
-    parameterData.setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
+    parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
     parameter->setTopLeftPosition(x, y);
 
@@ -867,15 +885,15 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
 
 template<class T>
 T *EffectTree::getFromTree(const ValueTree &vt) {
-    if (vt.hasProperty(EffectTreeBase::IDs::effectTreeBase)) {
+    if (vt.hasProperty(IDs::component)) {
         // Return effect
-        return dynamic_cast<T*>(vt.getProperty(EffectTreeBase::IDs::effectTreeBase).getObject());
-    } else if (vt.hasProperty(ConnectionLine::IDs::ConnectionLineObject)) {
+        return dynamic_cast<T*>(vt.getProperty(IDs::component).getObject());
+    } else if (vt.hasProperty(IDs::component)) {
         // Return connection
-        return dynamic_cast<T*>(vt.getProperty(ConnectionLine::IDs::ConnectionLineObject).getObject());
-    } else if (vt.hasProperty(Parameter::IDs::parameterObject)) {
+        return dynamic_cast<T*>(vt.getProperty(IDs::component).getObject());
+    } else if (vt.hasProperty(IDs::component)) {
         // Return parameter
-        return dynamic_cast<T*>(vt.getProperty(Parameter::IDs::parameterObject).getObject());
+        return dynamic_cast<T*>(vt.getProperty(IDs::component).getObject());
     }
 }
 
@@ -887,14 +905,14 @@ T *EffectTree::getPropertyFromTree(const ValueTree &vt, Identifier property) {
 void EffectTree::remove(SelectHoverObject *c) {
     if (auto l = dynamic_cast<ConnectionLine*>(c)) {
         auto parentTree = getTree(dynamic_cast<EffectTreeBase*>(l->getParentComponent()));
-        auto lineTree = parentTree.getChildWithProperty(ConnectionLine::IDs::ConnectionLineObject, l);
+        auto lineTree = parentTree.getChildWithProperty(IDs::component, l);
         parentTree.removeChild(lineTree, undoManager);
     } else if (auto e = dynamic_cast<Effect*>(c)) {
         auto effectTree = getTree(e);
         effectTree.getParent().removeChild(effectTree, undoManager);
     } else if (auto p = dynamic_cast<Parameter*>(c)) {
         auto parentTree = getTree(dynamic_cast<Effect*>(p->getParentComponent()));
-        auto paramTree = parentTree.getChildWithProperty(Parameter::IDs::parameterObject, p);
+        auto paramTree = parentTree.getChildWithProperty(IDs::component, p);
         parentTree.removeChild(paramTree, undoManager);
     }
 }
