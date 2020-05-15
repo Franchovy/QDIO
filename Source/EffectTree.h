@@ -24,9 +24,9 @@ public:
     Effect* loadEffect(ValueTree tree);
 
     // Create new methods - constructs ValueTree Data needed
-    ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
+    //ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
     ValueTree newEffect(String name, Point<int> pos, int processorID = -1);
-    ValueTree newParameter();
+    //ValueTree newParameter();
 
     void remove(SelectHoverObject* c);
 

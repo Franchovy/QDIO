@@ -208,7 +208,7 @@ ValueTree EffectTree::newEffect(String name, Point<int> pos, int processorID) {
     return newEffect;
 }
 
-ValueTree EffectTree::newConnection(ConnectionPort::Ptr port1, ConnectionPort::Ptr port2) {
+/*ValueTree EffectTree::newConnection(ConnectionPort::Ptr port1, ConnectionPort::Ptr port2) {
     ConnectionPort::Ptr inPort;
     ConnectionPort::Ptr outPort;
     if (port1->isInput) {
@@ -240,39 +240,44 @@ ValueTree EffectTree::newConnection(ConnectionPort::Ptr port1, ConnectionPort::P
     }
 
     return newConnection;
-}
+}*/
 
+/*
+ValueTree EffectTree::newParameter() {
+    return ValueTree();
+}*/
 
 
 void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    if (auto effect = dynamic_cast<Effect*>(&component)) {
-        if (! getTree(effect).isValid()) {
-            return;
-        }
+    if (! undoManager->isPerformingUndoRedo()) {
+        if (auto effect = dynamic_cast<Effect*>(&component)) {
+            if (! getTree(effect).isValid()) {
+                return;
+            }
 
-        if (wasMoved) {
-            getTree(effect).setProperty(Effect::IDs::x, effect->getX(), undoManager);
-            getTree(effect).setProperty(Effect::IDs::y, effect->getY(), undoManager);
-        }
-        else if (wasResized) {
-            getTree(effect).setProperty(Effect::IDs::w, effect->getWidth(), undoManager);
-            getTree(effect).setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
-        }
-    } else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
-        auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
-        if (! getTree(effect).isValid()) {
-            return;
-        }
+            if (wasMoved) {
+                getTree(effect).setProperty(Effect::IDs::x, effect->getX(), undoManager);
+                getTree(effect).setProperty(Effect::IDs::y, effect->getY(), undoManager);
+            }
+            else if (wasResized) {
+                getTree(effect).setProperty(Effect::IDs::w, effect->getWidth(), undoManager);
+                getTree(effect).setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
+            }
+        } else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
+            auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
+            if (! getTree(effect).isValid()) {
+                return;
+            }
 
-        if (wasMoved) {
-            auto parameterTree = getTree(effect).getChildWithProperty(Parameter::IDs::parameterObject, parameter);
-            parameterTree.setProperty("x", component.getX(), nullptr);
-            parameterTree.setProperty("y", component.getY(), nullptr);
+            if (wasMoved) {
+                auto parameterTree = getTree(effect).getChildWithProperty(Parameter::IDs::parameterObject, parameter);
+                parameterTree.setProperty("x", component.getX(), nullptr);
+                parameterTree.setProperty("y", component.getY(), nullptr);
+            }
         }
+    } else {
+        std::cout << "Performing undo/redo, not updating valueTree!" << newLine;
     }
-
-
-
     ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
 }
 
@@ -505,9 +510,23 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
 }
 
 
-ValueTree EffectTree::newParameter() {
-    return ValueTree();
+
+void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    auto component = getFromTree<Component>(treeWhosePropertyHasChanged);
+
+    // Position
+    if (property == Identifier("x")) {
+        int newX = treeWhosePropertyHasChanged.getProperty("x");
+        component->setTopLeftPosition(newX, component->getY());
+    } else if (property == Identifier("y")) {
+        int newY = treeWhosePropertyHasChanged.getProperty("y");
+        component->setTopLeftPosition(component->getX(), newY);
+    }
+
+    Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
+
+
 
 
 
@@ -820,8 +839,4 @@ void EffectTree::remove(SelectHoverObject *c) {
         auto paramTree = parentTree.getChildWithProperty(Parameter::IDs::parameterObject, p);
         parentTree.removeChild(paramTree, undoManager);
     }
-}
-
-void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
