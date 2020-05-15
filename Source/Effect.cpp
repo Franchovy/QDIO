@@ -272,6 +272,11 @@ void Effect::setupMenu() {
     std::unique_ptr<PopupMenu> portSubMenu = std::make_unique<PopupMenu>();
     PopupMenu::Item portSubMenuItem("Add Port..");
 
+    std::unique_ptr<PopupMenu> parameterSubMenu = std::make_unique<PopupMenu>();
+    PopupMenu::Item addParamSubMenuItem("Add Parameter..");
+
+    // Actions
+
     toggleEditMode.setAction([=] {
         setEditMode(!editMode);
     });
@@ -296,11 +301,20 @@ void Effect::setupMenu() {
     });
     portSubMenuItem.subMenu = std::move(portSubMenu);
 
+    parameterSubMenu->addItem("Add Slider", [=] () {
+        undoManager.beginNewTransaction("Add slider parameter");
+
+        auto parameter = new Parameter(nullptr, true);
+        addAndMakeVisible(parameter);
+        parameter->setCentrePosition(getMouseXYRelative());
+    });
+    addParamSubMenuItem.subMenu = std::move(parameterSubMenu);
 
     addMenuItem(editMenu, toggleEditMode);
     addMenuItem(menu, toggleEditMode);
     addMenuItem(editMenu, changeEffectImage);
     addMenuItem(editMenu, portSubMenuItem);
+    addMenuItem(editMenu, addParamSubMenuItem);
 
     //todo move to class that can access
     /*if (!isIndividual()) {
@@ -322,17 +336,6 @@ void Effect::setupMenu() {
         editMenu.addItem(saveEffect);
     }*/
 
-    /*PopupMenu parameterSubMenu;
-    parameterSubMenu.addItem("Add Slider", [=] () {
-        undoManager.beginNewTransaction("Add slider parameter");
-        auto newParam = createParameter(new MetaParameter("New Parameter"));
-        newParam.setProperty("x", getMouseXYRelative().getX(), nullptr);
-        newParam.setProperty("y", getMouseXYRelative().getY(), nullptr);
-        tree.appendChild(newParam, &undoManager);
-        loadParameter(newParam);
-    });
-    editMenu.addSubMenu("Add Parameter..", parameterSubMenu);
-*/
 }
 
 Effect::~Effect()
@@ -385,12 +388,7 @@ void Effect::setProcessor(AudioProcessor *processor) {
 }
 
 
-ValueTree Effect::createParameter(AudioProcessorParameter *param) {
-    ValueTree parameterTree(PARAMETER_ID);
-    parameterTree.setProperty("name", param->getName(30), nullptr);
 
-    return parameterTree;
-}
 
 /**
  * Loads parameter from value tree data
@@ -399,55 +397,8 @@ ValueTree Effect::createParameter(AudioProcessorParameter *param) {
  * think of ways to kill myself. Fuck all this shit man.
  * @return parameter created
  */
-Parameter::Ptr Effect::loadParameter(ValueTree parameterData) {
-    auto name = parameterData.getProperty("name");
-
-    AudioProcessorParameter* param = nullptr;
-
-    if (isIndividual()) {
-        for(auto p : getParameters(false)) {
-            if (p->getName(30).compare(name) == 0) {
-                param = p;
-            }
-        }
-    } else {
-        param = new MetaParameter(name);
-        audioGraph->addParameter(param);
-    }
-
-    Parameter::Ptr parameter = new Parameter(param);
-    parameterArray.add(parameter);
-
-    if (isIndividual()) {
-        parameter->setEditMode(false);
-    } else {
-        parameter->setEditMode(editMode);
-    }
-
-    addAndMakeVisible(parameter.get());
-    addAndMakeVisible(parameter->getPort(true));
-
-    // Set position
-
-    int x = parameterData.getProperty("x");
-    int y = parameterData.getProperty("y");
-
-    // Set value
-    if (parameterData.hasProperty("value")) {
-        float value = parameterData.getProperty("value");
-        param->setValueNotifyingHost(value);
-    }
-
-    parameterData.setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
-
-    parameter->setTopLeftPosition(x, y);
-
-
-    // if has connection then connect
-
-
-    return parameter;
-}
+/*
+*/
 
 
 /**

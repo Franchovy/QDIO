@@ -33,6 +33,8 @@ public:
     ValueTree storeEffect(const ValueTree& tree);
     void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
 
+    Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
+
     void loadUserState();
     void storeAll();
 

@@ -19,7 +19,7 @@ class Parameter : public SelectHoverObject, public AudioProcessorParameter::List
 public:
     using Ptr = ReferenceCountedObjectPtr<Parameter>;
 
-    explicit Parameter(AudioProcessorParameter *param);
+    explicit Parameter(AudioProcessorParameter *param = nullptr, bool editMode = false);
 
     ~Parameter() override;
 

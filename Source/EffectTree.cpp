@@ -134,7 +134,7 @@ Effect* EffectTree::loadEffect(ValueTree tree) {
     // Load parameters from tree
     for (int i = 0; i < tree.getNumChildren(); i++) {
         if (tree.getChild(i).hasType(PARAMETER_ID)) {
-            auto parameter = effect->loadParameter(tree.getChild(i));
+            auto parameter = loadParameter(effect, tree.getChild(i));
             tree.getChild(i).setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
         }
     }
@@ -265,12 +265,11 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
             }
         } else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
             auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
-            if (! getTree(effect).isValid()) {
-                return;
-            }
+            jassert(effect != nullptr);
+
+            auto parameterTree = getTree(effect).getChildWithProperty(Parameter::IDs::parameterObject, parameter);
 
             if (wasMoved) {
-                auto parameterTree = getTree(effect).getChildWithProperty(Parameter::IDs::parameterObject, parameter);
                 parameterTree.setProperty("x", component.getX(), nullptr);
                 parameterTree.setProperty("y", component.getY(), nullptr);
             }
@@ -322,6 +321,13 @@ void EffectTree::componentChildrenChanged(Component &component) {
     }
 
     ComponentListener::componentChildrenChanged(component);
+}
+
+ValueTree Effect::createParameter(AudioProcessorParameter *param) {
+    ValueTree parameterTree(PARAMETER_ID);
+    parameterTree.setProperty("name", param->getName(30), nullptr);
+
+    return parameterTree;
 }
 
 /*ValueTree EffectTree::getTree(EffectTreeBase *effect) {
@@ -805,6 +811,58 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
         loadEffect(copy);
     }
 }
+
+//todo just use existing parameterData parent instead of effect
+Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
+    auto name = parameterData.getProperty("name");
+
+    AudioProcessorParameter* param = nullptr;
+
+    if (effect->isIndividual()) {
+        for(auto p : effect->getParameters(false)) {
+            if (p->getName(30).compare(name) == 0) {
+                param = p;
+            }
+        }
+    } else {
+        param = new MetaParameter(name);
+        effect->getAudioGraph()->addParameter(param);
+    }
+
+    Parameter::Ptr parameter = new Parameter(param);
+    //effect->parameterArray.add(parameter);
+
+    if (effect->isIndividual()) {
+        parameter->setEditMode(false);
+    } else {
+        parameter->setEditMode(effect->isInEditMode());
+    }
+
+    effect->addAndMakeVisible(parameter.get());
+    effect->addAndMakeVisible(parameter->getPort(true));
+
+    // Set position
+
+    int x = parameterData.getProperty("x");
+    int y = parameterData.getProperty("y");
+
+    // Set value
+    if (parameterData.hasProperty("value")) {
+        float value = parameterData.getProperty("value");
+        param->setValueNotifyingHost(value);
+    }
+
+    parameterData.setProperty(Parameter::IDs::parameterObject, parameter.get(), nullptr);
+
+    parameter->setTopLeftPosition(x, y);
+
+
+    // if has connection then connect
+
+
+    return parameter;
+}
+
 
 
 template<class T>

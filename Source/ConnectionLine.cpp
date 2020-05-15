@@ -51,10 +51,14 @@ void ConnectionLine::setOutPort(ConnectionPort *port) {
 
 
 ConnectionLine::~ConnectionLine() {
-    inPort->setOtherPort(nullptr);
-    outPort->setOtherPort(nullptr);
-    inPort->removeComponentListener(this);
-    outPort->removeComponentListener(this);
+    if (inPort != nullptr) {
+        inPort->setOtherPort(nullptr);
+        inPort->removeComponentListener(this);
+    }
+    if (outPort != nullptr) {
+        outPort->setOtherPort(nullptr);
+        outPort->removeComponentListener(this);
+    }
 }
 
 void ConnectionLine::paint(Graphics &g) {
