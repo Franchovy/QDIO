@@ -23,7 +23,6 @@ public:
     // Create new - from ValueTree data
     Effect* loadEffect(ValueTree tree);
 
-
     // Create new methods - constructs ValueTree Data needed
     ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
     ValueTree newEffect(String name, Point<int> pos, int processorID = -1);
@@ -41,16 +40,15 @@ public:
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
+    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
     void componentNameChanged(Component &component) override;
     void componentChildrenChanged(Component &component) override;
 
-
-
     // Convenience methods
     //ValueTree getTree(EffectTreeBase* effect);
-    ValueTree getTree(GuiObject* component);
+    ValueTree getTree(GuiObject* component); //todo move the below into this
     ValueTree getTree(ValueTree parentToCheck, GuiObject* component);
     template<class T>
     static T* getFromTree(const ValueTree& vt);

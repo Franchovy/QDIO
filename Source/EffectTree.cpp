@@ -285,8 +285,9 @@ void EffectTree::componentNameChanged(Component &component) {
 }
 
 void EffectTree::componentChildrenChanged(Component &component) {
-    auto effect = dynamic_cast<Effect*>(&component);
-    if (effect != nullptr) {
+    // Effect
+    if (auto effect = dynamic_cast<Effect*>(&component)) {
+        std::cout << "componentChildrenChanged effect" << newLine;
         auto effectTree = getTree(effect);
         jassert(effectTree.isValid());
 
@@ -303,10 +304,18 @@ void EffectTree::componentChildrenChanged(Component &component) {
                 }
             }
         }
-    } else {
-        //todo handle other types bro.
-        jassertfalse;
     }
+    // ConnectionLine
+    else if (auto line = dynamic_cast<ConnectionLine*>(&component)) {
+        std::cout << "componentChildrenChanged line" << newLine;
+    }
+    // Parameter
+    else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
+        std::cout << "componentChildrenChanged parameter" << newLine;
+    } else {
+        std::cout << "componentChildrenChanged something else" << newLine;
+    }
+
     ComponentListener::componentChildrenChanged(component);
 }
 
@@ -811,4 +820,8 @@ void EffectTree::remove(SelectHoverObject *c) {
         auto paramTree = parentTree.getChildWithProperty(Parameter::IDs::parameterObject, p);
         parentTree.removeChild(paramTree, undoManager);
     }
+}
+
+void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+    Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
 }
