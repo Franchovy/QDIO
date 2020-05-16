@@ -332,7 +332,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
                         }
                     }
                 }
-            } 
+            }
         }
     }
     // ConnectionLine
@@ -438,8 +438,18 @@ EffectTree::~EffectTree() {
 void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     // ADD EFFECT
     if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
-        if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
-            if (auto e = getFromTree<Effect>(childWhichHasBeenAdded)) {
+        auto e = getFromTree<Effect>(childWhichHasBeenAdded);
+        if (e != nullptr) {
+            auto parent = getFromTree<EffectTreeBase>(parentTree);
+            if (parent->isParentOf(e)) {
+                e->setVisible(true);
+            } else {
+                parent->addAndMakeVisible(e);
+            }
+        }
+
+        /*if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
+            if () {
                 e->setVisible(true);
 
                 // Remove from effectsToDelete
@@ -458,11 +468,11 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
             }
         } else {
             // Initialise VT
-            /*childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
+            *//*childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
             auto parent = getFromTree<EffectTreeBase>(parentTree);
             auto effect = getFromTree<Effect>(effectTree);
-            parent->addAndMakeVisible(effect);*/
-        }
+            parent->addAndMakeVisible(effect);*//*
+        }*/
     }
         // ADD CONNECTION
     else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
