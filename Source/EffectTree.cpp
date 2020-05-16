@@ -551,16 +551,13 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
 
 
 
-
-
-
 void EffectTree::loadUserState() {
-
-
     if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
         if (loadedEffectsData != nullptr) {
             ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
+
+            std::cout << effectLoadDataTree.toXmlString() << newLine;
 
             loadEffect(effectTree, effectLoadDataTree);
         }
@@ -641,7 +638,9 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
 
                 childParam.setProperty("name", childParamObject->getName(), nullptr);
                 childParam.setProperty("type", childParamObject->type, nullptr);
-                childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
+                if (childParamObject->getParameter() != nullptr) {
+                    childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
+                }
 
                 if (childParamObject->isConnected()) {
                     childParam.setProperty("connectedParam",

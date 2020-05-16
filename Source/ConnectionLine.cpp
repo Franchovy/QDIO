@@ -171,7 +171,7 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
 
 
         setBounds(Rectangle<int>(inPos, outPos));
-
+        
         EffectTreeBase::connectAudio(*this);
     } else {
         // Cancel drag

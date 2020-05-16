@@ -125,13 +125,19 @@ public:
      * Use this to asynchronously update the buffer size
      */
     void timerCallback() override {
-        // TODO fix crashing
         if (fadeVal != fade->get()) {
             fadeVal = fade->get();
         }
 
+
         newDelayBufferSize = ceil(delay->get() * currentSampleRate );
         if (newDelayBufferSize != delayBufferSize){
+            if (numChannels < 0 || newDelayBufferSize < 0) {
+                startTimer(1000);
+                return;
+            }
+
+
             std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
 
             delayBuffer.setSize(numChannels, newDelayBufferSize
