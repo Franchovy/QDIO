@@ -28,9 +28,7 @@ public:
     Effect* loadEffect(ValueTree tree);
 
     // Create new methods - constructs ValueTree Data needed
-    //ValueTree newConnection(ConnectionPort::Ptr inPort, ConnectionPort::Ptr outPort);
     ValueTree newEffect(String name, Point<int> pos, int processorID = -1);
-    //ValueTree newParameter();
 
     void remove(SelectHoverObject* c);
 
@@ -53,10 +51,9 @@ public:
     void componentChildrenChanged(Component &component) override;
     void componentEnablementChanged(Component &component) override;
 
-    // Convenience methods
-    //ValueTree getTree(EffectTreeBase* effect);
-    ValueTree getTree(GuiObject* component); //todo move the below into this
-    ValueTree getTree(ValueTree parentToCheck, GuiObject* component);
+    // Access methods
+    ValueTree getTree(GuiObject* component);
+
     template<class T>
     static T* getFromTree(const ValueTree& vt);
     template <class T>

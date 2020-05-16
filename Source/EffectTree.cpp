@@ -209,45 +209,6 @@ ValueTree EffectTree::newEffect(String name, Point<int> pos, int processorID) {
     return newEffect;
 }
 
-/*ValueTree EffectTree::newConnection(ConnectionPort::Ptr port1, ConnectionPort::Ptr port2) {
-    ConnectionPort::Ptr inPort;
-    ConnectionPort::Ptr outPort;
-    if (port1->isInput) {
-        inPort = port1;
-        outPort = port2;
-    } else {
-        inPort = port2;
-        outPort = port1;
-    }
-
-    // Get port parents - Remember that input port is for output effect and vice versa.
-    auto effect1 = dynamic_cast<Effect*>(outPort->getParentComponent());
-    auto effect2 = dynamic_cast<Effect*>(inPort->getParentComponent());
-
-    auto newConnection = ValueTree(CONNECTION_ID);
-    newConnection.setProperty(ConnectionLine::IDs::InPort, inPort.get(), nullptr);
-    newConnection.setProperty(ConnectionLine::IDs::OutPort, outPort.get(), nullptr);
-
-    if (effect1->getParent() == effect2->getParent()) {
-        if (effect1 == effect2) {
-            //todo fuckin motherfuckin dumbass exception case
-        }
-
-        getTree(dynamic_cast<EffectTreeBase*>(effect1->getParent())).appendChild(newConnection, undoManager);
-    } else if (effect1->getParent() == effect2) {
-        getTree(dynamic_cast<EffectTreeBase*>(effect2)).appendChild(newConnection, undoManager);
-    } else if (effect2->getParent() == effect1) {
-        getTree(dynamic_cast<EffectTreeBase*>(effect1)).appendChild(newConnection, undoManager);
-    }
-
-    return newConnection;
-}*/
-
-/*
-ValueTree EffectTree::newParameter() {
-    return ValueTree();
-}*/
-
 
 void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
     if (! undoManager->isPerformingUndoRedo()) {
@@ -275,8 +236,6 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
                 parameterTree.setProperty("y", component.getY(), nullptr);
             }
         }
-    } else {
-        std::cout << "Performing undo/redo, not updating valueTree!" << newLine;
     }
     ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
 }
@@ -292,7 +251,7 @@ void EffectTree::componentNameChanged(Component &component) {
 void EffectTree::componentChildrenChanged(Component &component) {
     // Effect or EffectScene
     if (auto effectTreeBase = dynamic_cast<EffectTreeBase*>(&component)) {
-        std::cout << "componentChildrenChanged effect" << newLine;
+
         auto effectTree = getTree(effectTreeBase);
         jassert(effectTree.isValid());
 
@@ -335,16 +294,6 @@ void EffectTree::componentChildrenChanged(Component &component) {
             }
         }
     }
-    // ConnectionLine
-    else if (auto line = dynamic_cast<ConnectionLine*>(&component)) {
-        std::cout << "componentChildrenChanged line" << newLine;
-    }
-    // Parameter
-    else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
-        std::cout << "componentChildrenChanged parameter" << newLine;
-    } else {
-        std::cout << "componentChildrenChanged something else" << newLine;
-    }
 
     ComponentListener::componentChildrenChanged(component);
 }
@@ -377,22 +326,11 @@ ValueTree Effect::createParameter(AudioProcessorParameter *param) {
     return parameterTree;
 }
 
-/*ValueTree EffectTree::getTree(EffectTreeBase *effect) {
-    return effectTree.getChildWithProperty(IDs::component, effect);
-}*/
-
 ValueTree EffectTree::getTree(GuiObject* component) {
     if (effectTree.getProperty(IDs::component) == component) {
         return effectTree;
     }
 
-    /*if (dynamic_cast<EffectTreeBase*>(component)) {
-        return effectTree.getChildWithProperty(IDs::component, component);
-    } else if (dynamic_cast<ConnectionLine*>(component)) {
-        return effectTree.getChildWithProperty(IDs::component, component);
-    } else if (dynamic_cast<Parameter*>(component)) {
-        return effectTree.getChildWithProperty(IDs::component, component);
-    }*/
     auto childFound = effectTree.getChildWithProperty(IDs::component, component);
 
     if (childFound.isValid()) {
@@ -408,18 +346,9 @@ ValueTree EffectTree::getTree(GuiObject* component) {
         }
     }
 
-    return getTree(effectTree, component);
-
-
     return ValueTree();
 }
 
-ValueTree EffectTree::getTree(ValueTree parent, GuiObject* component) {
-    //Todo general "component" property
-
-
-    return ValueTree();
-}
 
 EffectTree::~EffectTree() {
     // Remove references to RefCountedObjects
@@ -447,32 +376,6 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
                 parent->addAndMakeVisible(e);
             }
         }
-
-        /*if (childWhichHasBeenAdded.hasProperty(Effect::IDs::initialised)) {
-            if () {
-                e->setVisible(true);
-
-                // Remove from effectsToDelete
-                if (effectsToDelete.contains(e)) {
-                    effectsToDelete.removeObject(e);
-                }
-
-                // Adjust pos
-                if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
-                    if (!parent->getChildren().contains(e)) {
-                        parent->addAndMakeVisible(e);
-
-                        e->setTopLeftPosition(parent->getLocalPoint(e, e->getPosition()));
-                    }
-                }
-            }
-        } else {
-            // Initialise VT
-            *//*childWhichHasBeenAdded.setProperty(Effect::IDs::initialised, true, nullptr);
-            auto parent = getFromTree<EffectTreeBase>(parentTree);
-            auto effect = getFromTree<Effect>(effectTree);
-            parent->addAndMakeVisible(effect);*//*
-        }*/
     }
         // ADD CONNECTION
     else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
@@ -550,25 +453,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         auto parameter = getFromTree<Parameter>(childWhichHasBeenRemoved);
         parameter->setVisible(false);
 
-        // REMOVE PARAMETER CONNECTION
-        //todo
-        // if parameter has external connection connected then remove connection from parentTree
-        /*if (parameter->isConnected()) {
-            for (int i = 0; i < parentTree.getNumChildren(); i++) {
-                auto child = parentTree.getChild(i);
-                if (child.hasType(CONNECTION_ID)) {
-                    auto connection = getFromTree<ConnectionLine>(child);
-                    if (connection->getInPort() == parameter->getPort(false)
-                        || connection->getOutPort() == parameter->getPort(false))
-                    {
-                        child.getParent().removeChild(child, &undoManager);
-                    }
-                }
-            }
-        }*/
-
-        //todo
-        // if parameter has internal connection connected then remove connection from parentTree parent
+        // Remove Parameter Connection
 
     }
     Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
