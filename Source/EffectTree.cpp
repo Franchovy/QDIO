@@ -257,7 +257,6 @@ void EffectTree::componentChildrenChanged(Component &component) {
 
         for (auto c : component.getChildren()) {
 
-            //todo move
             c->addComponentListener(this);
 
             auto child = dynamic_cast<SelectHoverObject*>(c);
@@ -284,6 +283,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
                     }
                     // Reassign Effect
                     else if (auto effect = dynamic_cast<Effect*>(c)) {
+                        childTree = getTree(effect);
                         auto newChildParent = getTree(dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
                         if (childTree.getParent() != newChildParent) {
                             childTree.getParent().removeChild(childTree, undoManager);
@@ -437,7 +437,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
 
                 parent->removeChildComponent(e);
                 e->setVisible(false);
-                effectsToDelete.add(e);
+                //effectsToDelete.add(e);
             }
         }
     }
