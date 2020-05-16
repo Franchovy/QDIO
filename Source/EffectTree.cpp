@@ -348,6 +348,10 @@ void EffectTree::componentEnablementChanged(Component &component) {
             // Line is connected
             auto lineTree = getTree(line);
             jassert(lineTree.isValid());
+
+            //update tree
+            lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), undoManager);
+            lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
         } else {
             // Line is disconnected
 
