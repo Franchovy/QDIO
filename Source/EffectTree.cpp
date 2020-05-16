@@ -349,14 +349,13 @@ void EffectTree::componentEnablementChanged(Component &component) {
             auto lineTree = getTree(line);
             jassert(lineTree.isValid());
 
-            //update tree
+            // Update tree
             lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), undoManager);
             lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
         } else {
             // Line is disconnected
 
         }
-
     }
 
     ComponentListener::componentEnablementChanged(component);
@@ -379,12 +378,26 @@ ValueTree EffectTree::getTree(GuiObject* component) {
         return effectTree;
     }
 
-    if (dynamic_cast<EffectTreeBase*>(component)) {
+    /*if (dynamic_cast<EffectTreeBase*>(component)) {
         return effectTree.getChildWithProperty(IDs::component, component);
     } else if (dynamic_cast<ConnectionLine*>(component)) {
         return effectTree.getChildWithProperty(IDs::component, component);
     } else if (dynamic_cast<Parameter*>(component)) {
         return effectTree.getChildWithProperty(IDs::component, component);
+    }*/
+    auto childFound = effectTree.getChildWithProperty(IDs::component, component);
+
+    if (childFound.isValid()) {
+        return childFound;
+    } else {
+        if (auto p = component->getParentComponent()) {
+            if (auto parentComponent = dynamic_cast<GuiObject *>(p)) {
+                auto parentTree = getTree(parentComponent);
+                if (parentTree.isValid()) {
+                    return parentTree.getChildWithProperty(IDs::component, component);
+                }
+            }
+        }
     }
 
     return getTree(effectTree, component);
@@ -395,20 +408,7 @@ ValueTree EffectTree::getTree(GuiObject* component) {
 
 ValueTree EffectTree::getTree(ValueTree parent, GuiObject* component) {
     //Todo general "component" property
-    auto childFound = parent.getChildWithProperty(IDs::component, component);
 
-    if (childFound.isValid()) {
-        return childFound;
-    } else {
-        if (auto p = component->getParentComponent()) {
-            if (auto parentComponent = dynamic_cast<GuiObject *>(p)) {
-                auto parentTree = getTree(parent, parentComponent);
-                if (parentTree.isValid()) {
-                    return parentTree.getChildWithProperty(IDs::component, component);
-                }
-            }
-        }
-    }
 
     return ValueTree();
 }

@@ -118,11 +118,8 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         dragLine = connections.add(new ConnectionLine());
 
-        if (port->isInput) {
-            dragLine->setInPort(port);
-        } else {
-            dragLine->setOutPort(port);
-        }
+        dragLine->setPort(port);
+
         auto parent = port->isInternal ? port->getParentComponent() : port->getParentComponent()->getParentComponent();
 
         parent->addAndMakeVisible(dragLine);

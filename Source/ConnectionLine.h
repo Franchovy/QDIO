@@ -61,6 +61,7 @@ public:
     void setInPort(ConnectionPort* port);
     void setOutPort(ConnectionPort* port);
     void setDragPort(ConnectionPort* port);
+    void setPort(ConnectionPort* port);
 
     void resized() override;
 
