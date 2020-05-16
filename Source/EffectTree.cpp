@@ -135,8 +135,7 @@ Effect* EffectTree::loadEffect(ValueTree tree) {
     // Load parameters from tree
     for (int i = 0; i < tree.getNumChildren(); i++) {
         if (tree.getChild(i).hasType(PARAMETER_ID)) {
-            auto parameter = loadParameter(effect, tree.getChild(i));
-            tree.getChild(i).setProperty(IDs::component, parameter.get(), nullptr);
+            loadParameter(effect, tree.getChild(i));
         }
     }
 
@@ -844,7 +843,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         }
     } else {
         param = new MetaParameter(name);
-        effect->getAudioGraph()->addParameter(param);
+        EffectTreeBase::getAudioGraph()->addParameter(param);
     }
 
     Parameter::Ptr parameter = new Parameter(param);
@@ -855,6 +854,8 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
     } else {
         parameter->setEditMode(effect->isInEditMode());
     }
+
+    parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
     effect->addAndMakeVisible(parameter.get());
     effect->addAndMakeVisible(parameter->getPort(true));
@@ -869,8 +870,6 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         float value = parameterData.getProperty("value");
         param->setValueNotifyingHost(value);
     }
-
-    parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
     parameter->setTopLeftPosition(x, y);
 
