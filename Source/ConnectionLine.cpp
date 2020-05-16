@@ -171,8 +171,8 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
 
 
         setBounds(Rectangle<int>(inPos, outPos));
-        
-        EffectTreeBase::connectAudio(*this);
+
+        connect();
     } else {
         // Cancel drag
         setVisible(false);
@@ -208,6 +208,32 @@ bool ConnectionLine::canConnect(const ConnectionPort *port) const {
         return outPort->canConnect(port);
     }
     jassertfalse;
+    return false;
+}
+
+bool ConnectionLine::connect() {
+    if (inPort != nullptr && outPort != nullptr) {
+        auto inParamPort = dynamic_cast<ParameterPort*>(inPort.get());
+        auto outParamPort = dynamic_cast<ParameterPort*>(outPort.get());
+
+        // Parameter connection case
+        if (inParamPort != nullptr && outParamPort != nullptr) {
+            //Effect::connectParameters
+        }
+        // Audio connection case
+        else {
+            jassert(dynamic_cast<AudioPort*>(inPort.get())
+                 || dynamic_cast<InternalConnectionPort*>(inPort.get()));
+            jassert(dynamic_cast<AudioPort*>(outPort.get())
+                 || dynamic_cast<InternalConnectionPort*>(outPort.get()));
+
+            Effect::connectAudio(*this);
+        }
+
+    } else {
+        return false;
+    }
+
     return false;
 }
 

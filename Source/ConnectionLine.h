@@ -84,6 +84,7 @@ public:
         return outPort;
     }
 
+    bool connect();
 
     void setAudioConnection(AudioProcessorGraph::Connection connection) {
         audioConnection = connection;

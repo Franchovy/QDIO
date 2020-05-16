@@ -452,10 +452,7 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         }
         line->toFront(false);
 
-        //todo DEBUG why is this called on internal line create, and not on external?
-        // separate loading connections (thus connect audio) and unconnected
-        // ---> line->connect() ? -- > uses ports and calls audioconnect if needed
-        //EffectTreeBase::connectAudio(*line);
+        line->connect();
     }
         // PARAMETER
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
