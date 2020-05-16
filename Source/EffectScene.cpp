@@ -184,50 +184,11 @@ void EffectScene::mouseDown(const MouseEvent &event) {
         undoManager.beginNewTransaction("resize");
         return;
     }
-    // Effect
-    else if (auto effect = dynamic_cast<Effect*>(event.originalComponent)) {
-        if (event.mods.isLeftButtonDown()) {
-            //todo static lasso functionality?
-
-        } else if (event.mods.isRightButtonDown()) {
-            // Send info upwards for menu
-            //TODO don't do this, call custom menu function
-            getParentComponent()->mouseDown(event);
-        }
-    }
 }
 
 void EffectScene::mouseDrag(const MouseEvent &event) {
     if (lasso.isVisible()) {
         lasso.dragLasso(event);
-    }
-
-    if (event.mods.isLeftButtonDown()) {
-        auto dragIntoObject = SelectHoverObject::getDragIntoObject();
-
-        if (dragIntoObject != nullptr) {
-            if (auto effect = dynamic_cast<Effect*>(dragIntoObject)) {
-                std::cout << "Drag into effect" << newLine;
-            } else if (auto port = dynamic_cast<ConnectionPort*>(dragIntoObject)) {
-                std::cout << "Drag into port" << newLine;
-            }
-        } else {
-            // Effect drag
-            if (auto effect = dynamic_cast<Effect *>(event.originalComponent)) {
-
-            }
-                // Line Drag
-            else if (dynamic_cast<ConnectionPort *>(event.originalComponent)) {
-
-                auto port = nullptr;//todo portToConnectTo(event, tree);
-
-                if (port != nullptr) {
-                    SelectHoverObject::setHoverObject(port);
-                } else {
-                    SelectHoverObject::resetHoverObject();
-                }
-            }
-        }
     }
 }
 
@@ -272,48 +233,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
                 }
             }
         }
-    }/* else if (dynamic_cast<ParameterPort *>(event.originalComponent)) {
-        auto port1 = dynamic_cast<ParameterPort *>(dragLine.getPort1());
-        auto port2 = dynamic_cast<ParameterPort *>(getHoverObject());
-
-        if (port1 != nullptr && port2 != nullptr) {
-
-            // InPort belongs to Internal parameter, but is child of parent effect.
-            auto inPort = port1->isInput ? port2 : port1;
-            auto outPort = port1->isInput ? port1 : port2;
-
-
-            // Connect internal Parameter2 to external Parameter1
-            auto e = dynamic_cast<Effect *>(outPort->getParentComponent());
-            // Internal port belongs to the external parameter & vice versa
-            auto inParameter = e->getParameterForPort(outPort);
-
-            auto outParameter = dynamic_cast<Parameter *>(inPort->getParentComponent());
-
-            if (inParameter == nullptr || outParameter == nullptr) {
-                std::cout << "Failed to connect parameters!" << newLine;
-                dragLine.release(nullptr);
-                return;
-            }
-
-            // Connect
-            outParameter->connect(inParameter);
-
-            auto newConnection = new ConnectionLine(*port1, *port2);
-            port1->getDragLineParent()->addAndMakeVisible(newConnection);
-        } else {
-            dragLine.release(nullptr);
-        }
-    } else {
-        // Call ConnectionPort connect
-        if (dynamic_cast<ConnectionPort *>(event.originalComponent)) {
-            if (auto port = dynamic_cast<ConnectionPort *>(getHoverObject())) {
-                // Call create on common parent
-                updater.newConnection(port, dragLine.getPort1());
-            }
-            dragLine.release(nullptr);
-        }
-    }*/
+    }
 }
 
 bool EffectScene::keyPressed(const KeyPress &key)
