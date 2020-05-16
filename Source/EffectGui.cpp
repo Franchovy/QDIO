@@ -208,7 +208,10 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
         // Return parent if mouse is no longer in this object
         auto parent = dynamic_cast<SelectHoverObject*>(objectToCheck->getParentComponent());
 
-        jassert(parent != nullptr);
+        if (parent == nullptr) {
+            return objectToCheck;
+        }
+
         return parent;
     }
 }

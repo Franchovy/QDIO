@@ -120,6 +120,12 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
     jassert (inPort != nullptr || outPort != nullptr);
     ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
 
+    if (port->isInput) {
+        inPort = port;
+    } else {
+        outPort = port;
+    }
+
     inPos = getParentComponent()->getLocalPoint(port, port->centrePoint);
     outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
 
@@ -144,6 +150,8 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
                 setDragPort(port);
             }
         }
+    } else {
+        setDragPort(nullptr);
     }
 
     /*p1 = getLocalPoint(port1, port1->centrePoint);
@@ -173,8 +181,19 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
 void ConnectionLine::setDragPort(ConnectionPort *port) {
     jassert(inPort != nullptr || outPort != nullptr);
 
-    if (inPort == nullptr) inPort = port;
-    if (outPort == nullptr) outPort = port;
+    if (port != nullptr) {
+        dragPort = port;
+
+        if (inPort == nullptr) inPort = port;
+        if (outPort == nullptr) outPort = port;
+    } else {
+        if (inPort == dragPort) inPort = nullptr;
+        if (outPort == dragPort) outPort = nullptr;
+
+        dragPort = nullptr;
+    }
+
+    std::cout << "DragPort: " << dragPort << newLine;
 }
 
 void ConnectionLine::parentHierarchyChanged() {

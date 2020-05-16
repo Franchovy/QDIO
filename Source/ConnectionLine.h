@@ -110,6 +110,7 @@ private:
     Point<int> inPos, outPos;
     Line<int> line;
 
+    ConnectionPort* dragPort = nullptr;
     ConnectionPort::Ptr inPort = nullptr;
     ConnectionPort::Ptr outPort = nullptr;
 
