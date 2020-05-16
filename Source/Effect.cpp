@@ -890,12 +890,14 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 
 void Effect::mouseDown(const MouseEvent &event) {
     //setAlwaysOnTop(true);
-    dragger.startDraggingComponent(this, event);
-    startDragHoverDetect();
-
-    if (event.originalComponent == this) {
-        getParentComponent()->mouseDown(event);
+    if (dynamic_cast<Resizer*>(event.originalComponent)) {
+        undoManager.beginNewTransaction("Resize");
+        return;
     } else {
+        undoManager.beginNewTransaction("Move");
+        dragger.startDraggingComponent(this, event);
+        startDragHoverDetect();
+
         EffectTreeBase::mouseDown(event);
     }
 }

@@ -471,6 +471,12 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
     } else if (property == Identifier("y")) {
         int newY = treeWhosePropertyHasChanged.getProperty("y");
         component->setTopLeftPosition(component->getX(), newY);
+    } else if (property == Identifier("w")) {
+        int newW = treeWhosePropertyHasChanged.getProperty("w");
+        component->setSize(newW, component->getHeight());
+    } else if (property == Identifier("h")) {
+        int newH = treeWhosePropertyHasChanged.getProperty("h");
+        component->setSize(component->getWidth(), newH);
     }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
