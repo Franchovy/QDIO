@@ -323,8 +323,16 @@ void EffectTree::componentChildrenChanged(Component &component) {
                         effectTree.appendChild(newParameterTree, undoManager);
                         //c->addComponentListener(this);
                     }
+                    // Reassign Effect
+                    else if (auto effect = dynamic_cast<Effect*>(c)) {
+                        auto newChildParent = getTree(dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
+                        if (childTree.getParent() != newChildParent) {
+                            childTree.getParent().removeChild(childTree, undoManager);
+                            newChildParent.appendChild(childTree, undoManager);
+                        }
+                    }
                 }
-            }
+            } 
         }
     }
     // ConnectionLine

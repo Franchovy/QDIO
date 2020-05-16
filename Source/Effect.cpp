@@ -889,7 +889,7 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
-    setAlwaysOnTop(true);
+    //setAlwaysOnTop(true);
     dragger.startDraggingComponent(this, event);
     startDragHoverDetect();
 
