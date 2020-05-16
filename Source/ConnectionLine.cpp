@@ -22,6 +22,7 @@ const Identifier ConnectionLine::IDs::AudioConnection = "audioConnection";
 
 ConnectionLine::ConnectionLine() {
     setRepaintsOnMouseActivity(true);
+    setEnabled(false);
     inPort = nullptr;
     outPort = nullptr;
 }
@@ -229,6 +230,9 @@ bool ConnectionLine::connect() {
 
             Effect::connectAudio(*this);
         }
+
+        setEnabled(true);
+        return true;
 
     } else {
         return false;

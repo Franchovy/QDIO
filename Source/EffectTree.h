@@ -51,6 +51,7 @@ public:
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
     void componentNameChanged(Component &component) override;
     void componentChildrenChanged(Component &component) override;
+    void componentEnablementChanged(Component &component) override;
 
     // Convenience methods
     //ValueTree getTree(EffectTreeBase* effect);

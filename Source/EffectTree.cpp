@@ -18,6 +18,7 @@ EffectTree::EffectTree(EffectTreeBase* effectScene)
 {
     effectTree.setProperty(IDs::component, effectScene, nullptr);
     effectTree.addListener(this);
+    effectScene->addComponentListener(this);
 }
 
 
@@ -289,10 +290,10 @@ void EffectTree::componentNameChanged(Component &component) {
 }
 
 void EffectTree::componentChildrenChanged(Component &component) {
-    // Effect
-    if (auto effect = dynamic_cast<Effect*>(&component)) {
+    // Effect or EffectScene
+    if (auto effectTreeBase = dynamic_cast<EffectTreeBase*>(&component)) {
         std::cout << "componentChildrenChanged effect" << newLine;
-        auto effectTree = getTree(effect);
+        auto effectTree = getTree(effectTreeBase);
         jassert(effectTree.isValid());
 
         for (auto c : component.getChildren()) {
@@ -340,6 +341,24 @@ void EffectTree::componentChildrenChanged(Component &component) {
     ComponentListener::componentChildrenChanged(component);
 }
 
+
+void EffectTree::componentEnablementChanged(Component &component) {
+    if (auto line = dynamic_cast<ConnectionLine*>(&component)) {
+        if (line->isEnabled()) {
+            // Line is connected
+            auto lineTree = getTree(line);
+            jassert(lineTree.isValid());
+        } else {
+            // Line is disconnected
+
+        }
+
+    }
+
+    ComponentListener::componentEnablementChanged(component);
+}
+
+
 ValueTree Effect::createParameter(AudioProcessorParameter *param) {
     ValueTree parameterTree(PARAMETER_ID);
     parameterTree.setProperty("name", param->getName(30), nullptr);
@@ -352,6 +371,10 @@ ValueTree Effect::createParameter(AudioProcessorParameter *param) {
 }*/
 
 ValueTree EffectTree::getTree(GuiObject* component) {
+    if (effectTree.getProperty(IDs::component) == component) {
+        return effectTree;
+    }
+
     if (dynamic_cast<EffectTreeBase*>(component)) {
         return effectTree.getChildWithProperty(IDs::component, component);
     } else if (dynamic_cast<ConnectionLine*>(component)) {
@@ -911,3 +934,4 @@ void EffectTree::remove(SelectHoverObject *c) {
         parentTree.removeChild(paramTree, undoManager);
     }
 }
+
