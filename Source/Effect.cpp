@@ -86,9 +86,9 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     auto inPort = connectionLine.getInPort();
     auto outPort = connectionLine.getOutPort();
 
-    if (inPort == nullptr || outPort == nullptr) {
+    /*if (inPort == nullptr || outPort == nullptr) {
         return returnArray;
-    }
+    }*/
 
     auto inEVT = dynamic_cast<Effect *>(outPort->getParentComponent());
     auto outEVT = dynamic_cast<Effect *>(inPort->getParentComponent());
@@ -572,15 +572,13 @@ Effect::NodeAndPort Effect::getNode(ConnectionPort::Ptr &port) {
         nodeAndPort.isValid = true;
         return nodeAndPort;
     } else {
-        ConnectionPort::Ptr portToCheck = nullptr;
+        ConnectionPort* portToCheck = nullptr;
         if (auto p = dynamic_cast<AudioPort*>(port.get())) {
-            portToCheck = p->internalPort;
-            portToCheck->incReferenceCount();
+            portToCheck = p->getInternalConnectionPort().get();
         }
 
         else if (auto p = dynamic_cast<InternalConnectionPort*>(port.get())) {
             portToCheck = p->audioPort;
-            portToCheck->incReferenceCount();
         }
 
         if (portToCheck->isConnected()) {

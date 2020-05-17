@@ -432,7 +432,7 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
                 parent->addAndMakeVisible(line);
             } else {
                 line->setVisible(true);
-            } 
+            }
         }
         line->toFront(false);
 
