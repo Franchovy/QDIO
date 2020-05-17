@@ -198,6 +198,11 @@ bool ConnectionLine::connect() {
 
         setBounds(Rectangle<int>(inPos, outPos));
 
+        line.setStart(getLocalPoint(getParentComponent(), inPos));
+        line.setEnd(getLocalPoint(getParentComponent(), outPos));
+
+        repaint();
+
         // Connect functionality
 
         auto inParamPort = dynamic_cast<ParameterPort*>(inPort.get());
@@ -258,6 +263,10 @@ void ConnectionLine::setPort(ConnectionPort *port) {
         inPort = port;
     } else {
         outPort = port;
+    }
+
+    if (! isConnected && (inPort != nullptr && outPort != nullptr)) {
+        connect();
     }
 }
 

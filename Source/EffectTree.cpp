@@ -417,13 +417,14 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
 
             line = new ConnectionLine();
+
+            auto parent = getFromTree<EffectTreeBase>(parentTree);
+            parent->addAndMakeVisible(line);
+
             line->setPort(inport);
             line->setPort(outport);
 
             childWhichHasBeenAdded.setProperty(IDs::component, line, nullptr);
-
-            auto parent = getFromTree<EffectTreeBase>(parentTree);
-            parent->addAndMakeVisible(line);
         } else {
             line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
                                                        IDs::component);
