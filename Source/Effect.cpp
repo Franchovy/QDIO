@@ -147,7 +147,7 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
         // Connection made?
         auto obj = getDragIntoObject();
         if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
-            dragLine->setDragPort(port);
+            //dragLine->setPort(port);
         } else {
             connections.removeObject(dragLine);
             // todo actually delete

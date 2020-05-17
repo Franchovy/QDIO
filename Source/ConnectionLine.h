@@ -58,10 +58,8 @@ public:
     ConnectionLine();
     ~ConnectionLine() override;
 
-    void setInPort(ConnectionPort* port);
-    void setOutPort(ConnectionPort* port);
-    void setDragPort(ConnectionPort* port);
     void setPort(ConnectionPort* port);
+    void unsetPort(ConnectionPort* port);
 
     void resized() override;
 
@@ -112,7 +110,6 @@ private:
 
     bool isConnected = false;
 
-    ConnectionPort* dragPort = nullptr;
     ConnectionPort::Ptr inPort = nullptr;
     ConnectionPort::Ptr outPort = nullptr;
 

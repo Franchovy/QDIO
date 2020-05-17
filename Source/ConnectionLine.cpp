@@ -27,17 +27,6 @@ ConnectionLine::ConnectionLine() {
     outPort = nullptr;
 }
 
-void ConnectionLine::setInPort(ConnectionPort *port) {
-    jassert(port->isInput);
-    inPort = port;
-}
-
-void ConnectionLine::setOutPort(ConnectionPort *port) {
-    jassert(! port->isInput);
-    outPort = port;
-}
-
-
 ConnectionLine::~ConnectionLine() {
     if (inPort != nullptr) {
         inPort->setOtherPort(nullptr);
@@ -158,27 +147,10 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
     getParentComponent()->removeMouseListener(this);
 
     if (inPort != nullptr && outPort != nullptr) {
-
         connect();
     } else {
         // Cancel drag
         setVisible(false);
-    }
-}
-
-void ConnectionLine::setDragPort(ConnectionPort *port) {
-    jassert(inPort != nullptr || outPort != nullptr);
-
-    if (port != nullptr) {
-        dragPort = port;
-
-        if (inPort == nullptr) inPort = port;
-        if (outPort == nullptr) outPort = port;
-    } else {
-        if (inPort == dragPort) inPort = nullptr;
-        if (outPort == dragPort) outPort = nullptr;
-
-        dragPort = nullptr;
     }
 }
 
@@ -252,6 +224,26 @@ bool ConnectionLine::connect() {
 
 void ConnectionLine::disconnect() {
     isConnected = false;
+
+    // Disconnect functionality
+
+    auto inParamPort = dynamic_cast<ParameterPort*>(inPort.get());
+    auto outParamPort = dynamic_cast<ParameterPort*>(outPort.get());
+
+    // Parameter connection case
+    if (inParamPort != nullptr && outParamPort != nullptr) {
+        //Effect::disconnectParameters
+    }
+        // Audio connection case
+    else {
+        jassert(dynamic_cast<AudioPort*>(inPort.get())
+                || dynamic_cast<InternalConnectionPort*>(inPort.get()));
+        jassert(dynamic_cast<AudioPort*>(outPort.get())
+                || dynamic_cast<InternalConnectionPort*>(outPort.get()));
+
+        Effect::disconnectAudio(*this);
+    }
+
     setEnabled(false);
 }
 
@@ -260,6 +252,24 @@ void ConnectionLine::setPort(ConnectionPort *port) {
         inPort = port;
     } else {
         outPort = port;
+    }
+}
+
+void ConnectionLine::unsetPort(ConnectionPort *port) {
+    if (port == inPort) {
+        inPort->getParentComponent()->addComponentListener(this);
+        inPort->setOtherPort(nullptr);
+        outPort->setOtherPort(nullptr);
+
+        inPort = nullptr;
+    } else if (port == outPort) {
+        outPort->getParentComponent()->addComponentListener(this);
+        outPort->setOtherPort(nullptr);
+        inPort->setOtherPort(nullptr);
+
+        outPort = nullptr;
+    } else {
+        jassertfalse;
     }
 
     if (isConnected && (inPort == nullptr || outPort == nullptr)) {
