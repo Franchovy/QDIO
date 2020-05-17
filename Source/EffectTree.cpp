@@ -272,14 +272,12 @@ void EffectTree::componentChildrenChanged(Component &component) {
                         ValueTree newLineTree(CONNECTION_ID);
                         newLineTree.setProperty(IDs::component, line, nullptr);
                         effectTree.appendChild(newLineTree, undoManager);
-                        //c->addComponentListener(this);
                     }
                     // Create Parameter Tree
                     else if (auto parameter = dynamic_cast<Parameter *>(c)) {
                         ValueTree newParameterTree(PARAMETER_ID);
                         newParameterTree.setProperty(IDs::component, parameter, nullptr);
                         effectTree.appendChild(newParameterTree, undoManager);
-                        //c->addComponentListener(this);
                     }
                     // Reassign Effect
                     else if (auto effect = dynamic_cast<Effect*>(c)) {
@@ -311,7 +309,7 @@ void EffectTree::componentEnablementChanged(Component &component) {
             lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
         } else {
             // Line is disconnected
-
+            line->setVisible(false);
         }
     }
 
@@ -444,8 +442,8 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         // CONNECTION
     else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, IDs::component);
-        line->setVisible(false);
 
+        line->setVisible(false);
         EffectTreeBase::disconnectAudio(*line);
     }
         // PARAMETER

@@ -101,9 +101,9 @@ bool ConnectionLine::hitTest(int x, int y) {
         return false;
     }
 
-    auto d1 = inPos.getDistanceFrom(Point<int>(x,y));
-    auto d2 = outPos.getDistanceFrom(Point<int>(x,y));
-    auto d = d1 + d2 - inPos.getDistanceFrom(outPos);
+    auto d1 = line.getStart().getDistanceFrom(Point<int>(x,y));
+    auto d2 = line.getEnd().getDistanceFrom(Point<int>(x,y));
+    auto d = d1 + d2 - line.getLength();
 
     if (d < 3) {
         return true;
