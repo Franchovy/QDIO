@@ -412,19 +412,20 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
     else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
         ConnectionLine *line;
         // Add connection here
-        if (!childWhichHasBeenAdded.hasProperty(IDs::component)) {
+        //todo get rid of this - we should not be creating new components here
+        if (! childWhichHasBeenAdded.hasProperty(IDs::component)) {
             auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
             auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
 
             line = new ConnectionLine();
+
+            childWhichHasBeenAdded.setProperty(IDs::component, line, nullptr);
 
             auto parent = getFromTree<EffectTreeBase>(parentTree);
             parent->addAndMakeVisible(line);
 
             line->setPort(inport);
             line->setPort(outport);
-
-            childWhichHasBeenAdded.setProperty(IDs::component, line, nullptr);
         } else {
             line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
                                                        IDs::component);
@@ -434,10 +435,8 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
             } else {
                 line->setVisible(true);
             }
+            line->connect();
         }
-        line->toFront(false);
-
-        line->connect();
     }
         // PARAMETER
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
@@ -481,10 +480,11 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         // CONNECTION
     else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, IDs::component);
-
-        line->disconnect();
-        //line->setVisible(false);
-        line->getParentComponent()->removeChildComponent(line);
+        if (line->getParentComponent() != nullptr) {
+            line->disconnect();
+            //line->setVisible(false);
+            line->getParentComponent()->removeChildComponent(line);
+        }
     }
         // PARAMETER
     else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {

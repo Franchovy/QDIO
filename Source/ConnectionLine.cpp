@@ -57,7 +57,6 @@ void ConnectionLine::paint(Graphics &g) {
 
 
 void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
-    Point<int> inPos, outPos;
     if (inPort != nullptr) {
         inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
     }
@@ -68,6 +67,7 @@ void ConnectionLine::componentMovedOrResized(Component &component, bool wasMoved
 
     line.setStart(getLocalPoint(getParentComponent(), inPos));
     line.setEnd(getLocalPoint(getParentComponent(), outPos));
+
 }
 
 bool ConnectionLine::hitTest(int x, int y) {
@@ -152,11 +152,13 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
 
     getParentComponent()->removeMouseListener(this);
 
-    if (inPort != nullptr && outPort != nullptr) {
-        connect();
-    } else {
-        // Cancel drag
-        setVisible(false);
+    if (event.getDistanceFromDragStart() > 15) {
+        if (inPort != nullptr && outPort != nullptr) {
+            connect();
+        } else {
+            // Cancel drag
+            setVisible(false);
+        }
     }
 }
 
@@ -200,8 +202,6 @@ bool ConnectionLine::connect() {
 
         line.setStart(getLocalPoint(getParentComponent(), inPos));
         line.setEnd(getLocalPoint(getParentComponent(), outPos));
-
-        repaint();
 
         // Connect functionality
 
