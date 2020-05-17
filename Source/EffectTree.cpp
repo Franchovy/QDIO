@@ -309,9 +309,17 @@ void EffectTree::componentEnablementChanged(Component &component) {
             lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
         } else {
             // Line is disconnected
-            //line->setVisible(false);
-            Effect::disconnectAudio(*line);
-            std::cout << "update received." << newLine;
+            auto lineTree = getTree(line);
+            jassert(lineTree.isValid());
+
+            auto inPort = line->getInPort().get();
+            if (inPort == nullptr) {
+                lineTree.removeProperty(ConnectionLine::IDs::InPort, undoManager);
+            }
+            auto outPort = line->getOutPort().get();
+            if (outPort == nullptr) {
+                lineTree.removeProperty(ConnectionLine::IDs::OutPort, undoManager);
+            }
         }
     }
 
