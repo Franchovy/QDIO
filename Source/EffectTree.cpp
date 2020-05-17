@@ -299,8 +299,22 @@ void EffectTree::componentChildrenChanged(Component &component) {
                     }
                 }
             }
+
+            /*if (! undoManager->isPerformingUndoRedo()) {
+                for (int i = 0; i < effectTree.getNumChildren(); i++) {
+                    auto child = effectTree.getChild(i);
+
+                    if (child.hasProperty(IDs::component)) {
+                        auto childComponent = getFromTree<Component>(child);
+                        if (! effectTreeBase->isParentOf(childComponent)) {
+                            effectTreeBase->addAndMakeVisible(childComponent);
+                        }
+                    }
+                }
+            }*/
         }
     }
+
 
     ComponentListener::componentChildrenChanged(component);
 }
@@ -319,15 +333,15 @@ void EffectTree::componentEnablementChanged(Component &component) {
         } else {
             // Line is disconnected
             auto lineTree = getTree(line);
-            jassert(lineTree.isValid());
-
-            auto inPort = line->getInPort().get();
-            if (inPort == nullptr) {
-                lineTree.removeProperty(ConnectionLine::IDs::InPort, undoManager);
-            }
-            auto outPort = line->getOutPort().get();
-            if (outPort == nullptr) {
-                lineTree.removeProperty(ConnectionLine::IDs::OutPort, undoManager);
+            if (lineTree.isValid()) {
+                auto inPort = line->getInPort().get();
+                if (inPort == nullptr) {
+                    lineTree.removeProperty(ConnectionLine::IDs::InPort, undoManager);
+                }
+                auto outPort = line->getOutPort().get();
+                if (outPort == nullptr) {
+                    lineTree.removeProperty(ConnectionLine::IDs::OutPort, undoManager);
+                }
             }
         }
     }
@@ -413,7 +427,12 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         } else {
             line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
                                                        IDs::component);
-            line->setVisible(true);
+            if (line->getParentComponent() == nullptr) {
+                auto parent = getFromTree<EffectTreeBase>(parentTree);
+                parent->addAndMakeVisible(line);
+            } else {
+                line->setVisible(true);
+            } 
         }
         line->toFront(false);
 
@@ -462,8 +481,9 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
     else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
         auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, IDs::component);
 
-        line->setVisible(false);
-        EffectTreeBase::disconnectAudio(*line);
+        line->disconnect();
+        //line->setVisible(false);
+        line->getParentComponent()->removeChildComponent(line);
     }
         // PARAMETER
     else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {
