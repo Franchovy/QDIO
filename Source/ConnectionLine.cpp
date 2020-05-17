@@ -30,24 +30,11 @@ ConnectionLine::ConnectionLine() {
 void ConnectionLine::setInPort(ConnectionPort *port) {
     jassert(port->isInput);
     inPort = port;
-/*
-
-    inPos = dynamic_cast<InternalConnectionPort*>(inPort.get()) != nullptr
-                 ? inPort->getPosition() + inPort->centrePoint
-                 : inPort->getParentComponent()->getPosition() + inPort->getPosition() + inPort->centrePoint;
-*/
 }
 
 void ConnectionLine::setOutPort(ConnectionPort *port) {
     jassert(! port->isInput);
     outPort = port;
-
-/*
-    outPos = dynamic_cast<InternalConnectionPort*>(outPort.get()) != nullptr
-                  ? outPort->getPosition() + outPort->centrePoint
-                  : outPort->getParentComponent()->getPosition() + outPort->getPosition() + outPort->centrePoint;
-*/
-
 }
 
 
@@ -117,14 +104,25 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
     startDragHoverDetect();
     SelectHoverObject::mouseDown(event.getEventRelativeTo(this));
 
-    jassert (inPort != nullptr || outPort != nullptr);
-    ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
+    ConnectionPort *port;
+    if (inPort != nullptr && outPort != nullptr) {
+        // Line already connected
 
-    /*if (port->isInput) {
-        inPort = port;
+        auto inPortPos = getLocalPoint(inPort.get(), inPort->centrePoint);
+        auto outPortPos = getLocalPoint(outPort.get(), outPort->centrePoint);
+        auto mouseClickPos = getLocalPoint(event.eventComponent, event.getPosition());
+        if (inPortPos.getDistanceFrom(mouseClickPos) > outPortPos.getDistanceFrom(mouseClickPos)) {
+            // inPort to change
+            port = inPort.get();
+        } else {
+            // outPort to change
+            port = outPort.get();
+        }
     } else {
-        outPort = port;
-    }*/
+        // New Line
+        jassert (inPort != nullptr || outPort != nullptr);
+        port = (inPort != nullptr) ? inPort.get() : outPort.get();
+    }
 
     inPos = getParentComponent()->getLocalPoint(port, port->centrePoint);
     outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
@@ -137,9 +135,6 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
 void ConnectionLine::mouseDrag(const MouseEvent &event) {
     SelectHoverObject::mouseDrag(event.getEventRelativeTo(this));
 
-    //ConnectionPort* port = (inPort != nullptr) ? inPort.get() : outPort.get();
-    //port->setTopLeftPosition(getLocalPoint(event.eventComponent, event.getPosition()));
-
     outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
     setBounds(Rectangle<int>(inPos, outPos));
 
@@ -150,12 +145,6 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
             }
         }
     }
-
-    /*p1 = getLocalPoint(port1, port1->centrePoint);
-    p2 = getLocalPoint(event.eventComponent, event.getPosition());
-    line.setStart(p1);
-    line.setEnd(p2);
-    */
 }
 
 void ConnectionLine::mouseUp(const MouseEvent &event) {
@@ -169,8 +158,6 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
     getParentComponent()->removeMouseListener(this);
 
     if (inPort != nullptr && outPort != nullptr) {
-        /*inPos = getLocalPoint(inPort.get(), inPort->centrePoint);
-        outPos = getLocalPoint(outPort.get(), outPort->centrePoint);*/
 
         connect();
     } else {
@@ -193,8 +180,6 @@ void ConnectionLine::setDragPort(ConnectionPort *port) {
 
         dragPort = nullptr;
     }
-
-    std::cout << "DragPort: " << dragPort << newLine;
 }
 
 void ConnectionLine::parentHierarchyChanged() {
@@ -254,6 +239,7 @@ bool ConnectionLine::connect() {
             Effect::connectAudio(*this);
         }
 
+        isConnected = true;
         setEnabled(true);
         return true;
 
@@ -264,11 +250,20 @@ bool ConnectionLine::connect() {
     return false;
 }
 
+void ConnectionLine::disconnect() {
+    isConnected = false;
+    setEnabled(false);
+}
+
 void ConnectionLine::setPort(ConnectionPort *port) {
     if (port->isInput) {
         inPort = port;
     } else {
         outPort = port;
     }
-}
 
+    if (isConnected && (inPort == nullptr || outPort == nullptr)) {
+        std::cout << "disconnect!" << newLine;
+        disconnect();
+    }
+}

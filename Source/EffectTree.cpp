@@ -309,7 +309,9 @@ void EffectTree::componentEnablementChanged(Component &component) {
             lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
         } else {
             // Line is disconnected
-            line->setVisible(false);
+            //line->setVisible(false);
+            Effect::disconnectAudio(*line);
+            std::cout << "update received." << newLine;
         }
     }
 
