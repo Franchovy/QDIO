@@ -36,7 +36,9 @@ public:
     void resized() override;
 
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
-    
+
+    void menuCreateEffect(ValueTree effect);
+
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
@@ -69,7 +71,7 @@ private:
     static EffectScene* instance;
 
     // EffectTreeBase static stuff
-    EffectTree updater;
+    EffectTree tree;
 
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;

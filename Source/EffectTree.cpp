@@ -22,8 +22,11 @@ EffectTree::EffectTree(EffectTreeBase* effectScene)
 }
 
 
-Effect* EffectTree::loadEffect(ValueTree tree) {
-    effectTree.appendChild(tree, undoManager);
+Effect* EffectTree::createEffect(ValueTree tree) {
+    if (! tree.getParent().isValid()) {
+        effectTree.appendChild(tree, undoManager);
+    }
+
     auto effect = new Effect();
     tree.setProperty(IDs::component, effect, nullptr);
     effect->addComponentListener(this);
@@ -241,8 +244,11 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
 }
 
 void EffectTree::componentNameChanged(Component &component) {
-    if (auto e = dynamic_cast<Effect*>(&component)) {
-        getTree(e).setProperty(Effect::IDs::name, component.getName(), undoManager);
+    if (auto effect = dynamic_cast<Effect*>(&component)) {
+        auto effectTree = getTree(effect);
+        if (effectTree.isValid()) {
+            effectTree.setProperty(Effect::IDs::name, component.getName(), undoManager);
+        }
     }
 
     ComponentListener::componentNameChanged(component);
@@ -253,39 +259,42 @@ void EffectTree::componentChildrenChanged(Component &component) {
     if (auto effectTreeBase = dynamic_cast<EffectTreeBase*>(&component)) {
 
         auto effectTree = getTree(effectTreeBase);
-        jassert(effectTree.isValid());
+        //jassert(effectTree.isValid());
+        if (effectTree.isValid()) {
 
-        for (auto c : component.getChildren()) {
+            for (auto c : component.getChildren()) {
 
-            c->addComponentListener(this);
+                c->addComponentListener(this);
 
-            auto child = dynamic_cast<SelectHoverObject*>(c);
+                auto child = dynamic_cast<SelectHoverObject *>(c);
 
-            if (child != nullptr) {
-                auto childTree = effectTree.getChildWithProperty(IDs::component, child);
+                if (child != nullptr) {
+                    auto childTree = effectTree.getChildWithProperty(IDs::component, child);
 
-                if (childTree.isValid()) {
+                    if (childTree.isValid()) {
 
-                } else {
-                    // Create ConnectionLine tree
-                    if (auto line = dynamic_cast<ConnectionLine *>(c)) {
-                        ValueTree newLineTree(CONNECTION_ID);
-                        newLineTree.setProperty(IDs::component, line, nullptr);
-                        effectTree.appendChild(newLineTree, undoManager);
-                    }
-                    // Create Parameter Tree
-                    else if (auto parameter = dynamic_cast<Parameter *>(c)) {
-                        ValueTree newParameterTree(PARAMETER_ID);
-                        newParameterTree.setProperty(IDs::component, parameter, nullptr);
-                        effectTree.appendChild(newParameterTree, undoManager);
-                    }
-                    // Reassign Effect
-                    else if (auto effect = dynamic_cast<Effect*>(c)) {
-                        childTree = getTree(effect);
-                        auto newChildParent = getTree(dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
-                        if (childTree.getParent() != newChildParent) {
-                            childTree.getParent().removeChild(childTree, undoManager);
-                            newChildParent.appendChild(childTree, undoManager);
+                    } else {
+                        // Create ConnectionLine tree
+                        if (auto line = dynamic_cast<ConnectionLine *>(c)) {
+                            ValueTree newLineTree(CONNECTION_ID);
+                            newLineTree.setProperty(IDs::component, line, nullptr);
+                            effectTree.appendChild(newLineTree, undoManager);
+                        }
+                            // Create Parameter Tree
+                        else if (auto parameter = dynamic_cast<Parameter *>(c)) {
+                            ValueTree newParameterTree(PARAMETER_ID);
+                            newParameterTree.setProperty(IDs::component, parameter, nullptr);
+                            effectTree.appendChild(newParameterTree, undoManager);
+                        }
+                            // Reassign Effect
+                        else if (auto effect = dynamic_cast<Effect *>(c)) {
+                            childTree = getTree(effect);
+                            auto newChildParent = getTree(
+                                    dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
+                            if (childTree.getParent() != newChildParent) {
+                                childTree.getParent().removeChild(childTree, undoManager);
+                                newChildParent.appendChild(childTree, undoManager);
+                            }
                         }
                     }
                 }
@@ -593,6 +602,11 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
                 // Register connection
             else if  (child.hasType(CONNECTION_ID))
             {
+                auto line = getFromTree<ConnectionLine>(child);
+                if (! line->isEnabled()) {
+                    jassertfalse;
+                }
+
                 // Get data to set
                 auto inPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::InPort);
                 auto outPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::OutPort);
@@ -664,7 +678,9 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
             }
         }
 
+        // Create effect
         parentTree.appendChild(copy, nullptr);
+        createEffect(copy);
 
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
@@ -764,9 +780,6 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
             }
         }
     }
-    if (copy.getType() == EFFECT_ID) {
-        loadEffect(copy);
-    }
 }
 
 //todo just use existing parameterData parent instead of effect
@@ -854,5 +867,9 @@ void EffectTree::remove(SelectHoverObject *c) {
         auto paramTree = parentTree.getChildWithProperty(IDs::component, p);
         parentTree.removeChild(paramTree, undoManager);
     }
+}
+
+void EffectTree::loadEffect(const ValueTree &loadData) {
+    loadEffect(effectTree, loadData);
 }
 

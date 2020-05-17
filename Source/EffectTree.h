@@ -25,7 +25,7 @@ public:
     };
 
     // Create new - from ValueTree data
-    Effect* loadEffect(ValueTree tree);
+    Effect* createEffect(ValueTree tree);
 
     // Create new methods - constructs ValueTree Data needed
     ValueTree newEffect(String name, Point<int> pos, int processorID = -1);
@@ -34,6 +34,7 @@ public:
 
     ValueTree storeEffect(const ValueTree& tree);
     void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
+    void loadEffect(const ValueTree& loadData);
 
     Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
 

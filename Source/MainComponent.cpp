@@ -57,6 +57,16 @@ MainComponent::MainComponent()
     effectSelectMenu.setBounds(100, 100, 400, 50);
     effectSelectMenu.setText("Select Effect");
 
+    effectSelectMenu.onChange = [=] {
+        auto selectedIndex = effectSelectMenu.getSelectedItemIndex();
+        if (selectedIndex >= 0) {
+            auto effectName = effectSelectMenu.getItemText(selectedIndex);
+            auto loadData = EffectLoader::loadEffect(effectName);
+            main.menuCreateEffect(loadData);
+
+            effectSelectMenu.setSelectedId(0, sendNotificationSync);
+        }
+    };
 
     updateEffectSelectMenu();
 

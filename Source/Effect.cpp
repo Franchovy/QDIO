@@ -81,8 +81,14 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     Effect::NodeAndPort in;
     Effect::NodeAndPort out;
 
+    auto returnArray = Array<AudioProcessorGraph::Connection>();
+
     auto inPort = connectionLine.getInPort();
     auto outPort = connectionLine.getOutPort();
+
+    if (inPort == nullptr || outPort == nullptr) {
+        return returnArray;
+    }
 
     auto inEVT = dynamic_cast<Effect *>(outPort->getParentComponent());
     auto outEVT = dynamic_cast<Effect *>(inPort->getParentComponent());
@@ -90,7 +96,6 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     in = inEVT->getNode(inPort);
     out = outEVT->getNode(outPort);
 
-    auto returnArray = Array<AudioProcessorGraph::Connection>();
 
     if (in.isValid && out.isValid) {
         for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(),

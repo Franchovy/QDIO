@@ -39,7 +39,7 @@ EffectSelectMenu::EffectSelectMenu() : ComboBox() {
             auto effectLoaded = EffectLoader::loadEffect(effectToLoad);
             /*if (effectLoaded.isValid()) {
                 auto main = EffectScene::getScene();
-                main->loadEffect(main.getTree(), effectLoaded);
+                main->createEffect(main.getTree(), effectLoaded);
             }
 
             effectSelectMenu.setSelectedItemIndex(0, dontSendNotification);

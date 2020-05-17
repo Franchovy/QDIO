@@ -7,7 +7,7 @@ EffectScene* EffectScene::instance = nullptr;
 EffectScene::EffectScene()
         : EffectTreeBase()
         , MenuItem(1)
-        , updater(this)
+        , tree(this)
 {
     setComponentID("EffectScene");
     setName("EffectScene");
@@ -70,7 +70,7 @@ EffectScene::EffectScene()
     //mainMenu.addSubMenu("Create Effect", createEffectMenu);
 
     appState = loading;
-    updater.loadUserState();
+    tree.loadUserState();
     appState = neutral;
 }
 
@@ -95,40 +95,40 @@ void EffectScene::setupCreateEffectMenu() {
     createEffectMenu->addItem("Empty Effect", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Effect");
-                auto effectVT = updater.newEffect("Effect", getMouseXYRelative());
-                updater.loadEffect(effectVT);
+                auto effectVT = tree.newEffect("Effect", getMouseXYRelative());
+                tree.createEffect(effectVT);
             }));
     createEffectMenu->addItem("Input Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Input Effect");
-                auto effectVT = updater.newEffect("Input Device", getMouseXYRelative(), 0);
-                updater.loadEffect(effectVT);
+                auto effectVT = tree.newEffect("Input Device", getMouseXYRelative(), 0);
+                tree.createEffect(effectVT);
             }));
     createEffectMenu->addItem("Output Device", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Output Effect");
-                auto effectVT = updater.newEffect("Output Device", getMouseXYRelative(), 1);
-                updater.loadEffect(effectVT);
+                auto effectVT = tree.newEffect("Output Device", getMouseXYRelative(), 1);
+                tree.createEffect(effectVT);
             }));
     createEffectMenu->addItem("Distortion Effect", std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Distortion Effect");
-                auto effectVT = updater.newEffect("Distortion Effect", getMouseXYRelative(), 2);
-                updater.loadEffect(effectVT);
+                auto effectVT = tree.newEffect("Distortion Effect", getMouseXYRelative(), 2);
+                tree.createEffect(effectVT);
             }
     ));
     createEffectMenu->addItem("Delay Effect", std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Delay Effect");
-                auto effectVT = updater.newEffect("Delay Effect", getMouseXYRelative(), 3);
-                updater.loadEffect(effectVT);
+                auto effectVT = tree.newEffect("Delay Effect", getMouseXYRelative(), 3);
+                tree.createEffect(effectVT);
             }
     ));
     createEffectMenu->addItem("Reverb Effect", std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Reverb Effect");
-                auto effectVT = updater.newEffect("Reverb Effect", getMouseXYRelative(), 4);
-                updater.loadEffect(effectVT);
+                auto effectVT = tree.newEffect("Reverb Effect", getMouseXYRelative(), 4);
+                tree.createEffect(effectVT);
             }
     ));
 
@@ -299,7 +299,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         undoManager.beginNewTransaction("Delete");
 
         for (const auto& selectedItem : getSelected()) {
-            updater.remove(selectedItem);
+            tree.remove(selectedItem);
         }
         deselectAll();
     }
@@ -322,14 +322,14 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
         if (key.getKeyCode() == 's') {
             std::cout << "Save effects" << newLine;
-            updater.storeAll();
+            tree.storeAll();
         }
     }
 }
 
 
 void EffectScene::storeState() {
-    updater.storeAll();
+    tree.storeAll();
 }
 
 /*void EffectScene::updateChannels() {
@@ -381,6 +381,11 @@ bool EffectScene::canDragInto(const SelectHoverObject *other) const {
 
 bool EffectScene::canDragHover(const SelectHoverObject *other) const {
     return false;
+}
+
+void EffectScene::menuCreateEffect(ValueTree effectData) {
+    getScene()->tree.loadEffect(effectData);
+
 }
 
 
