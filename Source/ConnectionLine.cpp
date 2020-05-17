@@ -94,37 +94,41 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
     SelectHoverObject::mouseDown(event.getEventRelativeTo(this));
 
     ConnectionPort *originPort;
-    if (inPort != nullptr && outPort != nullptr) {
-        // Line already connected
-
-        auto inPortPos = getLocalPoint(inPort.get(), inPort->centrePoint);
-        auto outPortPos = getLocalPoint(outPort.get(), outPort->centrePoint);
-        auto mouseClickPos = getLocalPoint(event.eventComponent, event.getPosition());
-        if (inPortPos.getDistanceFrom(mouseClickPos) > outPortPos.getDistanceFrom(mouseClickPos)) {
-            // outPort to change
-            originPort = inPort.get();
-            unsetPort(outPort.get());
-        } else {
-            // inPort to change
-            originPort = outPort.get();
-            unsetPort(inPort.get());
-        }
-    } else {
+    if (inPort == nullptr || outPort == nullptr) {
         // New Line
         jassert (inPort != nullptr || outPort != nullptr);
         originPort = (inPort != nullptr) ? inPort.get() : outPort.get();
+
+        inPos = getParentComponent()->getLocalPoint(originPort, originPort->centrePoint);
+        outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
+
+        setBounds(Rectangle<int>(inPos, outPos));
+
+        SelectHoverObject::resetHoverObject();
     }
-
-    inPos = getParentComponent()->getLocalPoint(originPort, originPort->centrePoint);
-    outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
-
-    setBounds(Rectangle<int>(inPos, outPos));
-
-    SelectHoverObject::resetHoverObject();
 }
 
 void ConnectionLine::mouseDrag(const MouseEvent &event) {
     SelectHoverObject::mouseDrag(event.getEventRelativeTo(this));
+
+
+
+    // If line is already connected
+    if (inPort != nullptr && outPort != nullptr) {
+        // Disconnect line
+        if (event.getDistanceFromDragStart() > 15) {
+            auto inPortPos = getLocalPoint(inPort.get(), inPort->centrePoint);
+            auto outPortPos = getLocalPoint(outPort.get(), outPort->centrePoint);
+            auto mouseClickPos = getLocalPoint(event.eventComponent, event.getPosition());
+            if (inPortPos.getDistanceFrom(mouseClickPos) > outPortPos.getDistanceFrom(mouseClickPos)) {
+                // outPort to change
+                unsetPort(outPort.get());
+            } else {
+                // inPort to change
+                unsetPort(inPort.get());
+            }
+        }
+    }
 
     outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
     setBounds(Rectangle<int>(inPos, outPos));
