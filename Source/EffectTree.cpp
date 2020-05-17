@@ -626,6 +626,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
                 auto line = getFromTree<ConnectionLine>(child);
                 if (! line->isEnabled()) {
                     jassertfalse;
+                    continue;
                 }
 
                 // Get data to set
