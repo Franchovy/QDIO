@@ -875,6 +875,10 @@ T *EffectTree::getPropertyFromTree(const ValueTree &vt, Identifier property) {
 }
 
 void EffectTree::remove(SelectHoverObject *c) {
+    if (c->getParentComponent() == nullptr) {
+        return;
+    }
+
     if (auto l = dynamic_cast<ConnectionLine*>(c)) {
         auto parentTree = getTree(dynamic_cast<EffectTreeBase*>(l->getParentComponent()));
         auto lineTree = parentTree.getChildWithProperty(IDs::component, l);

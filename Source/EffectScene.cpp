@@ -299,8 +299,25 @@ bool EffectScene::keyPressed(const KeyPress &key)
         undoManager.beginNewTransaction("Delete");
 
         for (const auto& selectedItem : getSelected()) {
-            tree.remove(selectedItem);
+            if (dynamic_cast<Effect*>(selectedItem)) {
+                tree.remove(selectedItem);
+            }
         }
+
+        for (const auto& selectedItem : getSelected()) {
+            if (dynamic_cast<ConnectionLine*>(selectedItem)) {
+                tree.remove(selectedItem);
+            }
+        }
+
+        for (const auto& selectedItem : getSelected()) {
+            if (! dynamic_cast<ConnectionLine*>(selectedItem) &&
+                    ! dynamic_cast<Effect*>(selectedItem))
+            {
+                tree.remove(selectedItem);
+            }
+        }
+
         deselectAll();
     }
 
