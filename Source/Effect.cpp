@@ -69,7 +69,7 @@ bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
     jassert(inEffect != nullptr && outEffect != nullptr);
 
     auto inParam = inEffect->getParameterForPort(dynamic_cast<ParameterPort*>(inPort.get()));
-    auto outParam = outEffect->getParameterForPort(dynamic_cast<ParameterPort*>(outPort.get()));
+    auto outParam = dynamic_cast<Parameter*>(outPort->getParentComponent());
 
     outParam->connect(inParam);
     return outParam->isConnected();

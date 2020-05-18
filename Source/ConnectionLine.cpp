@@ -154,7 +154,7 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
 
     if (event.getDistanceFromDragStart() > 15) {
         if (inPort != nullptr && outPort != nullptr) {
-            connect();
+            //connect();
         } else {
             // Cancel drag
             setVisible(false);
