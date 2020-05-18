@@ -75,7 +75,6 @@ void SelectHoverObject::setHoverable(bool isHoverable) {
 }
 
 void SelectHoverObject::mouseEnter(const MouseEvent &event) {
-    std::cout << "Mouse Enter " << event.eventComponent->getName() << newLine;
     if (hoverable && ! manualHover) {
         setHoverObject(this);
     }
@@ -83,7 +82,6 @@ void SelectHoverObject::mouseEnter(const MouseEvent &event) {
 }
 
 void SelectHoverObject::mouseExit(const MouseEvent &event) {
-    std::cout << "Mouse Exit " << event.eventComponent->getName() << newLine;
     if (hoverable && ! manualHover) {
         resetHoverObject();
     }
