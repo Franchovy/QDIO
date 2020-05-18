@@ -392,21 +392,6 @@ void Effect::setProcessor(AudioProcessor *processor) {
             audioGraph->getSampleRate(),
             audioGraph->getBlockSize());
 
-    // Set up ports based on processor buses
-    int numInputBuses = processor->getBusCount(true );
-    int numBuses = numInputBuses + processor->getBusCount(false);
-    for (int i = 0; i < numBuses; i++){
-        bool isInput = i < numInputBuses;
-        // Get bus from processor
-        auto bus = isInput ? processor->getBus(true, i) :
-                   processor->getBus(false, i - numInputBuses);
-        // Check channel number - if 0 ignore
-        if (bus->getNumberOfChannels() == 0)
-            continue;
-        // Create port - giving audiochannelset info and isInput bool
-        addPort(bus, isInput);
-    }
-
     // Save AudioProcessorParameterGroup
     parameters = &processor->getParameterTree();
 }
@@ -980,6 +965,7 @@ bool Effect::canDragHover(const SelectHoverObject *other) const {
     }
     return false;
 }
+
 
 bool ConnectionLine::canDragInto(const SelectHoverObject *other) const {
     return dynamic_cast<const Effect*>(other);

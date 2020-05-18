@@ -11,6 +11,8 @@
 #include "EffectTree.h"
 
 Identifier EffectTree::IDs::component = "component";
+Identifier PORT_ID = "port";
+
 
 EffectTree::EffectTree(EffectTreeBase* effectScene)
     : effectTree(EFFECTSCENE_ID)
@@ -65,8 +67,35 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         // Create from node:
         effect->setProcessor(node->getProcessor());
     }
-    else {
-        int numInputPorts = tree.getProperty("numInputPorts", 0);
+
+    //======================================================================
+    // Set up Ports
+    if (tree.getChildWithName(PORT_ID).isValid() && effect->isIndividual()) {
+        // Set up ports based on processor buses
+        int numInputBuses = effect->getProcessor()->getBusCount(true);
+        int numBuses = numInputBuses + effect->getProcessor()->getBusCount(false);
+        for (int i = 0; i < numBuses; i++) {
+            bool isInput = i < numInputBuses;
+            // Get bus from processor
+            auto bus = isInput ? effect->getProcessor()->getBus(true, i) :
+                       effect->getProcessor()->getBus(false, i - numInputBuses);
+            // Check channel number - if 0 ignore
+            if (bus->getNumberOfChannels() == 0)
+                continue;
+
+            // Create port
+            effect->addPort(bus, isInput);
+        }
+    } else {
+        // Load ports from valueTree
+        for (int i = 0; i < tree.getNumChildren(); i++) {
+            auto child = tree.getChild(i);
+            if (child.hasType(PORT_ID)) {
+                auto isInput = child.getProperty("isInput");
+                effect->addPort(Effect::getDefaultBus(), isInput);
+            }
+        }
+        /*int numInputPorts = tree.getProperty("numInputPorts", 0);
         int numOutputPorts = tree.getProperty("numOutputPorts", 0);
 
         for (int i = 0; i < numInputPorts; i++) {
@@ -74,7 +103,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         }
         for (int i = 0; i < numOutputPorts; i++) {
             effect->addPort(Effect::getDefaultBus(), false);
-        }
+        }*/
     }
 
     //==============================================================
@@ -295,6 +324,15 @@ void EffectTree::componentChildrenChanged(Component &component) {
                                 childTree.getParent().removeChild(childTree, undoManager);
                                 newChildParent.appendChild(childTree, undoManager);
                             }
+                        }
+                        // Create Port
+                        else if (auto port = dynamic_cast<ConnectionPort*>(c)) {
+
+                            auto portTree = ValueTree(PORT_ID);
+
+                            portTree.setProperty("ID", reinterpret_cast<int64>(port), nullptr);
+                            portTree.setProperty("isInput", port->isInput, nullptr);
+                            portTree.setProperty("isInternal", port->isInternal, nullptr);
                         }
                     }
                 }
