@@ -46,6 +46,9 @@ public:
 
     //===================================================================
 
+    static bool connectParameters(const ConnectionLine& connectionLine);
+    static void disconnectParameters(const ConnectionLine& connectionLine);
+
     static void disconnectAudio(const ConnectionLine& connectionLine);
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);

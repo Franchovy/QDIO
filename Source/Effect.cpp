@@ -59,6 +59,27 @@ SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
 }
 
 
+bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
+    auto inPort = connectionLine.getInPort();
+    auto outPort = connectionLine.getOutPort();
+
+    auto inEffect = dynamic_cast<Effect*>(inPort->getParentComponent());
+    auto outEffect = dynamic_cast<Effect*>(outPort->getParentComponent()->getParentComponent());
+
+    jassert(inEffect != nullptr && outEffect != nullptr);
+
+    auto inParam = inEffect->getParameterForPort(dynamic_cast<ParameterPort*>(inPort.get()));
+    auto outParam = outEffect->getParameterForPort(dynamic_cast<ParameterPort*>(outPort.get()));
+
+    outParam->connect(inParam);
+    return outParam->isConnected();
+}
+
+void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) {
+
+}
+
+
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
     for (auto connection : getAudioConnection(connectionLine)) {
         if (!EffectTreeBase::audioGraph->isConnected(connection) &&
@@ -160,6 +181,7 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
 
     }
 }
+
 
 /*
 void EffectTreeBase::createGroupEffect() {

@@ -210,7 +210,7 @@ bool ConnectionLine::connect() {
 
         // Parameter connection case
         if (inParamPort != nullptr && outParamPort != nullptr) {
-            //Effect::connectParameters
+            Effect::connectParameters(*this);
         }
         // Audio connection case
         else {
