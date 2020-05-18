@@ -442,7 +442,12 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
         auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
         if (parameter != nullptr) {
-            parameter->setVisible(true);
+            if (parameter->getParentComponent() == nullptr) {
+                auto parent = getFromTree<EffectTreeBase>(parentTree);
+                parent->addAndMakeVisible(parameter);
+            } else {
+                parameter->setVisible(true);
+            }
         }
     }
     Listener::valueTreeChildAdded(parentTree, childWhichHasBeenAdded);
@@ -489,7 +494,12 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         // PARAMETER
     else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {
         auto parameter = getFromTree<Parameter>(childWhichHasBeenRemoved);
-        parameter->setVisible(false);
+        auto parent = parameter->getParentComponent();
+        if (parent != nullptr) {
+            parent->removeChildComponent(parameter);
+        } else {
+            parameter->setVisible(false);
+        }
 
         // Remove Parameter Connection
 
