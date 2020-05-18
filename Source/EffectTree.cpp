@@ -301,7 +301,11 @@ void EffectTree::componentChildrenChanged(Component &component) {
                     auto childTree = effectTree.getChildWithProperty(IDs::component, child);
 
                     if (childTree.isValid()) {
-
+                        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
+                            if (! (line->getInPort()->isShowing() && line->getOutPort()->isShowing())) {
+                                effectTree.removeChild(childTree, undoManager);
+                            }
+                        }
                     } else {
                         // Create ConnectionLine tree
                         if (auto line = dynamic_cast<ConnectionLine *>(c)) {
@@ -434,97 +438,45 @@ EffectTree::~EffectTree() {
 
 
 void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
-    // ADD EFFECT
-    if (childWhichHasBeenAdded.hasType(EFFECT_ID)) {
-        auto e = getFromTree<Effect>(childWhichHasBeenAdded);
-        if (e != nullptr) {
-            auto parent = getFromTree<EffectTreeBase>(parentTree);
-            if (parent->isParentOf(e)) {
-                e->setVisible(true);
-            } else {
-                parent->addAndMakeVisible(e);
-            }
+    if (childWhichHasBeenAdded.hasProperty(IDs::component)) {
+        auto component = getFromTree<Component>(childWhichHasBeenAdded);
+        auto parent = getFromTree<EffectTreeBase>(parentTree);
+
+        // Type-specific operations
+        if (auto line = dynamic_cast<ConnectionLine*>(component)) {
+            line->connect();
         }
-    }
-        // ADD CONNECTION
-    else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
-        ConnectionLine *line;
-        // Add connection here
-        line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
-                                                   IDs::component);
-        if (line->getParentComponent() == nullptr) {
-            auto parent = getFromTree<EffectTreeBase>(parentTree);
-            parent->addAndMakeVisible(line);
+
+        if (parent != nullptr) {
+            parent->addAndMakeVisible(component);
         } else {
-            line->setVisible(true);
-        }
-        line->connect();
-    }
-        // PARAMETER
-    else if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
-        auto parameter = getFromTree<Parameter>(childWhichHasBeenAdded);
-        if (parameter != nullptr) {
-            if (parameter->getParentComponent() == nullptr) {
-                auto parent = getFromTree<EffectTreeBase>(parentTree);
-                parent->addAndMakeVisible(parameter);
-            } else {
-                parameter->setVisible(true);
-            }
+            component->setVisible(true);
+            jassertfalse;
         }
     }
+
     Listener::valueTreeChildAdded(parentTree, childWhichHasBeenAdded);
 }
 
 void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
 
-    // EFFECT
-    if (childWhichHasBeenRemoved.hasType(EFFECT_ID)) {
-        if (auto e = getFromTree<Effect>(childWhichHasBeenRemoved)) {
-            if (auto parent = getFromTree<EffectTreeBase>(parentTree)) {
 
-                // Remove connections
-                //todo use connections refarray as Effect member for fast access
-                int childrenRemoved = 0; // Used for index-correcting
-                for (int i = 0; (i - childrenRemoved) < parentTree.getNumChildren(); i ++) {
-                    auto child = parentTree.getChild(i - childrenRemoved);
-                    if (child.hasType(CONNECTION_ID)) {
-                        auto connection = getPropertyFromTree<ConnectionLine>(child, IDs::component);
+    if (childWhichHasBeenRemoved.hasProperty(IDs::component)) {
+        auto component = getFromTree<Component>(childWhichHasBeenRemoved);
+        auto parent = component->getParentComponent();
 
-                        if (e->hasConnection(connection)) {
-                            parentTree.removeChild(child, undoManager);
-                            childrenRemoved++;
-                        }
-                    }
-                }
-
-                parent->removeChildComponent(e);
-                e->setVisible(false);
-                //effectsToDelete.add(e);
-            }
-        }
-    }
-        // CONNECTION
-    else if (childWhichHasBeenRemoved.hasType(CONNECTION_ID)) {
-        auto line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenRemoved, IDs::component);
-        if (line->getParentComponent() != nullptr) {
+        // Type-specific operations
+        if (auto line = dynamic_cast<ConnectionLine*>(component)) {
             line->disconnect();
-            //line->setVisible(false);
-            line->getParentComponent()->removeChildComponent(line);
         }
-    }
-        // PARAMETER
-    else if (childWhichHasBeenRemoved.hasType(PARAMETER_ID)) {
-        auto parameter = getFromTree<Parameter>(childWhichHasBeenRemoved);
-        auto parent = parameter->getParentComponent();
+
         if (parent != nullptr) {
-            parent->removeChildComponent(parameter);
+            parent->removeChildComponent(component);
         } else {
-            parameter->setVisible(false);
+            component->setVisible(false);
+            jassertfalse;
         }
-
-        // Remove Parameter Connection
-
     }
     Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
 }
@@ -911,7 +863,7 @@ ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
 
     childWhichHasBeenAdded.setProperty(IDs::component, line, nullptr);
 */
-    auto parent = getFromTree<EffectTreeBase>(parentTree);
+    //auto parent = getFromTree<EffectTreeBase>(parentTree);
     parent->addAndMakeVisible(line);
 
     return line;
