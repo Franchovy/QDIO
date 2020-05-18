@@ -353,31 +353,34 @@ void EffectTree::componentChildrenChanged(Component &component) {
 
 
 void EffectTree::componentEnablementChanged(Component &component) {
-    if (auto line = dynamic_cast<ConnectionLine*>(&component)) {
-        if (line->isEnabled()) {
-            // Line is connected
-            auto lineTree = getTree(line);
-            jassert(lineTree.isValid());
+    if (! undoManager->isPerformingUndoRedo()) {
 
-            // Update tree
-            lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), undoManager);
-            lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
-            lineTree.setProperty("inPortID", line->getInPort()->getComponentID(), undoManager);
-            lineTree.setProperty("outPortID", line->getOutPort()->getComponentID(), undoManager);
-        } else {
-            // Line is disconnected
-            auto lineTree = getTree(line);
-            if (lineTree.isValid()) {
-                auto inPort = line->getInPort().get();
-                if (inPort == nullptr) {
-                    lineTree.removeProperty(ConnectionLine::IDs::InPort, undoManager);
-                }
-                auto outPort = line->getOutPort().get();
-                if (outPort == nullptr) {
-                    lineTree.removeProperty(ConnectionLine::IDs::OutPort, undoManager);
+        if (auto line = dynamic_cast<ConnectionLine *>(&component)) {
+            if (line->isEnabled()) {
+                // Line is connected
+                auto lineTree = getTree(line);
+                jassert(lineTree.isValid());
+
+                // Update tree
+                lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), undoManager);
+                lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
+
+            } else {
+                // Line is disconnected
+                auto lineTree = getTree(line);
+                if (lineTree.isValid()) {
+                    auto inPort = line->getInPort().get();
+                    if (inPort == nullptr) {
+                        lineTree.removeProperty(ConnectionLine::IDs::InPort, undoManager);
+                    }
+                    auto outPort = line->getOutPort().get();
+                    if (outPort == nullptr) {
+                        lineTree.removeProperty(ConnectionLine::IDs::OutPort, undoManager);
+                    }
                 }
             }
         }
+
     }
 
     ComponentListener::componentEnablementChanged(component);
@@ -649,7 +652,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                     childCopy.setProperty("isInput", port->isInput, nullptr);
                     childCopy.setProperty("isInternal", port->isInternal, nullptr);
 
-                    childCopy.setProperty("linkedPortID", reinterpret_cast<int64>(port->linkedPort), nullptr);
+                    childCopy.setProperty("linkedPortID", reinterpret_cast<int64>(port->getLinkedPort()), nullptr);
 
                     if (dynamic_cast<AudioPort *>(port) || dynamic_cast<InternalConnectionPort *>(port)) {
                         childCopy.setProperty("type", "audio", nullptr);
@@ -893,23 +896,29 @@ ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
     auto effect = getFromTree<Effect>(portData.getParent());
     String ID = portData.getProperty("ID");
     bool isInput = portData.getProperty("isInput");
-    //bool isInternal = portData.getProperty("isInternal");
+    bool isInternal = portData.getProperty("isInternal");
     String linkedID = portData.getProperty("linkedPort");
 
     ConnectionPort* port = nullptr;
 
     String type = portData.getProperty("type");
     if (type == "audio") {
-        auto newPort = new AudioPort(isInput);
-        portData.setProperty(IDs::component, newPort, nullptr);
-        newPort->setComponentID(ID);
-        effect->addPort(newPort);
+        if (! isInternal) {
+            auto newPort = new AudioPort(isInput);
+            portData.setProperty(IDs::component, newPort, nullptr);
+            newPort->setComponentID(ID);
+            effect->addPort(newPort);
 
+            newPort->bus = Effect::getDefaultBus();
+
+            return newPort;
+        } else {
+
+        }
         /*if (newPort->internalPort != nullptr) {
             newPort->internalPort->audioPort = newPort;
         }*/
 
-        return newPort;
     }
 
     return port;

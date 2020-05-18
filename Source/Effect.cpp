@@ -13,6 +13,8 @@
 #include "Effect.h"
 #include "IDs"
 #include "DSPEffects.h"
+#include "Ports.h"
+
 
 // Static members
 EffectTreeBase::AppState EffectTreeBase::appState = neutral;
@@ -594,17 +596,9 @@ Effect::NodeAndPort Effect::getNode(ConnectionPort::Ptr &port) {
         nodeAndPort.isValid = true;
         return nodeAndPort;
     } else {
-        ConnectionPort* portToCheck = nullptr;
-        if (auto p = dynamic_cast<AudioPort*>(port.get())) {
-            portToCheck = p->getInternalConnectionPort().get();
-        }
-
-        else if (auto p = dynamic_cast<InternalConnectionPort*>(port.get())) {
-            portToCheck = p->audioPort;
-        }
-
-        if (portToCheck->isConnected()) {
-            auto otherPort = portToCheck->getOtherPort();
+        auto linkedPort = port->getLinkedPort();
+        if (linkedPort->isConnected()) {
+            auto otherPort = linkedPort->getOtherPort();
             nodeAndPort = dynamic_cast<Effect*>(otherPort->getParentComponent())->getNode(
                     otherPort);
             return nodeAndPort;
@@ -988,7 +982,8 @@ void Effect::addPort(AudioPort *port) {
         outputPorts.add(port);
     }
     addAndMakeVisible(port);
-    if (!isIndividual()) {
+
+    if (! isIndividual()) {
         addChildComponent(*port->internalPort);
         port->internalPort->setVisible(isInEditMode());
     }
@@ -1010,6 +1005,7 @@ bool ConnectionPort::canDragHover(const SelectHoverObject *other) const {
 bool ConnectionPort::canDragInto(const SelectHoverObject *other) const {
     return false;
 }
+
 
 
 /*

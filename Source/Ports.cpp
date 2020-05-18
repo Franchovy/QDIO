@@ -84,6 +84,15 @@ ConnectionPort::ConnectionPort() {
     setColour(portColour, Colours::black);
 }
 
+ConnectionPort *ConnectionPort::getLinkedPort() {
+    return linkedPort;
+}
+
+
+ConnectionPort::Ptr ConnectionPort::getOtherPort() {
+    return otherPort;
+}
+
 
 bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
     // Return false if the port is AP and belongs to the same parent

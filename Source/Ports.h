@@ -42,7 +42,7 @@ public:
     bool isInternal = false;
 
     void setOtherPort(ConnectionPort::Ptr newPort) { otherPort = newPort; }
-    ConnectionPort::Ptr getOtherPort() { return otherPort; }
+    ConnectionPort::Ptr getOtherPort();
 
     bool isConnected() { return otherPort != nullptr; }
 
@@ -50,8 +50,7 @@ public:
         portColour = 0
     };
 
-    //ConnectionPort* getLinkedPort() { return linkedPort; }
-    ConnectionPort* linkedPort = nullptr;
+    ConnectionPort* getLinkedPort();
 
 protected:
     ConnectionPort();
@@ -61,6 +60,7 @@ protected:
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
 
+    ConnectionPort* linkedPort = nullptr;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionPort)
