@@ -19,6 +19,9 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
     , internalPort(true)
     , externalPort(false)
 {
+    internalPort.linkedPort = &externalPort;
+    externalPort.linkedPort = &internalPort;
+
     referencedParameter = param;
 
     outline = Rectangle<int>(10, 20, 130, 90);

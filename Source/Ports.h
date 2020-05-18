@@ -51,12 +51,12 @@ public:
     };
 
     ConnectionPort* getLinkedPort() { return linkedPort; }
+    ConnectionPort* linkedPort = nullptr;
 
 protected:
     ConnectionPort();
 
     ConnectionPort::Ptr otherPort = nullptr;
-    ConnectionPort* linkedPort = nullptr;
 
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
