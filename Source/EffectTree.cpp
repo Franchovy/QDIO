@@ -139,18 +139,19 @@ Effect* EffectTree::createEffect(ValueTree tree) {
             auto processorParam = effect->getParameters(false)[i];
             // If parameter doesn't already exist in tree
             if (! tree.getChildWithProperty("name", processorParam->getName(30)).isValid()) {
-                auto parameterVT = effect->createParameter(processorParam);
+                ValueTree parameterTree(PARAMETER_ID);
+                parameterTree.setProperty("name", processorParam->getName(30), nullptr);
 
                 // Set position
                 auto x = (effect->getNumInputs()) > 0 ? 60 : 30;
                 auto y = 30 + i * 50;
 
-                parameterVT.setProperty("x", x, nullptr);
-                parameterVT.setProperty("y", y, nullptr);
+                parameterTree.setProperty("x", x, nullptr);
+                parameterTree.setProperty("y", y, nullptr);
 
                 // Add parameterVT to tree
-                parameterChildren.add(parameterVT);
-                tree.appendChild(parameterVT, nullptr);
+                parameterChildren.add(parameterTree);
+                tree.appendChild(parameterTree, nullptr);
             }
         }
     }
@@ -394,14 +395,6 @@ void EffectTree::componentVisibilityChanged(Component &component) {
     ComponentListener::componentVisibilityChanged(component);
 }
 
-
-ValueTree Effect::createParameter(AudioProcessorParameter *param) {
-    ValueTree parameterTree(PARAMETER_ID);
-    parameterTree.setProperty("name", param->getName(30), nullptr);
-
-    return parameterTree;
-}
-
 ValueTree EffectTree::getTree(GuiObject* component) {
     if (effectTree.getProperty(IDs::component) == component) {
         return effectTree;
@@ -445,6 +438,9 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         // Type-specific operations
         if (auto line = dynamic_cast<ConnectionLine*>(component)) {
             line->connect();
+        }
+        if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
+            std::cout << "add parameter" << newLine;
         }
 
         if (parent != nullptr) {
@@ -499,6 +495,10 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
     } else if (property == Identifier("h")) {
         int newH = treeWhosePropertyHasChanged.getProperty("h");
         component->setSize(component->getWidth(), newH);
+    }
+
+    if (property == IDs::component) {
+        std::cout << "poop" << newLine;
     }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
@@ -717,12 +717,14 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
 
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
-            auto child = loadData.getChild(i);
+            auto child = loadData.getChild(i).createCopy();
 
             if (child.hasType(EFFECT_ID)) {
+                copy.appendChild(child, nullptr);
                 loadEffect(copy, child);
             }
         }
+
     }
 
     // Add parameter connections
@@ -760,10 +762,10 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     // Add Connections
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
-            auto child = copy.getChild(i);
-
             // Connection
-            if (child.hasType(CONNECTION_ID)) {
+            if (loadData.getChild(i).hasType(CONNECTION_ID)) {
+                auto child = loadData.getChild(i).createCopy();
+                copy.appendChild(child, nullptr);
                 // Set data
                 loadConnection(child);
             }
@@ -835,6 +837,10 @@ ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
         auto inPort = parent->getPortFromID(inPortID);
         auto outPort = parent->getPortFromID(outPortID);
 
+        if (inPort == nullptr || outPort == nullptr) {
+            jassertfalse;
+            return nullptr;
+        }
 
         auto line = new ConnectionLine();
 
@@ -912,13 +918,7 @@ ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
             newPort->bus = Effect::getDefaultBus();
 
             return newPort;
-        } else {
-
         }
-        /*if (newPort->internalPort != nullptr) {
-            newPort->internalPort->audioPort = newPort;
-        }*/
-
     }
 
     return port;

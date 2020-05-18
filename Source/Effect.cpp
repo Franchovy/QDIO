@@ -189,15 +189,15 @@ ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
 
     if (auto p = findChildWithID(ref)) {
         return dynamic_cast<ConnectionPort*>(p);
-    } else {
-        for (auto child : getChildren()) {
-            if (dynamic_cast<Effect*>(child) || dynamic_cast<Parameter*>(child)) {
-                return dynamic_cast<ConnectionPort*>(child->findChildWithID(ref));
+    }
+
+    for (auto child : getChildren()) {
+        if (dynamic_cast<Effect*>(child) || dynamic_cast<Parameter*>(child)) {
+            if (auto p = child->findChildWithID(ref)) {
+                return dynamic_cast<ConnectionPort*>(p);
             }
         }
     }
-
-    return nullptr;
 }
 
 
