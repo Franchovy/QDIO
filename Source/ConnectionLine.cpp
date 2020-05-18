@@ -246,12 +246,11 @@ void ConnectionLine::disconnect() {
         //Effect::disconnectParameters
     }
         // Audio connection case
-    else {
-        jassert(dynamic_cast<AudioPort*>(inPort.get())
-                || dynamic_cast<InternalConnectionPort*>(inPort.get()));
-        jassert(dynamic_cast<AudioPort*>(outPort.get())
-                || dynamic_cast<InternalConnectionPort*>(outPort.get()));
-
+    else if ((dynamic_cast<AudioPort*>(inPort.get())
+                || dynamic_cast<InternalConnectionPort*>(inPort.get()))
+             && (dynamic_cast<AudioPort*>(outPort.get())
+                || dynamic_cast<InternalConnectionPort*>(outPort.get())))
+    {
         Effect::disconnectAudio(*this);
     }
 

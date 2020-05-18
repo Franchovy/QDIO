@@ -36,6 +36,7 @@ public:
     void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
     void loadEffect(const ValueTree& loadData);
 
+    ConnectionPort::Ptr loadPort(ValueTree port);
     Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
     ConnectionLine::Ptr loadConnection(ValueTree connectionData);
 
@@ -52,6 +53,8 @@ public:
     void componentNameChanged(Component &component) override;
     void componentChildrenChanged(Component &component) override;
     void componentEnablementChanged(Component &component) override;
+
+    void componentVisibilityChanged(Component &component) override;
 
     // Access methods
     ValueTree getTree(GuiObject* component);

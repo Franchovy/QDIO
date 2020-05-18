@@ -65,7 +65,7 @@ public:
 */
     EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(getParentComponent()); }
 
-
+    ConnectionPort* getPortFromID(String portID);
 
     struct IDs {
         static const Identifier effectTreeBase;
@@ -137,9 +137,7 @@ public:
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
     void mouseDrag(const MouseEvent &event) override;
-
     void mouseDown(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
 
     bool canDragInto(const SelectHoverObject *other) const override;
@@ -162,6 +160,7 @@ public:
 
     Parameter* getParameterForPort(ParameterPort* port);
 
+    void addPort(AudioPort* port);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
     Array<ConnectionPort*> getPorts(int isInput = -1);
 

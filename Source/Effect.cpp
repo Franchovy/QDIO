@@ -182,6 +182,22 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
     }
 }
 
+ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
+    auto ref = Identifier(portID);
+
+    if (auto p = findChildWithID(ref)) {
+        return dynamic_cast<ConnectionPort*>(p);
+    } else {
+        for (auto child : getChildren()) {
+            if (dynamic_cast<Effect*>(child) || dynamic_cast<Parameter*>(child)) {
+                return dynamic_cast<ConnectionPort*>(child->findChildWithID(ref));
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 
 /*
 void EffectTreeBase::createGroupEffect() {
@@ -565,7 +581,6 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
 
     return p;
 }
-
 
 Effect::NodeAndPort Effect::getNode(ConnectionPort::Ptr &port) {
     NodeAndPort nodeAndPort;
@@ -964,6 +979,12 @@ bool Effect::canDragHover(const SelectHoverObject *other) const {
         return (effect->isInEditMode() && ! effect->isIndividual());
     }
     return false;
+}
+
+void Effect::addPort(AudioPort *port) {
+    if (port->isInput) {
+        inputPorts.add(port);
+    }
 }
 
 
