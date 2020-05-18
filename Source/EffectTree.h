@@ -37,6 +37,7 @@ public:
     void loadEffect(const ValueTree& loadData);
 
     Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
+    ConnectionLine::Ptr loadConnection(ValueTree connectionData);
 
     void loadUserState();
     void storeAll();

@@ -412,31 +412,15 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
     else if (childWhichHasBeenAdded.hasType(CONNECTION_ID)) {
         ConnectionLine *line;
         // Add connection here
-        //todo get rid of this - we should not be creating new components here
-        if (! childWhichHasBeenAdded.hasProperty(IDs::component)) {
-            auto inport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::InPort);
-            auto outport = getPropertyFromTree<ConnectionPort>(childWhichHasBeenAdded, ConnectionLine::IDs::OutPort);
-
-            line = new ConnectionLine();
-
-            childWhichHasBeenAdded.setProperty(IDs::component, line, nullptr);
-
+        line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
+                                                   IDs::component);
+        if (line->getParentComponent() == nullptr) {
             auto parent = getFromTree<EffectTreeBase>(parentTree);
             parent->addAndMakeVisible(line);
-
-            line->setPort(inport);
-            line->setPort(outport);
         } else {
-            line = getPropertyFromTree<ConnectionLine>(childWhichHasBeenAdded,
-                                                       IDs::component);
-            if (line->getParentComponent() == nullptr) {
-                auto parent = getFromTree<EffectTreeBase>(parentTree);
-                parent->addAndMakeVisible(line);
-            } else {
-                line->setVisible(true);
-            }
-            line->connect();
+            line->setVisible(true);
         }
+        line->connect();
     }
         // PARAMETER
     else if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
@@ -760,55 +744,12 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     // Add Connections
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
         for (int i = 0; i < loadData.getNumChildren(); i++) {
-            auto child = loadData.getChild(i);
+            auto child = copy.getChild(i);
 
             // Connection
             if (child.hasType(CONNECTION_ID)) {
                 // Set data
-                ValueTree connectionToSet(CONNECTION_ID);
-
-                int64 inPortEffectID = child.getProperty("inPortEffect");
-                int64 outPortEffectID = child.getProperty("outPortEffect");
-
-                bool inPortIsInternal = child.getProperty("inPortIsInternal");
-                bool outPortIsInternal = child.getProperty("outPortIsInternal");
-
-                ValueTree in;
-                ValueTree out;
-                if (parentTree.getChildWithProperty("ID", inPortEffectID).isValid()) {
-                    in = parentTree.getChildWithProperty("ID", inPortEffectID);
-                } else {
-                    in = copy.getChildWithProperty("ID", inPortEffectID);
-                }
-                if (parentTree.getChildWithProperty("ID", outPortEffectID).isValid()) {
-                    out = parentTree.getChildWithProperty("ID", outPortEffectID);
-                } else {
-                    out = copy.getChildWithProperty("ID", outPortEffectID);
-                }
-
-                auto inEffect = getFromTree<Effect>(in);
-                auto outEffect = getFromTree<Effect>(out);
-
-                if (inEffect == NULL || outEffect == NULL) {
-                    return; //todo return bool?
-                }
-
-                auto inPort = inEffect->getPortFromID(child.getProperty("inPortID"), inPortIsInternal);
-                auto outPort = outEffect->getPortFromID(child.getProperty("outPortID"), outPortIsInternal);
-
-                if (inPort == NULL || outPort == NULL) {
-                    return;
-                }
-
-                connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
-                connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
-
-                if ((inPortIsInternal || outPortIsInternal)
-                    || (in.getParent() == copy && out.getParent() == copy)) {
-                    copy.appendChild(connectionToSet, nullptr);
-                } else {
-                    parentTree.appendChild(connectionToSet, nullptr);
-                }
+                loadConnection(child);
             }
         }
     }
@@ -858,11 +799,84 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
 
     parameter->setTopLeftPosition(x, y);
 
-
-    // if has connection then connect
-
-
     return parameter;
+}
+
+/**
+ * Creates a ConnectionLine from ValueTree data
+ * @param connectionData is loadable ConnectionLine data, including parent to load to
+ * @return newly created line
+ */
+ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
+
+    int64 inPortEffectID = connectionData.getProperty("inPortEffect");
+    int64 outPortEffectID = connectionData.getProperty("outPortEffect");
+
+    bool inPortIsInternal = connectionData.getProperty("inPortIsInternal");
+    bool outPortIsInternal = connectionData.getProperty("outPortIsInternal");
+
+    //todo how to navigate this?
+    auto parentTree = connectionData.getParent();
+
+    auto parent = getFromTree<EffectTreeBase>(parentTree);
+    auto inPort = parent->getPortFromID();
+    auto outPort = parent->getPortFromID();
+
+    /*
+    ValueTree inEffectTree;
+    ValueTree outEffectTree;
+    if (parentTree.getParent().getChildWithProperty("ID", inPortEffectID).isValid()) {
+        //inEffectTree = parentTree.getChildWithProperty("ID", inPortEffectID);
+        inEffectTree = parentTree.getParent().getChildWithProperty("ID", inPortEffectID);
+    } else {
+        //inEffectTree = copy.getChildWithProperty("ID", inPortEffectID);
+        inEffectTree = parentTree.getChildWithProperty("ID", inPortEffectID);
+    }
+    if (parentTree.getParent().getChildWithProperty("ID", outPortEffectID).isValid()) {
+        //outEffectTree = parentTree.getChildWithProperty("ID", outPortEffectID);
+        outEffectTree = parentTree.getParent().getChildWithProperty("ID", outPortEffectID);
+    } else {
+        //outEffectTree = copy.getChildWithProperty("ID", outPortEffectID);
+        outEffectTree = parentTree.getChildWithProperty("ID", outPortEffectID);
+    }
+
+
+    auto inEffect = getFromTree<Effect>(inEffectTree);
+    auto outEffect = getFromTree<Effect>(outEffectTree);
+
+    if (inEffect == NULL || outEffect == NULL) {
+        jassertfalse;
+    }
+
+    // change port ID system to unique IDs
+    auto inPort = inEffect->getPortFromID(connectionData.getProperty("inPortID"), inPortIsInternal);
+    auto outPort = outEffect->getPortFromID(connectionData.getProperty("outPortID"), outPortIsInternal);
+
+    if (inPort == NULL || outPort == NULL) {
+        jassertfalse;
+    }*/
+
+    auto line = new ConnectionLine();
+
+    line->setPort(inPort);
+    line->setPort(outPort);
+
+    /*connectionToSet.setProperty(ConnectionLine::IDs::InPort, inPort, nullptr);
+    connectionToSet.setProperty(ConnectionLine::IDs::OutPort, outPort, nullptr);
+
+    if ((inPortIsInternal || outPortIsInternal)
+        || (inEffectTree.getParent() == copy && outEffectTree.getParent() == copy)) {
+        copy.appendChild(connectionToSet, nullptr);
+    } else {
+        parentTree.appendChild(connectionToSet, nullptr);
+    }
+
+    childWhichHasBeenAdded.setProperty(IDs::component, line, nullptr);
+*/
+    auto parent = getFromTree<EffectTreeBase>(parentTree);
+    parent->addAndMakeVisible(line);
+
+    return line;
 }
 
 
@@ -908,4 +922,6 @@ void EffectTree::remove(SelectHoverObject *c) {
 void EffectTree::loadEffect(const ValueTree &loadData) {
     loadEffect(effectTree, loadData);
 }
+
+
 
