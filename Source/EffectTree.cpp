@@ -695,7 +695,7 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     else if (loadData.hasType(EFFECT_ID)) {
         copy.copyPropertiesFrom(loadData, nullptr);
 
-        // Load Parameters
+        // Load Effect Child Trees needed in Effect construction
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
             if (child.hasType(PARAMETER_ID)) {
@@ -726,38 +726,6 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
         }
 
     }
-
-    // Add parameter connections
-    /*if (copy.hasType(EFFECT_ID)) {
-        for (int i = 0; i < copy.getNumChildren(); i++) {
-            auto child = copy.getChild(i);
-
-            // Connect parameters
-            if (child.hasType(PARAMETER_ID)) {
-                if (child.hasProperty("connectedParam")) {
-                    auto connectedParamName = child.getProperty("connectedParam");
-
-                    for (int j = 0; j < copy.getNumChildren(); j++) {
-                        // Check all children of currently loading effect for a matching parameter child
-                        auto c = copy.getChild(j).getChildWithProperty("name", connectedParamName);
-
-                        if (c.isValid()) {
-                            auto thisParam = getFromTree<Parameter>(child);
-                            auto toConnectParam = getFromTree<Parameter>(c);
-                            thisParam->connect(toConnectParam);
-                            auto newConnection = new ConnectionLine();
-
-                            newConnection->setPort(thisParam->getPort(false));
-                            newConnection->setPort(toConnectParam->getPort(true));
-
-                            getFromTree<Effect>(copy)->addAndMakeVisible(newConnection);
-                        }
-                    }
-                }
-            }
-        }
-    }*/
-
 
     // Add Connections
     if (loadData.hasType(EFFECT_ID) || loadData.hasType(EFFECTSCENE_ID)) {
