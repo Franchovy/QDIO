@@ -323,7 +323,9 @@ void EffectTree::componentChildrenChanged(Component &component) {
                         else if (auto port = dynamic_cast<ConnectionPort*>(c)) {
                             auto portTree = ValueTree(PORT_ID);
                             portTree.setProperty(IDs::component, port, nullptr);
-                            portTree.setProperty("ID", reinterpret_cast<int64>(port), nullptr);
+                            String portID = std::to_string(reinterpret_cast<int64>(port));
+                            port->setComponentID(portID);
+                            portTree.setProperty("ID", portID, nullptr);
                             portTree.setProperty("isInput", port->isInput, nullptr);
                             portTree.setProperty("isInternal", port->isInternal, nullptr);
 
@@ -541,19 +543,19 @@ EffectTreeBase::EffectTreeBase() {
 }
 
 
-ValueTree EffectTree::storeEffect(const ValueTree &tree) {
-    ValueTree copy(tree.getType());
-    copy.copyPropertiesFrom(tree, nullptr);
+ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
+    ValueTree copy(storeData.getType());
+    copy.copyPropertiesFrom(storeData, nullptr);
 
-    std::cout << "Storing: " << tree.getType().toString() << newLine;
+    std::cout << "Storing: " << storeData.getType().toString() << newLine;
 
-    if (tree.hasType(EFFECT_ID)) {
+    if (storeData.hasType(EFFECT_ID)) {
         // Remove unused properties
         copy.removeProperty(Effect::IDs::initialised, nullptr);
         copy.removeProperty(Effect::IDs::connections, nullptr);
 
         // Set properties based on object
-        if (auto effect = dynamic_cast<Effect*>(tree.getProperty(
+        if (auto effect = dynamic_cast<Effect*>(storeData.getProperty(
                 IDs::component).getObject())) {
 
             // Set size property
@@ -565,8 +567,8 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
             copy.setProperty("ID", reinterpret_cast<int64>(effect), nullptr);
 
             // Set num ports
-            copy.setProperty("numInputPorts", effect->getNumInputs(), nullptr);
-            copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);
+            /*copy.setProperty("numInputPorts", effect->getNumInputs(), nullptr);
+            copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);*/
 
             // Set edit mode
             copy.setProperty("editMode", effect->isInEditMode(), nullptr);
@@ -577,11 +579,11 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
         }
     }
 
-    if (tree.hasType(EFFECTSCENE_ID) || tree.hasType(EFFECT_ID)) {
+    if (storeData.hasType(EFFECTSCENE_ID) || storeData.hasType(EFFECT_ID)) {
         copy.removeProperty(IDs::component, nullptr);
 
-        for (int i = 0; i < tree.getNumChildren(); i++) {
-            auto child = tree.getChild(i);
+        for (int i = 0; i < storeData.getNumChildren(); i++) {
+            auto child = storeData.getChild(i);
 
             // Register child effect
             if (child.hasType(EFFECT_ID))
@@ -591,7 +593,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
                     copy.appendChild(childTreeToStore, nullptr);
                 }
             }
-                // Register parameter
+            // Register parameter
             else if (child.hasType(PARAMETER_ID))
             {
                 auto childParamObject = getFromTree<Parameter>(child);
@@ -606,14 +608,14 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
                     childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
                 }
 
-                if (childParamObject->isConnected()) {
+                /*if (childParamObject->isConnected()) {
                     childParam.setProperty("connectedParam",
                                            childParamObject->getConnectedParameter()->getName(), nullptr);
-                }
+                }*/
 
                 copy.appendChild(childParam, nullptr);
             }
-                // Register connection
+            // Register connection
             else if  (child.hasType(CONNECTION_ID))
             {
                 auto line = getFromTree<ConnectionLine>(child);
@@ -623,32 +625,38 @@ ValueTree EffectTree::storeEffect(const ValueTree &tree) {
                 }
 
                 // Get data to set
-                auto inPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::InPort);
-                auto outPortObject = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::OutPort);
+                auto inPort = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::InPort);
+                auto outPort = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::OutPort);
 
-                auto effect1 = dynamic_cast<Effect*>(inPortObject->getParentComponent());
-                auto effect2 = dynamic_cast<Effect*>(outPortObject->getParentComponent());
+                /*auto effect1 = dynamic_cast<Effect*>(inPortObject->getParentComponent());
+                auto effect2 = dynamic_cast<Effect*>(outPortObject->getParentComponent());*/
 
-                auto inPortID = effect1->getPortID(inPortObject);
-                auto outPortID = effect2->getPortID(outPortObject);
+                /*auto inPortID = effect1->getPortID(inPortObject);
+                auto outPortID = effect2->getPortID(outPortObject);*/
 
                 // Set data
 
                 ValueTree connectionToSet(CONNECTION_ID);
 
-                connectionToSet.setProperty("inPortEffect", reinterpret_cast<int64>(effect1), nullptr);
-                connectionToSet.setProperty("outPortEffect", reinterpret_cast<int64>(effect2), nullptr);
+                /*connectionToSet.setProperty("inPortEffect", reinterpret_cast<int64>(effect1), nullptr);
+                connectionToSet.setProperty("outPortEffect", reinterpret_cast<int64>(effect2), nullptr);*/
 
-                connectionToSet.setProperty("inPortID", inPortID, nullptr);
-                connectionToSet.setProperty("outPortID", outPortID, nullptr);
+                connectionToSet.setProperty("inPortID", inPort->getComponentID(), nullptr);
+                connectionToSet.setProperty("outPortID", outPort->getComponentID(), nullptr);
 
-                connectionToSet.setProperty("inPortIsInternal",
+                /*connectionToSet.setProperty("inPortIsInternal",
                                             (dynamic_cast<InternalConnectionPort*>(inPortObject) != nullptr), nullptr);
                 connectionToSet.setProperty("outPortIsInternal",
-                                            (dynamic_cast<InternalConnectionPort*>(outPortObject) != nullptr), nullptr);
+                                            (dynamic_cast<InternalConnectionPort*>(outPortObject) != nullptr), nullptr);*/
 
                 // Set data to ValueTree
                 copy.appendChild(connectionToSet, nullptr);
+            }
+            // Port
+            else if (child.hasType(PORT_ID)) {
+                auto childCopy = child.createCopy();
+                childCopy.removeProperty(IDs::component, nullptr);
+                copy.appendChild(childCopy, nullptr);
             }
         }
     }

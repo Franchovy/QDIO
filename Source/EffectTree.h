@@ -32,7 +32,7 @@ public:
 
     void remove(SelectHoverObject* c);
 
-    ValueTree storeEffect(const ValueTree& tree);
+    ValueTree storeEffect(const ValueTree& storeData);
     void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
     void loadEffect(const ValueTree& loadData);
 
