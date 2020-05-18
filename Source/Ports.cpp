@@ -92,6 +92,9 @@ bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
 
 InternalConnectionPort::InternalConnectionPort(AudioPort *parent, bool isInput) : ConnectionPort() {
     audioPort = parent;
+    linkedPort = audioPort;
+    audioPort->linkedPort = this;
+
     this->isInput = isInput;
     isInternal = true;
 

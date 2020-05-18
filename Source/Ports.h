@@ -50,13 +50,17 @@ public:
         portColour = 0
     };
 
+    ConnectionPort* getLinkedPort() { return linkedPort; }
+
 protected:
     ConnectionPort();
 
     ConnectionPort::Ptr otherPort = nullptr;
+    ConnectionPort* linkedPort = nullptr;
 
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
+
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionPort)
