@@ -984,6 +984,13 @@ bool Effect::canDragHover(const SelectHoverObject *other) const {
 void Effect::addPort(AudioPort *port) {
     if (port->isInput) {
         inputPorts.add(port);
+    } else {
+        outputPorts.add(port);
+    }
+    addAndMakeVisible(port);
+    if (!isIndividual()) {
+        addChildComponent(*port->internalPort);
+        port->internalPort->setVisible(isInEditMode());
     }
 }
 

@@ -309,7 +309,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
                             newParameterTree.setProperty(IDs::component, parameter, nullptr);
                             effectTree.appendChild(newParameterTree, undoManager);
                         }
-                            // Reassign Effect
+                        // Reassign Effect
                         else if (auto effect = dynamic_cast<Effect *>(c)) {
                             childTree = getTree(effect);
                             auto newChildParent = getTree(
@@ -325,17 +325,6 @@ void EffectTree::componentChildrenChanged(Component &component) {
                             portTree.setProperty(IDs::component, port, nullptr);
                             String portID = std::to_string(reinterpret_cast<int64>(port));
                             port->setComponentID(portID);
-                            portTree.setProperty("ID", portID, nullptr);
-                            portTree.setProperty("isInput", port->isInput, nullptr);
-                            portTree.setProperty("isInternal", port->isInternal, nullptr);
-
-                            // todo linked port ID
-
-                            if (dynamic_cast<AudioPort*>(port) || dynamic_cast<InternalConnectionPort*>(port)) {
-                                portTree.setProperty("type", "audio", nullptr);
-                            } else if (dynamic_cast<ParameterPort*>(port)) {
-                                portTree.setProperty("type", "parameter", nullptr);
-                            }
 
                             effectTree.appendChild(portTree, undoManager);
                         }
@@ -435,9 +424,6 @@ ValueTree EffectTree::getTree(GuiObject* component) {
 
 
 EffectTree::~EffectTree() {
-    // Remove references to RefCountedObjects
-    effectsToDelete.clear(); // effect references stored in toDelete array
-
     auto effectScene = effectTree.getProperty(IDs::component).getObject();
     effectScene->incReferenceCount();
 
@@ -641,8 +627,8 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 /*connectionToSet.setProperty("inPortEffect", reinterpret_cast<int64>(effect1), nullptr);
                 connectionToSet.setProperty("outPortEffect", reinterpret_cast<int64>(effect2), nullptr);*/
 
-                connectionToSet.setProperty("inPortID", inPort->getComponentID(), nullptr);
-                connectionToSet.setProperty("outPortID", outPort->getComponentID(), nullptr);
+                connectionToSet.setProperty("inPortID", reinterpret_cast<int64>(inPort), nullptr);
+                connectionToSet.setProperty("outPortID", reinterpret_cast<int64>(outPort), nullptr);
 
                 /*connectionToSet.setProperty("inPortIsInternal",
                                             (dynamic_cast<InternalConnectionPort*>(inPortObject) != nullptr), nullptr);
@@ -655,8 +641,24 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
             // Port
             else if (child.hasType(PORT_ID)) {
                 auto childCopy = child.createCopy();
-                childCopy.removeProperty(IDs::component, nullptr);
-                copy.appendChild(childCopy, nullptr);
+                auto port = getFromTree<ConnectionPort>(child);
+
+                if (port != nullptr) {
+                    childCopy.removeProperty(IDs::component, nullptr);
+                    childCopy.setProperty("ID", reinterpret_cast<int64>(port), nullptr);
+                    childCopy.setProperty("isInput", port->isInput, nullptr);
+                    childCopy.setProperty("isInternal", port->isInternal, nullptr);
+
+                    childCopy.setProperty("linkedPortID", reinterpret_cast<int64>(port->linkedPort), nullptr);
+
+                    if (dynamic_cast<AudioPort *>(port) || dynamic_cast<InternalConnectionPort *>(port)) {
+                        childCopy.setProperty("type", "audio", nullptr);
+                    } else if (dynamic_cast<ParameterPort *>(port)) {
+                        childCopy.setProperty("type", "parameter", nullptr);
+                    }
+
+                    copy.appendChild(childCopy, nullptr);
+                }
             }
         }
     }
@@ -698,6 +700,11 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
                 paramChild.copyPropertiesFrom(child, nullptr);
 
                 copy.appendChild(paramChild, nullptr);
+            } else if (child.hasType(PORT_ID)) {
+                ValueTree portChild(PORT_ID);
+                portChild.copyPropertiesFrom(child, nullptr);
+
+                copy.appendChild(portChild, nullptr);
             }
         }
 
@@ -884,20 +891,25 @@ void EffectTree::loadEffect(const ValueTree &loadData) {
 
 ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
     auto effect = getFromTree<Effect>(portData.getParent());
-    int64 ID = portData.getProperty("ID");
+    String ID = portData.getProperty("ID");
     bool isInput = portData.getProperty("isInput");
-    bool isInternal = portData.getProperty("isInternal");
-    //todo linked ID port
+    //bool isInternal = portData.getProperty("isInternal");
+    String linkedID = portData.getProperty("linkedPort");
 
-    ConnectionPort* port;
+    ConnectionPort* port = nullptr;
 
     String type = portData.getProperty("type");
     if (type == "audio") {
-        if (! isInternal) {
-            port = new AudioPort(isInput);
-            port->setComponentID(std::to_string(ID));
-            effect->addPort(dynamic_cast<AudioPort*>(port));
-        }
+        auto newPort = new AudioPort(isInput);
+        portData.setProperty(IDs::component, newPort, nullptr);
+        newPort->setComponentID(ID);
+        effect->addPort(newPort);
+
+        /*if (newPort->internalPort != nullptr) {
+            newPort->internalPort->audioPort = newPort;
+        }*/
+
+        return newPort;
     }
 
     return port;
