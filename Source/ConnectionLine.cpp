@@ -165,8 +165,9 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
 void ConnectionLine::parentHierarchyChanged() {
     auto parent = getParentComponent();
     if (parent != nullptr) {
-        setBounds(parent->getBounds());
+        //setBounds(parent->getBounds());
     }
+
     Component::parentHierarchyChanged();
 }
 

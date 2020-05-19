@@ -59,6 +59,8 @@ public:
     // Access methods
     ValueTree getTree(GuiObject* component);
 
+    ValueTree findTree(ValueTree treeToSearch, GuiObject* component);
+
     template<class T>
     static T* getFromTree(const ValueTree& vt);
     template <class T>

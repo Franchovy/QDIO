@@ -296,7 +296,14 @@ void EffectTree::componentChildrenChanged(Component &component) {
                             if (! (line->getInPort()->isShowing() && line->getOutPort()->isShowing())) {
                                 effectTree.removeChild(childTree, undoManager);
                             }
-                        }
+                        }/* else if (auto effect = dynamic_cast<Effect*>(c)) {
+                            auto newChildParent = getTree(
+                                    dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
+                            if (childTree.getParent() != newChildParent) {
+                                childTree.getParent().removeChild(childTree, undoManager);
+                                newChildParent.appendChild(childTree, undoManager);
+                            }
+                        }*/
                     } else {
                         // Create ConnectionLine tree
                         if (auto line = dynamic_cast<ConnectionLine *>(c)) {
@@ -312,7 +319,10 @@ void EffectTree::componentChildrenChanged(Component &component) {
                         }
                         // Reassign Effect
                         else if (auto effect = dynamic_cast<Effect *>(c)) {
-                            childTree = getTree(effect);
+                            if (! childTree.isValid()) {
+                                childTree = findTree(effectTree, effect);
+                            }
+
                             auto newChildParent = getTree(
                                     dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
                             if (childTree.getParent() != newChildParent) {
@@ -395,6 +405,11 @@ void EffectTree::componentVisibilityChanged(Component &component) {
     ComponentListener::componentVisibilityChanged(component);
 }
 
+/**
+ * Finds tree based on component hierarchy - meant to be efficient.
+ * @param component
+ * @return
+ */
 ValueTree EffectTree::getTree(GuiObject* component) {
     if (effectTree.getProperty(IDs::component) == component) {
         return effectTree;
@@ -608,8 +623,9 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
             else if  (child.hasType(CONNECTION_ID))
             {
                 auto line = getFromTree<ConnectionLine>(child);
-                if (! line->isEnabled()) {
-                    jassertfalse;
+                if (line == nullptr || ! line->isEnabled()) {
+                    // Invalid line, ignore
+                    //jassertfalse;
                     continue;
                 }
 
@@ -892,6 +908,22 @@ ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
     }
 
     return port;
+}
+
+ValueTree EffectTree::findTree(ValueTree treeToSearch, GuiObject *component) {
+    auto childFound = treeToSearch.getChildWithProperty(IDs::component, component);
+    if (childFound.isValid()) {
+        return childFound;
+    } else {
+        // Search children
+        for (int i = 0; i < treeToSearch.getNumChildren(); i++) {
+            childFound = findTree(treeToSearch.getChild(i), component);
+            if (childFound.isValid()) {
+                return childFound;
+            }
+        }
+    }
+    return ValueTree();
 }
 
 
