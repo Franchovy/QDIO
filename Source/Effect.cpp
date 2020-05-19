@@ -281,6 +281,9 @@ Effect::Effect() : MenuItem(2)
 {
     addAndMakeVisible(resizer);
     resizer.setAlwaysOnTop(true);
+
+    outputPortFlexBox.flexDirection = inputPortFlexBox.flexDirection = FlexBox::Direction::column;
+    outputPortFlexBox.justifyContent = inputPortFlexBox.justifyContent = FlexBox::JustifyContent::center;
 }
 
 void Effect::setupTitle() {
@@ -433,7 +436,9 @@ void Effect::setProcessor(AudioProcessor *processor) {
  * @param pos relative to this component (no conversion needed here)
  * @return nullptr if no match, ConnectionPort* if found
  */
+/*
 ConnectionPort* Effect::checkPort(Point<int> pos) {
+    //todo === unnecessary, can loop through all
     for (auto p : inputPorts) {
         if (p->contains(p->getLocalPoint(this, pos)))
         {
@@ -455,6 +460,7 @@ ConnectionPort* Effect::checkPort(Point<int> pos) {
     }
     return nullptr;
 }
+*/
 
 void Effect::setEditMode(bool isEditMode) {
     // Turn on edit mode
@@ -473,8 +479,9 @@ void Effect::setEditMode(bool isEditMode) {
             }
         }
 
-        for (auto l : {inputPorts, outputPorts}) {
-            for (auto p : l) {
+        //todo change singular colour
+        for (auto c : getChildren()) {
+            if (auto p = dynamic_cast<AudioPort*>(c)) {
                 p->setColour(0, Colours::whitesmoke);
                 p->internalPort->setVisible(true);
             }
@@ -515,8 +522,8 @@ void Effect::setEditMode(bool isEditMode) {
             }
         }
 
-        for (auto l : {inputPorts, outputPorts}) {
-            for (auto p : l) {
+        for (auto c : getChildren()) {
+            if (auto p = dynamic_cast<AudioPort*>(c)) {
                 p->setColour(0, Colours::black);
                 p->internalPort->setVisible(false);
             }
@@ -559,27 +566,23 @@ Parameter& Effect::addParameterFromProcessorParam(AudioProcessorParameter *param
 
 
 AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
-    auto p = isInput ?
-             inputPorts.add(new AudioPort(isInput)) :
-             outputPorts.add(new AudioPort(isInput));
+    auto p = new AudioPort(isInput);
+
     p->bus = bus;
     if (editMode){
         p->setColour(p->portColour, Colours::whitesmoke);
     }
 
-    addAndMakeVisible(p);
-
     if (!isIndividual()) {
         addChildComponent(p->internalPort.get());
-        Point<int> d;
-        d = isInput ? Point<int>(50, 0) : Point<int>(-50, 0);
 
         p->internalPort->setColour(p->portColour, Colours::whitesmoke);
-        p->internalPort->setCentrePosition(getLocalPoint(p, p->centrePoint + d));
         p->internalPort->setVisible(true);
     } else {
         p->internalPort->setVisible(false);
     }
+
+    addPort(p);
 
     return p;
 }
@@ -611,75 +614,18 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 }
 
 
-
-/*
-
-void Effect::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
-    std::cout << "VT property changed: " << property.toString() << newLine;
-    if (treeWhosePropertyHasChanged == tree) {
-        if (property == IDs::x) {
-            int x = treeWhosePropertyHasChanged.getProperty(IDs::x);
-            setTopLeftPosition(x, getY());
-        } else if (property == IDs::y) {
-            int y = treeWhosePropertyHasChanged.getProperty(IDs::y);
-            setTopLeftPosition(getX(), y);
-        } else if (property == IDs::w) {
-            if (undoManager.isPerformingUndoRedo()) {
-                int w = tree.getProperty(IDs::w);
-                setSize(w, getHeight());
-            }
-        } else if (property == IDs::h) {
-            if (undoManager.isPerformingUndoRedo()) {
-                int h = tree.getProperty(IDs::h);
-                setSize(h, getWidth());
-            }
-        } else if (property == IDs::name) {
-            auto e = getFromTree<Effect>(treeWhosePropertyHasChanged);
-            if (e != nullptr) {
-                auto newName = treeWhosePropertyHasChanged.getProperty(IDs::name);
-
-                e->setName(newName);
-                e->title.setText(newName, sendNotificationAsync);
-            }
-        } else if (property == EffectTreeBase::IDs::effectTreeBase) {
-            std::cout << "bro wut" << newLine;
-        }
-    }
-    Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
-}
-
-void Effect::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
-    std::cout << "Parent changed" << newLine;
-    if (treeWhoseParentHasChanged == tree) {
-
-    }
-}
-*/
-
 void Effect::resized() {
-    // Position Ports
-    inputPortPos = inputPortStartPos;
-    outputPortPos = outputPortStartPos;
-    for (auto p : inputPorts){
-        p->setCentrePosition(portIncrement, inputPortPos);
-        p->internalPort->setCentrePosition(portIncrement + 50, inputPortPos);
-        inputPortPos += portIncrement;
-    }
-    for (auto p : outputPorts){
-        p->setCentrePosition(getWidth() - portIncrement, outputPortPos);
-        p->internalPort->setCentrePosition(getWidth() - portIncrement - 50, outputPortPos);
-        outputPortPos += portIncrement;
+    // Layout using flexbox
+    // todo singular layout flexbox
+    //FlexBox layout;
+
+    std::cout << "item list" << newLine;
+    for (auto i : inputPortFlexBox.items) {
+        std::cout << "item: " << i.associatedComponent->getName() << newLine;
     }
 
-    int i = 0;
-    for (auto c : getChildren()) {
-        if (auto parameter = dynamic_cast<Parameter*>(c)) {
-            auto paramPort = parameter->getPort(true);
-
-            paramPort->setCentrePosition(100 + i * 50, getHeight() - 5);
-            i++;
-        }
-    }
+    outputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 100, 30, 100, getHeight()));
+    inputPortFlexBox.performLayout(Rectangle<int>(20, 30, 100, getHeight()));
 
     title.setBounds(30,30,200, title.getFont().getHeight());
 }
@@ -738,6 +684,7 @@ void Effect::paint(Graphics& g) {
 
 }
 
+/*
 int Effect::getPortID(const ConnectionPort *port) {
     if (auto p = dynamic_cast<const AudioPort*>(port)) {
         if (inputPorts.contains(p)) {
@@ -774,6 +721,7 @@ ConnectionPort* Effect::getPortFromID(const int id, bool internal) {
         return port;
     }
 }
+*/
 
 
 bool Effect::hasProcessor(AudioProcessor *processor) {
@@ -806,7 +754,9 @@ bool Effect::hasProcessor(AudioProcessor *processor) {
 }*/
 
 bool Effect::hasPort(const ConnectionPort *port) {
-    if (auto p = dynamic_cast<const AudioPort*>(port)) {
+    return (port->getParentComponent() == this);
+
+    /*if (auto p = dynamic_cast<const AudioPort*>(port)) {
         return (inputPorts.contains(p) || outputPorts.contains(p));
     } else if (auto p = dynamic_cast<const InternalConnectionPort*>(port)) {
         for (auto list : {inputPorts, outputPorts}) {
@@ -817,7 +767,7 @@ bool Effect::hasPort(const ConnectionPort *port) {
             }
         }
     }
-    return false;
+    return false;*/
 }
 
 bool Effect::hasConnection(const ConnectionLine *line) {
@@ -892,7 +842,17 @@ Array<Parameter*> Effect::getParameterChildren() {
 Array<ConnectionPort *> Effect::getPorts(int isInput) {
     Array<ConnectionPort*> list;
 
-    if (isInput <= 0) {
+    //todo add template type to cast
+
+    for (auto c : getChildren()) {
+        if (auto p = dynamic_cast<AudioPort*>(c)) {
+            if (p->isInput == isInput) {
+                list.add(p);
+            }
+        }
+    }
+
+    /*if (isInput <= 0) {
         for (auto p : outputPorts) {
             list.add(p);
         }
@@ -902,7 +862,7 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
         for (auto p : inputPorts) {
             list.add(p);
         }
-    }
+    }*/
 
     return list;
 }
@@ -976,17 +936,53 @@ bool Effect::canDragHover(const SelectHoverObject *other) const {
 }
 
 void Effect::addPort(AudioPort *port) {
-    if (port->isInput) {
-        inputPorts.add(port);
-    } else {
-        outputPorts.add(port);
-    }
-    addAndMakeVisible(port);
+    auto flexAudioPort = FlexItem(*port);
+    flexAudioPort.height = port->getHeight();
+    flexAudioPort.width = port->getWidth();
+    flexAudioPort.margin = 10;
+    flexAudioPort.alignSelf = FlexItem::AlignSelf::center;
+/*
+
+    FlexBox portsFlexBox;
+    portsFlexBox.flexDirection = FlexBox::Direction::row;
+    portsFlexBox.items.add(flexAudioPort);
+*/
+
+    int width;
+    int height;
 
     if (! isIndividual()) {
+        auto flexInternalPort = FlexItem(*port->internalPort);
+
+        flexInternalPort.width = port->internalPort->getWidth();
+        flexInternalPort.height = port->internalPort->getHeight();
+        flexInternalPort.margin = 10;
+        flexInternalPort.alignSelf = FlexItem::AlignSelf::center;
+
+        //portsFlexBox.items.add(flexInternalPort);
+
         addChildComponent(*port->internalPort);
         port->internalPort->setVisible(isInEditMode());
+
+        width = port->getWidth() + port->internalPort->getWidth();
+    } else {
+        width = port->getWidth();
     }
+    height = port->getHeight();
+    //portsFlexBox.performLayout(Rectangle<int>(0, 0, width, height));
+
+    /*auto flexItem = FlexItem(portsFlexBox);
+    flexItem.width = width;
+    flexItem.height = height;
+    flexItem.margin = 10;
+*/
+    if (port->isInput) {
+        inputPortFlexBox.items.add(flexAudioPort);
+    } else {
+        outputPortFlexBox.items.add(flexAudioPort);
+    }
+
+    addAndMakeVisible(port);
 }
 
 

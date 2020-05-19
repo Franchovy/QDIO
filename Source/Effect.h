@@ -184,8 +184,8 @@ public:
     AudioProcessorGraph::NodeID getNodeID() const;
     static AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
 
-    int getNumInputs() const { return inputPorts.size(); }
-    int getNumOutputs() const { return outputPorts.size(); }
+    int getNumInputs() const { return inputPortFlexBox.items.size(); }
+    int getNumOutputs() const { return outputPortFlexBox.items.size(); }
 
     bool isIndividual() const { return processor != nullptr; }
 
@@ -212,10 +212,16 @@ public:
 
 private:
     bool editMode = false;
-    ReferenceCountedArray<AudioPort> inputPorts;
-    ReferenceCountedArray<AudioPort> outputPorts;
+    /*ReferenceCountedArray<AudioPort> inputPorts;
+    ReferenceCountedArray<AudioPort> outputPorts;*/
     Label title;
     Image image;
+
+    // Layout stuff
+    //FlexBox flexBox;
+    FlexBox inputPortFlexBox;
+    FlexBox outputPortFlexBox;
+    FlexBox paramPortsFlexBox;
 
     Resizer resizer;
 
