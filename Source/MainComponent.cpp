@@ -129,7 +129,8 @@ void MainComponent::mouseWheelMove(const juce::MouseEvent &event, const juce::Mo
     //main.setBounds(main.getBoundsInParent().expanded(wheel.deltaY));
 }*/
 
-void MainComponent::resized() { 
+void MainComponent::resized() {
+    main.setBounds(getLocalBounds());
     settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
 }
 
