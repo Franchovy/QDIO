@@ -624,8 +624,10 @@ void Effect::resized() {
         std::cout << "item: " << i.associatedComponent->getName() << newLine;
     }
 
-    outputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 100, 30, 100, getHeight()));
-    inputPortFlexBox.performLayout(Rectangle<int>(20, 30, 100, getHeight()));
+    inputPortFlexBox.performLayout(Rectangle<int>(10, 30, 60, getHeight()));
+    outputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 90, 30, 60, getHeight()));
+    internalInputPortFlexBox.performLayout(Rectangle<int>(100, 30, 30, getHeight()));
+    internalOutputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 120, 30, 60, getHeight()));
 
     title.setBounds(30,30,200, title.getFont().getHeight());
 }
@@ -941,15 +943,6 @@ void Effect::addPort(AudioPort *port) {
     flexAudioPort.width = port->getWidth();
     flexAudioPort.margin = 10;
     flexAudioPort.alignSelf = FlexItem::AlignSelf::center;
-/*
-
-    FlexBox portsFlexBox;
-    portsFlexBox.flexDirection = FlexBox::Direction::row;
-    portsFlexBox.items.add(flexAudioPort);
-*/
-
-    int width;
-    int height;
 
     if (! isIndividual()) {
         auto flexInternalPort = FlexItem(*port->internalPort);
@@ -959,23 +952,16 @@ void Effect::addPort(AudioPort *port) {
         flexInternalPort.margin = 10;
         flexInternalPort.alignSelf = FlexItem::AlignSelf::center;
 
-        //portsFlexBox.items.add(flexInternalPort);
+        if (port->isInput) {
+            internalInputPortFlexBox.items.add(flexInternalPort);
+        } else {
+            internalOutputPortFlexBox.items.add(flexInternalPort);
+        }
 
         addChildComponent(*port->internalPort);
         port->internalPort->setVisible(isInEditMode());
-
-        width = port->getWidth() + port->internalPort->getWidth();
-    } else {
-        width = port->getWidth();
     }
-    height = port->getHeight();
-    //portsFlexBox.performLayout(Rectangle<int>(0, 0, width, height));
 
-    /*auto flexItem = FlexItem(portsFlexBox);
-    flexItem.width = width;
-    flexItem.height = height;
-    flexItem.margin = 10;
-*/
     if (port->isInput) {
         inputPortFlexBox.items.add(flexAudioPort);
     } else {
