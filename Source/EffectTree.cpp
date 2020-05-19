@@ -871,7 +871,7 @@ ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
     String ID = portData.getProperty("ID");
     bool isInput = portData.getProperty("isInput");
     bool isInternal = portData.getProperty("isInternal");
-    String linkedID = portData.getProperty("linkedPort");
+    String linkedID = portData.getProperty("linkedPortID");
 
     ConnectionPort* port = nullptr;
 
@@ -884,6 +884,8 @@ ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
             effect->addPort(newPort);
 
             newPort->bus = Effect::getDefaultBus();
+
+            newPort->internalPort->setComponentID(linkedID);
 
             return newPort;
         }
