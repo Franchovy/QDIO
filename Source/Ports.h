@@ -41,7 +41,7 @@ public:
     bool isInput;
     bool isInternal = false;
 
-    void setOtherPort(ConnectionPort::Ptr newPort) { otherPort = newPort; }
+    void setOtherPort(ConnectionPort* newPort);
     ConnectionPort::Ptr getOtherPort();
 
     bool isConnected() { return otherPort != nullptr; }

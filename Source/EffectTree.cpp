@@ -293,8 +293,10 @@ void EffectTree::componentChildrenChanged(Component &component) {
 
                     if (childTree.isValid()) {
                         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
-                            if (! (line->getInPort()->isShowing() && line->getOutPort()->isShowing())) {
-                                effectTree.removeChild(childTree, undoManager);
+                            if (Effect::appState != Effect::loading) {
+                                if (! (line->getInPort()->isShowing() && line->getOutPort()->isShowing())) {
+                                    effectTree.removeChild(childTree, undoManager);
+                                }
                             }
                         }/* else if (auto effect = dynamic_cast<Effect*>(c)) {
                             auto newChildParent = getTree(
@@ -319,6 +321,9 @@ void EffectTree::componentChildrenChanged(Component &component) {
                         }
                         // Reassign Effect
                         else if (auto effect = dynamic_cast<Effect *>(c)) {
+                            if (! childTree.isValid()) {
+                                childTree = getTree(effect);
+                            }
                             if (! childTree.isValid()) {
                                 childTree = findTree(effectTree, effect);
                             }
@@ -630,8 +635,8 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 }
 
                 // Get data to set
-                auto inPort = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::InPort);
-                auto outPort = getPropertyFromTree<ConnectionPort>(child, ConnectionLine::IDs::OutPort);
+                auto inPort = line->getInPort();
+                auto outPort = line->getOutPort();
 
                 /*auto effect1 = dynamic_cast<Effect*>(inPortObject->getParentComponent());
                 auto effect2 = dynamic_cast<Effect*>(outPortObject->getParentComponent());*/
@@ -646,8 +651,8 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 /*connectionToSet.setProperty("inPortEffect", reinterpret_cast<int64>(effect1), nullptr);
                 connectionToSet.setProperty("outPortEffect", reinterpret_cast<int64>(effect2), nullptr);*/
 
-                connectionToSet.setProperty("inPortID", reinterpret_cast<int64>(inPort), nullptr);
-                connectionToSet.setProperty("outPortID", reinterpret_cast<int64>(outPort), nullptr);
+                connectionToSet.setProperty("inPortID", reinterpret_cast<int64>(inPort.get()), nullptr);
+                connectionToSet.setProperty("outPortID", reinterpret_cast<int64>(outPort.get()), nullptr);
 
                 /*connectionToSet.setProperty("inPortIsInternal",
                                             (dynamic_cast<InternalConnectionPort*>(inPortObject) != nullptr), nullptr);
