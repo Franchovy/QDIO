@@ -71,6 +71,7 @@ EffectScene::EffectScene()
 
     appState = loading;
     tree.loadUserState();
+    undoManager.clearUndoHistory();
     appState = neutral;
 }
 
