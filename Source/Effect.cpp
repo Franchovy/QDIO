@@ -619,14 +619,9 @@ void Effect::resized() {
     // todo singular layout flexbox
     //FlexBox layout;
 
-    std::cout << "item list" << newLine;
-    for (auto i : inputPortFlexBox.items) {
-        std::cout << "item: " << i.associatedComponent->getName() << newLine;
-    }
-
     inputPortFlexBox.performLayout(Rectangle<int>(10, 30, 60, getHeight()));
     outputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 90, 30, 60, getHeight()));
-    internalInputPortFlexBox.performLayout(Rectangle<int>(100, 30, 30, getHeight()));
+    internalInputPortFlexBox.performLayout(Rectangle<int>(80, 30, 60, getHeight()));
     internalOutputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 120, 30, 60, getHeight()));
 
     title.setBounds(30,30,200, title.getFont().getHeight());
