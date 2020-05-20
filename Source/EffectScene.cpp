@@ -281,10 +281,11 @@ bool EffectScene::keyPressed(const KeyPress &key)
             std::cout << e << newLine;
         }
     }
-    if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'p') {
-        std::cout << "Clear effects" << newLine;
+    if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'l') {
+        std::cout << "Saved effects: " << newLine;
         for (auto e : EffectLoader::getEffectsAvailable()) {
-            EffectLoader::clearEffect(e);
+            std::cout << "Effect: " << e << newLine;
+            std::cout << EffectLoader::loadEffect(e).toXmlString() << newLine;
         }
     }
 #endif
