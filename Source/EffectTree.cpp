@@ -30,6 +30,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
     }
 
     auto effect = new Effect();
+    effect->state = Effect::loading;
     tree.setProperty(IDs::component, effect, nullptr);
     effect->addComponentListener(this);
 
@@ -320,7 +321,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
 
                     if (childTree.isValid()) {
                         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
-                            if (Effect::appState != Effect::loading) {
+                            if (Effect::appState != Effect::loading && effectTreeBase->state != Effect::loading) {
                                 if (! (line->getInPort()->isShowing() && line->getOutPort()->isShowing())) {
                                     effectTree.removeChild(childTree, undoManager);
                                 }
@@ -787,6 +788,10 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
             }
         }
     }
+
+    // Set Effect state to neutral
+    auto effect = getFromTree<EffectTreeBase>(copy);
+    effect->state = Effect::neutral;
 }
 
 //todo just use existing parameterData parent instead of effect

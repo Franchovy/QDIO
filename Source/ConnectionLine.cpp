@@ -191,13 +191,14 @@ bool ConnectionLine::canConnect(const ConnectionPort *port) const {
 bool ConnectionLine::connect() {
     if (inPort != nullptr && outPort != nullptr) {
         // Connect listeners and port components
+
         inPos = getParentComponent()->getLocalPoint(inPort.get(), inPort->centrePoint);
         outPos = getParentComponent()->getLocalPoint(outPort.get(), outPort->centrePoint);
 
         inPort->getParentComponent()->addComponentListener(this);
         outPort->getParentComponent()->addComponentListener(this);
-        inPort->setOtherPort(outPort);
-        outPort->setOtherPort(inPort);
+        inPort->setOtherPort(outPort.get());
+        outPort->setOtherPort(inPort.get());
 
         setBounds(Rectangle<int>(inPos, outPos));
 

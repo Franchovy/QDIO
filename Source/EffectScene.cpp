@@ -44,32 +44,12 @@ EffectScene::EffectScene()
 
 #define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
-    //bg = ImageCache::getFromMemory(BinaryData::background_png, BinaryData::background_pngSize);
-    //bgTile = ImageCache::getFromMemory(BinaryData::bgtile_png, BinaryData::bgtile_pngSize);
-    //logo = ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
-
-    //========================================================================================
-    // MIDI example code
-
-    //auto inputDevice  = MidiInput::getDevices()  [MidiInput::getDefaultDeviceIndex()];
-    //auto outputDevice = MidiOutput::getDevices() [MidiOutput::getDefaultDeviceIndex()];
-
-    //deviceManager.setMidiInputEnabled (inputDevice, true);
-    //deviceManager.addMidiInputCallback (inputDevice, &processorPlayer); // [3]
-    //deviceManager.setDefaultMidiOutput (outputDevice);
 
 
-    //==============================================================================
     // Main component popup menu
-
     setupCreateEffectMenu();
 
-    /*createGroupEffectItem = PopupMenu::Item("Create Effect with group");
-    createGroupEffectItem.setAction([=] {
-        createGroupEffect();
-    });*/
-    //mainMenu.addSubMenu("Create Effect", createEffectMenu);
-
+    // Load effects
     appState = loading;
     tree.loadUserState();
     undoManager.clearUndoHistory();

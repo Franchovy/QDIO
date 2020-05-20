@@ -22,12 +22,7 @@ AudioProcessorGraph* EffectTreeBase::audioGraph = nullptr;
 AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
 AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
 UndoManager EffectTreeBase::undoManager;
-//LineComponent EffectTreeBase::dragLine;
 
-
-const Identifier EffectTreeBase::IDs::effectTreeBase = "effectTreeBase";
-
-//const Identifier Effect::IDs::pos = "pos";
 const Identifier Effect::IDs::x = "x";
 const Identifier Effect::IDs::y = "y";
 const Identifier Effect::IDs::w = "w";
@@ -448,7 +443,7 @@ void Effect::setEditMode(bool isEditMode) {
         for (int i = 0; i < getNumChildComponents(); i++) {
             auto c = getChildComponent(i);
 
-            c->toFront(false);
+            //c->toFront(false);
             c->setInterceptsMouseClicks(true, true);
 
             if (dynamic_cast<Effect*>(c)) {
@@ -492,7 +487,7 @@ void Effect::setEditMode(bool isEditMode) {
                 continue;
             }
 
-            c->toBack();
+            //c->toBack();
             c->setInterceptsMouseClicks(false, false);
             if (dynamic_cast<Effect*>(c)) {
                 c->setVisible(false);

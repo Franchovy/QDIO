@@ -39,9 +39,7 @@ public:
     void resized() override = 0;
 
     void mouseDown(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
 
     //===================================================================
@@ -59,28 +57,22 @@ public:
     static AudioDeviceManager* getDeviceManager() {return deviceManager;}
     static AudioProcessorGraph* getAudioGraph() {return audioGraph;}
 
-/*
-    ValueTree& getTree() { return tree; }
-    const ValueTree& getTree() const {return tree; }
-*/
-    EffectTreeBase* getParent() { return dynamic_cast<EffectTreeBase*>(getParentComponent()); }
-
     ConnectionPort* getPortFromID(String portID);
-
-    struct IDs {
-        static const Identifier effectTreeBase;
-    };
 
     enum AppState {
         loading = 0,
         neutral = 1
-    } static appState;
+    }
+    //todo change usage of appState to effectScene->state
+    static appState;
+
+    AppState state = neutral;
 
 protected:
     static EffectTreeBase* effectScene;
 
     //====================================================================================
-    // Lasso stuff (todo: simplify)
+    // Lasso stuff
     LassoComponent<SelectHoverObject::Ptr> lasso;
 
     void findLassoItemsInArea (Array <SelectHoverObject::Ptr>& results, const Rectangle<int>& area) override;
@@ -91,10 +83,6 @@ protected:
     ConnectionLine* dragLine = nullptr;
 
     ReferenceCountedArray<ConnectionLine> connections;
-
-    //====================================================================================
-
-    void createGroupEffect();
 
     //====================================================================================
 

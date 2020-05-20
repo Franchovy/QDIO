@@ -68,6 +68,7 @@ public:
     bool canDragHover(const SelectHoverObject *other) const override;
 
 private:
+    //todo replace usage of this instance with EffectTreeBase::effectScene
     static EffectScene* instance;
 
     // EffectTreeBase static stuff
