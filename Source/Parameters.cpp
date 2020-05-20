@@ -21,6 +21,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
 {
     internalPort.setLinkedPort(&externalPort);
     externalPort.setLinkedPort(&internalPort);
+    externalPort.incReferenceCount();
 
     referencedParameter = param;
 
@@ -301,7 +302,7 @@ void Parameter::removeListeners() {
 }
 
 Parameter::~Parameter() {
-
+    externalPort.decReferenceCountWithoutDeleting();
 }
 
 bool Parameter::canDragInto(const SelectHoverObject *other) const {
