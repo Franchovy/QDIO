@@ -134,6 +134,8 @@ public:
     void resized() override;
     void paint(Graphics& g) override;
 
+    void childrenChanged() override;
+
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
     void mouseDrag(const MouseEvent &event) override;
