@@ -125,6 +125,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
 
     parameterLabel.setTopLeftPosition(15, 55);
     parameterLabel.setColour(Label::textColourId, Colours::black);
+    parameterLabel.setText(getName(), dontSendNotification);
     //parameterComponent->setTopLeftPosition(0,60);
 
     setBounds(0, 0, 150, 120);
@@ -318,12 +319,6 @@ void Parameter::parentHierarchyChanged() {
     Component::parentHierarchyChanged();
 }
 
-
-/*NormalisableRange<double> Parameter::getRange() {
-    auto slider = dynamic_cast<Slider*>(parameterComponent.get());
-
-    return NormalisableRange<double>(slider->getRange(), slider->getInterval());
-}*/
 
 MetaParameter::MetaParameter(String name)
         : RangedAudioParameter(newID(name), name)
