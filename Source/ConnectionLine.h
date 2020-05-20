@@ -84,7 +84,7 @@ public:
     }
 
     bool connect();
-    void disconnect();
+    void disconnect(ConnectionPort* port = nullptr);
 
     void setAudioConnection(AudioProcessorGraph::Connection connection) {
         audioConnection = connection;
@@ -102,13 +102,15 @@ public:
         static const Identifier AudioConnection;
     };
 
+    bool isConnected() const;
+
 private:
     AudioProcessorGraph::Connection audioConnection;
 
     Point<int> inPos, outPos;
     Line<int> line;
 
-    bool isConnected = false;
+    bool connected = false;
 
     ConnectionPort::Ptr inPort = nullptr;
     ConnectionPort::Ptr outPort = nullptr;

@@ -105,6 +105,10 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
         setBounds(Rectangle<int>(inPos, outPos));
 
         SelectHoverObject::resetHoverObject();
+    } else {
+        // Reconnect line
+        // Call undomanager new op
+        getParentComponent()->postCommandMessage(9);
     }
 }
 
@@ -226,7 +230,7 @@ bool ConnectionLine::connect() {
             Effect::connectAudio(*this);
         }
 
-        isConnected = true;
+        connected = true;
         setEnabled(true);
         return true;
 
@@ -237,8 +241,8 @@ bool ConnectionLine::connect() {
     return false;
 }
 
-void ConnectionLine::disconnect() {
-    isConnected = false;
+void ConnectionLine::disconnect(ConnectionPort* port) {
+    connected = false;
 
     // Disconnect functionality
 
@@ -258,6 +262,10 @@ void ConnectionLine::disconnect() {
         Effect::disconnectAudio(*this);
     }
 
+    if (port != nullptr) {
+        unsetPort(port);
+    }
+
     setEnabled(false);
 }
 
@@ -268,29 +276,35 @@ void ConnectionLine::setPort(ConnectionPort *port) {
         outPort = port;
     }
 
-    if (! isConnected && (inPort != nullptr && outPort != nullptr)) {
+    if (!connected && (inPort != nullptr && outPort != nullptr)) {
         connect();
     }
 }
 
 void ConnectionLine::unsetPort(ConnectionPort *port) {
-    if (isConnected) {
-        disconnect();
-    }
-
-    if (port == inPort) {
+    if (connected) {
+        disconnect(port);
+    } else if (port == inPort) {
         inPort->getParentComponent()->addComponentListener(this);
         inPort->setOtherPort(nullptr);
-        outPort->setOtherPort(nullptr);
+        if (outPort != nullptr) {
+            outPort->setOtherPort(nullptr);
+        }
 
         inPort = nullptr;
     } else if (port == outPort) {
         outPort->getParentComponent()->addComponentListener(this);
         outPort->setOtherPort(nullptr);
-        inPort->setOtherPort(nullptr);
+        if (inPort != nullptr) {
+            inPort->setOtherPort(nullptr);
+        }
 
         outPort = nullptr;
     } else {
         jassertfalse;
     }
+}
+
+bool ConnectionLine::isConnected() const {
+    return connected;
 }

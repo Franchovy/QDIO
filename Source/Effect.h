@@ -42,6 +42,8 @@ public:
     void mouseUp(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
 
+    void handleCommandMessage(int commandId) override;
+
     //===================================================================
 
     static bool connectParameters(const ConnectionLine& connectionLine);

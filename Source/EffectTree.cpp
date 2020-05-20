@@ -278,8 +278,8 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
             auto parameterTree = getTree(effect).getChildWithProperty(IDs::component, parameter);
 
             if (wasMoved) {
-                parameterTree.setProperty("x", component.getX(), nullptr);
-                parameterTree.setProperty("y", component.getY(), nullptr);
+                parameterTree.setProperty("x", component.getX(), undoManager);
+                parameterTree.setProperty("y", component.getY(), undoManager);
             }
         }
     }
@@ -320,13 +320,13 @@ void EffectTree::componentChildrenChanged(Component &component) {
                     }
 
                     if (childTree.isValid()) {
-                        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
+                        /*if (auto line = dynamic_cast<ConnectionLine*>(c)) {
                             if (Effect::appState != Effect::loading && effectTreeBase->state != Effect::loading) {
                                 if (! (line->getInPort()->isShowing() && line->getOutPort()->isShowing())) {
                                     effectTree.removeChild(childTree, undoManager);
                                 }
                             }
-                        }/* else if (auto effect = dynamic_cast<Effect*>(c)) {
+                        }*//* else if (auto effect = dynamic_cast<Effect*>(c)) {
                             auto newChildParent = getTree(
                                     dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
                             if (childTree.getParent() != newChildParent) {
@@ -398,7 +398,6 @@ void EffectTree::componentChildrenChanged(Component &component) {
 
 void EffectTree::componentEnablementChanged(Component &component) {
     if (! undoManager->isPerformingUndoRedo()) {
-
         if (auto line = dynamic_cast<ConnectionLine *>(&component)) {
             if (line->isEnabled()) {
                 // Line is connected
@@ -424,16 +423,18 @@ void EffectTree::componentEnablementChanged(Component &component) {
                 }
             }
         }
-
     }
-
     ComponentListener::componentEnablementChanged(component);
 }
 
 void EffectTree::componentVisibilityChanged(Component &component) {
-    if (auto line = dynamic_cast<ConnectionLine*>(&component)) {
-        auto lineTree = getTree(line);
-        lineTree.getParent().removeChild(lineTree, nullptr);
+    if (! undoManager->isPerformingUndoRedo()) {
+        if (auto line = dynamic_cast<ConnectionLine *>(&component)) {
+            auto lineTree = getTree(line);
+            if (! line->isVisible()) {
+                lineTree.getParent().removeChild(lineTree, undoManager);
+            }
+        }
     }
     ComponentListener::componentVisibilityChanged(component);
 }
@@ -545,8 +546,24 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
         component->setSize(component->getWidth(), newH);
     }
 
-    if (property == IDs::component) {
-        std::cout << "poop" << newLine;
+    if (treeWhosePropertyHasChanged.hasType(CONNECTION_ID)) {
+        auto line = getFromTree<ConnectionLine>(treeWhosePropertyHasChanged);
+        if (property == Identifier(ConnectionLine::IDs::InPort)) {
+            // Set line inPort
+            auto inPort = getPropertyFromTree<ConnectionPort>(treeWhosePropertyHasChanged, ConnectionLine::IDs::InPort);
+            if (inPort != nullptr) {
+                line->setPort(inPort);
+            } else if (line->isConnected()) {
+                line->unsetPort(line->getInPort().get());
+            }
+        } else if (property == Identifier(ConnectionLine::IDs::OutPort)) {
+            auto outPort = getPropertyFromTree<ConnectionPort>(treeWhosePropertyHasChanged, ConnectionLine::IDs::OutPort);
+            if (outPort != nullptr) {
+                line->setPort(outPort);
+            } else if (line->isConnected()){
+                line->unsetPort(line->getOutPort().get());
+            }
+        }
     }
 
     Listener::valueTreePropertyChanged(treeWhosePropertyHasChanged, property);
@@ -645,7 +662,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                     childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
                 }
 
-                /*if (childParamObject->isConnected()) {
+                /*if (childParamObject->connected()) {
                     childParam.setProperty("connectedParam",
                                            childParamObject->getConnectedParameter()->getName(), nullptr);
                 }*/
@@ -869,6 +886,10 @@ ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
         line->setPort(outPort);
 
         parent->addAndMakeVisible(line);
+
+        auto lineTree = getTree(line);
+        lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), nullptr);
+        lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), nullptr);
 
         return line;
     }

@@ -373,6 +373,7 @@ void EffectScene::handleCommandMessage(int commandId) {
     if (commandId == 0) {
         getParentComponent()->postCommandMessage(0);
     }
+    EffectTreeBase::handleCommandMessage(commandId);
 }
 
 bool EffectScene::canDragInto(const SelectHoverObject *other) const {

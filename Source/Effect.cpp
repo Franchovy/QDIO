@@ -100,9 +100,9 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     auto inPort = connectionLine.getOutPort();
     auto outPort = connectionLine.getInPort();
 
-    /*if (inPort == nullptr || outPort == nullptr) {
+    if (inPort == nullptr || outPort == nullptr) {
         return returnArray;
-    }*/
+    }
 
     auto inEVT = dynamic_cast<Effect *>(inPort->getParentComponent());
     auto outEVT = dynamic_cast<Effect *>(outPort->getParentComponent());
@@ -189,6 +189,13 @@ ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
             }
         }
     }
+}
+
+void EffectTreeBase::handleCommandMessage(int commandId) {
+    if (commandId == 9) {
+        undoManager.beginNewTransaction();
+    }
+    Component::handleCommandMessage(commandId);
 }
 
 
