@@ -111,8 +111,6 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
 void ConnectionLine::mouseDrag(const MouseEvent &event) {
     SelectHoverObject::mouseDrag(event.getEventRelativeTo(this));
 
-
-
     // If line is already connected
     if (inPort != nullptr && outPort != nullptr) {
         // Disconnect line
@@ -130,7 +128,11 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
         }
     }
 
-    outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
+    if (inPort == nullptr) {
+        inPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
+    } else if (outPort == nullptr) {
+        outPos = getParentComponent()->getLocalPoint(event.eventComponent, event.getPosition());
+    }
     setBounds(Rectangle<int>(inPos, outPos));
 
     if (auto obj = getDragIntoObject()) {
