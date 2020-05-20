@@ -54,7 +54,7 @@ private:
     ImageButton settingsButton;
     SettingsComponent settingsMenu;
 
-    ComboBox effectSelectMenu;
+    EffectSelectMenu effectSelectMenu;
 
     ValueTree effectTree;
 

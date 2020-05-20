@@ -23,11 +23,23 @@ void EffectSelectMenu::mouseDrag(const MouseEvent &event) {
 
 void EffectSelectMenu::mouseUp(const MouseEvent &event) {
 
+    if (event.mods.isRightButtonDown()) {
+        PopupMenu menu;
+        menu.addItem("Clear menu", [=] {
+            for (auto e : EffectLoader::getEffectsAvailable()) {
+                EffectLoader::clearEffect(e);
+            }
+            clear(dontSendNotification);
+        });
+        menu.show();
+
+    }
+
     ComboBox::mouseUp(event);
 }
 
 EffectSelectMenu::EffectSelectMenu() : ComboBox() {
-    onChange = [=] {
+    /*onChange = [=] {
         auto selectedIndex = getSelectedItemIndex();
         if (selectedIndex < 0) {
             std::cout << "useless id" << newLine;
@@ -37,13 +49,13 @@ EffectSelectMenu::EffectSelectMenu() : ComboBox() {
             EffectLoader::loadEffect(effectToLoad);
 
             auto effectLoaded = EffectLoader::loadEffect(effectToLoad);
-            /*if (effectLoaded.isValid()) {
+            *//*if (effectLoaded.isValid()) {
                 auto main = EffectScene::getScene();
                 main->createEffect(main.getTree(), effectLoaded);
             }
 
             effectSelectMenu.setSelectedItemIndex(0, dontSendNotification);
-            effectSelectMenu.setText("Select Effect");*/
+            effectSelectMenu.setText("Select Effect");*//*
         }
-    };
+    };*/
 }
