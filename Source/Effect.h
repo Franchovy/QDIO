@@ -77,16 +77,11 @@ public:
     } static appState;
 
 protected:
-    //ValueTree tree;
-
-    //====================================================================================
-    // Menu stuff
-    //void callMenu(PopupMenu& menu);
+    static EffectTreeBase* effectScene;
 
     //====================================================================================
     // Lasso stuff (todo: simplify)
     LassoComponent<SelectHoverObject::Ptr> lasso;
-    bool intersectMode = true;
 
     void findLassoItemsInArea (Array <SelectHoverObject::Ptr>& results, const Rectangle<int>& area) override;
     SelectedItemSet<SelectHoverObject::Ptr>& getLassoSelection() override;

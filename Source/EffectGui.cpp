@@ -12,7 +12,6 @@
 
 SelectHoverObject::Ptr SelectHoverObject::hoverComponent = nullptr;
 ComponentSelection SelectHoverObject::selected;
-ReferenceCountedArray<SelectHoverObject> SelectHoverObject::componentsToSelect;
 
 bool SelectHoverObject::manualHover = false;
 SelectHoverObject* SelectHoverObject::draggedComponent = nullptr;
@@ -41,10 +40,6 @@ void SelectHoverObject::setHoverObject(SelectHoverObject::Ptr item) {
 
 SelectHoverObject::SelectHoverObject() {
     setRepaintsOnMouseActivity(true);
-
-    if (getName() != "MainWindow") {
-        componentsToSelect.add(this);
-    }
 }
 
 SelectHoverObject::~SelectHoverObject() {
@@ -101,7 +96,6 @@ void SelectHoverObject::removeSelectObject(const SelectHoverObject::Ptr& item) {
 }
 
 void SelectHoverObject::close() {
-    componentsToSelect.clear();
     selected.clear();
     hoverComponent = nullptr;
 }

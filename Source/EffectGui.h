@@ -68,7 +68,6 @@ public:
     static SelectHoverObject* getDragIntoObject();
 
 protected:
-    static ReferenceCountedArray<SelectHoverObject> componentsToSelect;
     static ComponentSelection selected;
 
     bool hoverMode = false;

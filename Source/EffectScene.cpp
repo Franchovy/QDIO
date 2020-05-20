@@ -20,6 +20,7 @@ EffectScene::EffectScene()
 
     // Set up static members
     instance = this;
+    EffectTreeBase::effectScene = this;
 
     EffectTreeBase::audioGraph = &audioGraph;
     EffectTreeBase::processorPlayer = &processorPlayer;

@@ -38,18 +38,14 @@ const Identifier Effect::IDs::name = "name";
 const Identifier Effect::IDs::connections = "connections";
 const Identifier Effect::IDs::EFFECT_ID = "effect";
 
-
+EffectTreeBase* EffectTreeBase::effectScene = nullptr;
 
 
 void EffectTreeBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results, const Rectangle<int> &area) {
-    for (auto c : componentsToSelect) {
-        if (!intersectMode) {
-            if (area.contains(c->getBoundsInParent())) {
-                results.addIfNotAlreadyThere(c);
-            }
-        } else {
+    for (auto c : effectScene->getChildren()) {
+        if (auto obj = dynamic_cast<SelectHoverObject*>(c)) {
             if (area.intersects(c->getBoundsInParent())) {
-                results.addIfNotAlreadyThere(c);
+                results.addIfNotAlreadyThere(obj);
             }
         }
     }
