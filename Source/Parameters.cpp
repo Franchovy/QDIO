@@ -123,7 +123,6 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
         parameterLabel.setVisible(false);
     }
 
-
     parameterLabel.setTopLeftPosition(15, 55);
     parameterLabel.setColour(Label::textColourId, Colours::black);
     //parameterComponent->setTopLeftPosition(0,60);
@@ -132,7 +131,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
 
     externalPort.setCentrePosition(75, 30);
 
-    setInterceptsMouseClicks(editMode, true);
+    setEditMode(editMode);
 }
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
@@ -310,6 +309,13 @@ bool Parameter::canDragInto(const SelectHoverObject *other) const {
 
 bool Parameter::canDragHover(const SelectHoverObject *other) const {
     return false;
+}
+
+void Parameter::parentHierarchyChanged() {
+    if (getParentComponent() != nullptr) {
+        getParentComponent()->addAndMakeVisible(internalPort);
+    }
+    Component::parentHierarchyChanged();
 }
 
 

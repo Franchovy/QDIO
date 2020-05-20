@@ -45,6 +45,8 @@ public:
 
     void moved() override;
 
+    void parentHierarchyChanged() override;
+
     bool isConnected();
     Parameter* getConnectedParameter();
 
