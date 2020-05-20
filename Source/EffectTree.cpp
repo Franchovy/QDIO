@@ -311,7 +311,12 @@ void EffectTree::componentChildrenChanged(Component &component) {
                 auto child = dynamic_cast<SelectHoverObject *>(c);
 
                 if (child != nullptr) {
-                    auto childTree = effectTree.getChildWithProperty(IDs::component, child);
+                    ValueTree childTree;
+                    for (int i = 0; i < effectTree.getNumChildren(); i++) {
+                        if (effectTree.getChild(i).getProperty(IDs::component).getObject() == child) {
+                            childTree = effectTree.getChild(i);
+                        }
+                    }
 
                     if (childTree.isValid()) {
                         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
@@ -813,7 +818,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
     parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
     effect->addAndMakeVisible(parameter.get());
-    effect->addAndMakeVisible(parameter->getPort(true));
+    //effect->addAndMakeVisible(parameter->getPort(true));
 
     // Set position
 
