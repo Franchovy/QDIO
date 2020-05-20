@@ -97,6 +97,10 @@ void ConnectionPort::setOtherPort(ConnectionPort *newPort) {
     otherPort = newPort;
 }
 
+void ConnectionPort::setLinkedPort(ConnectionPort *port) {
+    linkedPort = port;
+}
+
 
 bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
     // Return false if the port is AP and belongs to the same parent

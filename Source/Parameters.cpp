@@ -19,8 +19,8 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
     , internalPort(true)
     , externalPort(false)
 {
-    internalPort.linkedPort = &externalPort;
-    externalPort.linkedPort = &internalPort;
+    internalPort.setLinkedPort(&externalPort);
+    externalPort.setLinkedPort(&internalPort);
 
     referencedParameter = param;
 

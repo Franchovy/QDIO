@@ -51,6 +51,7 @@ public:
     };
 
     ConnectionPort* getLinkedPort();
+    void setLinkedPort(ConnectionPort* port);
 
 protected:
     ConnectionPort();
