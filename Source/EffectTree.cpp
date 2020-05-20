@@ -201,9 +201,31 @@ Effect* EffectTree::createEffect(ValueTree tree) {
     effect->setBounds(x, y, w, h);
 
     //==============================================================
-    // Set up other stuff
+    // Set up Menu
 
     effect->setupMenu();
+
+    if (! effect->isIndividual()) {
+        PopupMenu::Item saveEffect("Save Effect");
+        saveEffect.setAction([=]() {
+            auto saveTree = storeEffect(tree);
+
+            saveTree.setProperty("editMode", false, nullptr);
+
+            if (saveTree.isValid()) {
+                EffectLoader::saveEffect(saveTree);
+                effect->getParentComponent()->postCommandMessage(0);
+            } else {
+                std::cout << "invalid, mothafucka." << newLine;
+            }
+        });
+
+        effect->addMenuItem(effect->menu, saveEffect);
+        effect->addMenuItem(effect->editMenu, saveEffect);
+    }
+
+
+    // Set up Title
     effect->setupTitle();
 
     return effect;

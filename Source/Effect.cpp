@@ -364,26 +364,6 @@ void Effect::setupMenu() {
     addMenuItem(editMenu, portSubMenuItem);
     addMenuItem(editMenu, addParamSubMenuItem);
 
-    //todo move to class that can access
-    /*if (!isIndividual()) {
-        PopupMenu::Item saveEffect("Save Effect");
-        saveEffect.setAction([=]() {
-            auto saveTree = storeEffect(tree);
-
-            saveTree.setProperty("editMode", false, nullptr);
-
-            if (saveTree.isValid()) {
-                EffectLoader::saveEffect(saveTree);
-                getParentComponent()->postCommandMessage(0);
-            } else {
-                std::cout << "invalid, mothafucka." << newLine;
-            }
-        });
-
-        menu.addItem(saveEffect);
-        editMenu.addItem(saveEffect);
-    }*/
-
 }
 
 Effect::~Effect()
