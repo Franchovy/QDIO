@@ -53,6 +53,8 @@ public:
     AudioProcessorParameter* getParameter();
 
     ParameterPort* getPort(bool internal);
+    ParameterPort* getPortWithID(String portID);
+
     Point<int> getPortPosition();
 
     void connect(Parameter* otherParameter);

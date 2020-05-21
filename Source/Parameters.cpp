@@ -334,6 +334,15 @@ void Parameter::parentHierarchyChanged() {
     Component::parentHierarchyChanged();
 }
 
+ParameterPort *Parameter::getPortWithID(String portID) {
+    if (internalPort.getComponentID() == portID) {
+        return &internalPort;
+    } else if (externalPort.getComponentID() == portID) {
+        return &externalPort;
+    }
+    return nullptr;
+}
+
 
 MetaParameter::MetaParameter(String name)
         : RangedAudioParameter(newID(name), name)

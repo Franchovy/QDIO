@@ -183,9 +183,25 @@ ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
     }
 
     for (auto child : getChildren()) {
-        if (dynamic_cast<Effect*>(child) || dynamic_cast<Parameter*>(child)) {
+        if (auto effect = dynamic_cast<Effect*>(child)) {
+            for (auto p : effect->getParameterChildren()) {
+                if (auto port = p->getPortWithID(portID)) {
+                    return port;
+                }
+            }
+
             if (auto p = child->findChildWithID(ref)) {
                 return dynamic_cast<ConnectionPort*>(p);
+            }
+        }
+        if (auto param = dynamic_cast<Parameter*>(child)) {
+            auto port = param->getPort(false);
+            if (port->getComponentID() == portID) {
+                return port;
+            }
+            port = param->getPort(true);
+            if (port->getComponentID() == portID) {
+                return port;
             }
         }
     }

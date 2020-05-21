@@ -368,7 +368,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
                             auto portTree = ValueTree(PORT_ID);
                             portTree.setProperty(IDs::component, port, nullptr);
                             String portID = std::to_string(reinterpret_cast<int64>(port));
-                            port->setComponentID(portID);
+                            //port->setComponentID(portID);
 
                             effectTree.appendChild(portTree, undoManager);
                         }
@@ -678,8 +678,10 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                     childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
                 }
 
-                childParam.setProperty("portID",
-                        reinterpret_cast<int64>(childParamObject->getPort(false)), nullptr);
+                childParam.setProperty("internalPortID",
+                        reinterpret_cast<int64>(childParamObject->getPort(true)), nullptr);
+                childParam.setProperty("externalPortID",
+                                       reinterpret_cast<int64>(childParamObject->getPort(false)), nullptr);
 
                 /*if (childParamObject->connected()) {
                     childParam.setProperty("connectedParam",
@@ -832,7 +834,7 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
 
 //todo just use existing parameterData parent instead of effect
 Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
-    auto name = parameterData.getProperty("name");
+    String name = parameterData.getProperty("name");
 
     AudioProcessorParameter* param = nullptr;
 
@@ -849,8 +851,13 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
 
     Parameter::Ptr parameter = new Parameter(param);
 
-    if (parameterData.hasProperty("portID")) {
-        String portID = parameterData.getProperty("portID");
+
+    if (parameterData.hasProperty("internalPortID")) {
+        String portID = parameterData.getProperty("internalPortID");
+        parameter->getPort(true)->setComponentID(portID);
+    }
+    if (parameterData.hasProperty("externalPortID")) {
+        String portID = parameterData.getProperty("externalPortID");
         parameter->getPort(false)->setComponentID(portID);
     }
 
@@ -865,7 +872,6 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
     parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
     effect->addAndMakeVisible(parameter.get());
-    //effect->addAndMakeVisible(parameter->getPort(true));
 
     // Set position
 
