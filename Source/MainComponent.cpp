@@ -7,7 +7,7 @@
 
   ==============================================================================
 */
-#define DEBUG_APPEARANCE
+//#define DEBUG_APPEARANCE
 
 #include "MainComponent.h"
 
@@ -88,6 +88,11 @@ MainComponent::~MainComponent() {
     getAppProperties().getUserSettings()->saveIfNeeded();
 
     EffectTreeBase::close();
+}
+
+bool MainComponent::keyPressed(const KeyPress &key) {
+    std::cout << "key pressed" << newLine;
+    return main.keyPressed(key);
 }
 
 void MainComponent::move(int deltaX, int deltaY) {

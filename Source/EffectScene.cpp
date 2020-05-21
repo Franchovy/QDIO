@@ -11,6 +11,8 @@ EffectScene::EffectScene()
 {
     setComponentID("EffectScene");
     setName("EffectScene");
+    
+    bool dontLoad = true;
 
     setBufferedToImage(true);
     //setPaintingIsUnclipped(false);
@@ -27,10 +29,16 @@ EffectScene::EffectScene()
     EffectTreeBase::deviceManager = &deviceManager;
 
     audioGraph.enableAllBuses();
-
-    deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
+   
+    if (! dontLoad) {
+        //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
+    deviceManager.initialise(256, 256, nullptr,
                              true);
-
+    } else {
+        
+        deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
+                                 true);
+    }
     deviceManager.addAudioCallback(&processorPlayer);
     processorPlayer.setProcessor(&audioGraph);
 
@@ -49,11 +57,13 @@ EffectScene::EffectScene()
     // Main component popup menu
     setupCreateEffectMenu();
 
+    if (! dontLoad) {
     // Load effects
     appState = loading;
     tree.loadUserState();
     undoManager.clearUndoHistory();
     appState = neutral;
+    }
 }
 
 EffectScene::~EffectScene()
@@ -311,11 +321,10 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
     // CTRL
     if (key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown()) {
-        if (key.getKeyCode() == 'z') {
+        if (key.getKeyCode() == 'z' || (key.getKeyCode() == 'Z' && ! key.getModifiers().isShiftDown())) {
             std::cout << "Undo: " << undoManager.getUndoDescription() << newLine;
             undoManager.undo();
-        } else if ((key.getModifiers().isCtrlDown() || key.getModifiers().isCommandDown())
-                   && key.getKeyCode() == 'Z') {
+        } else if (key.getKeyCode() == 'Z' && key.getModifiers().isShiftDown()) {
             std::cout << "Redo: " << undoManager.getRedoDescription() << newLine;
             undoManager.redo();
         }
@@ -325,6 +334,8 @@ bool EffectScene::keyPressed(const KeyPress &key)
             tree.storeAll();
         }
     }
+    
+    return true;
 }
 
 

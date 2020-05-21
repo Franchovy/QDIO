@@ -40,15 +40,19 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         int id = tree.getProperty(Effect::IDs::processorID);
 
         auto currentDeviceType = EffectTreeBase::getDeviceManager()->getCurrentDeviceTypeObject();
+        StringArray choices;
+        choices.add("Bluetooth device");
         auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
 
         switch (id) {
             case 0:
-                newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
+                choices.addArray(currentDeviceType->getDeviceNames(true));
+                newProcessor = std::make_unique<InputDeviceEffect>(choices,
                                                                    currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
                 break;
             case 1:
-                newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
+                choices.addArray(currentDeviceType->getDeviceNames(false));
+                newProcessor = std::make_unique<OutputDeviceEffect>(choices,
                                                                     currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
                 break;
             case 2:
