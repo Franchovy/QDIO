@@ -255,11 +255,11 @@ void Parameter::connect(Parameter *otherParameter) {
         if (param != nullptr) {
             param->addListener(this);
 
-            auto *listener = new SliderListener(param);
+            sliderListener = new SliderListener(param);
 
             auto slider = dynamic_cast<Slider*>(parameterComponent.get());
             slider->setValue(param->getValue(), dontSendNotification);
-            slider->addListener(listener);
+            slider->addListener(sliderListener);
         }
     }
 
@@ -316,6 +316,9 @@ void Parameter::removeListeners() {
 }
 
 Parameter::~Parameter() {
+    if (sliderListener != nullptr) {
+        delete sliderListener;
+    }
     externalPort.decReferenceCountWithoutDeleting();
 }
 
