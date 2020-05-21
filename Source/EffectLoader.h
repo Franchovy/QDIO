@@ -15,8 +15,10 @@
 ApplicationProperties& getAppProperties();
 ApplicationCommandManager& getCommandManager();
 
+const String KEYNAME_APP_VERSION = "appVersion";
 const String KEYNAME_DEVICE_SETTINGS = "audioDeviceState"; // maybe move this?
 const String KEYNAME_LOADED_EFFECTS = "loadedEffects";
+const String KEYNAME_LOADOUTS = "loadouts";
 
 class EffectLoader {
 public:

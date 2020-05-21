@@ -11,8 +11,28 @@ EffectScene::EffectScene()
 {
     setComponentID("EffectScene");
     setName("EffectScene");
-    
-    bool dontLoad = true;
+
+
+    //================================================================================
+    // Don't load anything if this isn't the right version.
+
+    bool dontLoad;
+
+    String currentVersion = "1.5";
+    std::cout << "App version: " << currentVersion << newLine;
+    auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
+
+    if (appVersion != nullptr && appVersion->hasAttribute("version")) {
+        std::cout << "Load version: " << appVersion->getStringAttribute("version") << newLine;
+        if (appVersion->getStringAttribute("version") == currentVersion) {
+            dontLoad = false;
+        } else {
+            dontLoad = true;
+        }
+    } else {
+        dontLoad = true;
+    }
+    std::cout << "Loading state? " << (dontLoad ? "false" : "true") << newLine;
 
     setBufferedToImage(true);
     //setPaintingIsUnclipped(false);
@@ -30,12 +50,11 @@ EffectScene::EffectScene()
 
     audioGraph.enableAllBuses();
    
-    if (! dontLoad) {
+    if (dontLoad) {
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
-    deviceManager.initialise(256, 256, nullptr,
+        deviceManager.initialise(256, 256, nullptr,
                              true);
     } else {
-        
         deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
     }
@@ -63,6 +82,14 @@ EffectScene::EffectScene()
     tree.loadUserState();
     undoManager.clearUndoHistory();
     appState = neutral;
+    }
+
+    // Update load app version
+    if (dontLoad) {
+        XmlElement newVersion("version");
+        newVersion.setAttribute("version", currentVersion);
+        getAppProperties().getUserSettings()->setValue(KEYNAME_APP_VERSION, &newVersion);
+        getAppProperties().getUserSettings()->save();
     }
 }
 
