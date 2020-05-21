@@ -296,8 +296,10 @@ Effect::Effect() : MenuItem(2)
     addAndMakeVisible(resizer);
     resizer.setAlwaysOnTop(true);
 
-    outputPortFlexBox.flexDirection = inputPortFlexBox.flexDirection = FlexBox::Direction::column;
-    outputPortFlexBox.justifyContent = inputPortFlexBox.justifyContent = FlexBox::JustifyContent::center;
+    internalInputPortFlexBox.flexDirection = internalOutputPortFlexBox.flexDirection =
+            outputPortFlexBox.flexDirection = inputPortFlexBox.flexDirection = FlexBox::Direction::column;
+    internalInputPortFlexBox.justifyContent = internalOutputPortFlexBox.justifyContent =
+        outputPortFlexBox.justifyContent = inputPortFlexBox.justifyContent = FlexBox::JustifyContent::center;
 
     paramPortsFlexBox.flexDirection = FlexBox::Direction::row;
     paramPortsFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
@@ -616,8 +618,8 @@ void Effect::resized() {
     // todo singular layout flexbox
     //FlexBox layout;
 
-    inputPortFlexBox.performLayout(Rectangle<int>(10, 30, 60, getHeight()));
-    outputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 90, 30, 60, getHeight()));
+    inputPortFlexBox.performLayout(Rectangle<int>(10, 18, 60, getHeight() - 18));
+    outputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 90, 18, 60, getHeight() - 18));
     internalInputPortFlexBox.performLayout(Rectangle<int>(80, 30, 60, getHeight()));
     internalOutputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 120, 30, 60, getHeight()));
 
@@ -941,8 +943,8 @@ void Effect::addPort(AudioPort *port) {
     if (! isIndividual()) {
         auto flexInternalPort = FlexItem(*port->internalPort);
 
-        flexInternalPort.width = port->internalPort->getWidth();
-        flexInternalPort.height = port->internalPort->getHeight();
+        flexInternalPort.width = port->getWidth();
+        flexInternalPort.height = port->getHeight();
         flexInternalPort.margin = 10;
         flexInternalPort.alignSelf = FlexItem::AlignSelf::center;
 
