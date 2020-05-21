@@ -82,7 +82,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
         parameterComponent = std::make_unique<Slider>();
         auto slider = dynamic_cast<Slider *>(parameterComponent.get());
 
-        auto paramRange = NormalisableRange<double>(0, 1, 0.01);
+        auto paramRange = NormalisableRange<double>(0, 1);
         slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
                                                                paramRange.interval, paramRange.skew));
 
@@ -139,7 +139,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     // This is called on audio thread! Use async updater for messages.
     if (editMode && connectedParameter != nullptr) {
-        connectedParameter->setValue(newValue);
+        connectedParameter->setValue(newValue, false);
     }
 
     switch (type) {
@@ -249,9 +249,23 @@ void Parameter::paint(Graphics &g) {
 void Parameter::connect(Parameter *otherParameter) {
     connectedParameter = otherParameter;
     otherParameter->isConnectedTo = true;
-    dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
 
-    referencedParameter->setValueNotifyingHost(connectedParameter->getParameter()->getValue());
+    if (type == slider) {
+        auto param = otherParameter->getParameter();
+        if (param != nullptr) {
+            param->addListener(this);
+
+            auto *listener = new SliderListener(param);
+
+            auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+            slider->setValue(param->getValue(), dontSendNotification);
+            slider->addListener(listener);
+        }
+    }
+
+    //dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
+
+    //referencedParameter->setValueNotifyingHost(connectedParameter->getParameter()->getValue());
 
     /*auto slider = dynamic_cast<Slider*>(parameterComponent.get());
     slider->setNormalisableRange(otherParameter->getRange());*/

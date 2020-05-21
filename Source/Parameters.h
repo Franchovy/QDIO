@@ -128,7 +128,7 @@ public:
     }
 
     void sliderValueChanged(Slider *slider) override {
-        linkedParameter->setValue(slider->getValueObject().getValue());
+        linkedParameter->setValueNotifyingHost(slider->getValueObject().getValue());
     }
 
     void sliderDragStarted(Slider *slider) override {
