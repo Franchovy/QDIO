@@ -678,6 +678,9 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                     childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
                 }
 
+                childParam.setProperty("portID",
+                        reinterpret_cast<int64>(childParamObject->getPort(false)), nullptr);
+
                 /*if (childParamObject->connected()) {
                     childParam.setProperty("connectedParam",
                                            childParamObject->getConnectedParameter()->getName(), nullptr);
@@ -845,6 +848,12 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
     }
 
     Parameter::Ptr parameter = new Parameter(param);
+
+    if (parameterData.hasProperty("portID")) {
+        String portID = parameterData.getProperty("portID");
+        parameter->getPort(false)->setComponentID(portID);
+    }
+
     //effect->parameterArray.add(parameter);
 
     if (effect->isIndividual()) {
