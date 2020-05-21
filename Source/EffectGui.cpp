@@ -125,10 +125,15 @@ void SelectHoverObject::mouseDrag(const MouseEvent &event) {
 
 void SelectHoverObject::mouseUp(const MouseEvent &event) {
     if (event.getDistanceFromDragStart() < 10) {
-
-        if (selectMode) {
-            removeSelectObject(this);
+        if (event.mods.isShiftDown()
+                || event.mods.isCtrlDown()) {
+            if (selectMode) {
+                removeSelectObject(this);
+            } else {
+                addSelectObject(this);
+            }
         } else {
+            deselectAll();
             addSelectObject(this);
         }
     }
@@ -139,8 +144,11 @@ void SelectHoverObject::mouseUp(const MouseEvent &event) {
 }
 
 void SelectHoverObject::deselectAll() {
+    auto items = selected.getItemArray();
     selected.deselectAll();
-    repaint();
+    for (auto s : items) {
+        s->repaint();
+    }
 }
 
 ReferenceCountedArray<SelectHoverObject> SelectHoverObject::getSelected() {

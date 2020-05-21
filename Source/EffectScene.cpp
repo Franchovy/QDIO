@@ -195,13 +195,10 @@ void EffectScene::mouseUp(const MouseEvent &event) {
         if (event.getDistanceFromDragStart() < 10)
         {
             // Deselect on effectscene click
-            if (event.mods.isLeftButtonDown()) {
+            if (event.mods.isLeftButtonDown() && ! event.mods.isCtrlDown()
+                                                 && ! event.mods.isShiftDown()) {
                 // Don't deselect if shift or ctrl is held.
-                if (! event.mods.isCtrlDown()
-                        && ! event.mods.isShiftDown())
-                {
-                    deselectAll();
-                }
+                deselectAll();
             }
             // Right mouse click opens menu
             else if (event.mods.isRightButtonDown()
