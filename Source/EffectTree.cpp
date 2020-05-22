@@ -598,6 +598,7 @@ void EffectTree::loadLayout(String name) {
     }
 
     auto effectLoadDataTree = EffectLoader::loadLayout(name);
+    currentLayoutName = name;
 
     if (effectLoadDataTree.isValid()) {
         loadEffect(effectTree, effectLoadDataTree);
@@ -1049,6 +1050,10 @@ ValueTree EffectTree::findTree(ValueTree treeToSearch, GuiObject *component) {
 
 bool EffectTree::isNotEmpty() {
     return effectTree.getNumChildren() > 0;
+}
+
+String EffectTree::getCurrentLayoutName() {
+    return currentLayoutName;
 }
 
 

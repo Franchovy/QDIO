@@ -72,7 +72,6 @@ MainComponent::MainComponent()
 
     updateEffectSelectMenu();
 
-
     //
     layoutMenu.setText("Layout");
     layoutMenu.onChange = [=] {
@@ -85,6 +84,7 @@ MainComponent::MainComponent()
         }
     };
 
+    updateLayoutMenu();
 
     //
     toolBoxMenu.setText("Toolbox");

@@ -80,9 +80,10 @@ EffectScene::EffectScene()
     setupCreateEffectMenu();
 
     if (! dontLoad) {
-        // Load effects
+        String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
+        // Load layout
         appState = loading;
-        tree.loadLayout();
+        tree.loadLayout(name);
         undoManager.clearUndoHistory();
         appState = neutral;
     }
@@ -375,7 +376,10 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
 
 void EffectScene::storeState() {
+    auto name = tree.getCurrentLayoutName();
     tree.storeLayout();
+
+    getAppProperties().getUserSettings()->setValue(KEYNAME_CURRENT_LOADOUT, name);
 }
 
 /*void EffectScene::updateChannels() {

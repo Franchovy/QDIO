@@ -40,10 +40,11 @@ public:
     Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
     ConnectionLine::Ptr loadConnection(ValueTree connectionData);
 
+    String getCurrentLayoutName();
 
-    //todo current layout name
     void loadLayout(String name = "");
     void storeLayout(String saveName = "");
+
     void clear();
     bool isNotEmpty();
 
@@ -72,6 +73,8 @@ public:
 
 
 private:
+    String currentLayoutName;
+
     ValueTree effectTree;
     UndoManager* undoManager;
 
