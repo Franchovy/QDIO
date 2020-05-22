@@ -640,7 +640,7 @@ void EffectTree::storeLayout(String name) {
 void EffectTree::clear() {
     if (effectTree.getNumChildren() > 0) {
         effectTree.removeAllChildren(undoManager);
-        effectTree.removeAllProperties(undoManager);
+        //effectTree.removeAllProperties(undoManager);
     }
 }
 
@@ -797,10 +797,11 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     // Effectscene added first
     if (loadData.hasType(EFFECTSCENE_ID)) {
         // Set children of Effectscene, and object property
+
         auto effectSceneObject = parentTree.getProperty(IDs::component);
 
         copy.setProperty(IDs::component, effectSceneObject, nullptr);
-        parentTree.copyPropertiesAndChildrenFrom(copy, nullptr);
+        copy.copyPropertiesAndChildrenFrom(parentTree, nullptr);
 
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {

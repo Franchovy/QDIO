@@ -362,12 +362,13 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
         if (key.getKeyCode() == 's') {
             String name;
-            callSaveLayoutDialog(name);
+            int result = callSaveLayoutDialog(name, false);
 
-            std::cout << "Save layout: " << name << newLine;
-
-            tree.storeLayout(name);
-            postCommandMessage(0);
+            if (result == 1) {
+                tree.storeLayout(name);
+                std::cout << "Save layout: " << name << newLine;
+                postCommandMessage(0);
+            }
         }
     }
     
@@ -441,25 +442,34 @@ void EffectScene::menuCreateEffect(ValueTree effectData) {
 void EffectScene::loadNewLayout(String layout) {
     if (tree.isNotEmpty()) {
         String layoutToSaveName;
-        callSaveLayoutDialog(layoutToSaveName);
+        int result = callSaveLayoutDialog(layoutToSaveName, true);
 
-        std::cout << "Save layout: " << layoutToSaveName << newLine;
+        if (result == -1) {
+            return;
+        } else if (result == 0) {
+            tree.clear();
+        } if (result == 1) {
+            std::cout << "Save layout: " << layoutToSaveName << newLine;
 
-        tree.storeLayout(layoutToSaveName);
+            tree.storeLayout(layoutToSaveName);
+        }
     }
 
     std::cout << "Load layout: " << layout << newLine;
     tree.loadLayout(layout);
 }
 
-int EffectScene::callSaveLayoutDialog(String &name) {
+int EffectScene::callSaveLayoutDialog(String &name, bool dontSaveButton) {
     AlertWindow saveDialog("Save current layout?", "Enter Layout Name", AlertWindow::AlertIconType::NoIcon);
 
     saveDialog.addButton("Save", 1, KeyPress(KeyPress::returnKey));
-    saveDialog.addButton("Don't Save", 0);
+    if (dontSaveButton) {
+        saveDialog.addButton("Don't Save", 0);
+    }
     saveDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
-    //todo default text - get EffectTree current Layout name
-    saveDialog.addTextEditor("Layout Name", "layout name");
+
+    String currentName = tree.getCurrentLayoutName();
+    saveDialog.addTextEditor("Layout Name", currentName);
 
     auto nameEditor = saveDialog.getTextEditor("Layout Name");
 
