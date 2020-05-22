@@ -45,8 +45,8 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
                 combo->addItem(s.substring(0, 20), i++);
             }
 
-            auto *listener = new ComboListener(param);
-            combo->addListener(listener);
+            comboListener = new ComboListener(param);
+            combo->addListener(comboListener);
             combo->setName("Combo");
 
             combo->setSelectedItemIndex(param->getValue());
@@ -63,8 +63,8 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
             slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
                                                                    paramRange.interval, paramRange.skew));
 
-            auto *listener = new SliderListener(param);
-            slider->addListener(listener);
+            sliderListener = new SliderListener(param);
+            slider->addListener(sliderListener);
             slider->setName("Slider");
             slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 
@@ -319,6 +319,12 @@ void Parameter::removeListeners() {
 Parameter::~Parameter() {
     if (sliderListener != nullptr) {
         delete sliderListener;
+    }
+    if (comboListener != nullptr) {
+        delete comboListener;
+    }
+    if (buttonListener != nullptr) {
+        delete buttonListener;
     }
     internalPort.decReferenceCountWithoutDeleting();
     externalPort.decReferenceCountWithoutDeleting();

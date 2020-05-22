@@ -138,6 +138,8 @@ private:
     AudioProcessorParameter* referencedParameter;
 
     SliderListener* sliderListener = nullptr;
+    ComboListener* comboListener = nullptr;
+    ButtonListener* buttonListener = nullptr;
 
     ParameterPort internalPort;
     ParameterPort externalPort;
