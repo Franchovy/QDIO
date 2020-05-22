@@ -40,8 +40,12 @@ public:
     Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
     ConnectionLine::Ptr loadConnection(ValueTree connectionData);
 
-    void loadUserState();
-    void storeAll();
+
+    //todo current layout name
+    void loadLayout(String name = "");
+    void storeLayout(String saveName = "");
+    void clear();
+    bool isNotEmpty();
 
     // Add and remove ValueTree functions (undoable)
     void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;

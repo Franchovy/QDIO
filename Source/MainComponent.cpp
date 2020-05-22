@@ -75,6 +75,16 @@ MainComponent::MainComponent()
 
     //
     layoutMenu.setText("Layout");
+    layoutMenu.onChange = [=] {
+        auto selectedIndex = layoutMenu.getSelectedItemIndex();
+        if (selectedIndex >= 0) {
+            auto layoutName = layoutMenu.getItemText(selectedIndex);
+            main.loadNewLayout(layoutName);
+
+            effectSelectMenu.setSelectedId(0, sendNotificationSync);
+        }
+    };
+
 
     //
     toolBoxMenu.setText("Toolbox");

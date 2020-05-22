@@ -52,6 +52,10 @@ SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
 }
 
 
+EffectTreeBase::EffectTreeBase() {
+    //dragLine.setAlwaysOnTop(true);
+}
+
 bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
     auto inPort = connectionLine.getInPort();
     auto outPort = connectionLine.getOutPort();

@@ -38,6 +38,7 @@ public:
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
 
     void menuCreateEffect(ValueTree effect);
+    void loadNewLayout(String layout);
 
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;

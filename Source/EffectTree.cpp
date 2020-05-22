@@ -591,8 +591,23 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
 
 
 
-void EffectTree::loadUserState() {
-    if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
+void EffectTree::loadLayout(String name) {
+    if (name.isEmpty()) {
+        // Load user state
+        name = "default";
+    }
+
+    auto effectLoadDataTree = EffectLoader::loadLayout(name);
+
+    if (effectLoadDataTree.isValid()) {
+        loadEffect(effectTree, effectLoadDataTree);
+    } else {
+        std::cout << "empty layout." << newLine;
+    }
+
+
+
+    /*if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
         if (loadedEffectsData != nullptr) {
             ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
@@ -601,20 +616,33 @@ void EffectTree::loadUserState() {
 
             loadEffect(effectTree, effectLoadDataTree);
         }
-    }
+    }*/
 }
 
-void EffectTree::storeAll() {
-    auto savedState = storeEffect(effectTree).createXml();
+void EffectTree::storeLayout(String name) {
+    if (name.isEmpty()) {
+        // Name is default loadout
+        name = "default";
+    }
+
+    auto saveState = storeEffect(effectTree);
+    saveState.setProperty("name", name, nullptr);
+    EffectLoader::saveLayout(saveState);
+
+/*    auto savedState = storeEffect(effectTree).createXml();
 
     std::cout << "Save state: " << savedState->toString() << newLine;
     getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-    getAppProperties().getUserSettings()->saveIfNeeded();
+    getAppProperties().getUserSettings()->saveIfNeeded();*/
 }
 
-EffectTreeBase::EffectTreeBase() {
-    //dragLine.setAlwaysOnTop(true);
+void EffectTree::clear() {
+    if (effectTree.getNumChildren() > 0) {
+        effectTree.removeAllChildren(undoManager);
+        effectTree.removeAllProperties(undoManager);
+    }
 }
+
 
 
 ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
@@ -1017,6 +1045,10 @@ ValueTree EffectTree::findTree(ValueTree treeToSearch, GuiObject *component) {
         }
     }
     return ValueTree();
+}
+
+bool EffectTree::isNotEmpty() {
+    return effectTree.getNumChildren() > 0;
 }
 
 

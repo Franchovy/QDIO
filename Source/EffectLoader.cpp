@@ -113,7 +113,7 @@ void EffectLoader::saveLayout(ValueTree &layout) {
         effectLib.removeChild(layoutToOverWrite, nullptr);
     }
 
-    effectLib.appendChild(layoutToOverWrite, nullptr);
+    effectLib.appendChild(layout, nullptr);
 
     auto dataToStore = effectLib.createXml();
     getAppProperties().getUserSettings()->setValue(KEYNAME_LOADOUTS, dataToStore.get());

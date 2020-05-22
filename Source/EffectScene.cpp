@@ -82,7 +82,7 @@ EffectScene::EffectScene()
     if (! dontLoad) {
         // Load effects
         appState = loading;
-        tree.loadUserState();
+        tree.loadLayout();
         undoManager.clearUndoHistory();
         appState = neutral;
     }
@@ -360,8 +360,23 @@ bool EffectScene::keyPressed(const KeyPress &key)
         }
 
         if (key.getKeyCode() == 's') {
-            std::cout << "Save effects" << newLine;
-            tree.storeAll();
+            std::cout << "Save layout" << newLine;
+
+            GroupComponent dialog;
+            Label nameBox;
+            nameBox.setBounds(100,100,150,50);
+            nameBox.setEditable(true, true);
+            nameBox.showEditor();
+            dialog.addAndMakeVisible(nameBox);
+
+            DialogWindow saveDialog("Save Layout", Colours::transparentBlack, false);
+            saveDialog.setBounds(200,200,200,200);
+
+
+            DialogWindow::showModalDialog("Save Layout", &dialog, getParentComponent(), Colours::transparentBlack, false);
+
+
+            tree.storeLayout();
         }
     }
     
@@ -370,7 +385,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
 
 void EffectScene::storeState() {
-    tree.storeAll();
+    tree.storeLayout();
 }
 
 /*void EffectScene::updateChannels() {
@@ -426,8 +441,22 @@ bool EffectScene::canDragHover(const SelectHoverObject *other) const {
 }
 
 void EffectScene::menuCreateEffect(ValueTree effectData) {
-    getScene()->tree.loadEffect(effectData);
+    tree.loadEffect(effectData);
+}
 
+void EffectScene::loadNewLayout(String layout) {
+    if (tree.isNotEmpty()) {
+        DialogWindow saveCurrentDialog("saveDialog", Colours::transparentBlack, true);
+
+        Label saveCurrent("Save", "Save current layout?");
+        saveCurrent.setBounds(0,0,500,300);
+
+        DialogWindow::showModalDialog("Save current Layout?", &saveCurrentDialog, getParentComponent(), Colours::transparentBlack, true);
+
+        tree.storeLayout();
+    }
+
+    tree.loadLayout(layout);
 }
 
 
