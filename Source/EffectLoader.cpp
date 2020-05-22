@@ -179,22 +179,30 @@ void EffectLoader::clearLayout(String layoutName) {
 
 void EffectLoader::writeToFile(ValueTree data) {
     FileChooser fileChooser("Save file");
-    fileChooser.browseForFileToSave(true);
+    auto result = fileChooser.browseForFileToSave(true);
 
-    File outputFile(fileChooser.getResult());
+    if (result == 0) {
+        return;
+    } else {
+        File outputFile(fileChooser.getResult());
 
-    FileOutputStream out(outputFile);
-    data.writeToStream(out);
+        FileOutputStream out(outputFile);
+        data.writeToStream(out);
+    }
 }
 
 ValueTree EffectLoader::loadFromFile() {
     FileChooser fileChooser("Load file");
-    fileChooser.browseForFileToOpen();
+    auto result = fileChooser.browseForFileToOpen();
 
-    File inputFile(fileChooser.getResult());
+    if (result == 0) {
+        return ValueTree();
+    } else {
+        File inputFile(fileChooser.getResult());
 
-    FileInputStream in(inputFile);
-    ValueTree loadData;
-    loadData = ValueTree::readFromStream(in);
-    return loadData;
+        FileInputStream in(inputFile);
+        ValueTree loadData;
+        loadData = ValueTree::readFromStream(in);
+        return loadData;
+    }
 }
