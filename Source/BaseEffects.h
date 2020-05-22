@@ -123,8 +123,8 @@ public:
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
 
 private:
-    AudioParameterFloat gain;
-    AudioParameterFloat cutoff;
+    AudioParameterFloat* gain;
+    AudioParameterFloat* cutoff;
     std::atomic<float> gainVal;
 
 };

@@ -149,20 +149,20 @@ void DelayEffect::releaseResources() {
 }
 
 DistortionEffect::DistortionEffect() : BaseEffect(),
-                                        gain("gain", "Gain",
-                                             NormalisableRange<float>(0.0f, 2.f, 0.001, 1.0f), 1.0f),
-                                        cutoff("cutoff", "Cutoff",
-                                               NormalisableRange<float>(0.0f, 1.0f, 0.001f, 0.5f), 0.8f)
+                                        gain(new AudioParameterFloat("gain", "Gain",
+                                             NormalisableRange<float>(0.0f, 2.f, 0.001, 1.0f), 1.0f)),
+                                        cutoff(new AudioParameterFloat("cutoff", "Cutoff",
+                                               NormalisableRange<float>(0.0f, 1.0f, 0.001f, 0.5f), 0.8f))
 {
     name = "Distortion Effect";
-    addParameter(&gain);
-    addParameter(&cutoff);
+    addParameter(gain);
+    addParameter(cutoff);
 
     setLayout(1,1);
 }
 
 void DistortionEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
-    gainVal = gain;
+    gainVal = *gain;
 }
 
 void DistortionEffect::releaseResources() {
@@ -173,8 +173,8 @@ void DistortionEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midi
     for (int c = 0; c < buffer.getNumChannels(); c++) {
         for (int s = 0; s < buffer.getNumSamples(); s++){
 
-            float sample = jlimit(-cutoff.get(), cutoff.get(), buffer.getSample(c, s) * gain);
-            sample *= gain;
+            float sample = jlimit(-cutoff->get(), cutoff->get(), buffer.getSample(c, s) * *gain);
+            sample *= *gain;
             buffer.setSample(c, s, sample);
         }
     }
