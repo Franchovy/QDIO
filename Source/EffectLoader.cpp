@@ -176,3 +176,25 @@ void EffectLoader::clearLayout(String layoutName) {
     getAppProperties().getUserSettings()->setValue(KEYNAME_LOADOUTS, dataToStore.get());
     getAppProperties().getUserSettings()->save();
 }
+
+void EffectLoader::writeToFile(ValueTree data) {
+    FileChooser fileChooser("Save file");
+    fileChooser.browseForFileToSave(true);
+
+    File outputFile(fileChooser.getResult());
+
+    FileOutputStream out(outputFile);
+    data.writeToStream(out);
+}
+
+ValueTree EffectLoader::loadFromFile() {
+    FileChooser fileChooser("Load file");
+    fileChooser.browseForFileToOpen();
+
+    File inputFile(fileChooser.getResult());
+
+    FileInputStream in(inputFile);
+    ValueTree loadData;
+    loadData.readFromStream(in);
+    return loadData;
+}
