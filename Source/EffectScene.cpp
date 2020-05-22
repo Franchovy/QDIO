@@ -32,6 +32,9 @@ EffectScene::EffectScene()
     } else {
         dontLoad = true;
     }
+
+    //dontLoad = true;
+
     std::cout << "Loading state? " << (dontLoad ? "false" : "true") << newLine;
 
     setBufferedToImage(true);
@@ -77,15 +80,18 @@ EffectScene::EffectScene()
     setupCreateEffectMenu();
 
     if (! dontLoad) {
-    // Load effects
-    appState = loading;
-    tree.loadUserState();
-    undoManager.clearUndoHistory();
-    appState = neutral;
+        // Load effects
+        appState = loading;
+        tree.loadUserState();
+        undoManager.clearUndoHistory();
+        appState = neutral;
     }
 
-    // Update load app version
     if (dontLoad) {
+        // Clear all settings
+        getAppProperties().getUserSettings()->clear();
+
+        // Update load app version
         XmlElement newVersion("version");
         newVersion.setAttribute("version", currentVersion);
         getAppProperties().getUserSettings()->setValue(KEYNAME_APP_VERSION, &newVersion);
