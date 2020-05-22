@@ -69,7 +69,6 @@ EffectScene::EffectScene()
     // Drag Line GUI
     addChildComponent(lasso);
 
-    // Manage EffectsTree
 
 
 #define BACKGROUND_IMAGE
@@ -360,7 +359,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
             undoManager.redo();
         }
 
-        if (key.getKeyCode() == 's') {
+        if (key.getKeyCode() == 's' || key.getKeyCode() == 'S') {
             String name;
             int result = callSaveLayoutDialog(name, false);
 
@@ -369,6 +368,17 @@ bool EffectScene::keyPressed(const KeyPress &key)
                 std::cout << "Save layout: " << name << newLine;
                 postCommandMessage(0);
             }
+        }
+
+        // super secret write to file op
+        if (key.getKeyCode() == 'x' || key.getKeyCode() == 'X') {
+            auto layoutData = EffectLoader::loadLayout(tree.getCurrentLayoutName());
+            EffectLoader::writeToFile(layoutData);
+        }
+        // super secret load from file op
+        if (key.getKeyCode() == 'o' || key.getKeyCode() == 'O') {
+            auto loadData = EffectLoader::loadFromFile();
+            std::cout << "load data type: " << loadData.getType().toString() << newLine;
         }
     }
     

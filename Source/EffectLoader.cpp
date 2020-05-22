@@ -195,6 +195,6 @@ ValueTree EffectLoader::loadFromFile() {
 
     FileInputStream in(inputFile);
     ValueTree loadData;
-    loadData.readFromStream(in);
+    loadData = ValueTree::readFromStream(in);
     return loadData;
 }
