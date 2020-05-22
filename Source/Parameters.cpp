@@ -21,6 +21,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
 {
     internalPort.setLinkedPort(&externalPort);
     externalPort.setLinkedPort(&internalPort);
+    internalPort.incReferenceCount();
     externalPort.incReferenceCount();
 
     referencedParameter = param;
@@ -319,6 +320,7 @@ Parameter::~Parameter() {
     if (sliderListener != nullptr) {
         delete sliderListener;
     }
+    internalPort.decReferenceCountWithoutDeleting();
     externalPort.decReferenceCountWithoutDeleting();
 }
 
