@@ -19,13 +19,13 @@ DSPEffect::DSPEffect()
 
 ReverbEffect::ReverbEffect()
     : DSPEffect()
-    , roomSize("size", "Size",
-            NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.7f)
-    , strength("strength", "Strength",
-            NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f)
+    , roomSize(new AudioParameterFloat("size", "Size",
+            NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.7f))
+    /*, strength(new AudioParameterFloat("strength", "Strength",
+            NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f))*/
 {
     name = "Reverb";
-    addParameter(&roomSize);
+    addParameter(roomSize);
     //addParameter(&strength);
 
     startTimer(1000);
@@ -56,14 +56,14 @@ void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMess
 }
 
 void ReverbEffect::timerCallback() {
-    if (reverbParameters.roomSize != roomSize) {
-        reverbParameters.roomSize = roomSize;
+    if (reverbParameters.roomSize != *roomSize) {
+        reverbParameters.roomSize = *roomSize;
         reverbProcessor.setParameters(reverbParameters);
     }
-    if (reverbParameters.damping != strength) {
+    /*if (reverbParameters.damping != strength) {
         reverbParameters.damping = strength;
         reverbProcessor.setParameters(reverbParameters);
-    }
+    }*/
     startTimer(100);
 }
 

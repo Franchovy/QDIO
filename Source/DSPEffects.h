@@ -31,8 +31,8 @@ public:
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
 
 private:
-    AudioParameterFloat roomSize;
-    AudioParameterFloat strength;
+    AudioParameterFloat* roomSize;
+    AudioParameterFloat* strength;
 
     Reverb::Parameters reverbParameters;
     Reverb reverbProcessor;
