@@ -360,22 +360,13 @@ bool EffectScene::keyPressed(const KeyPress &key)
         }
 
         if (key.getKeyCode() == 's') {
-            AlertWindow saveDialog("Save current layout?", "Enter Layout Name", AlertWindow::AlertIconType::NoIcon);
+            String name;
+            callSaveLayoutDialog(name);
 
-            saveDialog.addButton("Save", 1, KeyPress(KeyPress::returnKey));
-            saveDialog.addButton("Don't Save", 0);
-            saveDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
-            //todo default text - get EffectTree current Layout name
-            saveDialog.addTextEditor("Layout Name", "layout name");
-
-            auto nameEditor = saveDialog.getTextEditor("Layout Name");
-
-            saveDialog.runModalLoop();
-
-            auto name = nameEditor->getText();
             std::cout << "Save layout: " << name << newLine;
 
-            //tree.storeLayout();
+            tree.storeLayout(name);
+            postCommandMessage(0);
         }
     }
     
@@ -445,17 +436,34 @@ void EffectScene::menuCreateEffect(ValueTree effectData) {
 
 void EffectScene::loadNewLayout(String layout) {
     if (tree.isNotEmpty()) {
-        DialogWindow saveCurrentDialog("saveDialog", Colours::transparentBlack, true);
+        String layoutToSaveName;
+        callSaveLayoutDialog(layoutToSaveName);
 
-        Label saveCurrent("Save", "Save current layout?");
-        saveCurrent.setBounds(0,0,500,300);
+        std::cout << "Save layout: " << layoutToSaveName << newLine;
 
-        DialogWindow::showModalDialog("Save current Layout?", &saveCurrentDialog, getParentComponent(), Colours::transparentBlack, true);
-
-        tree.storeLayout();
+        tree.storeLayout(layoutToSaveName);
     }
 
+    std::cout << "Load layout: " << layout << newLine;
     tree.loadLayout(layout);
+}
+
+int EffectScene::callSaveLayoutDialog(String &name) {
+    AlertWindow saveDialog("Save current layout?", "Enter Layout Name", AlertWindow::AlertIconType::NoIcon);
+
+    saveDialog.addButton("Save", 1, KeyPress(KeyPress::returnKey));
+    saveDialog.addButton("Don't Save", 0);
+    saveDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
+    //todo default text - get EffectTree current Layout name
+    saveDialog.addTextEditor("Layout Name", "layout name");
+
+    auto nameEditor = saveDialog.getTextEditor("Layout Name");
+
+    auto result = saveDialog.runModalLoop();
+
+    name = nameEditor->getText();
+
+    return result;
 }
 
 

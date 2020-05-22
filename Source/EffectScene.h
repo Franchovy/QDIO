@@ -40,6 +40,8 @@ public:
     void menuCreateEffect(ValueTree effect);
     void loadNewLayout(String layout);
 
+    int callSaveLayoutDialog(String& name);
+
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
