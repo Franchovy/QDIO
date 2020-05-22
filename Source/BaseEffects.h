@@ -82,6 +82,9 @@ public:
 protected:
     String name;
     BusesLayout layout;
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BaseEffect)
 };
 
 
@@ -111,7 +114,7 @@ private:
     int newDelayBufferSize;
     int delayBufferPt;
 
-
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DelayEffect)
 };
 
 class DistortionEffect : public BaseEffect {
@@ -127,4 +130,5 @@ private:
     AudioParameterFloat* cutoff;
     std::atomic<float> gainVal;
 
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistortionEffect)
 };

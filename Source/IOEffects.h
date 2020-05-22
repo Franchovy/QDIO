@@ -32,6 +32,7 @@ private:
     const String name = "Input Device";
     AudioParameterChoice* deviceParam;
 
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(InputDeviceEffect)
 };
 
 class OutputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor//, private BaseEffect
@@ -71,5 +72,7 @@ private:
 
     AudioParameterChoice* deviceParam;
     String deviceName;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OutputDeviceEffect)
 };
 

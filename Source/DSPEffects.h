@@ -17,6 +17,9 @@ class DSPEffect : public BaseEffect
 {
 public:
     DSPEffect();
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DSPEffect)
 };
 
 class ReverbEffect : public DSPEffect, public Timer
@@ -36,4 +39,6 @@ private:
 
     Reverb::Parameters reverbParameters;
     Reverb reverbProcessor;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReverbEffect)
 };

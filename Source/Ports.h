@@ -76,6 +76,8 @@ public:
     bool canConnect(const ConnectionPort* other) const override;
 
     Component *getDragLineParent() override;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterPort)
 };
 
 class AudioPort;
@@ -90,6 +92,7 @@ public:
 
     bool canConnect(const ConnectionPort* other) const override;
     AudioPort* audioPort;
+
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InternalConnectionPort)
 };

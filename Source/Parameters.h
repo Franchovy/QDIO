@@ -152,6 +152,8 @@ private:
     ComponentDragger dragger;
 
     Rectangle<int> outline;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Parameter)
 };
 
 
@@ -186,4 +188,6 @@ private:
     AudioProcessorParameter* linkedParameter = nullptr;
 
     static int currentID;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MetaParameter)
 };

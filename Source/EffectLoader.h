@@ -34,4 +34,7 @@ public:
     static ValueTree loadLayout(String layoutName);
     static StringArray getLayoutsAvailable();
     static void clearLayout(String layoutName);
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectLoader)
 };

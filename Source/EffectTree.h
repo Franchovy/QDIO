@@ -79,5 +79,5 @@ private:
     ValueTree effectTree;
     UndoManager* undoManager;
 
-    ReferenceCountedArray<Effect> effectsToDelete;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTree)
 };
