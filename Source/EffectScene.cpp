@@ -360,23 +360,22 @@ bool EffectScene::keyPressed(const KeyPress &key)
         }
 
         if (key.getKeyCode() == 's') {
-            std::cout << "Save layout" << newLine;
+            AlertWindow saveDialog("Save current layout?", "Enter Layout Name", AlertWindow::AlertIconType::NoIcon);
 
-            GroupComponent dialog;
-            Label nameBox;
-            nameBox.setBounds(100,100,150,50);
-            nameBox.setEditable(true, true);
-            nameBox.showEditor();
-            dialog.addAndMakeVisible(nameBox);
+            saveDialog.addButton("Save", 1, KeyPress(KeyPress::returnKey));
+            saveDialog.addButton("Don't Save", 0);
+            saveDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
+            //todo default text - get EffectTree current Layout name
+            saveDialog.addTextEditor("Layout Name", "layout name");
 
-            DialogWindow saveDialog("Save Layout", Colours::transparentBlack, false);
-            saveDialog.setBounds(200,200,200,200);
+            auto nameEditor = saveDialog.getTextEditor("Layout Name");
 
+            saveDialog.runModalLoop();
 
-            DialogWindow::showModalDialog("Save Layout", &dialog, getParentComponent(), Colours::transparentBlack, false);
+            auto name = nameEditor->getText();
+            std::cout << "Save layout: " << name << newLine;
 
-
-            tree.storeLayout();
+            //tree.storeLayout();
         }
     }
     
