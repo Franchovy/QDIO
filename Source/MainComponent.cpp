@@ -54,8 +54,11 @@ MainComponent::MainComponent()
         settingsButton.setVisible(true);
     };
 
+    //============================================================================
     // Set up selection menus
-    
+
+    //
+    effectSelectMenu.setText("Effects");
     effectSelectMenu.onChange = [=] {
         auto selectedIndex = effectSelectMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
@@ -69,8 +72,6 @@ MainComponent::MainComponent()
 
     updateEffectSelectMenu();
 
-    //
-    effectSelectMenu.setText("Effects");
 
     //
     layoutMenu.setText("Layout");
@@ -186,11 +187,21 @@ void MainComponent::updateEffectSelectMenu() {
     }
 }
 
-void MainComponent::handleCommandMessage(int commandId) {
-    if (commandId == 0) {
-        std::cout << "update effect menu" << newLine;
-        updateEffectSelectMenu();
+void MainComponent::updateLayoutMenu() {
+    layoutMenu.clear(dontSendNotification);
+    Image img = ImageCache::getFromMemory(BinaryData::settings_png, BinaryData::settings_pngSize);
+
+    int i = 1;
+    for (auto e : EffectLoader::getLayoutsAvailable()) {
+        layoutMenu.getRootMenu()->addItem(i++, e, true, false, img);
     }
 }
 
+void MainComponent::handleCommandMessage(int commandId) {
+    if (commandId == 0) {
+        std::cout << "Update menus" << newLine;
+        updateEffectSelectMenu();
+        updateLayoutMenu();
+    }
+}
 

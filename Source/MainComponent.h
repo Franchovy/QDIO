@@ -36,6 +36,7 @@ public:
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
 
     void updateEffectSelectMenu();
+    void updateLayoutMenu();
     
     bool keyPressed(const KeyPress &key) override;
 
