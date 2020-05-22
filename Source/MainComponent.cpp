@@ -35,15 +35,15 @@ MainComponent::MainComponent()
     main.view = getViewArea();
 
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
-
     settingsButton.setImages(false, true, false,
                              image, 1.0f, Colours::grey, image, 1.0f, Colours::lightgrey,
                              image, 1.0f, Colours::darkgrey);
     addAndMakeVisible(settingsButton);
-    settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
+
 
     settingsMenu.setTopRightPosition(getWidth() - 40, 40);
     addChildComponent(settingsMenu);
+
     settingsButton.onClick = [=] {
         settingsMenu.setVisible(true);
         settingsButton.setVisible(false);
@@ -54,9 +54,8 @@ MainComponent::MainComponent()
         settingsButton.setVisible(true);
     };
 
-    effectSelectMenu.setBounds(100, 100, 400, 50);
-    effectSelectMenu.setText("Select Effect");
-
+    // Set up selection menus
+    
     effectSelectMenu.onChange = [=] {
         auto selectedIndex = effectSelectMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
@@ -70,6 +69,17 @@ MainComponent::MainComponent()
 
     updateEffectSelectMenu();
 
+    //
+    effectSelectMenu.setText("Effects");
+
+    //
+    layoutMenu.setText("Layout");
+
+    //
+    toolBoxMenu.setText("Toolbox");
+
+    addAndMakeVisible(layoutMenu);
+    addAndMakeVisible(toolBoxMenu);
     addAndMakeVisible(effectSelectMenu);
     /*auto menu = effectSelectMenu.getRootMenu();
     populateEffectMenu(*menu);*/
@@ -137,6 +147,26 @@ void MainComponent::mouseWheelMove(const juce::MouseEvent &event, const juce::Mo
 void MainComponent::resized() {
     main.setBounds(getLocalBounds());
     settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
+
+    auto menu1 = FlexItem(settingsButton);
+    auto menu2 = FlexItem(layoutMenu);
+    auto menu3 = FlexItem(effectSelectMenu);
+    auto menu4 = FlexItem(toolBoxMenu);
+
+    menu1.height = menu2.height = menu3.height = menu4.height = 50;
+    menu1.width = 50;
+    menu2.width = menu3.width = menu4.width = 90;
+    menu1.margin = menu2.margin = menu3.margin = menu4.margin = 10;
+
+    FlexBox menus;
+    menus.justifyContent = FlexBox::JustifyContent::flexStart;
+    menus.flexDirection = FlexBox::Direction::row;
+    menus.alignItems = FlexBox::AlignItems::flexStart;
+    menus.items.add(menu1);
+    menus.items.add(menu2);
+    menus.items.add(menu3);
+    menus.items.add(menu4);
+    menus.performLayout(Rectangle<int>(100,100,400,60));
 }
 
 void MainComponent::populateEffectMenu(PopupMenu& menu) {
