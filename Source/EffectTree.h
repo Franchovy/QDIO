@@ -71,6 +71,7 @@ public:
     template <class T>
     static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
 
+    void removeAllListeners(ValueTree component = ValueTree());
 
 private:
     String currentLayoutName;

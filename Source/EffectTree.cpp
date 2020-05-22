@@ -476,6 +476,8 @@ EffectTree::~EffectTree() {
     auto effectScene = effectTree.getProperty(IDs::component).getObject();
     effectScene->incReferenceCount();
 
+    removeAllListeners();
+
     effectTree = ValueTree(); // clear ValueTree
 
     effectScene->decReferenceCountWithoutDeleting();
@@ -1055,6 +1057,24 @@ bool EffectTree::isNotEmpty() {
 
 String EffectTree::getCurrentLayoutName() {
     return currentLayoutName;
+}
+
+void EffectTree::removeAllListeners(ValueTree component) {
+    if (component.isValid()) {
+        for (int i = 0; i < component.getNumChildren(); i++) {
+            auto child = component.getChild(i);
+
+            if (child.hasProperty(IDs::component)) {
+                getFromTree<Component>(child)->removeComponentListener(this);
+            }
+
+            if (child.getNumChildren() > 0) {
+                removeAllListeners(child);
+            }
+        }
+    } else {
+        removeAllListeners(effectTree);
+    }
 }
 
 
