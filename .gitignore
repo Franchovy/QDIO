@@ -1,2 +1,3 @@
 Builds/*
 JuceLibraryCode/*
+!JuceLibraryCode/modules/juce_gui_basics/native/juce_mac_NSViewComponentPeer.mm
