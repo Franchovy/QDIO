@@ -20,6 +20,7 @@ const String KEYNAME_DEVICE_SETTINGS = "audioDeviceState"; // maybe move this?
 const String KEYNAME_LOADED_EFFECTS = "loadedEffects";
 const String KEYNAME_LOADOUTS = "loadouts";
 const String KEYNAME_CURRENT_LOADOUT = "currentLoadout";
+const String KEYNAME_INITIAL_USE = "initialUse";
 
 class EffectLoader {
 public:

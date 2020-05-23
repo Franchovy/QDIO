@@ -22,6 +22,14 @@ EffectScene::EffectScene()
     std::cout << "App version: " << currentVersion << newLine;
     auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
 
+    auto initialUse = getAppProperties().getUserSettings()->getValue(KEYNAME_INITIAL_USE);
+
+    auto loadInitialCase = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE);
+    if (initialUse.isEmpty()) {
+        loadInitialCase = true;
+    }
+
+
     if (appVersion != nullptr && appVersion->hasAttribute("version")) {
         std::cout << "Load version: " << appVersion->getStringAttribute("version") << newLine;
         if (appVersion->getStringAttribute("version") == currentVersion) {
@@ -79,10 +87,24 @@ EffectScene::EffectScene()
     setupCreateEffectMenu();
 
     if (! dontLoad) {
-        String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
         // Load layout
         appState = loading;
-        tree.loadLayout(name);
+        if (loadInitialCase) {
+            // Load initial layout
+            auto initialLayout = ValueTree::readFromData(BinaryData::defaultLayout, BinaryData::defaultLayoutSize);
+            jassert(initialLayout.getType() == Identifier(EFFECTSCENE_ID));
+            EffectLoader::saveLayout(initialLayout);
+            auto name = initialLayout.getProperty("name");
+            tree.loadLayout(name);
+            std::cout << "Initial layout load!" << newLine;
+
+            getAppProperties().getUserSettings()->setValue(KEYNAME_INITIAL_USE, true);
+        } else {
+            // Load previous layout
+            String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
+            std::cout << "Load layout: " << name << newLine;
+            tree.loadLayout(name);
+        }
         undoManager.clearUndoHistory();
         appState = neutral;
     }

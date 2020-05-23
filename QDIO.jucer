@@ -3,6 +3,9 @@
 <JUCERPROJECT id="XyrfN6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7"
               compilerFlagSchemes="NewScheme">
   <MAINGROUP id="T8wAiB" name="QDIO">
+    <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
+      <FILE id="v5uXFq" name="defaultLayout" compile="0" resource="1" file="Resources/Loadout/defaultLayout"/>
+    </GROUP>
     <GROUP id="{3656747D-F630-B6A0-87B7-F4E2A08E98F7}" name="Resources">
       <FILE id="DRvEs5" name="background.png" compile="0" resource="1" file="Resources/background.png"/>
       <FILE id="ly2BEv" name="minus.png" compile="0" resource="1" file="Resources/minus.png"/>
