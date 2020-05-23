@@ -23,7 +23,7 @@ EffectScene::EffectScene()
     auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
 
     auto initialUse = getAppProperties().getUserSettings()->getValue(KEYNAME_INITIAL_USE);
-    bool loadInitialCase = false;
+    bool loadInitialCase = true;
     auto initialUseBool = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE); //true if prev use
     if (initialUse.isEmpty() && ! initialUseBool) {
         loadInitialCase = true;
@@ -42,6 +42,7 @@ EffectScene::EffectScene()
     }
 
     //dontLoad = true;
+    bool dontLoadDevices = true;
 
     std::cout << "Loading state? " << (dontLoad ? "false" : "true") << newLine;
 
@@ -61,10 +62,9 @@ EffectScene::EffectScene()
 
     audioGraph.enableAllBuses();
    
-    if (dontLoad) {
+    if (dontLoadDevices) {
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
-        deviceManager.initialise(2, 2, nullptr,
-                             true);
+        deviceManager.initialiseWithDefaultDevices(2, 2);
     } else {
         deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
@@ -86,7 +86,7 @@ EffectScene::EffectScene()
 
     // Main component popup menu
     setupCreateEffectMenu();
-
+    
     if (! dontLoad) {
         // Load layout
         appState = loading;

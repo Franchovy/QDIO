@@ -40,19 +40,15 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         int id = tree.getProperty(Effect::IDs::processorID);
 
         auto currentDeviceType = EffectTreeBase::getDeviceManager()->getCurrentDeviceTypeObject();
-        StringArray choices;
-        choices.add("Bluetooth device");
         auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
 
         switch (id) {
             case 0:
-                choices.addArray(currentDeviceType->getDeviceNames(true));
-                newProcessor = std::make_unique<InputDeviceEffect>(choices,
+                newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
                                                                    currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
                 break;
             case 1:
-                choices.addArray(currentDeviceType->getDeviceNames(false));
-                newProcessor = std::make_unique<OutputDeviceEffect>(choices,
+                newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
                                                                     currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
                 break;
             case 2:
@@ -968,14 +964,9 @@ ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
 template<class T>
 T *EffectTree::getFromTree(const ValueTree &vt) {
     if (vt.hasProperty(IDs::component)) {
-        // Return effect
         return dynamic_cast<T*>(vt.getProperty(IDs::component).getObject());
-    } else if (vt.hasProperty(IDs::component)) {
-        // Return connection
-        return dynamic_cast<T*>(vt.getProperty(IDs::component).getObject());
-    } else if (vt.hasProperty(IDs::component)) {
-        // Return parameter
-        return dynamic_cast<T*>(vt.getProperty(IDs::component).getObject());
+    } else {
+        return nullptr;
     }
 }
 

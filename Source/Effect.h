@@ -169,7 +169,7 @@ public:
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
-    static AudioProcessor::Bus* getDefaultBus() { audioGraph->getBus(true, 0); }
+    static AudioProcessor::Bus* getDefaultBus() { return audioGraph->getBus(true, 0); }
 
     int getNumInputs() const { return inputPortFlexBox.items.size(); }
     int getNumOutputs() const { return outputPortFlexBox.items.size(); }
