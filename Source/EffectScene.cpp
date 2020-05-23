@@ -11,7 +11,7 @@ EffectScene::EffectScene()
 {
     setComponentID("EffectScene");
     setName("EffectScene");
-    
+
     //================================================================================
     // LOADING PARAMETERS
 
@@ -89,7 +89,7 @@ EffectScene::EffectScene()
 
 
     // Main component popup menu
-    setupCreateEffectMenu();
+    //setupCreateEffectMenu();
 
 
     //==========================================================================
@@ -142,55 +142,83 @@ EffectScene::~EffectScene()
     undoManager.clearUndoHistory();
 }
 
-void EffectScene::setupCreateEffectMenu() {
+/*Array<PopupMenu::Item> EffectScene::setupCreateEffectMenu() {
 
+    Array<PopupMenu::Item> returnArray;
     std::unique_ptr<PopupMenu> createEffectMenu = std::make_unique<PopupMenu>();
 
-    createEffectMenu->addItem("Empty Effect", std::function<void()>(
+    PopupMenu::Item empty("Empty Effect");
+    empty.setAction( std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Effect");
                 auto effectVT = tree.newEffect("Effect", getMouseXYRelative());
                 tree.createEffect(effectVT);
-            }));
-    createEffectMenu->addItem("Input Device", std::function<void()>(
+            }
+    ));
+    returnArray.add(empty);
+
+    PopupMenu::Item input("Input Device");
+    input.setAction(std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Input Effect");
                 auto effectVT = tree.newEffect("Input Device", getMouseXYRelative(), 0);
                 tree.createEffect(effectVT);
-            }));
-    createEffectMenu->addItem("Output Device", std::function<void()>(
+            }
+    ));
+    returnArray.add(input);
+
+    PopupMenu::Item output("Output Device");
+    output.setAction(std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Output Effect");
                 auto effectVT = tree.newEffect("Output Device", getMouseXYRelative(), 1);
                 tree.createEffect(effectVT);
-            }));
-    createEffectMenu->addItem("Distortion Effect", std::function<void()>(
+            }
+    ));
+    returnArray.add(output);
+
+    PopupMenu::Item distortion("Distortion Effect");
+    distortion.setAction(std::function<void()>(
             [=]{
                 undoManager.beginNewTransaction("Create Distortion Effect");
                 auto effectVT = tree.newEffect("Distortion Effect", getMouseXYRelative(), 2);
                 tree.createEffect(effectVT);
             }
     ));
-    createEffectMenu->addItem("Delay Effect", std::function<void()>(
+    returnArray.add(distortion);
+
+    PopupMenu::Item delay("Delay Effect");
+    delay.setAction(std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Delay Effect");
                 auto effectVT = tree.newEffect("Delay Effect", getMouseXYRelative(), 3);
                 tree.createEffect(effectVT);
             }
     ));
-    createEffectMenu->addItem("Reverb Effect", std::function<void()>(
+    returnArray.add(delay);
+
+    PopupMenu::Item reverb("Reverb Effect");
+    reverb.setAction(std::function<void()>(
             [=](){
                 undoManager.beginNewTransaction("Create Reverb Effect");
                 auto effectVT = tree.newEffect("Reverb Effect", getMouseXYRelative(), 4);
                 tree.createEffect(effectVT);
             }
     ));
+    returnArray.add(reverb);
 
-    PopupMenu::Item createEffectMenuItem("Create effect..");
+    *//*PopupMenu::Item createEffectMenuItem("Create effect..");
     createEffectMenuItem.subMenu = std::move(createEffectMenu);
+    addMenuItem(0, createEffectMenuItem);*//*
 
-    addMenuItem(0, createEffectMenuItem);
+    return returnArray;
+}*/
+
+void EffectScene::createProcessor(int processorID) {
+    auto newEffect = tree.newEffect(tree.getProcessorName(processorID), getMouseXYRelative(), processorID);
+    tree.loadEffect(newEffect);
 }
+
 
 
 //==============================================================================
@@ -475,6 +503,8 @@ bool EffectScene::canDragHover(const SelectHoverObject *other) const {
 }
 
 void EffectScene::menuCreateEffect(ValueTree effectData) {
+    effectData.setProperty("x", 400, nullptr);
+    effectData.setProperty("y", 400, nullptr);
     tree.loadEffect(effectData);
 }
 
@@ -518,6 +548,11 @@ int EffectScene::callSaveLayoutDialog(String &name, bool dontSaveButton) {
 
     return result;
 }
+
+StringArray EffectScene::getProcessorNames() {
+    return tree.getProcessorNames();
+}
+
 
 
 

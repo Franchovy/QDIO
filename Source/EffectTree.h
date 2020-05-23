@@ -30,6 +30,10 @@ public:
     // Create new methods - constructs ValueTree Data needed
     ValueTree newEffect(String name, Point<int> pos, int processorID = -1);
 
+    StringArray getProcessorNames();
+    String getProcessorName(int processorID);
+    std::unique_ptr<AudioProcessor> createProcessor(int processorID);
+
     void remove(SelectHoverObject* c);
 
     ValueTree storeEffect(const ValueTree& storeData);

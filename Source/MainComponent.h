@@ -37,6 +37,7 @@ public:
 
     void updateEffectSelectMenu();
     void updateLayoutMenu();
+    void populateToolBoxMenu();
     
     bool keyPressed(const KeyPress &key) override;
 

@@ -65,7 +65,9 @@ public:
     Rectangle<int> view;
 
     // Menu stuff
-    void setupCreateEffectMenu();
+    //Array<PopupMenu::Item> setupCreateEffectMenu();
+    StringArray getProcessorNames();
+    void createProcessor(int processorID);
 
     bool canDragInto(const SelectHoverObject *other) const override;
     bool canDragHover(const SelectHoverObject *other) const override;

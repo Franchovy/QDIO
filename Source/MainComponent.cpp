@@ -89,6 +89,15 @@ MainComponent::MainComponent()
     //
     toolBoxMenu.setText("Toolbox");
 
+    toolBoxMenu.onChange = [=] {
+        auto selectedIndex = toolBoxMenu.getSelectedItemIndex();
+        if (selectedIndex >= 0) {
+            main.createProcessor(selectedIndex);
+        }
+    };
+
+    populateToolBoxMenu();
+
     addAndMakeVisible(layoutMenu);
     addAndMakeVisible(toolBoxMenu);
     addAndMakeVisible(effectSelectMenu);
@@ -212,6 +221,13 @@ void MainComponent::handleCommandMessage(int commandId) {
         std::cout << "Update menus" << newLine;
         updateEffectSelectMenu();
         updateLayoutMenu();
+    }
+}
+
+void MainComponent::populateToolBoxMenu() {
+    int i = 0;
+    for (auto item : main.getProcessorNames()) {
+        toolBoxMenu.addItem(item, ++i);
     }
 }
 

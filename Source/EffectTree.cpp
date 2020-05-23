@@ -39,30 +39,8 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         std::unique_ptr<AudioProcessor> newProcessor;
         int id = tree.getProperty(Effect::IDs::processorID);
 
-        auto currentDeviceType = EffectTreeBase::getDeviceManager()->getCurrentDeviceTypeObject();
-        auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
+        newProcessor = createProcessor(id);
 
-        switch (id) {
-            case 0:
-                newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
-                                                                   currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
-                break;
-            case 1:
-                newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
-                                                                    currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
-                break;
-            case 2:
-                newProcessor = std::make_unique<DistortionEffect>();
-                break;
-            case 3:
-                newProcessor = std::make_unique<DelayEffect>();
-                break;
-            case 4:
-                newProcessor = std::make_unique<ReverbEffect>();
-                break;
-            default:
-                std::cout << "ProcessorID not found." << newLine;
-        }
         auto node = EffectTreeBase::getAudioGraph()->addNode(move(newProcessor));
         effect->setNode(node);
         // Create from node:
@@ -1066,6 +1044,61 @@ void EffectTree::removeAllListeners(ValueTree component) {
     } else {
         removeAllListeners(effectTree);
     }
+}
+
+StringArray EffectTree::getProcessorNames() {
+    StringArray names;
+    for (int i = 0; i < 5; i++) {
+        names.add(getProcessorName(i));
+    }
+    return names;
+}
+
+String EffectTree::getProcessorName(int processorID) {
+    switch (processorID) {
+        case 0:
+            return "Input Device";
+        case 1: //todo remove arguments
+            return "Output Device";
+        case 2:
+            return "Distortion";
+        case 3:
+            return "Delay";
+        case 4:
+            return "Reverb";
+        default:
+            jassertfalse;
+            return String();
+    }
+}
+
+std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
+    std::unique_ptr<AudioProcessor> newProcessor;
+    auto currentDeviceType = EffectTreeBase::getDeviceManager()->getCurrentDeviceTypeObject();
+    auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
+
+    switch (processorID) {
+        case 0: //todo remove arguments
+            newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
+                                                               currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
+            break;
+        case 1: //todo remove arguments
+            newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
+                                                                currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
+            break;
+        case 2:
+            newProcessor = std::make_unique<DistortionEffect>();
+            break;
+        case 3:
+            newProcessor = std::make_unique<DelayEffect>();
+            break;
+        case 4:
+            newProcessor = std::make_unique<ReverbEffect>();
+            break;
+        default:
+            jassertfalse;
+    }
+    return newProcessor;
 }
 
 
