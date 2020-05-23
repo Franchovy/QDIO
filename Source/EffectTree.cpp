@@ -189,7 +189,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
 
     effect->setupMenu();
 
-    if (! effect->isIndividual()) {
+    /*if (! effect->isIndividual()) {
         PopupMenu::Item saveEffect("Save Effect");
         saveEffect.setAction([=]() {
             auto saveTree = storeEffect(tree);
@@ -206,7 +206,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
 
         effect->addMenuItem(effect->menu, saveEffect);
         effect->addMenuItem(effect->editMenu, saveEffect);
-    }
+    }*/
 
 
     // Set up Title
@@ -457,7 +457,11 @@ EffectTree::~EffectTree() {
 
     removeAllListeners();
 
+/*    auto test = effectTree.getChild(0);
+    std::cout << test.getReferenceCount() << newLine;*/
+
     effectTree = ValueTree(); // clear ValueTree
+    //std::cout << test.getReferenceCount() << newLine;
 
     effectScene->decReferenceCountWithoutDeleting();
 }

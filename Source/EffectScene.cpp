@@ -42,7 +42,7 @@ EffectScene::EffectScene()
 
     bool dontLoadDevices = dontLoad;
 
-    dontLoad = true;
+    //dontLoad = true;
     //bool dontLoadDevices = false;
 
     std::cout << "Loading state? " << (dontLoad ? "false" : "true") << newLine;
