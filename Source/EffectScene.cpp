@@ -23,9 +23,9 @@ EffectScene::EffectScene()
     auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
 
     auto initialUse = getAppProperties().getUserSettings()->getValue(KEYNAME_INITIAL_USE);
-
-    auto loadInitialCase = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE);
-    if (initialUse.isEmpty()) {
+    bool loadInitialCase = false;
+    auto initialUseBool = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE); //true if prev use
+    if (initialUse.isEmpty() && ! initialUseBool) {
         loadInitialCase = true;
     }
 
