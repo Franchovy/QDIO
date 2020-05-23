@@ -417,13 +417,40 @@ bool EffectScene::keyPressed(const KeyPress &key)
         }
 
         if (key.getKeyCode() == 's' || key.getKeyCode() == 'S') {
-            String name;
-            int result = callSaveLayoutDialog(name, false);
 
-            if (result == 1) {
-                tree.storeLayout(name);
-                std::cout << "Save layout: " << name << newLine;
-                postCommandMessage(0);
+
+            if (selected.getItemArray().size() == 1) {
+                auto item = selected.getSelectedItem(0);
+
+                if (auto effect = dynamic_cast<Effect*>(item.get())) {
+                    String name = item->getName();
+
+                    int result = callSaveEffectDialog(name);
+
+                    if (result == 1) {
+                        auto effectTree = tree.getTree(effect);
+
+                        // Set name to whatever was entered
+                        effect->setName(name);
+                        effectTree.setProperty("name", name, nullptr);
+
+                        auto data = tree.storeEffect(tree.getTree(effect));
+                        EffectLoader::saveEffect(data);
+
+                        std::cout << "Saved Effect: " << name << newLine;
+                        postCommandMessage(0);
+                    }
+                }
+            } else {
+                // Save layout
+                String name;
+                int result = callSaveLayoutDialog(name, false);
+
+                if (result == 1) {
+                    tree.storeLayout(name);
+                    std::cout << "Save layout: " << name << newLine;
+                    postCommandMessage(0);
+                }
             }
         }
 
@@ -432,11 +459,12 @@ bool EffectScene::keyPressed(const KeyPress &key)
             if (selected.getItemArray().size() == 1) {
                 auto item = selected.getSelectedItem(0);
                 if (auto effect = dynamic_cast<Effect*>(item.get())) {
-                    // Save effect
+                    // Export effect
                     auto effectData = tree.storeEffect(tree.getTree(effect));
                     EffectLoader::writeToFile(effectData);
                 }
             } else {
+                // Export Layout
                 auto layoutData = EffectLoader::loadLayout(tree.getCurrentLayoutName());
                 EffectLoader::writeToFile(layoutData);
             }
@@ -447,12 +475,12 @@ bool EffectScene::keyPressed(const KeyPress &key)
             std::cout << "load data type: " << loadData.getType().toString() << newLine;
             jassert(loadData.hasProperty("name"));
             if (loadData.getType() == Identifier(EFFECTSCENE_ID)) {
-                // Load layout
+                // Import layout
                 EffectLoader::saveLayout(loadData);
                 String layoutName = loadData.getProperty("name");
                 loadNewLayout(layoutName);
             } else if (loadData.getType() == Identifier(EFFECT_ID)) {
-                // Load effect
+                // Import effect
                 EffectLoader::saveEffect(loadData);
                 String effectName = loadData.getProperty("name");
                 tree.loadEffect(loadData);
@@ -562,6 +590,23 @@ int EffectScene::callSaveLayoutDialog(String &name, bool dontSaveButton) {
     saveDialog.addTextEditor("Layout Name", currentName);
 
     auto nameEditor = saveDialog.getTextEditor("Layout Name");
+
+    auto result = saveDialog.runModalLoop();
+
+    name = nameEditor->getText();
+
+    return result;
+}
+
+int EffectScene::callSaveEffectDialog(String &name) {
+    AlertWindow saveDialog("Save this effect?", "Enter Effect Name", AlertWindow::AlertIconType::NoIcon);
+
+    saveDialog.addButton("Save", 1, KeyPress(KeyPress::returnKey));
+    saveDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
+
+    saveDialog.addTextEditor("Effect Name", name);
+
+    auto nameEditor = saveDialog.getTextEditor("Effect Name");
 
     auto result = saveDialog.runModalLoop();
 

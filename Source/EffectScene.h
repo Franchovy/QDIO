@@ -41,6 +41,7 @@ public:
     void loadNewLayout(String layout);
 
     int callSaveLayoutDialog(String& name, bool dontSaveButton);
+    int callSaveEffectDialog(String &name);
 
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
