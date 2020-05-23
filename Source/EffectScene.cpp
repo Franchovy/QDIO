@@ -16,12 +16,8 @@ EffectScene::EffectScene()
     // LOADING PARAMETERS
 
     // If this is the Initial Use Case
-    auto initialUse = getAppProperties().getUserSettings()->getValue(KEYNAME_INITIAL_USE);
-    bool loadInitialCase = false;
-    auto initialUseBool = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE); //true if prev use
-    if (initialUse.isEmpty() && ! initialUseBool) {
-        loadInitialCase = true;
-    }
+    auto loadInitialCase = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE, true);
+
 
     // Don't load anything if this isn't the right version.
     bool dontLoad;
@@ -35,11 +31,13 @@ EffectScene::EffectScene()
             dontLoad = false;
         } else {
             dontLoad = true;
+
         }
     } else {
         dontLoad = true;
     }
 
+    loadInitialCase = dontLoad;
     bool dontLoadDevices = dontLoad;
 
     //dontLoad = true;
@@ -95,28 +93,7 @@ EffectScene::EffectScene()
     //==========================================================================
     // Load starting state
 
-    if (! dontLoad) {
-        // Load layout
-        appState = loading;
-        if (loadInitialCase) {
-            // Load initial layout
-            auto initialLayout = ValueTree::readFromData(BinaryData::defaultLayout, BinaryData::defaultLayoutSize);
-            jassert(initialLayout.getType() == Identifier(EFFECTSCENE_ID));
-            EffectLoader::saveLayout(initialLayout);
-            auto name = initialLayout.getProperty("name");
-            tree.loadLayout(name);
-            std::cout << "Initial layout load!" << newLine;
-
-            getAppProperties().getUserSettings()->setValue(KEYNAME_INITIAL_USE, true);
-        } else {
-            // Load previously loaded layout
-            String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
-            std::cout << "Load layout: " << name << newLine;
-            tree.loadLayout(name);
-        }
-        undoManager.clearUndoHistory();
-        appState = neutral;
-    } else {
+    if (dontLoad) {
         // Clear all settings
         getAppProperties().getUserSettings()->clear();
 
@@ -125,6 +102,51 @@ EffectScene::EffectScene()
         newVersion.setAttribute("version", currentVersion);
         getAppProperties().getUserSettings()->setValue(KEYNAME_APP_VERSION, &newVersion);
         getAppProperties().getUserSettings()->save();
+    }
+
+    if (loadInitialCase) {
+        // Load initial layout
+        auto initialLayout = ValueTree::readFromData(BinaryData::BasicInOutLayout, BinaryData::BasicInOutLayoutSize);
+
+        jassert(initialLayout.getType() == Identifier(EFFECTSCENE_ID));
+        EffectLoader::saveLayout(initialLayout);
+
+        auto name = initialLayout.getProperty("name");
+        tree.loadLayout(name);
+
+        std::cout << "Initial layout load!" << newLine;
+
+        getAppProperties().getUserSettings()->setValue(KEYNAME_INITIAL_USE, true);
+
+        // Load effects and layouts to EffectLoader
+        auto data = ValueTree::readFromData(BinaryData::Guitar_Rig, BinaryData::Guitar_RigSize);
+        EffectLoader::saveLayout(data);
+
+        data = ValueTree::readFromData(BinaryData::GuitarInputEffect, BinaryData::GuitarInputEffectSize);
+        EffectLoader::saveEffect(data);
+
+        data = ValueTree::readFromData(BinaryData::AmpOutputEffect, BinaryData::AmpOutputEffectSize);
+        EffectLoader::saveEffect(data);
+
+        data = ValueTree::readFromData(BinaryData::MegaGrunge, BinaryData::MegaGrungeSize);
+        EffectLoader::saveEffect(data);
+
+        data = ValueTree::readFromData(BinaryData::SuperDelay, BinaryData::SuperDelaySize);
+        EffectLoader::saveEffect(data);
+
+        // Refresh effect and layout menus
+        postCommandMessage(0);
+    } else if (! dontLoad) {
+        // Load layout
+        appState = loading;
+
+        // Load previously loaded layout
+        String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
+        std::cout << "Load layout: " << name << newLine;
+        tree.loadLayout(name);
+
+        undoManager.clearUndoHistory();
+        appState = neutral;
     }
 }
 
@@ -417,8 +439,6 @@ bool EffectScene::keyPressed(const KeyPress &key)
         }
 
         if (key.getKeyCode() == 's' || key.getKeyCode() == 'S') {
-
-
             if (selected.getItemArray().size() == 1) {
                 auto item = selected.getSelectedItem(0);
 
@@ -485,6 +505,24 @@ bool EffectScene::keyPressed(const KeyPress &key)
                 String effectName = loadData.getProperty("name");
                 tree.loadEffect(loadData);
             }
+        }
+        // reset initial use command
+        if (key.getKeyCode() == 'I' && key.getModifiers().isCtrlDown())
+        {
+            tree.clear();
+
+            // If shift is down also erase all saved content
+            if (key.getModifiers().isShiftDown()) {
+                for (auto l : EffectLoader::getLayoutsAvailable()) {
+                    EffectLoader::clearLayout(l);
+                }
+                for (auto e : EffectLoader::getEffectsAvailable()) {
+                    EffectLoader::clearEffect(e);
+                }
+            }
+
+            getAppProperties().getUserSettings()->clear();
+            getAppProperties().getUserSettings()->save();
         }
     }
     
