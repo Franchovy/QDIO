@@ -206,6 +206,7 @@ void MainComponent::updateEffectSelectMenu() {
     for (auto e : EffectLoader::getEffectsAvailable()) {
         effectSelectMenu.getRootMenu()->addItem(i++, e, true, false, img);
     }
+    effectSelectMenu.setText("Effects");
 }
 
 void MainComponent::updateLayoutMenu() {
@@ -216,6 +217,7 @@ void MainComponent::updateLayoutMenu() {
     for (auto e : EffectLoader::getLayoutsAvailable()) {
         layoutMenu.getRootMenu()->addItem(i++, e, true, false, img);
     }
+    layoutMenu.setText("Layout");
 }
 
 void MainComponent::handleCommandMessage(int commandId) {
