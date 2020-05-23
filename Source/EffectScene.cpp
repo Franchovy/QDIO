@@ -63,11 +63,12 @@ EffectScene::EffectScene()
    
     if (dontLoad) {
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
-        deviceManager.initialise(256, 256, nullptr,
+        deviceManager.initialise(2, 2, nullptr,
                              true);
     } else {
-        deviceManager.initialise(256, 256, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
+        deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
+
     }
     deviceManager.addAudioCallback(&processorPlayer);
     processorPlayer.setProcessor(&audioGraph);
