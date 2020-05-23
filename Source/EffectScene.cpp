@@ -11,17 +11,11 @@ EffectScene::EffectScene()
 {
     setComponentID("EffectScene");
     setName("EffectScene");
-
-
+    
     //================================================================================
-    // Don't load anything if this isn't the right version.
+    // LOADING PARAMETERS
 
-    bool dontLoad;
-
-    String currentVersion = "1.5";
-    std::cout << "App version: " << currentVersion << newLine;
-    auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
-
+    // If this is the Initial Use Case
     auto initialUse = getAppProperties().getUserSettings()->getValue(KEYNAME_INITIAL_USE);
     bool loadInitialCase = false;
     auto initialUseBool = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE); //true if prev use
@@ -29,6 +23,11 @@ EffectScene::EffectScene()
         loadInitialCase = true;
     }
 
+    // Don't load anything if this isn't the right version.
+    bool dontLoad;
+    String currentVersion = "1.5";
+    std::cout << "App version: " << currentVersion << newLine;
+    auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
 
     if (appVersion != nullptr && appVersion->hasAttribute("version")) {
         std::cout << "Load version: " << appVersion->getStringAttribute("version") << newLine;
@@ -47,6 +46,9 @@ EffectScene::EffectScene()
     //bool dontLoadDevices = false;
 
     std::cout << "Loading state? " << (dontLoad ? "false" : "true") << newLine;
+
+    //=======================================================================
+    //
 
     setBufferedToImage(true);
     //setPaintingIsUnclipped(false);
@@ -88,7 +90,11 @@ EffectScene::EffectScene()
 
     // Main component popup menu
     setupCreateEffectMenu();
-    
+
+
+    //==========================================================================
+    // Load starting state
+
     if (! dontLoad) {
         // Load layout
         appState = loading;
@@ -103,16 +109,14 @@ EffectScene::EffectScene()
 
             getAppProperties().getUserSettings()->setValue(KEYNAME_INITIAL_USE, true);
         } else {
-            // Load previous layout
+            // Load previously loaded layout
             String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
             std::cout << "Load layout: " << name << newLine;
             tree.loadLayout(name);
         }
         undoManager.clearUndoHistory();
         appState = neutral;
-    }
-
-    if (dontLoad) {
+    } else {
         // Clear all settings
         getAppProperties().getUserSettings()->clear();
 
