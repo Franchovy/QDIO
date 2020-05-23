@@ -42,7 +42,7 @@ EffectScene::EffectScene()
 
     bool dontLoadDevices = dontLoad;
 
-    //dontLoad = true;
+    dontLoad = true;
     //bool dontLoadDevices = false;
 
     std::cout << "Loading state? " << (dontLoad ? "false" : "true") << newLine;
@@ -429,13 +429,34 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
         // super secret write to file op
         if (key.getKeyCode() == 'x' || key.getKeyCode() == 'X') {
-            auto layoutData = EffectLoader::loadLayout(tree.getCurrentLayoutName());
-            EffectLoader::writeToFile(layoutData);
+            if (selected.getItemArray().size() == 1) {
+                auto item = selected.getSelectedItem(0);
+                if (auto effect = dynamic_cast<Effect*>(item.get())) {
+                    // Save effect
+                    auto effectData = tree.storeEffect(tree.getTree(effect));
+                    EffectLoader::writeToFile(effectData);
+                }
+            } else {
+                auto layoutData = EffectLoader::loadLayout(tree.getCurrentLayoutName());
+                EffectLoader::writeToFile(layoutData);
+            }
         }
         // super secret load from file op
         if (key.getKeyCode() == 'o' || key.getKeyCode() == 'O') {
             auto loadData = EffectLoader::loadFromFile();
             std::cout << "load data type: " << loadData.getType().toString() << newLine;
+            jassert(loadData.hasProperty("name"));
+            if (loadData.getType() == Identifier(EFFECTSCENE_ID)) {
+                // Load layout
+                EffectLoader::saveLayout(loadData);
+                String layoutName = loadData.getProperty("name");
+                loadNewLayout(layoutName);
+            } else if (loadData.getType() == Identifier(EFFECT_ID)) {
+                // Load effect
+                EffectLoader::saveEffect(loadData);
+                String effectName = loadData.getProperty("name");
+                tree.loadEffect(loadData);
+            }
         }
     }
     

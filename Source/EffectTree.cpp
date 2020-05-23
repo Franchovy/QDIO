@@ -34,10 +34,15 @@ Effect* EffectTree::createEffect(ValueTree tree) {
     tree.setProperty(IDs::component, effect, nullptr);
     effect->addComponentListener(this);
 
-    if (tree.hasProperty(Effect::IDs::processorID)) {
+
+    int id = tree.getProperty(Effect::IDs::processorID);
+    if (! tree.hasProperty(Effect::IDs::processorID)) {
+        id = 0;
+    }
+
+    if (id > 0) {
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
-        int id = tree.getProperty(Effect::IDs::processorID);
 
         newProcessor = createProcessor(id);
 
@@ -1048,7 +1053,7 @@ void EffectTree::removeAllListeners(ValueTree component) {
 
 StringArray EffectTree::getProcessorNames() {
     StringArray names;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
         names.add(getProcessorName(i));
     }
     return names;
@@ -1057,14 +1062,16 @@ StringArray EffectTree::getProcessorNames() {
 String EffectTree::getProcessorName(int processorID) {
     switch (processorID) {
         case 0:
+            return "Empty Effect";
+        case 1:
             return "Input Device";
-        case 1: //todo remove arguments
+        case 2: //todo remove arguments
             return "Output Device";
-        case 2:
-            return "Distortion";
         case 3:
-            return "Delay";
+            return "Distortion";
         case 4:
+            return "Delay";
+        case 5:
             return "Reverb";
         default:
             jassertfalse;
@@ -1078,21 +1085,21 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
     auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
 
     switch (processorID) {
-        case 0: //todo remove arguments
+        case 1: //todo remove arguments
             newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
                                                                currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
             break;
-        case 1: //todo remove arguments
+        case 2: //todo remove arguments
             newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
                                                                 currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
             break;
-        case 2:
+        case 3:
             newProcessor = std::make_unique<DistortionEffect>();
             break;
-        case 3:
+        case 4:
             newProcessor = std::make_unique<DelayEffect>();
             break;
-        case 4:
+        case 5:
             newProcessor = std::make_unique<ReverbEffect>();
             break;
         default:
