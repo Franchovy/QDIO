@@ -119,6 +119,8 @@ public:
     void resized() override;
     void paint(Graphics& g) override;
 
+    void setName(const String &newName) override;
+
     void childrenChanged() override;
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;

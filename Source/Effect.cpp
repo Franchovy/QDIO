@@ -988,6 +988,11 @@ void Effect::childrenChanged() {
     Component::childrenChanged();
 }
 
+void Effect::setName(const String &newName) {
+    title.setText(newName, dontSendNotification);
+    Component::setName(newName);
+}
+
 
 bool ConnectionLine::canDragInto(const SelectHoverObject *other) const {
     return dynamic_cast<const Effect*>(other);
