@@ -58,7 +58,6 @@ MainComponent::MainComponent()
     // Set up selection menus
 
     //
-    effectSelectMenu.setText("Effects");
     effectSelectMenu.onChange = [=] {
         auto selectedIndex = effectSelectMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
@@ -66,33 +65,36 @@ MainComponent::MainComponent()
             auto loadData = EffectLoader::loadEffect(effectName);
             main.menuCreateEffect(loadData);
 
-            effectSelectMenu.setSelectedId(0, sendNotificationSync);
+            effectSelectMenu.setText("Effects");
         }
     };
 
     updateEffectSelectMenu();
+    effectSelectMenu.setText("Effects");
 
     //
-    layoutMenu.setText("Layout");
     layoutMenu.onChange = [=] {
         auto selectedIndex = layoutMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
             auto layoutName = layoutMenu.getItemText(selectedIndex);
             main.loadNewLayout(layoutName);
 
-            effectSelectMenu.setSelectedId(0, sendNotificationSync);
+            layoutMenu.setText("Layout");
         }
     };
 
     updateLayoutMenu();
+    layoutMenu.setText("Layout");
 
     //
-    toolBoxMenu.setText("Toolbox");
+    toolBoxMenu.setText("ToolBox");
 
     toolBoxMenu.onChange = [=] {
         auto selectedIndex = toolBoxMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
             main.createProcessor(selectedIndex);
+
+            toolBoxMenu.setText("ToolBox");
         }
     };
 
