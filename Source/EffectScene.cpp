@@ -23,7 +23,7 @@ EffectScene::EffectScene()
     auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
 
     auto initialUse = getAppProperties().getUserSettings()->getValue(KEYNAME_INITIAL_USE);
-    bool loadInitialCase = true;
+    bool loadInitialCase = false;
     auto initialUseBool = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE); //true if prev use
     if (initialUse.isEmpty() && ! initialUseBool) {
         loadInitialCase = true;
@@ -41,8 +41,10 @@ EffectScene::EffectScene()
         dontLoad = true;
     }
 
+    bool dontLoadDevices = dontLoad;
+
     //dontLoad = true;
-    bool dontLoadDevices = true;
+    //bool dontLoadDevices = false;
 
     std::cout << "Loading state? " << (dontLoad ? "false" : "true") << newLine;
 
