@@ -31,8 +31,18 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
         if (param->isBoolean()) {
             // Button
             this->type = button;
-            parameterComponent = std::make_unique<TextButton>();
+            parameterComponent = std::make_unique<ToggleButton>(param->getName(30));
 
+            auto button = dynamic_cast<ToggleButton *>(parameterComponent.get());
+
+            button->setToggleState(param->getValue(), sendNotificationAsync);
+
+            buttonListener = new ButtonListener(param);
+            button->addListener(buttonListener);
+            button->setName("Button");
+
+            button->setBounds(20, 60, 100, 40);
+            addAndMakeVisible(button);
         } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
             // Combo
             this->type = combo;
@@ -87,8 +97,6 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
                                                                    paramRange.interval, paramRange.skew));
 
-            //auto *listener = new SliderListener(param);
-            //slider->addListener(listener);
             slider->setName("Slider");
             slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 
@@ -105,8 +113,6 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             parameterComponent = std::make_unique<ComboBox>();
             auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
 
-            /*comboListener = new ComboListener(param);
-            combo->addListener(comboListener);*/
             combo->setName("Combo");
 
             combo->setSelectedItemIndex(0);
@@ -114,9 +120,20 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             combo->setBounds(20, 60, 250, 40);
             addAndMakeVisible(combo);
         } else if (type == button) {
+            // Button
+            this->type = button;
+            parameterComponent = std::make_unique<ToggleButton>();
 
+            auto button = dynamic_cast<ToggleButton *>(parameterComponent.get());
+
+            button->setToggleState(false, sendNotificationAsync);
+
+            button->setName("Button");
+
+            button->setBounds(20, 60, 100, 30);
+            addAndMakeVisible(button);
         }
-    }// todo other types
+    }
 
     if (param != nullptr) {
         param->addListener(this);
@@ -138,7 +155,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
     addAndMakeVisible(parameterLabel);
     addChildComponent(externalPort);
 
-    if (type == combo) {
+    if (type != slider) {
         parameterLabel.setVisible(false);
     }
 
@@ -304,7 +321,17 @@ void Parameter::connect(Parameter *otherParameter) {
                 combo->setSelectedId(param->getValue(), dontSendNotification);
             }
         } else if (type == button) {
+            buttonListener = new ButtonListener(param);
 
+            auto button = dynamic_cast<ToggleButton *>(parameterComponent.get());
+
+            button->addListener(buttonListener);
+
+            if (valueStored) {
+                button->setToggleState(value, dontSendNotification);
+            } else {
+                button->setToggleState(param->getValue(), dontSendNotification);
+            }
         }
     }
 }
