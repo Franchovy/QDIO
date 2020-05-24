@@ -99,7 +99,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
 
         slider->hideTextBox(false);
         slider->hideTextBox(true);
-    }
+    } // todo other types
 
     if (param != nullptr) {
         param->addListener(this);
@@ -263,6 +263,7 @@ void Parameter::connect(Parameter *otherParameter) {
             slider->addListener(sliderListener);
         }
     }
+    // todo other types
 
     //dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
 

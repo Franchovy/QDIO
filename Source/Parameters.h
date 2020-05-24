@@ -22,7 +22,7 @@ public:
     }
 
     void buttonClicked(Button *button) override {
-        linkedParameter->setValue(button->getToggleState());
+        linkedParameter->setValueNotifyingHost(button->getToggleState());
     }
 
 private:
@@ -39,7 +39,7 @@ public:
     }
 
     void comboBoxChanged(ComboBox *comboBoxThatHasChanged) override {
-        linkedParameter->setValue(comboBoxThatHasChanged->getSelectedItemIndex());
+        linkedParameter->setValueNotifyingHost(comboBoxThatHasChanged->getSelectedItemIndex());
     }
 
 private:
