@@ -372,7 +372,7 @@ void Effect::setupMenu() {
     parameterSubMenu->addItem("Add Slider", [=] () {
         undoManager.beginNewTransaction("Add slider parameter");
 
-        auto parameter = new Parameter(nullptr, true);
+        auto parameter = new Parameter(nullptr, 2, true);
         addAndMakeVisible(parameter);
         parameter->setCentrePosition(getMouseXYRelative());
     });

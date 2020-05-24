@@ -864,8 +864,8 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
             }
         }
     } else {
-        param = new MetaParameter(name);
-        EffectTreeBase::getAudioGraph()->addParameter(param);
+/*        param = new MetaParameter(name);
+        EffectTreeBase::getAudioGraph()->addParameter(param);*/
     }
 
     Parameter::Ptr parameter = new Parameter(param);

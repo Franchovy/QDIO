@@ -81,7 +81,7 @@ class Parameter : public SelectHoverObject, public AudioProcessorParameter::List
 public:
     using Ptr = ReferenceCountedObjectPtr<Parameter>;
 
-    explicit Parameter(AudioProcessorParameter *param = nullptr, bool editMode = false);
+    explicit Parameter(AudioProcessorParameter *param = nullptr, int type = slider, bool editMode = false);
 
     ~Parameter() override;
 
@@ -157,6 +157,7 @@ private:
 };
 
 
+/*
 class MetaParameter : public RangedAudioParameter
 {
 public:
@@ -190,4 +191,4 @@ private:
     static int currentID;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MetaParameter)
-};
+};*/

@@ -12,9 +12,8 @@
 
 const Identifier Parameter::IDs::parameterObject = "parameterObject";
 
-int MetaParameter::currentID = 0;
 
-Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
+Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
     : editMode(editMode)
     , internalPort(true)
     , externalPort(false)
@@ -31,12 +30,12 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
     if (param != nullptr) {
         if (param->isBoolean()) {
             // Button
-            type = button;
+            this->type = button;
             parameterComponent = std::make_unique<TextButton>();
 
         } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
             // Combo
-            type = combo;
+            this->type = combo;
             parameterComponent = std::make_unique<ComboBox>();
             auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
 
@@ -55,7 +54,7 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
             addAndMakeVisible(combo);
         } else {
             // Slider
-            type = slider;
+            this->type = slider;
             parameterComponent = std::make_unique<Slider>();
             auto slider = dynamic_cast<Slider *>(parameterComponent.get());
 
@@ -78,28 +77,51 @@ Parameter::Parameter(AudioProcessorParameter *param, bool editMode)
             slider->hideTextBox(true);
         }
     } else {
-        // Slider
-        type = slider;
-        parameterComponent = std::make_unique<Slider>();
-        auto slider = dynamic_cast<Slider *>(parameterComponent.get());
+        if (type == slider) {
+            // Slider
+            this->type = slider;
+            parameterComponent = std::make_unique<Slider>();
+            auto slider = dynamic_cast<Slider *>(parameterComponent.get());
 
-        auto paramRange = NormalisableRange<double>(0, 1);
-        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                               paramRange.interval, paramRange.skew));
+            auto paramRange = NormalisableRange<double>(0, 1);
+            slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
+                                                                   paramRange.interval, paramRange.skew));
 
-        //auto *listener = new SliderListener(param);
-        //slider->addListener(listener);
-        slider->setName("Slider");
-        slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
+            //auto *listener = new SliderListener(param);
+            //slider->addListener(listener);
+            slider->setName("Slider");
+            slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 
-        slider->setTextBoxIsEditable(true);
+            slider->setTextBoxIsEditable(true);
 
-        slider->setBounds(0, 60, 100, 70);
-        addAndMakeVisible(slider);
+            slider->setBounds(0, 60, 100, 70);
+            addAndMakeVisible(slider);
 
-        slider->hideTextBox(false);
-        slider->hideTextBox(true);
-    } // todo other types
+            slider->hideTextBox(false);
+            slider->hideTextBox(true);
+        } else if (type == combo) {
+            // Combo
+            this->type = combo;
+            parameterComponent = std::make_unique<ComboBox>();
+            auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
+
+            int i = 1;
+            for (auto s : param->getAllValueStrings()) {
+                combo->addItem(s.substring(0, 20), i++);
+            }
+
+            comboListener = new ComboListener(param);
+            combo->addListener(comboListener);
+            combo->setName("Combo");
+
+            combo->setSelectedItemIndex(param->getValue());
+
+            combo->setBounds(20, 60, 250, 40);
+            addAndMakeVisible(combo);
+        } else if (type == button) {
+
+        }
+    }// todo other types
 
     if (param != nullptr) {
         param->addListener(this);
@@ -355,6 +377,7 @@ ParameterPort *Parameter::getPortWithID(String portID) {
     return nullptr;
 }
 
+/*
 
 MetaParameter::MetaParameter(String name)
         : RangedAudioParameter(newID(name), name)
@@ -406,3 +429,4 @@ String MetaParameter::newID(String name) {
 }
 
 
+*/
