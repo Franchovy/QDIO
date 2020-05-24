@@ -46,7 +46,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             button->setColour(TextButton::buttonColourId, Colours::darkgrey);
             button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
 
-            button->setBounds(0, 30, 150, 40);
+            button->setBounds(0, 30, 120, 40);
             addAndMakeVisible(button);
         } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
             // Combo
