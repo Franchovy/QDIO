@@ -359,20 +359,27 @@ void Effect::setupMenu() {
         }
     });
 
-    portSubMenu->addItem("Add Input Port", [=]() {
+    portSubMenu->addItem("Input Port", [=]() {
         addPort(getDefaultBus(), true);
         resized();
     });
-    portSubMenu->addItem("Add Output Port", [=](){
+    portSubMenu->addItem("Output Port", [=](){
         addPort(getDefaultBus(), false);
         resized();
     });
     portSubMenuItem.subMenu = std::move(portSubMenu);
 
-    parameterSubMenu->addItem("Add Slider", [=] () {
+    parameterSubMenu->addItem("Slider", [=] () {
         undoManager.beginNewTransaction("Add slider parameter");
 
         auto parameter = new Parameter(nullptr, 2, true);
+        addAndMakeVisible(parameter);
+        parameter->setCentrePosition(getMouseXYRelative());
+    });
+    parameterSubMenu->addItem("Selection Box", [=] () {
+        undoManager.beginNewTransaction("Add combo parameter");
+
+        auto parameter = new Parameter(nullptr, 1, true);
         addAndMakeVisible(parameter);
         parameter->setCentrePosition(getMouseXYRelative());
     });
