@@ -1089,10 +1089,10 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
 
     switch (processorID) {
         case 1:
-            newProcessor = std::make_unique<InputDeviceEffect>();
+            newProcessor = std::make_unique<IOEffect>(true);
             break;
         case 2:
-            newProcessor = std::make_unique<OutputDeviceEffect>();
+            newProcessor = std::make_unique<IOEffect>(false);
             break;
         case 3:
             newProcessor = std::make_unique<DistortionEffect>();

@@ -11,6 +11,7 @@
 #include "Settings.h"
 
 AudioDeviceManager* SettingsComponent::deviceManager = nullptr;
+AudioDeviceManager::AudioDeviceSetup SettingsComponent::setup;
 
 
 /*

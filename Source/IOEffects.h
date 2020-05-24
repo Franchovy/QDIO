@@ -13,7 +13,34 @@
 #include "Settings.h"
 #include "BaseEffects.h"
 
-class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
+class IOEffect : public AudioProcessorGraph::AudioGraphIOProcessor, public AudioProcessorParameter::Listener
+{
+public:
+    IOEffect(bool isInput)
+        : AudioGraphIOProcessor(isInput ? AudioGraphIOProcessor::audioInputNode : AudioGraphIOProcessor::audioOutputNode)
+        , deviceParam(new AudioParameterChoice(isInput ? "inputdevice" : "outputDevice", "Device"
+            , SettingsComponent::getDevicesList(isInput), SettingsComponent::getCurrentDeviceIndex(isInput)))
+        , isInput(isInput)
+    {
+        addParameter(deviceParam);
+
+        deviceParam->addListener(this);
+    }
+
+    void parameterValueChanged(int parameterIndex, float newValue) override {
+        SettingsComponent::setCurrentDevice(isInput, newValue);
+    }
+
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {
+        //todo update list
+    }
+
+private:
+    bool isInput;
+    AudioParameterChoice* deviceParam;
+};
+
+/*class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
 {
 public:
     InputDeviceEffect()
@@ -61,12 +88,12 @@ public:
 
         auto numIns = getMainBusNumInputChannels();
         auto numOuts = getMainBusNumOutputChannels();
-        /*if (numIns > numOuts) {
+        *//*if (numIns > numOuts) {
             for (int i = 0; i < numIns - numOuts; i++)
             {
                 buffer.copyFrom(i + numIns, 0, buffer, i, 0, buffer.getNumSamples());
             }
-        }*/
+        }*//*
     }
 
     const String getName() const override { return name; }
@@ -77,5 +104,5 @@ private:
     String deviceName;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OutputDeviceEffect)
-};
+};*/
 

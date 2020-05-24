@@ -21,6 +21,7 @@ public:
         addAndMakeVisible(deviceSelectorMenu);
 
         deviceManager = &dm;
+        dm.getAudioDeviceSetup(setup);
 
         auto image = ImageCache::getFromMemory (BinaryData::close_png, BinaryData::close_pngSize);
 
@@ -59,11 +60,23 @@ public:
         return currentDeviceType->getIndexOfDevice(currentAudioDevice, isInput);
     }
 
+    static void setCurrentDevice(bool isInput, int index) {
+        auto newDevice = deviceManager->getCurrentDeviceTypeObject()->getDeviceNames(isInput)[index];
+        setup = deviceManager->getAudioDeviceSetup();
+        isInput ? setup.inputDeviceName : setup.outputDeviceName
+            = newDevice;
+        isInput ? setup.useDefaultInputChannels : setup.useDefaultOutputChannels
+            = true;
+
+        deviceManager->setAudioDeviceSetup(setup, true);
+    }
+
 private:
     Rectangle<float> outline;
     AudioDeviceSelectorComponent deviceSelectorMenu;
     ImageButton closeButton;
 
+    static AudioDeviceManager::AudioDeviceSetup setup;
     static AudioDeviceManager* deviceManager;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SettingsComponent)
