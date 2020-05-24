@@ -274,7 +274,7 @@ void Parameter::connect(Parameter *otherParameter) {
     auto param = otherParameter->getParameter();
     if (param != nullptr) {
         param->addListener(this);
-        
+
         if (type == slider) {
             sliderListener = new SliderListener(param);
 
@@ -296,15 +296,6 @@ void Parameter::connect(Parameter *otherParameter) {
 
         }
     }
-}
-
-
-    //dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
-
-    //referencedParameter->setValueNotifyingHost(connectedParameter->getParameter()->getValue());
-
-    /*auto slider = dynamic_cast<Slider*>(parameterComponent.get());
-    slider->setNormalisableRange(otherParameter->getRange());*/
 }
 
 void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarting) {
