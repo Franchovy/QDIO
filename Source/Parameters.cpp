@@ -105,16 +105,13 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             parameterComponent = std::make_unique<ComboBox>();
             auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
 
-            int i = 1;
-            for (auto s : param->getAllValueStrings()) {
-                combo->addItem(s.substring(0, 20), i++);
-            }
+
 
             comboListener = new ComboListener(param);
             combo->addListener(comboListener);
             combo->setName("Combo");
 
-            combo->setSelectedItemIndex(param->getValue());
+            combo->setSelectedItemIndex(0);
 
             combo->setBounds(20, 60, 250, 40);
             addAndMakeVisible(combo);
@@ -273,19 +270,34 @@ void Parameter::connect(Parameter *otherParameter) {
     connectedParameter = otherParameter;
     otherParameter->isConnectedTo = true;
 
-    if (type == slider) {
-        auto param = otherParameter->getParameter();
-        if (param != nullptr) {
-            param->addListener(this);
-
+    //todo canConnect() checks types for ports
+    auto param = otherParameter->getParameter();
+    if (param != nullptr) {
+        param->addListener(this);
+        
+        if (type == slider) {
             sliderListener = new SliderListener(param);
 
-            auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+            auto slider = dynamic_cast<Slider *>(parameterComponent.get());
             slider->setValue(param->getValue(), dontSendNotification);
             slider->addListener(sliderListener);
+        } else if (type == combo) {
+            comboListener = new ComboListener(param);
+
+            int i = 1;
+            auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
+
+            for (auto s : param->getAllValueStrings()) {
+                combo->addItem(s.substring(0, 20), i++);
+            }
+            combo->setSelectedId(param->getValue(), dontSendNotification);
+            combo->addListener(comboListener);
+        } else if (type == button) {
+
         }
     }
-    // todo other types
+}
+
 
     //dynamic_cast<MetaParameter*>(referencedParameter)->setLinkedParameter(connectedParameter->getParameter());
 
@@ -308,7 +320,13 @@ void Parameter::setValue(float newVal, bool notifyHost) {
 }
 
 AudioProcessorParameter *Parameter::getParameter() {
-    return referencedParameter;
+    if (referencedParameter != nullptr) {
+        return referencedParameter;
+    } else if (connectedParameter != nullptr) {
+        return connectedParameter->getParameter();
+    } else {
+        return nullptr;
+    }
 }
 
 void Parameter::setActionOnComboSelect(std::function<void()> funct) {
