@@ -31,17 +31,20 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
         if (param->isBoolean()) {
             // Button
             this->type = button;
-            parameterComponent = std::make_unique<ToggleButton>(param->getName(30));
+            parameterComponent = std::make_unique<TextButton>(param->getName(30));
 
-            auto button = dynamic_cast<ToggleButton *>(parameterComponent.get());
+            auto button = dynamic_cast<TextButton *>(parameterComponent.get());
 
             button->setToggleState(param->getValue(), sendNotificationAsync);
+            button->setClickingTogglesState(true);
 
             buttonListener = new ButtonListener(param);
             button->addListener(buttonListener);
             button->setName("Button");
+            button->setColour(TextButton::ColourIds::textColourOffId, Colours::whitesmoke);
+            button->setColour(TextButton::ColourIds::textColourOnId, Colours::lightgrey);
 
-            button->setBounds(20, 60, 100, 40);
+            button->setBounds(0, 30, 150, 40);
             addAndMakeVisible(button);
         } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
             // Combo
@@ -60,7 +63,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
             combo->setSelectedItemIndex(param->getValue());
 
-            combo->setBounds(20, 60, 250, 40);
+            combo->setBounds(20, 60, 200, 40);
             addAndMakeVisible(combo);
         } else {
             // Slider
@@ -155,7 +158,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
     addAndMakeVisible(parameterLabel);
     addChildComponent(externalPort);
 
-    if (type != slider) {
+    if (this->type != slider) {
         parameterLabel.setVisible(false);
     }
 
@@ -323,7 +326,7 @@ void Parameter::connect(Parameter *otherParameter) {
         } else if (type == button) {
             buttonListener = new ButtonListener(param);
 
-            auto button = dynamic_cast<ToggleButton *>(parameterComponent.get());
+            auto button = dynamic_cast<TextButton *>(parameterComponent.get());
 
             button->addListener(buttonListener);
 

@@ -636,6 +636,12 @@ void Effect::resized() {
 
     paramPortsFlexBox.performLayout(Rectangle<int>(40, getHeight() - 50, getWidth() - 40, 60));
 
+    /*for (auto parameter : getParameterChildren()) {
+        if (parameter->getName() == "Bypass") {
+            parameter->setTopRightPosition(getWidth() - 40, 40);
+        }
+    }*/
+
     title.setBounds(30,30,200, title.getFont().getHeight());
 }
 
