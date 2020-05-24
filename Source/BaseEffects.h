@@ -20,66 +20,42 @@
 class BaseEffect : public AudioProcessor
 {
 public:
-    BaseEffect() = default;
+    BaseEffect()
+        : AudioProcessor()
+        , bypass(new AudioParameterBool("bypass", "Bypass", false))
+    {
+        addParameter(bypass);
+    }
 
     //TODO fix const shit
     const String getName() const override;
 
     void setLayout(int numInputs, int numOutputs);
 
-    virtual void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) = 0;
-    virtual void releaseResources() = 0;
-    virtual void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) = 0;
+    virtual void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override = 0;
+    virtual void releaseResources() override = 0;
+    virtual void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override = 0;
 
-    double getTailLengthSeconds() const override {
-        return 0;
-    }
+    double getTailLengthSeconds() const override { return 0; }
+    bool acceptsMidi() const override { return false; }
+    bool producesMidi() const override { return false; }
 
-    bool acceptsMidi() const override {
-        return false;
-    }
+    AudioProcessorEditor *createEditor() override { return nullptr; }
+    bool hasEditor() const override { return false; }
 
-    bool producesMidi() const override {
-        return false;
-    }
+    int getNumPrograms() override { return 0; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram(int index) override { }
 
-    AudioProcessorEditor *createEditor() override {
-        return nullptr;
-    }
+    const String getProgramName(int index) override { return String(); }
+    void changeProgramName(int index, const String &newName) override { }
 
-    bool hasEditor() const override {
-        return false;
-    }
-
-    int getNumPrograms() override {
-        return 0;
-    }
-
-    int getCurrentProgram() override {
-        return 0;
-    }
-
-    void setCurrentProgram(int index) override {
-
-    }
-
-    const String getProgramName(int index) override {
-        return String();
-    }
-
-    void changeProgramName(int index, const String &newName) override {
-
-    }
-
-    void getStateInformation(juce::MemoryBlock &destData) override {
-
-    }
-
-    void setStateInformation(const void *data, int sizeInBytes) override {
-
-    }
+    void getStateInformation(juce::MemoryBlock &destData) override { }
+    void setStateInformation(const void *data, int sizeInBytes) override { }
 
 protected:
+    AudioParameterBool* bypass;
+
     String name;
     BusesLayout layout;
 
