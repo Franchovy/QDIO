@@ -100,46 +100,48 @@ void DelayEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPer
 }
 
 void DelayEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
-    if (delayBufferSize < buffer.getNumSamples())
-        return;
+    if (! bypass->get()) {
+        if (delayBufferSize < buffer.getNumSamples())
+            return;
 
 
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-    auto numSamples = buffer.getNumSamples();
+        auto totalNumInputChannels = getTotalNumInputChannels();
+        auto totalNumOutputChannels = getTotalNumOutputChannels();
+        auto numSamples = buffer.getNumSamples();
 
-    for (int channel = 0; channel < totalNumInputChannels; ++channel) {
-        auto *channelData = buffer.getWritePointer(channel);
-        bool resetState = false;
-        if (channel == totalNumInputChannels - 1) {
-            resetState = true;
-        }
+        for (int channel = 0; channel < totalNumInputChannels; ++channel) {
+            auto *channelData = buffer.getWritePointer(channel);
+            bool resetState = false;
+            if (channel == totalNumInputChannels - 1) {
+                resetState = true;
+            }
 
-        if (delayBufferPt + numSamples > delayBufferSize) {
-            auto firstHalfSize = delayBufferSize - delayBufferPt;
-            auto secondHalfSize = numSamples - firstHalfSize;
-            // Split add to output
-            buffer.addFrom(channel, 0, delayBuffer, channel, delayBufferPt, firstHalfSize);
-            buffer.addFrom(channel, firstHalfSize, delayBuffer, channel, 0, secondHalfSize);
-            // Copy over to delayBuffer
-            delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, firstHalfSize);
-            delayBuffer.copyFrom(channel, 0, buffer, channel, firstHalfSize, secondHalfSize);
-            // Apply gain to echo buffer
-            delayBuffer.applyGain(delayBufferPt, firstHalfSize, fadeVal);
-            delayBuffer.applyGain(channel, 0, secondHalfSize, fadeVal);
-            // Set new delayBufferPt if this is the last channel
-            if (resetState)
-                delayBufferPt = numSamples - firstHalfSize;
-        } else {
-            // Add to output
-            buffer.addFrom(channel, 0, delayBuffer, channel, delayBufferPt, numSamples);
-            // Copy to echo buffer
-            delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, numSamples);
-            // Apply gain to echo buffer
-            delayBuffer.applyGain(channel, delayBufferPt, numSamples, fadeVal);
-            // Set new delayBufferPt if this is the last channel
-            if (resetState)
-                delayBufferPt += numSamples;
+            if (delayBufferPt + numSamples > delayBufferSize) {
+                auto firstHalfSize = delayBufferSize - delayBufferPt;
+                auto secondHalfSize = numSamples - firstHalfSize;
+                // Split add to output
+                buffer.addFrom(channel, 0, delayBuffer, channel, delayBufferPt, firstHalfSize);
+                buffer.addFrom(channel, firstHalfSize, delayBuffer, channel, 0, secondHalfSize);
+                // Copy over to delayBuffer
+                delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, firstHalfSize);
+                delayBuffer.copyFrom(channel, 0, buffer, channel, firstHalfSize, secondHalfSize);
+                // Apply gain to echo buffer
+                delayBuffer.applyGain(delayBufferPt, firstHalfSize, fadeVal);
+                delayBuffer.applyGain(channel, 0, secondHalfSize, fadeVal);
+                // Set new delayBufferPt if this is the last channel
+                if (resetState)
+                    delayBufferPt = numSamples - firstHalfSize;
+            } else {
+                // Add to output
+                buffer.addFrom(channel, 0, delayBuffer, channel, delayBufferPt, numSamples);
+                // Copy to echo buffer
+                delayBuffer.copyFrom(channel, delayBufferPt, buffer, channel, 0, numSamples);
+                // Apply gain to echo buffer
+                delayBuffer.applyGain(channel, delayBufferPt, numSamples, fadeVal);
+                // Set new delayBufferPt if this is the last channel
+                if (resetState)
+                    delayBufferPt += numSamples;
+            }
         }
     }
 }
@@ -170,12 +172,14 @@ void DistortionEffect::releaseResources() {
 }
 
 void DistortionEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
-    for (int c = 0; c < buffer.getNumChannels(); c++) {
-        for (int s = 0; s < buffer.getNumSamples(); s++){
+    if (! bypass->get()) {
+        for (int c = 0; c < buffer.getNumChannels(); c++) {
+            for (int s = 0; s < buffer.getNumSamples(); s++) {
 
-            float sample = jlimit(-cutoff->get(), cutoff->get(), buffer.getSample(c, s) * *gain);
-            sample *= *gain;
-            buffer.setSample(c, s, sample);
+                float sample = jlimit(-cutoff->get(), cutoff->get(), buffer.getSample(c, s) * *gain);
+                sample *= *gain;
+                buffer.setSample(c, s, sample);
+            }
         }
     }
 }
