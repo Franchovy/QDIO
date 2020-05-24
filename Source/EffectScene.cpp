@@ -73,6 +73,7 @@ EffectScene::EffectScene()
 
     }
     deviceManager.addAudioCallback(&processorPlayer);
+    deviceManager.addChangeListener(this);
     processorPlayer.setProcessor(&audioGraph);
 
     setMouseClickGrabsKeyboardFocus(true);
@@ -104,10 +105,11 @@ EffectScene::EffectScene()
         getAppProperties().getUserSettings()->save();
     }
 
-    startTimer(1000);
+    startTimer(500);
 }
 
 void EffectScene::timerCallback() {
+    stopTimer();
     // Load
     if (loadInitialCase) {
         // Load initial layout
@@ -152,6 +154,15 @@ void EffectScene::timerCallback() {
 
         undoManager.clearUndoHistory();
         appState = neutral;
+    }
+}
+
+
+void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
+    if (source == &deviceManager) {
+        // DeviceManager change
+        std::cout << "AudioDeviceManager change" << newLine;
+
     }
 }
 
@@ -662,6 +673,7 @@ int EffectScene::callSaveEffectDialog(String &name) {
 StringArray EffectScene::getProcessorNames() {
     return tree.getProcessorNames();
 }
+
 
 
 

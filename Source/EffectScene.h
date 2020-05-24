@@ -18,11 +18,12 @@
 #include "IDs"
 #include "EffectLoader.h"
 #include "MenuItem.h"
+#include "IOEffects.h"
 
 /**
  *
  */
-class EffectScene : public EffectTreeBase, public MenuItem, public Timer
+class EffectScene : public EffectTreeBase, public MenuItem, public Timer, public ChangeListener
 {
 public:
 
@@ -31,6 +32,8 @@ public:
     ~EffectScene() override;
 
     void timerCallback() override;
+
+    void changeListenerCallback(ChangeBroadcaster *source) override;
 
     //==============================================================================
     // Component overrides

@@ -18,7 +18,8 @@ class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
 public:
     InputDeviceEffect()
         : AudioGraphIOProcessor(AudioGraphIOProcessor::audioInputNode)
-        , deviceParam(new AudioParameterChoice("inputdevice", "Device", SettingsComponent::getDevicesList(true), SettingsComponent::getCurrentDeviceIndex(true)))
+        , deviceParam(new AudioParameterChoice("inputdevice", "Device"
+                , SettingsComponent::getDevicesList(true), SettingsComponent::getCurrentDeviceIndex(true)))
     {
         addParameter(deviceParam);
     }
@@ -41,7 +42,8 @@ class OutputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor//, 
 public:
     OutputDeviceEffect()
         : AudioGraphIOProcessor(AudioGraphIOProcessor::audioOutputNode)
-        , deviceParam(new AudioParameterChoice("outputdevice", "Device", SettingsComponent::getDevicesList(true), SettingsComponent::getCurrentDeviceIndex(true)))
+        , deviceParam(new AudioParameterChoice("outputdevice", "Device"
+                , SettingsComponent::getDevicesList(false), SettingsComponent::getCurrentDeviceIndex(false)))
     {
         addParameter(deviceParam);
     }
