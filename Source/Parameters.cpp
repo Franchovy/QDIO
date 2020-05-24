@@ -105,10 +105,8 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             parameterComponent = std::make_unique<ComboBox>();
             auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
 
-
-
-            comboListener = new ComboListener(param);
-            combo->addListener(comboListener);
+            /*comboListener = new ComboListener(param);
+            combo->addListener(comboListener);*/
             combo->setName("Combo");
 
             combo->setSelectedItemIndex(0);
@@ -286,6 +284,7 @@ void Parameter::connect(Parameter *otherParameter) {
 
             int i = 1;
             auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
+            combo->clear(dontSendNotification);
 
             for (auto s : param->getAllValueStrings()) {
                 combo->addItem(s.substring(0, 20), i++);

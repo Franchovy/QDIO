@@ -43,7 +43,7 @@ public:
     }
 
 private:
-    AudioProcessorParameter* linkedParameter;
+    AudioProcessorParameter* linkedParameter = nullptr;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComboListener)
 };
 
