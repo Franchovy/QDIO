@@ -63,11 +63,14 @@ public:
     static void setCurrentDevice(bool isInput, int index) {
         auto newDevice = deviceManager->getCurrentDeviceTypeObject()->getDeviceNames(isInput)[index];
         setup = deviceManager->getAudioDeviceSetup();
-        isInput ? setup.inputDeviceName : setup.outputDeviceName
-            = newDevice;
-        isInput ? setup.useDefaultInputChannels : setup.useDefaultOutputChannels
-            = true;
-
+        if (isInput) {
+            setup.inputDeviceName = newDevice;
+            setup.useDefaultInputChannels = true;
+        } else {
+            setup.outputDeviceName = newDevice;
+            setup.useDefaultOutputChannels = true;
+        }
+       
         deviceManager->setAudioDeviceSetup(setup, true);
     }
 

@@ -20,8 +20,8 @@ public:
         : AudioGraphIOProcessor(isInput ? AudioGraphIOProcessor::audioInputNode : AudioGraphIOProcessor::audioOutputNode)
         , deviceParam(new AudioParameterChoice(isInput ? "inputdevice" : "outputDevice", "Device"
             , SettingsComponent::getDevicesList(isInput), SettingsComponent::getCurrentDeviceIndex(isInput)))
-        , isInput(isInput)
     {
+        this->isInput = isInput;
         addParameter(deviceParam);
 
         deviceParam->addListener(this);
