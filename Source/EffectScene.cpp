@@ -16,11 +16,11 @@ EffectScene::EffectScene()
     // LOADING PARAMETERS
 
     // If this is the Initial Use Case
-    auto loadInitialCase = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE, true);
+    loadInitialCase = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE, true);
 
 
     // Don't load anything if this isn't the right version.
-    bool dontLoad;
+
     String currentVersion = "1.5";
     std::cout << "App version: " << currentVersion << newLine;
     auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
@@ -104,6 +104,11 @@ EffectScene::EffectScene()
         getAppProperties().getUserSettings()->save();
     }
 
+    startTimer(1000);
+}
+
+void EffectScene::timerCallback() {
+    // Load
     if (loadInitialCase) {
         // Load initial layout
         auto initialLayout = ValueTree::readFromData(BinaryData::BasicInOutLayout, BinaryData::BasicInOutLayoutSize);
@@ -149,6 +154,7 @@ EffectScene::EffectScene()
         appState = neutral;
     }
 }
+
 
 EffectScene::~EffectScene()
 {
@@ -656,6 +662,7 @@ int EffectScene::callSaveEffectDialog(String &name) {
 StringArray EffectScene::getProcessorNames() {
     return tree.getProcessorNames();
 }
+
 
 
 

@@ -15,9 +15,9 @@ MainComponent::MainComponent()
     : main()
     , effectTree(EFFECT_ID)
     , deviceManager(main.getDeviceManager())
+    , settingsMenu(deviceManager)
     , audioGraph(main.getAudioGraph())
     , audioPlayer(main.getAudioPlayer())
-    , settingsMenu(deviceManager)
 {
     // EffectScene component
     setViewedComponent(&main, false);

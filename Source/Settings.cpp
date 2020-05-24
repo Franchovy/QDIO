@@ -10,6 +10,9 @@
 
 #include "Settings.h"
 
+AudioDeviceManager* SettingsComponent::deviceManager = nullptr;
+
+
 /*
 deviceSelectorComponent.closeButton.onClick = [=]{
     deviceSelectorComponent.setVisible(false);

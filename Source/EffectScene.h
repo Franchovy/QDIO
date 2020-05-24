@@ -22,13 +22,15 @@
 /**
  *
  */
-class EffectScene : public EffectTreeBase, public MenuItem
+class EffectScene : public EffectTreeBase, public MenuItem, public Timer
 {
 public:
 
     //==============================================================================
     EffectScene();
     ~EffectScene() override;
+
+    void timerCallback() override;
 
     //==============================================================================
     // Component overrides
@@ -76,6 +78,9 @@ public:
 private:
     //todo replace usage of this instance with EffectTreeBase::effectScene
     static EffectScene* instance;
+
+    bool loadInitialCase = false;
+    bool dontLoad = false;
 
     // EffectTreeBase static stuff
     EffectTree tree;

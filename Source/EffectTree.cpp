@@ -1085,17 +1085,14 @@ String EffectTree::getProcessorName(int processorID) {
 
 std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
     std::unique_ptr<AudioProcessor> newProcessor;
-    auto currentDeviceType = EffectTreeBase::getDeviceManager()->getCurrentDeviceTypeObject();
-    auto currentAudioDevice = EffectTreeBase::getDeviceManager()->getCurrentAudioDevice();
+
 
     switch (processorID) {
-        case 1: //todo remove arguments
-            newProcessor = std::make_unique<InputDeviceEffect>(currentDeviceType->getDeviceNames(true),
-                                                               currentDeviceType->getIndexOfDevice(currentAudioDevice, true));
+        case 1:
+            newProcessor = std::make_unique<InputDeviceEffect>();
             break;
-        case 2: //todo remove arguments
-            newProcessor = std::make_unique<OutputDeviceEffect>(currentDeviceType->getDeviceNames(false),
-                                                                currentDeviceType->getIndexOfDevice(currentAudioDevice, false));
+        case 2:
+            newProcessor = std::make_unique<OutputDeviceEffect>();
             break;
         case 3:
             newProcessor = std::make_unique<DistortionEffect>();

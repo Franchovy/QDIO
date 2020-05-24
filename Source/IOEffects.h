@@ -10,14 +10,15 @@
 
 #pragma once
 #include <JuceHeader.h>
+#include "Settings.h"
 #include "BaseEffects.h"
 
 class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
 {
 public:
-    InputDeviceEffect(StringArray choices, int defaultIndex)
+    InputDeviceEffect()
         : AudioGraphIOProcessor(AudioGraphIOProcessor::audioInputNode)
-        , deviceParam(new AudioParameterChoice("inputdevice", "Device", choices, defaultIndex))
+        , deviceParam(new AudioParameterChoice("inputdevice", "Device", SettingsComponent::getDevicesList(true), SettingsComponent::getCurrentDeviceIndex(true)))
     {
         addParameter(deviceParam);
     }
@@ -38,9 +39,9 @@ private:
 class OutputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor//, private BaseEffect
 {
 public:
-    OutputDeviceEffect(StringArray choices, int defaultIndex)
+    OutputDeviceEffect()
         : AudioGraphIOProcessor(AudioGraphIOProcessor::audioOutputNode)
-        , deviceParam(new AudioParameterChoice("outputdevice", "Device", choices, defaultIndex))
+        , deviceParam(new AudioParameterChoice("outputdevice", "Device", SettingsComponent::getDevicesList(true), SettingsComponent::getCurrentDeviceIndex(true)))
     {
         addParameter(deviceParam);
     }

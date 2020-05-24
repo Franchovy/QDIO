@@ -20,6 +20,8 @@ public:
         addAndMakeVisible(closeButton);
         addAndMakeVisible(deviceSelectorMenu);
 
+        deviceManager = &dm;
+
         auto image = ImageCache::getFromMemory (BinaryData::close_png, BinaryData::close_pngSize);
 
         closeButton.setImages(false, true, false,
@@ -43,10 +45,26 @@ public:
         deviceSelectorMenu.setBounds(10, 30, getWidth() - 10, getHeight() - 10);
     }
 
+    static StringArray getDevicesList(bool isInput) {
+        auto currentDeviceType = deviceManager->getCurrentDeviceTypeObject();
+        auto currentAudioDevice = deviceManager->getCurrentAudioDevice();
+
+        return StringArray(currentDeviceType->getDeviceNames(isInput));
+    }
+
+    static int getCurrentDeviceIndex(bool isInput) {
+        auto currentDeviceType = deviceManager->getCurrentDeviceTypeObject();
+        auto currentAudioDevice = deviceManager->getCurrentAudioDevice();
+
+        return currentDeviceType->getIndexOfDevice(currentAudioDevice, isInput);
+    }
+
 private:
     Rectangle<float> outline;
     AudioDeviceSelectorComponent deviceSelectorMenu;
     ImageButton closeButton;
+
+    static AudioDeviceManager* deviceManager;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SettingsComponent)
 };
