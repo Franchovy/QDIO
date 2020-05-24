@@ -900,7 +900,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
     // Set value
     if (parameterData.hasProperty("value")) {
         float value = parameterData.getProperty("value");
-        param->setValueNotifyingHost(value);
+        parameter->setValue(value);
     }
 
     parameter->setTopLeftPosition(x, y);

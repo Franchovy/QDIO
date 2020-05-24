@@ -277,8 +277,14 @@ void Parameter::connect(Parameter *otherParameter) {
             sliderListener = new SliderListener(param);
 
             auto slider = dynamic_cast<Slider *>(parameterComponent.get());
-            slider->setValue(param->getValue(), dontSendNotification);
+
             slider->addListener(sliderListener);
+
+            if (valueStored) {
+                 slider->setValue(value, dontSendNotification);
+            } else {
+                slider->setValue(param->getValue(), dontSendNotification);
+            }
         } else if (type == combo) {
             comboListener = new ComboListener(param);
 
@@ -289,8 +295,14 @@ void Parameter::connect(Parameter *otherParameter) {
             for (auto s : param->getAllValueStrings()) {
                 combo->addItem(s.substring(0, 20), i++);
             }
-            combo->setSelectedId(param->getValue(), dontSendNotification);
+
             combo->addListener(comboListener);
+
+            if (valueStored) {
+                combo->setSelectedId(value, dontSendNotification);
+            } else {
+                combo->setSelectedId(param->getValue(), dontSendNotification);
+            }
         } else if (type == button) {
 
         }
@@ -302,10 +314,18 @@ void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarti
 }
 
 void Parameter::setValue(float newVal, bool notifyHost) {
-    if (notifyHost) {
-        referencedParameter->setValueNotifyingHost(newVal);
+    if (referencedParameter != nullptr) {
+        if (notifyHost) {
+            referencedParameter->setValueNotifyingHost(newVal);
+        } else {
+            referencedParameter->setValue(newVal);
+        }
+    } else if (connectedParameter != nullptr) {
+        connectedParameter->setValue(newVal, notifyHost);
     } else {
-        referencedParameter->setValue(newVal);
+        // Store value for later use
+        value = newVal;
+        valueStored = true;
     }
 }
 

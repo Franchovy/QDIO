@@ -136,6 +136,8 @@ private:
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
     AudioProcessorParameter* referencedParameter;
+    bool valueStored = false;
+    float value = -1;
 
     SliderListener* sliderListener = nullptr;
     ComboListener* comboListener = nullptr;
