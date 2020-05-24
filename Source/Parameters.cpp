@@ -42,7 +42,9 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             button->addListener(buttonListener);
             button->setName("Button");
             button->setColour(TextButton::ColourIds::textColourOffId, Colours::whitesmoke);
-            button->setColour(TextButton::ColourIds::textColourOnId, Colours::lightgrey);
+            button->setColour(TextButton::ColourIds::textColourOnId, Colours::red);
+            button->setColour(TextButton::buttonColourId, Colours::darkgrey);
+            button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
 
             button->setBounds(0, 30, 150, 40);
             addAndMakeVisible(button);
@@ -125,15 +127,21 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
         } else if (type == button) {
             // Button
             this->type = button;
-            parameterComponent = std::make_unique<ToggleButton>();
+            parameterComponent = std::make_unique<TextButton>();
 
-            auto button = dynamic_cast<ToggleButton *>(parameterComponent.get());
+            auto button = dynamic_cast<TextButton *>(parameterComponent.get());
 
             button->setToggleState(false, sendNotificationAsync);
+            button->setClickingTogglesState(true);
+
+            button->setColour(TextButton::ColourIds::textColourOffId, Colours::whitesmoke);
+            button->setColour(TextButton::ColourIds::textColourOnId, Colours::red);
+            button->setColour(TextButton::buttonColourId, Colours::darkgrey);
+            button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
 
             button->setName("Button");
 
-            button->setBounds(20, 60, 100, 30);
+            button->setBounds(0, 30, 150, 40);
             addAndMakeVisible(button);
         }
     }
