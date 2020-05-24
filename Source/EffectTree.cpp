@@ -855,20 +855,22 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
 Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
     String name = parameterData.getProperty("name");
 
+    Parameter::Ptr parameter = nullptr;
     AudioProcessorParameter* param = nullptr;
-
     if (effect->isIndividual()) {
         for(auto p : effect->getParameters(false)) {
             if (p->getName(30).compare(name) == 0) {
                 param = p;
             }
         }
-    } else {
-/*        param = new MetaParameter(name);
-        EffectTreeBase::getAudioGraph()->addParameter(param);*/
-    }
 
-    Parameter::Ptr parameter = new Parameter(param);
+        jassert(param != nullptr);
+        parameter = new Parameter(param);
+    } else {
+        int type = parameterData.getProperty("type");
+
+        parameter = new Parameter(nullptr, type);
+    }
 
 
     if (parameterData.hasProperty("internalPortID")) {
