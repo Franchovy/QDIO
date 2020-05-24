@@ -48,7 +48,12 @@ void ReverbEffect::releaseResources() {
 
 void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
     if (! bypass->get()) {
-        reverbProcessor.processMono(buffer.getWritePointer(0), buffer.getNumSamples());
+        if (buffer.getNumChannels() == 1) {
+            reverbProcessor.processMono(buffer.getWritePointer(0), buffer.getNumSamples());
+        } else if (buffer.getNumChannels() == 2) {
+            reverbProcessor.processStereo(buffer.getWritePointer(0),
+                    buffer.getWritePointer(1), buffer.getNumSamples());
+        }
     }
     /*for (int c = 0; c < buffer.getNumChannels(); c++) {
         reverbProcessor.processMono(buffer.getWritePointer(c), buffer.getNumSamples());
