@@ -95,6 +95,8 @@ public:
     void parameterValueChanged(int parameterIndex, float newValue) override;
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
 
+    void setName(const String& name) override;
+
     void setValue(float newVal, bool notifyHost = true);
 
     void paint(Graphics& g) override;

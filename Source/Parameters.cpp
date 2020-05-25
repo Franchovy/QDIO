@@ -449,6 +449,11 @@ ParameterPort *Parameter::getPortWithID(String portID) {
     return nullptr;
 }
 
+void Parameter::setName(const String& name) {
+    parameterLabel.setText(name, dontSendNotification);
+    Component::setName(name);
+}
+
 /*
 
 MetaParameter::MetaParameter(String name)

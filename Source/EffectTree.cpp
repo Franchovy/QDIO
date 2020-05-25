@@ -871,7 +871,9 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
 
         parameter = new Parameter(nullptr, type);
     }
-
+    if (parameter->getName() == "Parameter" && name != "") {
+        parameter->setName(name);
+    }
 
     if (parameterData.hasProperty("internalPortID")) {
         String portID = parameterData.getProperty("internalPortID");
