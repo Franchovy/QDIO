@@ -54,8 +54,6 @@ MainComponent::MainComponent()
                              image, 1.0f, Colours::darkgrey);
     addAndMakeVisible(settingsButton);
 
-
-    settingsMenu.setTopRightPosition(getWidth() - 40, 40);
     addChildComponent(settingsMenu);
 
     settingsButton.onClick = [=] {
@@ -204,6 +202,8 @@ void MainComponent::resized() {
     menus.items.add(menu3);
     menus.items.add(menu4);
     menus.performLayout(Rectangle<int>(100,100,400,60));
+
+    settingsMenu.setTopLeftPosition(40, settingsButton.getY() + 100);
 }
 
 void MainComponent::populateEffectMenu(PopupMenu& menu) {

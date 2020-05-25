@@ -36,8 +36,10 @@ public:
     ImageButton& getCloseButton() { return closeButton; }
 
     void paint(Graphics& g) override {
+        g.setColour(Colour(40,40,42));
+        g.fillRoundedRectangle(outline, 3);
         g.setColour(Colours::whitesmoke);
-        g.drawRoundedRectangle(outline, 5, 1);
+        g.drawRoundedRectangle(outline, 5, 3);
     }
 
     void resized() override {
