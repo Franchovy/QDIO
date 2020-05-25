@@ -19,19 +19,28 @@ MainComponent::MainComponent()
     , audioGraph(main.getAudioGraph())
     , audioPlayer(main.getAudioPlayer())
 {
+    auto& desktop = Desktop::getInstance();
+    // Set size to full screen
+    auto mainDisplay = desktop.getDisplays().getMainDisplay();
+    auto appArea = mainDisplay.userArea;
+
+    float scaleRatio = appArea.getWidth() / 2000.f;
+    desktop.setGlobalScaleFactor(scaleRatio);
+
+    setBounds(appArea);
+
     // EffectScene component
+    main.setBounds(getBounds());
     setViewedComponent(&main, false);
     addAndMakeVisible(&main);
 
-    // Set size to full screen
-    auto appArea = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
+
 #ifdef DEBUG_APPEARANCE
     // Make it smaller
     appArea = appArea.expanded(-900, -500);
 #endif
-    setBounds(appArea);
 
-    main.setBounds(getBounds());
+
     main.view = getViewArea();
 
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
