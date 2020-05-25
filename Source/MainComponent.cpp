@@ -30,9 +30,9 @@ MainComponent::MainComponent()
     setBounds(appArea);
 
     // EffectScene component
-    main.setBounds(getBounds());
     setViewedComponent(&main, false);
     addAndMakeVisible(&main);
+    main.setBounds(getLocalBounds());
 
 
 #ifdef DEBUG_APPEARANCE
