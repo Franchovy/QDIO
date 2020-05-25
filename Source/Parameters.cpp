@@ -402,7 +402,7 @@ Parameter* Parameter::getConnectedParameter() {
 }
 
 void Parameter::removeListeners() {
-    referencedParameter->removeListener(this);
+    //referencedParameter->removeListener(this);
 }
 
 Parameter::~Parameter() {
