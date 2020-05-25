@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="XyrfN6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7"
-              compilerFlagSchemes="NewScheme">
+              compilerFlagSchemes="NewScheme" defines="JUCE_COREGRAPHICS_DRAW_ASYNC=1">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
       <FILE id="yDisfA" name="SuperDelay" compile="0" resource="1" file="Resources/Loadout/SuperDelay"/>
@@ -141,7 +141,7 @@
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
-    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>

@@ -25,7 +25,12 @@ MainComponent::MainComponent()
     auto appArea = mainDisplay.userArea;
 
     float scaleRatio = appArea.getWidth() / 2000.f;
-    desktop.setGlobalScaleFactor(scaleRatio);
+    
+    if (scaleRatio < 1) {
+        desktop.setGlobalScaleFactor(0.5);
+    } else {
+        desktop.setGlobalScaleFactor(scaleRatio);
+    }
 
     setBounds(appArea);
 
@@ -133,6 +138,7 @@ MainComponent::~MainComponent() {
 
 bool MainComponent::keyPressed(const KeyPress &key) {
     std::cout << "key pressed" << newLine;
+        
     return main.keyPressed(key);
 }
 

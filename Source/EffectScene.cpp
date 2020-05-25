@@ -404,6 +404,19 @@ bool EffectScene::keyPressed(const KeyPress &key)
             std::cout << EffectLoader::loadEffect(e).toXmlString() << newLine;
         }
     }
+    if (key.getKeyCode() == '=') {
+        auto scaleFactor = Desktop::getInstance().getGlobalScaleFactor();
+        scaleFactor += 0.1f;
+        Desktop::getInstance().setGlobalScaleFactor(scaleFactor);
+        repaint();
+        return true;
+    } else if (key.getKeyCode() == '-') {
+        auto scaleFactor = Desktop::getInstance().getGlobalScaleFactor();
+        scaleFactor -= 0.1f;
+        Desktop::getInstance().setGlobalScaleFactor(scaleFactor);
+        repaint();
+        return true;
+    }
 #endif
 
     if (key.getKeyCode() == KeyPress::spaceKey) {
