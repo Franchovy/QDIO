@@ -302,7 +302,9 @@ void Parameter::connect(Parameter *otherParameter) {
         param->addListener(this);
 
         if (type == slider) {
-            sliderListener = new SliderListener(param);
+            if (sliderListener == nullptr) {
+                sliderListener = new SliderListener(param);
+            }
 
             auto slider = dynamic_cast<Slider *>(parameterComponent.get());
 
@@ -314,7 +316,9 @@ void Parameter::connect(Parameter *otherParameter) {
                 slider->setValue(param->getValue(), dontSendNotification);
             }
         } else if (type == combo) {
-            comboListener = new ComboListener(param);
+            if (comboListener == nullptr) {
+                comboListener = new ComboListener(param);
+            }
 
             int i = 1;
             auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
@@ -332,7 +336,9 @@ void Parameter::connect(Parameter *otherParameter) {
                 combo->setSelectedId(param->getValue(), dontSendNotification);
             }
         } else if (type == button) {
-            buttonListener = new ButtonListener(param);
+            if (buttonListener == nullptr) {
+                buttonListener = new ButtonListener(param);
+            }
 
             auto button = dynamic_cast<TextButton *>(parameterComponent.get());
 
