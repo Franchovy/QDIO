@@ -15,36 +15,6 @@
 
 #pragma once
 
-/*
-
-class LineComponent : public GuiObject
-{
-public:
-    LineComponent() = default;
-
-    void paint(Graphics &g) override;
-
-    */
-/**
-     * Updates dragLineTree connection property if connection is successful
-     * @param port2
-     *//*
-
-    void convert(ConnectionPort* port2);
-
-    ConnectionPort* getPort1();
-
-private:
-    ConnectionPort* port1 = nullptr;
-
-    Line<int> line;
-    Point<int> p1, p2;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (LineComponent)
-};
-
-*/
-
 
 class ConnectionLine : public SelectHoverObject, public ComponentListener
 {

@@ -178,6 +178,13 @@ void ConnectionLine::parentHierarchyChanged() {
 }
 
 void ConnectionLine::resized() {
+    if (getHeight() < 15) {
+        setBounds(getBounds().withHeight(15));
+    }
+    if (getWidth() < 15) {
+        setBounds(getBounds().withWidth(15));
+    }
+
     line.setStart(getLocalPoint(getParentComponent(), inPos));
     line.setEnd(getLocalPoint(getParentComponent(), outPos));
 
