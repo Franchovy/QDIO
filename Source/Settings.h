@@ -65,10 +65,10 @@ public:
         setup = deviceManager->getAudioDeviceSetup();
         if (isInput) {
             setup.inputDeviceName = newDevice;
-            setup.useDefaultInputChannels = true;
+            //setup.useDefaultInputChannels = true;
         } else {
             setup.outputDeviceName = newDevice;
-            setup.useDefaultOutputChannels = true;
+            //setup.useDefaultOutputChannels = true;
         }
        
         deviceManager->setAudioDeviceSetup(setup, true);
