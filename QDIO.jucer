@@ -5,12 +5,12 @@
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
       <FILE id="yDisfA" name="SuperDelay" compile="0" resource="1" file="Resources/Loadout/SuperDelay"/>
-      <FILE id="gbK6Pu" name="AmpOutputEffect" compile="0" resource="1" file="Resources/Loadout/AmpOutputEffect"/>
       <FILE id="WQ4uWP" name="BasicInOutLayout" compile="0" resource="1"
             file="Resources/Loadout/BasicInOutLayout"/>
-      <FILE id="WiKmPo" name="GuitarInputEffect" compile="0" resource="1"
-            file="Resources/Loadout/GuitarInputEffect"/>
-      <FILE id="fyF6Z4" name="Guitar Rig" compile="0" resource="1" file="Resources/Loadout/Guitar Rig"/>
+      <FILE id="MoZJG1" name="AmpOutputEffect" compile="0" resource="1" file="../Desktop/qdio stuff/AmpOutputEffect"/>
+      <FILE id="KDEDbX" name="Guitar Rig" compile="0" resource="1" file="../Desktop/qdio stuff/Guitar Rig"/>
+      <FILE id="gGrlm4" name="GuitarInputEffect" compile="0" resource="1"
+            file="../Desktop/qdio stuff/GuitarInputEffect"/>
       <FILE id="w81vHn" name="MegaGrunge" compile="0" resource="1" file="Resources/Loadout/MegaGrunge"/>
     </GROUP>
     <GROUP id="{3656747D-F630-B6A0-87B7-F4E2A08E98F7}" name="Resources">
