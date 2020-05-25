@@ -230,7 +230,9 @@ void MainComponent::updateLayoutMenu() {
 
     int i = 1;
     for (auto e : EffectLoader::getLayoutsAvailable()) {
-        layoutMenu.getRootMenu()->addItem(i++, e, true, false, img);
+        if (e.compare("default") != 0) { // Don't add default (working) layout to list
+            layoutMenu.getRootMenu()->addItem(i++, e, true, false, img);
+        }
     }
     layoutMenu.setText("Layout");
 }

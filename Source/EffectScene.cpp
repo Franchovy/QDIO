@@ -561,10 +561,10 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
 
 void EffectScene::storeState() {
-    auto name = tree.getCurrentLayoutName();
+    //auto name = tree.getCurrentLayoutName();
     tree.storeLayout();
 
-    getAppProperties().getUserSettings()->setValue(KEYNAME_CURRENT_LOADOUT, name);
+    getAppProperties().getUserSettings()->setValue(KEYNAME_CURRENT_LOADOUT, "default");
 }
 
 /*void EffectScene::updateChannels() {
