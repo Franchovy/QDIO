@@ -27,9 +27,9 @@ MainComponent::MainComponent()
     float scaleRatio = appArea.getWidth() / 2000.f;
     
     if (scaleRatio < 1) {
-        desktop.setGlobalScaleFactor(0.5);
-    } else {
-        desktop.setGlobalScaleFactor(scaleRatio);
+        desktop.setGlobalScaleFactor(0.5f);
+    } else if (scaleRatio > 1.5) {
+        desktop.setGlobalScaleFactor(1.5f);
     }
 
     setBounds(appArea);
