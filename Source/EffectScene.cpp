@@ -132,7 +132,7 @@ void EffectScene::timerCallback() {
         data = ValueTree::readFromData(BinaryData::GuitarInputEffect, BinaryData::GuitarInputEffectSize);
         EffectLoader::saveEffect(data);
 
-        data = ValueTree::readFromData(BinaryData::AmpOutputEffect, BinaryData::AmpOutputEffectSize);
+        data = ValueTree::readFromData(BinaryData::OutputAmpEffect, BinaryData::OutputAmpEffectSize);
         EffectLoader::saveEffect(data);
 
         data = ValueTree::readFromData(BinaryData::MegaGrunge, BinaryData::MegaGrungeSize);

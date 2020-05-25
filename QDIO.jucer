@@ -5,11 +5,11 @@
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
       <FILE id="yDisfA" name="SuperDelay" compile="0" resource="1" file="Resources/Loadout/SuperDelay"/>
+      <FILE id="j0eWGL" name="GuitarInputEffect" compile="0" resource="1"
+            file="Resources/Loadout/GuitarInputEffect"/>
+      <FILE id="koMl5A" name="OutputAmpEffect" compile="0" resource="1" file="Resources/Loadout/OutputAmpEffect"/>
       <FILE id="WQ4uWP" name="BasicInOutLayout" compile="0" resource="1"
             file="Resources/Loadout/BasicInOutLayout"/>
-      <FILE id="MoZJG1" name="AmpOutputEffect" compile="0" resource="1" file="../Desktop/qdio stuff/AmpOutputEffect"/>
-      <FILE id="gGrlm4" name="GuitarInputEffect" compile="0" resource="1"
-            file="../Desktop/qdio stuff/GuitarInputEffect"/>
       <FILE id="HStIzA" name="Guitar Rig" compile="0" resource="1" file="Resources/Loadout/Guitar Rig"/>
       <FILE id="w81vHn" name="MegaGrunge" compile="0" resource="1" file="Resources/Loadout/MegaGrunge"/>
     </GROUP>
