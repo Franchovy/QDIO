@@ -918,12 +918,19 @@ void Effect::mouseDrag(const MouseEvent &event) {
                 }
             }
         } else if (event.mods.isRightButtonDown()) {
-            if (event.getDistanceFromDragStart() > 50) {
-                // if ! rightHandDragMode
-                // turn into right hand drag mode, disconnect and make smaller
-
-                // Disconnect from any connections
-
+            if (event.getDistanceFromDragStart() > 50 && event.getDistanceFromDragStart() < 60) {
+                auto ingoingConnections = getConnections(true);
+                auto outgoingConnections = getConnections(false);
+                if (ingoingConnections.size() != 0 | outgoingConnections.size() != 0) {
+                    // Disconnect from any connections
+                    if (ingoingConnections.size() == outgoingConnections.size()) {
+                        mergeConnection(ingoingConnections.getFirst(), outgoingConnections.getFirst());
+                    } else if (ingoingConnections.size() == 0 && outgoingConnections.size() > 1) {
+                        getParentComponent()->removeChildComponent(outgoingConnections.getFirst());
+                    } else if (outgoingConnections.size() == 0 && ingoingConnections.size() > 1) {
+                        getParentComponent()->removeChildComponent(ingoingConnections.getFirst());
+                    }
+                }
             }
 
             if (dragIntoObject != nullptr) {
@@ -979,7 +986,12 @@ bool Effect::canDragHover(const SelectHoverObject *other, bool isRightClickDrag)
             return (effect->isInEditMode() && ! effect->isIndividual());
         }
     } else {
-        return dynamic_cast<const ConnectionLine*>(other) != nullptr;
+        if (other == this) {
+            return false;
+        }
+        if (auto line = dynamic_cast<const ConnectionLine*>(other)) {
+            return ! (isParentOf(line->getInPort().get()) || isParentOf(line->getOutPort().get()));
+        }
     }
     return false;
 }
@@ -1038,6 +1050,32 @@ void Effect::childrenChanged() {
 void Effect::setName(const String &newName) {
     title.setText(newName, dontSendNotification);
     Component::setName(newName);
+}
+
+void Effect::mergeConnection(ConnectionLine *inLine, ConnectionLine *outLine) {
+    jassert(getPorts(true).contains(inLine->getInPort().get()));
+    jassert(getPorts(false).contains(outLine->getOutPort().get()));
+
+    auto newInPort = outLine->getInPort().get();
+    outLine->getParentComponent()->removeChildComponent(outLine);
+
+    inLine->unsetPort(inLine->getInPort().get());
+    inLine->setPort(newInPort);
+}
+
+Array<ConnectionLine *> Effect::getConnections(bool isInputConnection) {
+    Array<ConnectionLine*> array;
+    for (auto c : getParentComponent()->getChildren()) {
+        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
+            if (isInputConnection && isParentOf(line->getInPort().get())) {
+                array.add(line);
+            } else if (! isInputConnection && isParentOf(line->getOutPort().get())) {
+                array.add(line);
+            }
+        }
+    }
+
+    return array;
 }
 
 

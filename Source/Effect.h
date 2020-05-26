@@ -157,6 +157,9 @@ public:
     bool hasPort(const ConnectionPort* port);
     bool hasConnection(const ConnectionLine* line);
 
+    Array<ConnectionLine*> getConnections(bool isInputConnection);
+    void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
+
     int getPortID(const ConnectionPort* port);
     ConnectionPort* getPortFromID(const int id, bool internal = false);
 
