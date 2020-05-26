@@ -315,3 +315,16 @@ void ConnectionLine::unsetPort(ConnectionPort *port) {
 bool ConnectionLine::isConnected() const {
     return connected;
 }
+
+void ConnectionLine::reconnect(ConnectionPort *newInPort, ConnectionPort *newOutPort) {
+    jassert(newInPort->isInput && ! newOutPort->isInput);
+
+    auto oldOutPort = outPort.get();
+    unsetPort(oldOutPort);
+    setPort(newOutPort);
+
+    auto newLine = new ConnectionLine();
+    getParentComponent()->addAndMakeVisible(newLine);
+    newLine->setPort(oldOutPort);
+    newLine->setPort(newInPort);
+}

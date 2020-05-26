@@ -940,9 +940,9 @@ void Effect::mouseDrag(const MouseEvent &event) {
                         lineToJoin->unsetPort(lineToJoin->getInPort().get());
                         lineToJoin->setPort(inPorts.getFirst());
                     }
-                    /*if (inPorts.size() > 0 && outPorts.size() > 0) {
-                        //lineToJoin.reconnect()
-                    }*/
+                    if (inPorts.size() > 0 && outPorts.size() > 0) {
+                        lineToJoin->reconnect(inPorts.getFirst(), outPorts.getFirst());
+                    }
                 }
             }
         }

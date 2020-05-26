@@ -53,6 +53,8 @@ public:
         return outPort;
     }
 
+    void reconnect(ConnectionPort *newInPort, ConnectionPort *newOutPort);
+
     bool connect();
     void disconnect(ConnectionPort* port = nullptr);
 
