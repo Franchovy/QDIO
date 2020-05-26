@@ -929,7 +929,20 @@ void Effect::mouseDrag(const MouseEvent &event) {
             if (dragIntoObject != nullptr) {
                 if (auto lineToJoin = dynamic_cast<ConnectionLine*>(dragIntoObject)) {
                     // Join this connection
-
+                    auto inPorts = getPorts(true);
+                    auto outPorts = getPorts(false);
+                    // Replace single port with this one
+                    if (inPorts.size() == 0) {
+                        lineToJoin->unsetPort(lineToJoin->getOutPort().get());
+                        lineToJoin->setPort(outPorts.getFirst());
+                    }
+                    if (outPorts.size() == 0) {
+                        lineToJoin->unsetPort(lineToJoin->getInPort().get());
+                        lineToJoin->setPort(inPorts.getFirst());
+                    }
+                    /*if (inPorts.size() > 0 && outPorts.size() > 0) {
+                        //lineToJoin.reconnect()
+                    }*/
                 }
             }
         }
@@ -961,8 +974,12 @@ bool Effect::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) 
 
 
 bool Effect::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
-    if (auto effect = dynamic_cast<const Effect*>(other)) {
-        return (effect->isInEditMode() && ! effect->isIndividual());
+    if (! isRightClickDrag) {
+        if (auto effect = dynamic_cast<const Effect*>(other)) {
+            return (effect->isInEditMode() && ! effect->isIndividual());
+        }
+    } else {
+        return dynamic_cast<const ConnectionLine*>(other) != nullptr;
     }
     return false;
 }
