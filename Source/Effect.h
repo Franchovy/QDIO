@@ -129,8 +129,8 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    bool canDragInto(const SelectHoverObject *other) const override;
-    bool canDragHover(const SelectHoverObject *other) const override;
+    bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
+    bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;

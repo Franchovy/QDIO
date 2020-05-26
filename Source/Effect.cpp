@@ -909,11 +909,28 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
         auto dragIntoObject = getDragIntoObject();
 
-        if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
-            std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
-            if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
-                setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
-                newParent->addAndMakeVisible(this);
+        if (event.mods.isLeftButtonDown()) {
+            if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
+                std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
+                if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
+                    setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
+                    newParent->addAndMakeVisible(this);
+                }
+            }
+        } else if (event.mods.isRightButtonDown()) {
+            if (event.getDistanceFromDragStart() > 50) {
+                // if ! rightHandDragMode
+                // turn into right hand drag mode, disconnect and make smaller
+
+                // Disconnect from any connections
+
+            }
+
+            if (dragIntoObject != nullptr) {
+                if (auto lineToJoin = dynamic_cast<ConnectionLine*>(dragIntoObject)) {
+                    // Join this connection
+
+                }
             }
         }
 
@@ -933,7 +950,7 @@ void Effect::mouseUp(const MouseEvent &event) {
     }
 }
 
-bool Effect::canDragInto(const SelectHoverObject *other) const {
+bool Effect::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     auto effect = dynamic_cast<const Effect*>(other);
     if (effect == nullptr) {
         return false;
@@ -943,7 +960,7 @@ bool Effect::canDragInto(const SelectHoverObject *other) const {
 }
 
 
-bool Effect::canDragHover(const SelectHoverObject *other) const {
+bool Effect::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
     if (auto effect = dynamic_cast<const Effect*>(other)) {
         return (effect->isInEditMode() && ! effect->isIndividual());
     }
@@ -1007,19 +1024,19 @@ void Effect::setName(const String &newName) {
 }
 
 
-bool ConnectionLine::canDragInto(const SelectHoverObject *other) const {
+bool ConnectionLine::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return dynamic_cast<const Effect*>(other);
 }
 
-bool ConnectionLine::canDragHover(const SelectHoverObject *other) const {
+bool ConnectionLine::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
     return dynamic_cast<const ConnectionPort*>(other);
 }
 
-bool ConnectionPort::canDragHover(const SelectHoverObject *other) const {
+bool ConnectionPort::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
 
-bool ConnectionPort::canDragInto(const SelectHoverObject *other) const {
+bool ConnectionPort::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
 

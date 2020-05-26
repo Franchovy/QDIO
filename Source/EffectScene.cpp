@@ -611,11 +611,11 @@ void EffectScene::handleCommandMessage(int commandId) {
     EffectTreeBase::handleCommandMessage(commandId);
 }
 
-bool EffectScene::canDragInto(const SelectHoverObject *other) const {
+bool EffectScene::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return (dynamic_cast<const Effect*>(other) != nullptr);
 }
 
-bool EffectScene::canDragHover(const SelectHoverObject *other) const {
+bool EffectScene::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
 

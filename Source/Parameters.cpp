@@ -425,11 +425,11 @@ Parameter::~Parameter() {
     externalPort.decReferenceCountWithoutDeleting();
 }
 
-bool Parameter::canDragInto(const SelectHoverObject *other) const {
+bool Parameter::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
 
-bool Parameter::canDragHover(const SelectHoverObject *other) const {
+bool Parameter::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
 

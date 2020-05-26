@@ -75,8 +75,8 @@ public:
     StringArray getProcessorNames();
     void createProcessor(int processorID);
 
-    bool canDragInto(const SelectHoverObject *other) const override;
-    bool canDragHover(const SelectHoverObject *other) const override;
+    bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
+    bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
 private:
     //todo replace usage of this instance with EffectTreeBase::effectScene

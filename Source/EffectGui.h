@@ -59,9 +59,9 @@ public:
     void mouseDrag(const MouseEvent &event) override;
 
     /// "Recurse to check inside"
-    virtual bool canDragInto(const SelectHoverObject* other) const = 0;
+    virtual bool canDragInto(const SelectHoverObject* other, bool isRightClickDrag = false) const = 0;
     /// "Return whether this is hoverable"
-    virtual bool canDragHover(const SelectHoverObject* other) const = 0;
+    virtual bool canDragHover(const SelectHoverObject* other, bool isRightClickDrag = false) const = 0;
 
     void startDragHoverDetect();
     void endDragHoverDetect();
@@ -82,7 +82,7 @@ private:
     static SelectHoverObject* draggedComponent;
     static SelectHoverObject* dragIntoComponent;
 
-    static SelectHoverObject* findDragHovered(SelectHoverObject* objectToCheck);
+    static SelectHoverObject* findDragHovered(SelectHoverObject* objectToCheck, bool isRightClickDrag = false);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectHoverObject)
 };

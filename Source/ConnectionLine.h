@@ -42,8 +42,8 @@ public:
 
     bool canConnect(const ConnectionPort* port) const;
 
-    bool canDragInto(const SelectHoverObject *other) const override;
-    bool canDragHover(const SelectHoverObject *other) const override;
+    bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
+    bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
     ConnectionPort::Ptr getOtherPort(const ConnectionPort::Ptr& port);
     ConnectionPort::Ptr getInPort() const {

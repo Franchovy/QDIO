@@ -111,7 +111,7 @@ void SelectHoverObject::mouseDrag(const MouseEvent &event) {
         auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
         jassert(parent != nullptr);
         if (parent != nullptr) {
-            auto newDragIntoComponent = findDragHovered(parent);
+            auto newDragIntoComponent = findDragHovered(parent, event.mods.isRightButtonDown());
             if (dragIntoComponent == newDragIntoComponent) {
                 dragIntoComponent = nullptr;
             } else {
@@ -177,7 +177,7 @@ SelectHoverObject* SelectHoverObject::getDragIntoObject() {
     return dragIntoComponent;
 }
 
-SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectToCheck) {
+SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectToCheck, bool isRightClickDrag) {
     if (objectToCheck->contains(objectToCheck->getMouseXYRelative())) {
         // Check if mouse is hovering over children
         for (auto c : objectToCheck->getChildren()) {
@@ -189,9 +189,9 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
                         continue;
                     }
 
-                    if (draggedComponent->canDragInto(child)) {
-                        return findDragHovered(child);
-                    } else if (draggedComponent->canDragHover(child)) {
+                    if (draggedComponent->canDragInto(child, isRightClickDrag)) {
+                        return findDragHovered(child, isRightClickDrag);
+                    } else if (draggedComponent->canDragHover(child, isRightClickDrag)) {
                         return child;
                     } else {
                         continue;
@@ -199,7 +199,7 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
                 }
             }
         }
-        if (draggedComponent->canDragHover(objectToCheck)) {
+        if (draggedComponent->canDragHover(objectToCheck, isRightClickDrag)) {
             return objectToCheck;
         } else {
             return nullptr;
