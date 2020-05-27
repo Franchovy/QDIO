@@ -13,7 +13,6 @@
 #include <JuceHeader.h>
 #include "EffectGui.h"
 
-class ConnectionLine;
 
 /**
  * Base class - port to connect to other ports
@@ -46,8 +45,6 @@ public:
     ConnectionPort::Ptr getOtherPort();
 
     bool isConnected() { return otherPort != nullptr; }
-    void setConnection(ConnectionLine* newConnection);
-    ConnectionLine* getConnection();
 
     enum ColourIDs {
         portColour = 0
@@ -59,7 +56,6 @@ public:
 protected:
     ConnectionPort();
 
-    ConnectionLine* connection = nullptr;
     ConnectionPort::Ptr otherPort = nullptr;
 
     Rectangle<int> hoverBox;

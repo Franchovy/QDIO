@@ -101,14 +101,6 @@ void ConnectionPort::setLinkedPort(ConnectionPort *port) {
     linkedPort = port;
 }
 
-ConnectionLine *ConnectionPort::getConnection() {
-    return connection;
-}
-
-void ConnectionPort::setConnection(ConnectionLine *newConnection) {
-    connection = newConnection;
-}
-
 bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
     // Return false if the port is AP and belongs to the same parent
     return !(dynamic_cast<const AudioPort *>(other)
