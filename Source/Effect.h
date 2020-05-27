@@ -219,6 +219,9 @@ private:
 
     Resizer resizer;
 
+    Point<int> rightClickDragPos;
+    bool rightClickDragActivated = false;
+
     const AudioProcessorParameterGroup* parameters = nullptr;
     ReferenceCountedArray<Parameter> parameterArray;
 

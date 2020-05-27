@@ -888,6 +888,11 @@ void Effect::mouseDown(const MouseEvent &event) {
         undoManager.beginNewTransaction("Resize");
         return;
     } else {
+        if (event.mods.isRightButtonDown()) {
+            rightClickDragPos = getPosition();
+            rightClickDragActivated = false;
+        }
+
         undoManager.beginNewTransaction("Move");
         dragger.startDraggingComponent(this, event);
         startDragHoverDetect();
@@ -918,10 +923,18 @@ void Effect::mouseDrag(const MouseEvent &event) {
                 }
             }
         } else if (event.mods.isRightButtonDown()) {
-            if (event.getDistanceFromDragStart() > 50 && event.getDistanceFromDragStart() < 60) {
+            std::cout << "Drag pos: " << rightClickDragPos.toString() << newLine;
+            std::cout << "Event pos: " << getPosition().toString() << newLine;
+            std::cout << "distance: " << getPosition().getDistanceFrom(rightClickDragPos) << newLine;
+
+            if (! rightClickDragActivated
+                    && (getPosition().getDistanceFrom(rightClickDragPos) > 50)) {
+
+                rightClickDragActivated = true;
+
                 auto ingoingConnections = getConnections(true);
                 auto outgoingConnections = getConnections(false);
-                if (ingoingConnections.size() != 0 | outgoingConnections.size() != 0) {
+                if (ingoingConnections.size() != 0 || outgoingConnections.size() != 0) {
                     // Disconnect from any connections
                     if (ingoingConnections.size() == outgoingConnections.size()) {
                         mergeConnection(ingoingConnections.getFirst(), outgoingConnections.getFirst());
@@ -942,13 +955,19 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     if (inPorts.size() == 0) {
                         lineToJoin->unsetPort(lineToJoin->getOutPort().get());
                         lineToJoin->setPort(outPorts.getFirst());
+                        rightClickDragPos = getPosition();
+                        rightClickDragActivated = false;
                     }
                     if (outPorts.size() == 0) {
                         lineToJoin->unsetPort(lineToJoin->getInPort().get());
                         lineToJoin->setPort(inPorts.getFirst());
+                        rightClickDragPos = getPosition();
+                        rightClickDragActivated = false;
                     }
                     if (inPorts.size() > 0 && outPorts.size() > 0) {
                         lineToJoin->reconnect(inPorts.getFirst(), outPorts.getFirst());
+                        rightClickDragPos = getPosition();
+                        rightClickDragActivated = false;
                     }
                 }
             }
