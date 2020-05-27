@@ -1183,8 +1183,34 @@ void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExte
 
 }
 
-void Effect::shortenConnection(ConnectionLine *line1, ConnectionLine *line2) {
+void Effect::shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine) {
+    auto parent = dynamic_cast<EffectTreeBase*>(exteriorLine->getParentComponent());
+    auto targetEffect = dynamic_cast<Effect*>(interiorLine->getParentComponent());
 
+    jassert(targetEffect->getParentComponent() == parent);
+
+    // Check which port has moved
+    if (interiorLine->getInPort()->getDragLineParent() != targetEffect
+        || interiorLine->getOutPort()->getDragLineParent() != targetEffect)
+    {
+        // interior line to remove
+        auto portToRemove = interiorLine->getInPort()->getParentComponent() == targetEffect
+                ? interiorLine->getInPort().get() : interiorLine->getOutPort().get();
+        auto newPort = interiorLine->getInPort()->getParentComponent() == targetEffect
+                           ? interiorLine->getOutPort().get() : interiorLine->getInPort().get();
+        targetEffect->removeChildComponent(interiorLine);
+
+        exteriorLine->unsetPort(portToRemove->getLinkedPort());
+        exteriorLine->setPort(newPort);
+
+        // Remove unused port
+        targetEffect->removeChildComponent(portToRemove);
+        targetEffect->removeChildComponent(portToRemove->getLinkedPort());
+
+    } else {
+        // exterior line to remove
+        parent->removeChildComponent(exteriorLine);
+    }
 }
 
 

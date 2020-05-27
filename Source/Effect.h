@@ -160,7 +160,7 @@ public:
 
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
     void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
-    void shortenConnection(ConnectionLine* line1, ConnectionLine* line2);
+    void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
 
     //int getPortID(const ConnectionPort* port);
     //ConnectionPort* getPortFromID(const int id, bool internal = false);

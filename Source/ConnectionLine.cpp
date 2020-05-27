@@ -289,6 +289,8 @@ void ConnectionLine::setPort(ConnectionPort *port) {
 }
 
 void ConnectionLine::unsetPort(ConnectionPort *port) {
+    jassert(port == inPort || port == outPort);
+
     if (connected) {
         disconnect(port);
     } else if (port == inPort) {
