@@ -212,6 +212,8 @@ bool ConnectionLine::connect() {
         outPort->getParentComponent()->addComponentListener(this);
         inPort->setOtherPort(outPort.get());
         outPort->setOtherPort(inPort.get());
+        inPort->setConnection(this);
+        outPort->setConnection(this);
 
         setBounds(Rectangle<int>(inPos, outPos));
 
@@ -297,6 +299,7 @@ void ConnectionLine::unsetPort(ConnectionPort *port) {
         if (outPort != nullptr) {
             outPort->setOtherPort(nullptr);
         }
+        inPort->setConnection(nullptr);
 
         inPort = nullptr;
     } else if (port == outPort) {
@@ -305,6 +308,7 @@ void ConnectionLine::unsetPort(ConnectionPort *port) {
         if (inPort != nullptr) {
             inPort->setOtherPort(nullptr);
         }
+        outPort->setConnection(nullptr);
 
         outPort = nullptr;
     } else {
