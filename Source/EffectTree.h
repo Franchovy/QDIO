@@ -63,6 +63,8 @@ public:
     void componentChildrenChanged(Component &component) override;
     void componentEnablementChanged(Component &component) override;
 
+    void componentParentHierarchyChanged(Component &component) override;
+
     void componentVisibilityChanged(Component &component) override;
 
     // Access methods

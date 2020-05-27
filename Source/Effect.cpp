@@ -111,6 +111,10 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     auto inEVT = dynamic_cast<Effect *>(inPort->getParentComponent());
     auto outEVT = dynamic_cast<Effect *>(outPort->getParentComponent());
 
+    if (inEVT == nullptr || outEVT == nullptr) {
+        return returnArray;
+    }
+
     in = inEVT->getNode(inPort);
     out = outEVT->getNode(outPort);
 

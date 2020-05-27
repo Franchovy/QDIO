@@ -379,6 +379,21 @@ void EffectTree::componentChildrenChanged(Component &component) {
 }
 
 
+
+void EffectTree::componentParentHierarchyChanged(Component &component) {
+    //todo delete connectionLine tree when removed from parent
+    if (auto line = dynamic_cast<ConnectionLine*>(&component)) {
+        if (line->getParentComponent() == nullptr) {
+            auto tree = getTree(line);
+            if (tree.isValid()) {
+                tree.getParent().removeChild(tree, undoManager);
+            }
+        }
+    }
+    ComponentListener::componentParentHierarchyChanged(component);
+}
+
+
 void EffectTree::componentEnablementChanged(Component &component) {
     if (! undoManager->isPerformingUndoRedo()) {
         if (auto line = dynamic_cast<ConnectionLine *>(&component)) {
@@ -507,9 +522,6 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
 
         if (parent != nullptr) {
             parent->removeChildComponent(component);
-        } else {
-            component->setVisible(false);
-            jassertfalse;
         }
     }
     Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
@@ -1096,6 +1108,7 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
     }
     return newProcessor;
 }
+
 
 
 
