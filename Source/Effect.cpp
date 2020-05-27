@@ -143,7 +143,7 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
 
         dragLine->setPort(port);
 
-        auto parent = port->isInternal ? port->getParentComponent() : port->getParentComponent()->getParentComponent();
+        auto parent = port->getDragLineParent();
 
         parent->addAndMakeVisible(dragLine);
         parent->addMouseListener(dragLine, true);
