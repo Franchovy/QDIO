@@ -159,7 +159,10 @@ public:
 
     Array<ConnectionLine*> getConnections(bool isInputConnection);
     Array<ConnectionLine*> getConnections();
+
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
+    void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
+    void shortenConnection(ConnectionLine* line1, ConnectionLine* line2);
 
     //int getPortID(const ConnectionPort* port);
     //ConnectionPort* getPortFromID(const int id, bool internal = false);

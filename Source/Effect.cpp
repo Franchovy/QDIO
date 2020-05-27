@@ -918,20 +918,37 @@ void Effect::mouseDrag(const MouseEvent &event) {
             if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
                 std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
                 if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
-                    if (newParent->isParentOf(getParentComponent())) {
+                    auto oldParent = dynamic_cast<EffectTreeBase *>(getParentComponent());
+
+                    // Reassign effect parent
+                    setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
+                    newParent->addAndMakeVisible(this);
+
+                    // Adjust connections accordingly
+                    if (newParent->isParentOf(oldParent)) {
                         // Exit parent effect
                         auto connections = getConnections();
                         std::cout << "exit parent - numConnections: " << connections.size() << newLine;
 
+                        for (auto c : connections) {
+                            // Connections to extend
+
+                            // Connections to shorten
+
+                        }
                     } else if (getParentComponent()->isParentOf(newParent)) {
                         // Join parent effect
                         auto connections = getConnections();
                         std::cout << "enter parent - numConnections: " << connections.size() << newLine;
 
+                        for (auto c : connections) {
+                            // Connections to extend
+
+                            // Connections to shorten
+
+                        }
                     }
 
-                    setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
-                    newParent->addAndMakeVisible(this);
                 }
             }
         } else if (event.mods.isRightButtonDown()) {
@@ -1116,6 +1133,14 @@ Array<ConnectionLine *> Effect::getConnections() {
     }
 
     return array;
+}
+
+void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExtendThrough) {
+
+}
+
+void Effect::shortenConnection(ConnectionLine *line1, ConnectionLine *line2) {
+
 }
 
 
