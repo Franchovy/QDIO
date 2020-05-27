@@ -918,15 +918,23 @@ void Effect::mouseDrag(const MouseEvent &event) {
             if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
                 std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
                 if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
+                    if (newParent->isParentOf(getParentComponent())) {
+                        // Exit parent effect
+                        auto connections = getConnections();
+                        std::cout << "exit parent - numConnections: " << connections.size() << newLine;
+
+                    } else if (getParentComponent()->isParentOf(newParent)) {
+                        // Join parent effect
+                        auto connections = getConnections();
+                        std::cout << "enter parent - numConnections: " << connections.size() << newLine;
+
+                    }
+
                     setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
                     newParent->addAndMakeVisible(this);
                 }
             }
         } else if (event.mods.isRightButtonDown()) {
-            std::cout << "Drag pos: " << rightClickDragPos.toString() << newLine;
-            std::cout << "Event pos: " << getPosition().toString() << newLine;
-            std::cout << "distance: " << getPosition().getDistanceFrom(rightClickDragPos) << newLine;
-
             if (! rightClickDragActivated
                     && (getPosition().getDistanceFrom(rightClickDragPos) > 50)) {
 
@@ -1089,6 +1097,19 @@ Array<ConnectionLine *> Effect::getConnections(bool isInputConnection) {
             if (isInputConnection && isParentOf(line->getInPort().get())) {
                 array.add(line);
             } else if (! isInputConnection && isParentOf(line->getOutPort().get())) {
+                array.add(line);
+            }
+        }
+    }
+
+    return array;
+}
+
+Array<ConnectionLine *> Effect::getConnections() {
+    Array<ConnectionLine*> array;
+    for (auto c : getParentComponent()->getChildren()) {
+        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
+            if (isParentOf(line->getInPort().get()) || isParentOf(line->getOutPort().get())) {
                 array.add(line);
             }
         }

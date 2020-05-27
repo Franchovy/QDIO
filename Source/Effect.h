@@ -129,8 +129,8 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
-    bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
+    bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const override;
+    bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const override;
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
@@ -141,8 +141,8 @@ public:
     NodeAndPort getNode(ConnectionPort::Ptr& port);
     void setNode(AudioProcessorGraph::Node::Ptr node);
 
-    ValueTree createParameter(AudioProcessorParameter* param);
-    Parameter::Ptr loadParameter(ValueTree parameterData);
+    //ValueTree createParameter(AudioProcessorParameter* param);
+    //Parameter::Ptr loadParameter(ValueTree parameterData);
 
     Array<AudioProcessorParameter*> getParameters(bool recursive);
     Array<Parameter*> getParameterChildren();
@@ -153,15 +153,16 @@ public:
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
     Array<ConnectionPort*> getPorts(int isInput = -1);
 
-    ConnectionPort* checkPort(Point<int> pos);
+    //ConnectionPort* checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);
     bool hasConnection(const ConnectionLine* line);
 
     Array<ConnectionLine*> getConnections(bool isInputConnection);
+    Array<ConnectionLine*> getConnections();
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
 
-    int getPortID(const ConnectionPort* port);
-    ConnectionPort* getPortFromID(const int id, bool internal = false);
+    //int getPortID(const ConnectionPort* port);
+    //ConnectionPort* getPortFromID(const int id, bool internal = false);
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() const { return editMode; }
