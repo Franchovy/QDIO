@@ -53,6 +53,9 @@ public:
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
+    Array<ConnectionLine*> getConnections(bool isInputConnection);
+    Array<ConnectionLine*> getConnections();
+
     //===================================================================
 
     static UndoManager& getUndoManager() { return undoManager; }
@@ -83,8 +86,6 @@ protected:
     //====================================================================================
     // Connections management
     ConnectionLine* dragLine = nullptr;
-
-    ReferenceCountedArray<ConnectionLine> connections;
 
     //====================================================================================
 
@@ -156,9 +157,6 @@ public:
     //ConnectionPort* checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);
     bool hasConnection(const ConnectionLine* line);
-
-    Array<ConnectionLine*> getConnections(bool isInputConnection);
-    Array<ConnectionLine*> getConnections();
 
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
     void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);

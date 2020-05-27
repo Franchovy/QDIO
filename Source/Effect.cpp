@@ -139,7 +139,7 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
     //SelectHoverObject::mouseDown(event);
     // Handle Connection
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        dragLine = connections.add(new ConnectionLine());
+        dragLine = new ConnectionLine();
 
         dragLine->setPort(port);
 
@@ -172,12 +172,40 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
         if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
             //dragLine->setPort(port);
         } else {
-            connections.removeObject(dragLine);
-            // todo actually delete
+            //connections.removeObject(dragLine);
         }
 
     }
 }
+
+Array<ConnectionLine *> EffectTreeBase::getConnections(bool isInputConnection) {
+    Array<ConnectionLine*> array;
+    for (auto c : getParentComponent()->getChildren()) {
+        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
+            if (isInputConnection && isParentOf(line->getInPort().get())) {
+                array.add(line);
+            } else if (! isInputConnection && isParentOf(line->getOutPort().get())) {
+                array.add(line);
+            }
+        }
+    }
+
+    return array;
+}
+
+Array<ConnectionLine *> EffectTreeBase::getConnections() {
+    Array<ConnectionLine*> array;
+    for (auto c : getParentComponent()->getChildren()) {
+        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
+            if (isParentOf(line->getInPort().get()) || isParentOf(line->getOutPort().get())) {
+                array.add(line);
+            }
+        }
+    }
+
+    return array;
+}
+
 
 ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
     auto ref = Identifier(portID);
@@ -935,11 +963,29 @@ void Effect::mouseDrag(const MouseEvent &event) {
                             if (c->getInPort().get()->getParentComponent() == oldParent
                                     || c->getOutPort().get()->getParentComponent() == oldParent)
                             {
-                                // Connections to shorten
-                                std::cout << "brrrrppppttt" << newLine;
+                                if (c->isConnected()) {
+                                    // Connection to shorten
+                                    ConnectionLine *outgoingConnection = nullptr;
+                                    for (auto c_out : oldParent->getConnections()) {
+                                        if (c_out->getOutPort() == c->getInPort()->getLinkedPort()
+                                            || c_out->getInPort() == c->getOutPort()->getLinkedPort()) {
+                                            outgoingConnection = c_out;
+                                        }
+                                    }
+                                    jassert(outgoingConnection != nullptr);
+                                    shortenConnection(c, outgoingConnection);
+                                } else {
+                                    if (c->getOutPort()->getParentComponent() == oldParent) {
+                                        // Remove port
+                                    } else if (c->getInPort()->getParentComponent() == oldParent) {
+                                        // Remove port
+                                    } else {
+                                        jassertfalse;
+                                    }
+                                    oldParent->removeChildComponent(c);
+                                }
                             } else {
-                                // Connections to extend
-                                std::cout << "all good" << newLine;
+                                // Connection to extend
                                 extendConnection(c, dynamic_cast<Effect*>(oldParent));
                             }
                         }
@@ -1112,34 +1158,6 @@ void Effect::mergeConnection(ConnectionLine *inLine, ConnectionLine *outLine) {
 
     inLine->unsetPort(inLine->getInPort().get());
     inLine->setPort(newInPort);
-}
-
-Array<ConnectionLine *> Effect::getConnections(bool isInputConnection) {
-    Array<ConnectionLine*> array;
-    for (auto c : getParentComponent()->getChildren()) {
-        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
-            if (isInputConnection && isParentOf(line->getInPort().get())) {
-                array.add(line);
-            } else if (! isInputConnection && isParentOf(line->getOutPort().get())) {
-                array.add(line);
-            }
-        }
-    }
-
-    return array;
-}
-
-Array<ConnectionLine *> Effect::getConnections() {
-    Array<ConnectionLine*> array;
-    for (auto c : getParentComponent()->getChildren()) {
-        if (auto line = dynamic_cast<ConnectionLine*>(c)) {
-            if (isParentOf(line->getInPort().get()) || isParentOf(line->getOutPort().get())) {
-                array.add(line);
-            }
-        }
-    }
-
-    return array;
 }
 
 void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExtendThrough) {
