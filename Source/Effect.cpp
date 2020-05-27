@@ -919,6 +919,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
                 std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
                 if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
                     auto oldParent = dynamic_cast<EffectTreeBase *>(getParentComponent());
+                    auto connections = getConnections();
 
                     // Reassign effect parent
                     setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
@@ -927,14 +928,20 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     // Adjust connections accordingly
                     if (newParent->isParentOf(oldParent)) {
                         // Exit parent effect
-                        auto connections = getConnections();
                         std::cout << "exit parent - numConnections: " << connections.size() << newLine;
 
                         for (auto c : connections) {
-                            // Connections to extend
-
-                            // Connections to shorten
-
+                            // Check if line is connected to an internal port
+                            if (c->getInPort().get()->getParentComponent() == oldParent
+                                    || c->getOutPort().get()->getParentComponent() == oldParent)
+                            {
+                                // Connections to shorten
+                                std::cout << "brrrrppppttt" << newLine;
+                            } else {
+                                // Connections to extend
+                                std::cout << "all good" << newLine;
+                                extendConnection(c, dynamic_cast<Effect*>(oldParent));
+                            }
                         }
                     } else if (getParentComponent()->isParentOf(newParent)) {
                         // Join parent effect
@@ -1136,6 +1143,25 @@ Array<ConnectionLine *> Effect::getConnections() {
 }
 
 void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExtendThrough) {
+    jassert(parentToExtendThrough->isParentOf(lineToExtend->getInPort().get())
+            || parentToExtendThrough->isParentOf(lineToExtend->getOutPort().get()));
+
+    bool isInput = parentToExtendThrough->isParentOf(lineToExtend->getInPort().get());
+
+    auto newPort = parentToExtendThrough->addPort(getDefaultBus(), isInput);
+    auto oldPort = isInput ? lineToExtend->getInPort().get() : lineToExtend->getOutPort().get();
+
+    // Set line ports
+    lineToExtend->unsetPort(oldPort);
+    parentToExtendThrough->getParentComponent()->addAndMakeVisible(lineToExtend);
+    lineToExtend->setPort(newPort.get());
+
+    // Create new internal line
+    auto newConnection = new ConnectionLine();
+    parentToExtendThrough->addAndMakeVisible(newConnection);
+    parentToExtendThrough->resized();
+    newConnection->setPort(oldPort);
+    newConnection->setPort(newPort->internalPort.get());
 
 }
 
