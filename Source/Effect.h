@@ -53,8 +53,9 @@ public:
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
-    Array<ConnectionLine*> getConnections(bool isInputConnection);
-    Array<ConnectionLine*> getConnections();
+    Array<ConnectionLine*> getConnectionsToThis(bool isInputConnection);
+    Array<ConnectionLine*> getConnectionsToThis();
+    Array<ConnectionLine*> getConnectionsInside();
 
     //===================================================================
 
