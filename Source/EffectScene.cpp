@@ -638,6 +638,7 @@ void EffectScene::loadNewLayout(String layout) {
             std::cout << "Save layout: " << layoutToSaveName << newLine;
 
             tree.storeLayout(layoutToSaveName);
+            tree.clear();
         }
     }
 
