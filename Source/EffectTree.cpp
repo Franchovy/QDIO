@@ -384,9 +384,11 @@ void EffectTree::componentParentHierarchyChanged(Component &component) {
     //todo delete connectionLine tree when removed from parent
     if (auto line = dynamic_cast<ConnectionLine*>(&component)) {
         if (line->getParentComponent() == nullptr) {
-            auto tree = getTree(line);
+            auto tree = findTree(effectTree,line);
             if (tree.isValid()) {
                 tree.getParent().removeChild(tree, undoManager);
+            } else {
+                std::cout << "poop" << newLine;
             }
         }
     }
