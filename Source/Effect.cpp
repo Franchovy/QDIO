@@ -991,10 +991,14 @@ void Effect::mouseDrag(const MouseEvent &event) {
                                 } else {
                                     if (c->getOutPort()->getParentComponent() == oldParent) {
                                         // Remove port
-                                        //oldParent->removeChildComponent(c->getOutPort().get());
+                                        auto oldParentEffect = dynamic_cast<Effect*>(oldParent);
+                                        jassert(oldParentEffect != nullptr);
+                                        oldParentEffect->removePort(c->getOutPort().get());
                                     } else if (c->getInPort()->getParentComponent() == oldParent) {
                                         // Remove port
-                                        //oldParent->removeChildComponent(c->getInPort().get());
+                                        auto oldParentEffect = dynamic_cast<Effect*>(oldParent);
+                                        jassert(oldParentEffect != nullptr);
+                                        oldParentEffect->removePort(c->getInPort().get());
                                     } else {
                                         jassertfalse;
                                     }
@@ -1251,9 +1255,7 @@ void Effect::shortenConnection(ConnectionLine *interiorLine, ConnectionLine *ext
         exteriorLine->setPort(newPort);
 
         // Remove unused port
-        targetEffect->removeChildComponent(portToRemove);
-        targetEffect->removeChildComponent(portToRemove->getLinkedPort());
-
+        targetEffect->removePort(portToRemove);
     } else {
         // exterior line to remove
         auto portToRemove = exteriorLine->getInPort()->getParentComponent() == targetEffect
@@ -1266,11 +1268,47 @@ void Effect::shortenConnection(ConnectionLine *interiorLine, ConnectionLine *ext
         interiorLine->setPort(portToReconnect);
 
         // Remove unused port
-        targetEffect->removeChildComponent(portToRemove);
-        targetEffect->removeChildComponent(portToRemove->getLinkedPort());
+        targetEffect->removePort(portToRemove);
 
         parent->removeChildComponent(exteriorLine);
     }
+}
+
+void Effect::removePort(ConnectionPort *port) { //todo test
+    auto audioPort = dynamic_cast<AudioPort*> (port);
+    if (audioPort == nullptr) {
+        audioPort = dynamic_cast<AudioPort*>(port->getLinkedPort());
+    }
+    jassert(audioPort != nullptr);
+
+    if (audioPort->isInput) {
+        for (auto& item : internalInputPortFlexBox.items) {
+            if (item.associatedComponent == audioPort->internalPort.get()) {
+                internalInputPortFlexBox.items.remove(&item);
+            }
+        }
+        for (auto& item : inputPortFlexBox.items) {
+            if (item.associatedComponent == audioPort) {
+                inputPortFlexBox.items.remove(&item);
+            }
+        }
+    } else {
+        for (auto& item : internalOutputPortFlexBox.items) {
+            if (item.associatedComponent == audioPort->internalPort.get()) {
+                //auto index = internalOutputPortFlexBox.items.indexOf(item);
+                internalOutputPortFlexBox.items.remove(&item);
+            }
+        }
+        for (auto& item : outputPortFlexBox.items) {
+            if (item.associatedComponent == audioPort) {
+                //auto index = outputPortFlexBox.items.indexOf(item);
+                outputPortFlexBox.items.remove(&item);
+            }
+        }
+    }
+
+    removeChildComponent(audioPort);
+    removeChildComponent(audioPort->internalPort.get());
 }
 
 

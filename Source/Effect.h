@@ -154,6 +154,7 @@ public:
     void addPort(AudioPort* port);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
     Array<ConnectionPort*> getPorts(int isInput = -1);
+    void removePort(ConnectionPort* port);
 
     //ConnectionPort* checkPort(Point<int> pos);
     bool hasPort(const ConnectionPort* port);
