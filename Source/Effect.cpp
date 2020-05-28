@@ -1209,7 +1209,7 @@ void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExte
 
         // Set line ports
         lineToExtend->unsetPort(oldPort);
-        parentToExtendThrough->getParentComponent()->addAndMakeVisible(lineToExtend);
+    parentToExtendThrough->getParentComponent()->addAndMakeVisible(lineToExtend);
         lineToExtend->setPort(newPort.get());
 
         // Create new internal line
