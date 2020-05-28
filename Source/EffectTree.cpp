@@ -387,8 +387,13 @@ void EffectTree::componentParentHierarchyChanged(Component &component) {
             auto tree = findTree(effectTree,line);
             if (tree.isValid()) {
                 tree.getParent().removeChild(tree, undoManager);
-            } else {
-                std::cout << "poop" << newLine;
+            }
+        }
+    } else if (auto port = dynamic_cast<ConnectionPort*>(&component)) {
+        if (port->getParentComponent() == nullptr) {
+            auto tree = findTree(effectTree, port);
+            if (tree.isValid()) {
+                tree.getParent().removeChild(tree, undoManager);
             }
         }
     }
