@@ -163,19 +163,16 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
             //connect();
         } else {
             // Cancel drag
-            setVisible(false);
+            getParentComponent()->removeChildComponent(this);
         }
     }
 }
 
-void ConnectionLine::parentHierarchyChanged() {
+/*void ConnectionLine::parentHierarchyChanged() {
     auto parent = getParentComponent();
-    if (parent != nullptr) {
-        //setBounds(parent->getBounds());
-    }
 
     Component::parentHierarchyChanged();
-}
+}*/
 
 void ConnectionLine::resized() {
     if (getHeight() < 15) {

@@ -432,17 +432,17 @@ void EffectTree::componentEnablementChanged(Component &component) {
     ComponentListener::componentEnablementChanged(component);
 }
 
-void EffectTree::componentVisibilityChanged(Component &component) {
-    if (! undoManager->isPerformingUndoRedo()) {
+/*void EffectTree::componentVisibilityChanged(Component &component) {
+    *//*if (! undoManager->isPerformingUndoRedo()) {
         if (auto line = dynamic_cast<ConnectionLine *>(&component)) {
             auto lineTree = getTree(line);
             if (! line->isVisible()) {
                 lineTree.getParent().removeChild(lineTree, undoManager);
             }
         }
-    }
+    }*//*
     ComponentListener::componentVisibilityChanged(component);
-}
+}*/
 
 /**
  * Finds tree based on component hierarchy - meant to be efficient.

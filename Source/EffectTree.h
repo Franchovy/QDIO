@@ -65,7 +65,7 @@ public:
 
     void componentParentHierarchyChanged(Component &component) override;
 
-    void componentVisibilityChanged(Component &component) override;
+    //void componentVisibilityChanged(Component &component) override;
 
     // Access methods
     ValueTree getTree(GuiObject* component);
