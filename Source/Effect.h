@@ -131,6 +131,8 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
+    void mouseDoubleClick(const MouseEvent &event) override;
+
     bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const override;
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const override;
 

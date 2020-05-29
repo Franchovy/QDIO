@@ -1311,6 +1311,11 @@ void Effect::removePort(ConnectionPort *port) { //todo test
     removeChildComponent(audioPort->internalPort.get());
 }
 
+void Effect::mouseDoubleClick(const MouseEvent &event) {
+    setEditMode(! editMode);
+    Component::mouseDoubleClick(event);
+}
+
 
 bool ConnectionLine::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return dynamic_cast<const Effect*>(other);
