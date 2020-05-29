@@ -81,11 +81,12 @@ class Parameter : public SelectHoverObject, public AudioProcessorParameter::List
 public:
     using Ptr = ReferenceCountedObjectPtr<Parameter>;
 
-    explicit Parameter(AudioProcessorParameter *param = nullptr, int type = slider, bool editMode = false);
+    explicit Parameter(AudioProcessorParameter *param = nullptr, int type = null, bool editMode = false);
 
     ~Parameter() override;
 
     enum Type {
+        null = -1,
         button = 0,
         combo = 1,
         slider = 2

@@ -68,11 +68,15 @@ EffectScene::EffectScene()
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
         deviceManager.initialiseWithDefaultDevices(2, 2);
     } else {
+        std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
+
         deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
-
     }
+
     deviceManager.addAudioCallback(&processorPlayer);
+    //deviceManager.addAudioCallback(this);
+
     deviceManager.addChangeListener(this);
     processorPlayer.setProcessor(&audioGraph);
 
@@ -161,8 +165,11 @@ void EffectScene::timerCallback() {
 void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
     if (source == &deviceManager) {
         // DeviceManager change
-        std::cout << "AudioDeviceManager change" << newLine;
-
+        std::cout << "Device manager change state: " << newLine;
+        auto deviceData = deviceManager.createStateXml();
+        std::cout << deviceData->toString() << newLine;
+        getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
+        getAppProperties().getUserSettings()->save();
     }
 }
 
@@ -176,6 +183,9 @@ EffectScene::~EffectScene()
     jassert(! audioGraph.getParameters().isEmpty());*/
 
     processorPlayer.setProcessor(nullptr);
+
+    std::cout << "Closing with device settings: " << getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS)->toString() << newLine;
+
     deviceManager.closeAudioDevice();
 
     undoManager.clearUndoHistory();
@@ -686,6 +696,19 @@ int EffectScene::callSaveEffectDialog(String &name) {
 
 StringArray EffectScene::getProcessorNames() {
     return tree.getProcessorNames();
+}
+
+void EffectScene::audioDeviceIOCallback(const float **inputChannelData, int numInputChannels, float **outputChannelData,
+                                        int numOutputChannels, int numSamples) {
+
+}
+
+void EffectScene::audioDeviceAboutToStart(AudioIODevice *device) {
+
+}
+
+void EffectScene::audioDeviceStopped() {
+
 }
 
 

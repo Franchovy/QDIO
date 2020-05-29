@@ -874,12 +874,17 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         }
 
         jassert(param != nullptr);
-        parameter = new Parameter(param);
-    } else {
-        int type = parameterData.getProperty("type");
-
-        parameter = new Parameter(nullptr, type);
     }
+
+    int type = parameterData.getProperty("type");
+    float value = parameterData.getProperty("value");
+
+    if (param != nullptr && ! dynamic_cast<IOEffect*>(effect->getProcessor())) {
+        param->setValue(value);
+    }
+
+    parameter = new Parameter(param, type);
+
     if (parameter->getName() == "Parameter" && name != "") {
         parameter->setName(name);
     }
@@ -909,12 +914,6 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
 
     int x = parameterData.getProperty("x");
     int y = parameterData.getProperty("y");
-
-    // Set value
-    if (parameterData.hasProperty("value")) {
-        float value = parameterData.getProperty("value");
-        parameter->setValue(value);
-    }
 
     parameter->setTopLeftPosition(x, y);
 

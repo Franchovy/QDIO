@@ -29,6 +29,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
     if (param != nullptr) {
         if (param->isBoolean()) {
+            jassert(type == button || type == null);
             // Button
             this->type = button;
             parameterComponent = std::make_unique<TextButton>(param->getName(30));
@@ -49,6 +50,11 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             button->setBounds(0, 30, 120, 40);
             addAndMakeVisible(button);
         } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
+            jassert(type == combo || type == null);
+
+            auto comboParam = dynamic_cast<AudioParameterChoice*>(param);
+            jassert(comboParam != nullptr);
+
             // Combo
             this->type = combo;
             parameterComponent = std::make_unique<ComboBox>();
@@ -63,11 +69,12 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             combo->addListener(comboListener);
             combo->setName("Combo");
 
-            combo->setSelectedItemIndex(param->getValue());
+            combo->setSelectedItemIndex(comboParam->getIndex(), sendNotificationSync);
 
             combo->setBounds(20, 60, 200, 40);
             addAndMakeVisible(combo);
         } else {
+            jassert(type == slider || type == null);
             // Slider
             this->type = slider;
             parameterComponent = std::make_unique<Slider>();
@@ -120,7 +127,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
             combo->setName("Combo");
 
-            combo->setSelectedItemIndex(0);
+            combo->setSelectedItemIndex(0, sendNotificationSync);
 
             combo->setBounds(20, 60, 250, 40);
             addAndMakeVisible(combo);

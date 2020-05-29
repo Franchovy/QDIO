@@ -42,7 +42,7 @@ ValueTree EffectLoader::loadEffect(String effectName) {
     auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
     if (loadedEffectsData != nullptr) {
         effectLib = ValueTree::fromXml(*loadedEffectsData);
-        std::cout << "Stored effects:" << newLine << effectLib.toXmlString() << newLine;
+        //std::cout << "Stored effects:" << newLine << effectLib.toXmlString() << newLine;
     }
 
     auto effectToLoad = effectLib.getChildWithProperty("name", effectName);
@@ -126,7 +126,7 @@ ValueTree EffectLoader::loadLayout(String layoutName) {
     auto loadedLayoutsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
     if (loadedLayoutsData != nullptr) {
         layouts = ValueTree::fromXml(*loadedLayoutsData);
-        std::cout << "Stored layouts:" << newLine << layouts.toXmlString() << newLine;
+        //std::cout << "Stored layouts:" << newLine << layouts.toXmlString() << newLine;
     }
 
     auto layoutToLoad = layouts.getChildWithProperty("name", layoutName);
