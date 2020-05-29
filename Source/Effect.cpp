@@ -667,10 +667,6 @@ AudioProcessorGraph::NodeID Effect::getNodeID() const {
 
 
 void Effect::resized() {
-    // Layout using flexbox
-    // todo singular layout flexbox
-    //FlexBox layout;
-
     inputPortFlexBox.performLayout(Rectangle<int>(10, 18, 60, getHeight() - 18));
     outputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 90, 18, 60, getHeight() - 18));
     internalInputPortFlexBox.performLayout(Rectangle<int>(80, 30, 60, getHeight()));
@@ -678,11 +674,39 @@ void Effect::resized() {
 
     paramPortsFlexBox.performLayout(Rectangle<int>(40, getHeight() - 50, getWidth() - 40, 60));
 
-    /*for (auto parameter : getParameterChildren()) {
-        if (parameter->getName() == "Bypass") {
-            parameter->setTopRightPosition(getWidth() - 40, 40);
+
+    if (! editMode) {
+
+        // Parameters
+        FlexBox parameterFlexBox;
+
+        for (auto parameter : getParameterChildren()) {
+            FlexItem paramFlexItem;
+            paramFlexItem.associatedComponent = parameter;
+            if (parameter->type == Parameter::slider) {
+                paramFlexItem.width = 150;
+                paramFlexItem.height = 80;
+            } else if (parameter->type == Parameter::combo) {
+                paramFlexItem.width = 150;
+                paramFlexItem.height = 110;
+            } else if (parameter->type == Parameter::button) {
+                paramFlexItem.width = 120;
+                paramFlexItem.height = 110;
+            }
+            paramFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
+
+            parameterFlexBox.items.add(paramFlexItem);
         }
-    }*/
+
+        parameterFlexBox.flexDirection = FlexBox::Direction::column;
+        parameterFlexBox.alignContent = FlexBox::AlignContent::flexStart;
+        parameterFlexBox.alignItems = FlexBox::AlignItems::flexStart;
+        parameterFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
+        parameterFlexBox.performLayout(Rectangle<int>(30, 30, getWidth() - 30, getHeight() - 30));
+    }
+
+
+    // Layout using flexbox
 
     title.setBounds(30,30,200, title.getFont().getHeight());
 }
