@@ -32,6 +32,8 @@ ReverbEffect::ReverbEffect()
 }
 
 void ReverbEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
+    reverbProcessor.reset();
+
     reverbParameters.width = 0.5f;
     reverbParameters.damping = 0.8f;
     reverbParameters.dryLevel = 0.5f;
@@ -43,7 +45,7 @@ void ReverbEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPe
 }
 
 void ReverbEffect::releaseResources() {
-
+    reverbProcessor.reset();
 }
 
 void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {

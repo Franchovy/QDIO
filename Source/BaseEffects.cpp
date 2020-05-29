@@ -93,7 +93,7 @@ void DelayEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPer
     delayBufferPt = 1;
 
     delayBuffer.setSize(numChannels, delayBufferSize
-            , true, false, true);
+            , false, false, true);
     delayBuffer.clear();
 
     fadeVal = fade->get();
@@ -147,7 +147,7 @@ void DelayEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessa
 }
 
 void DelayEffect::releaseResources() {
-    std::cout << getName() << ": release resources" << newLine;
+    delayBuffer.clear();
 }
 
 DistortionEffect::DistortionEffect() : BaseEffect(),
