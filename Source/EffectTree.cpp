@@ -526,6 +526,12 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         if (auto line = dynamic_cast<ConnectionLine*>(component)) {
             line->disconnect();
         }
+        else if (auto effect = dynamic_cast<Effect*>(component)) {
+            for (auto c : effect->getConnectionsToThis()) {
+                auto connectionTree = getTree(c);
+                connectionTree.getParent().removeChild(connectionTree, undoManager);
+            }
+        }
 
         if (parent != nullptr) {
             parent->removeChildComponent(component);
