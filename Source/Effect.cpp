@@ -685,7 +685,7 @@ void Effect::resized() {
             paramFlexItem.associatedComponent = parameter;
             if (parameter->type == Parameter::slider) {
                 paramFlexItem.width = 150;
-                paramFlexItem.height = 80;
+                paramFlexItem.height = 120;
             } else if (parameter->type == Parameter::combo) {
                 paramFlexItem.width = 150;
                 paramFlexItem.height = 110;
