@@ -703,8 +703,8 @@ void Effect::resized() {
 
         parameterFlexBox.flexDirection = FlexBox::Direction::column;
         parameterFlexBox.alignContent = FlexBox::AlignContent::flexStart;
-        parameterFlexBox.alignItems = FlexBox::AlignItems::flexStart;
-        parameterFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
+        parameterFlexBox.alignItems = FlexBox::AlignItems::center;
+        parameterFlexBox.justifyContent = FlexBox::JustifyContent::center;
 
         paramPortsFlexBox.flexDirection = FlexBox::Direction::row;
         paramPortsFlexBox.alignItems = FlexBox::AlignItems::flexStart;
@@ -713,9 +713,9 @@ void Effect::resized() {
 
         parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 60 : 15
                 , 50, (outputPortFlexBox.items.size() > 0) ? getWidth() - 60 : getWidth() - 15
-                , getHeight() - 60));
-        paramPortsFlexBox.performLayout(Rectangle<int>(40, getHeight() - 60
-                , getWidth() - 80, 60));
+                , getHeight() - 90));
+        paramPortsFlexBox.performLayout(Rectangle<int>(20, getHeight() - 60
+                , getWidth() - 20, 60));
 
     }
 
@@ -1198,10 +1198,10 @@ void Effect::addPort(AudioPort *port) {
     addAndMakeVisible(port);
 }
 
-void Effect::childrenChanged() {
-    resized();
+/*void Effect::childrenChanged() {
+//    resized();
     Component::childrenChanged();
-}
+}*/
 
 void Effect::setName(const String &newName) {
     title.setText(newName, dontSendNotification);
