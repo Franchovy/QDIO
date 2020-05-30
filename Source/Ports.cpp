@@ -135,14 +135,14 @@ bool ParameterPort::canConnect(const ConnectionPort* other) const {
 ParameterPort::ParameterPort(bool isInternal)
     : ConnectionPort()
 {
-    hoverBox = Rectangle<int>(0,0,60,60);
-    outline = Rectangle<int>(20,20,20,20);
-    centrePoint = Point<int>(30,30);
+    hoverBox = Rectangle<int>(0,0,36,36);
+    outline = Rectangle<int>(12,12,12,12);
+    centrePoint = Point<int>(18,18);
 
     isInput = isInternal;
     this->isInternal = isInternal;
 
-    setBounds(0, 0, 60, 60);
+    setBounds(0, 0, 36, 36);
 }
 
 Component *ParameterPort::getDragLineParent() {
