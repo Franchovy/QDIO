@@ -876,7 +876,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         jassert(param != nullptr);
     }
 
-    int type = parameterData.getProperty("type");
+    int type = parameterData.getProperty("type", Parameter::null);
     float value = parameterData.getProperty("value");
 
     if (param != nullptr && ! dynamic_cast<IOEffect*>(effect->getProcessor())) {
