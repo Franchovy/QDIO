@@ -120,6 +120,9 @@ public:
     ParameterPort* getPort(bool internal);
     ParameterPort* getPortWithID(String portID);
 
+    void createParameterComponent();
+    void positionParameterComponent();
+
     Point<int> getPortPosition();
 
     void connect(Parameter* otherParameter);

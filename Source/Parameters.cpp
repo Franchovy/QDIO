@@ -29,129 +29,32 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
     if (param != nullptr) {
         if (param->isBoolean()) {
-            jassert(type == button || type == null);
             // Button
+            jassert(type == button || type == null);
             this->type = button;
-            parameterComponent = std::make_unique<TextButton>(param->getName(30));
-
-            auto button = dynamic_cast<TextButton *>(parameterComponent.get());
-
-            button->setToggleState(param->getValue(), sendNotificationAsync);
-            button->setClickingTogglesState(true);
-
-            buttonListener = new ButtonListener(param);
-            button->addListener(buttonListener);
-            button->setName("Button");
-            button->setColour(TextButton::ColourIds::textColourOffId, Colours::whitesmoke);
-            button->setColour(TextButton::ColourIds::textColourOnId, Colours::red);
-            button->setColour(TextButton::buttonColourId, Colours::darkgrey);
-            button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
-
-            button->setBounds(0, 30, 100, 30);
-            addAndMakeVisible(button);
         } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
-            jassert(type == combo || type == null);
-
-            auto comboParam = dynamic_cast<AudioParameterChoice*>(param);
-            jassert(comboParam != nullptr);
-
             // Combo
+            jassert(type == combo || type == null);
             this->type = combo;
-            parameterComponent = std::make_unique<ComboBox>();
-            auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
-
-            int i = 1;
-            for (auto s : param->getAllValueStrings()) {
-                combo->addItem(s.substring(0, 20), i++);
-            }
-
-            comboListener = new ComboListener(param);
-            combo->addListener(comboListener);
-            combo->setName("Combo");
-
-            combo->setSelectedItemIndex(comboParam->getIndex(), sendNotificationSync);
-
-            combo->setBounds(20, 60, 200, 40);
-            addAndMakeVisible(combo);
         } else {
-            jassert(type == slider || type == null);
             // Slider
+            jassert(type == slider || type == null);
             this->type = slider;
-            parameterComponent = std::make_unique<Slider>();
-            auto slider = dynamic_cast<Slider *>(parameterComponent.get());
-
-            auto paramRange = dynamic_cast<RangedAudioParameter *>(param)->getNormalisableRange();
-            slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                                   paramRange.interval, paramRange.skew));
-
-            sliderListener = new SliderListener(param);
-            slider->addListener(sliderListener);
-            slider->setName("Slider");
-            slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
-
-            slider->setTextBoxIsEditable(true);
-            slider->setValue(param->getValue());
-
-            slider->setBounds(0, 60, 100, 70);
-            addAndMakeVisible(slider);
-
-            slider->hideTextBox(false);
-            slider->hideTextBox(true);
         }
     } else {
         if (type == slider) {
             // Slider
             this->type = slider;
-            parameterComponent = std::make_unique<Slider>();
-            auto slider = dynamic_cast<Slider *>(parameterComponent.get());
-
-            auto paramRange = NormalisableRange<double>(0, 1);
-            slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                                   paramRange.interval, paramRange.skew));
-
-            slider->setName("Slider");
-            slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
-
-            slider->setTextBoxIsEditable(true);
-
-            slider->setBounds(0, 60, 100, 70);
-            addAndMakeVisible(slider);
-
-            slider->hideTextBox(false);
-            slider->hideTextBox(true);
         } else if (type == combo) {
             // Combo
             this->type = combo;
-            parameterComponent = std::make_unique<ComboBox>();
-            auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
-
-            combo->setName("Combo");
-
-            combo->setSelectedItemIndex(0, sendNotificationSync);
-
-            combo->setBounds(20, 60, 250, 40);
-            addAndMakeVisible(combo);
         } else if (type == button) {
             // Button
             this->type = button;
-            parameterComponent = std::make_unique<TextButton>();
-
-            auto button = dynamic_cast<TextButton *>(parameterComponent.get());
-
-            button->setToggleState(false, sendNotificationAsync);
-            button->setClickingTogglesState(true);
-
-            button->setColour(TextButton::ColourIds::textColourOffId, Colours::whitesmoke);
-            button->setColour(TextButton::ColourIds::textColourOnId, Colours::red);
-            button->setColour(TextButton::buttonColourId, Colours::darkgrey);
-            button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
-
-            button->setName("Button");
-
-            button->setBounds(0, 30, 100, 30);
-            addAndMakeVisible(button);
         }
     }
+
+    createParameterComponent();
 
     if (param != nullptr) {
         param->addListener(this);
@@ -188,6 +91,96 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
     setEditMode(editMode);
 }
+
+
+void Parameter::positionParameterComponent() {
+
+}
+
+void Parameter::createParameterComponent() {
+    if (type == button) {
+        parameterComponent = std::make_unique<TextButton>();
+
+        auto button = dynamic_cast<TextButton *>(parameterComponent.get());
+
+        if (referencedParameter != nullptr) {
+            button->setButtonText(referencedParameter->getName(30));
+        }
+
+        button->setToggleState(referencedParameter == nullptr ? false : referencedParameter->getValue(),
+                               sendNotificationAsync);
+        button->setClickingTogglesState(true);
+
+        if (referencedParameter != nullptr) {
+            buttonListener = new ButtonListener(referencedParameter);
+            button->addListener(buttonListener);
+        }
+
+        button->setName("Button");
+        button->setColour(TextButton::ColourIds::textColourOffId, Colours::whitesmoke);
+        button->setColour(TextButton::ColourIds::textColourOnId, Colours::red);
+        button->setColour(TextButton::buttonColourId, Colours::darkgrey);
+        button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
+
+        button->setBounds(0, 30, 100, 30);
+        addAndMakeVisible(button);
+    } else if (type == combo) {
+        parameterComponent = std::make_unique<ComboBox>();
+        auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
+
+        combo->setName("Combo");
+
+        if (referencedParameter != nullptr) {
+            int i = 1;
+            for (auto s : referencedParameter->getAllValueStrings()) {
+                combo->addItem(s.substring(0, 20), i++);
+            }
+
+            comboListener = new ComboListener(referencedParameter);
+            combo->addListener(comboListener);
+
+            auto comboParam = dynamic_cast<AudioParameterChoice*>(referencedParameter);
+            jassert(comboParam != nullptr);
+
+            combo->setSelectedItemIndex(comboParam->getIndex(), sendNotificationSync);
+        } else {
+            combo->setSelectedItemIndex(0, sendNotificationSync);
+        }
+
+        combo->setBounds(20, 60, 250, 40);
+        addAndMakeVisible(combo);
+    } else if (type == slider) {
+        parameterComponent = std::make_unique<Slider>();
+        auto slider = dynamic_cast<Slider *>(parameterComponent.get());
+
+        auto paramRange = NormalisableRange<double>(0, 1);
+        if (referencedParameter != nullptr) {
+            auto paramRange = dynamic_cast<RangedAudioParameter *>(referencedParameter)->getNormalisableRange();
+        }
+
+        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
+                                                               paramRange.interval, paramRange.skew));
+
+        if (referencedParameter != nullptr) {
+            sliderListener = new SliderListener(referencedParameter);
+            slider->addListener(sliderListener);
+        }
+
+        slider->setName("Slider");
+        slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
+
+        slider->setTextBoxIsEditable(true);
+
+        slider->setValue(referencedParameter != nullptr ? referencedParameter->getValue() : 1);
+
+        slider->setBounds(0, 60, 100, 70);
+        addAndMakeVisible(slider);
+
+        slider->hideTextBox(false);
+        slider->hideTextBox(true);
+    }
+}
+
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     // This is called on audio thread! Use async updater for messages.
