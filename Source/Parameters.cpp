@@ -212,13 +212,18 @@ void Parameter::setEditMode(bool isEditable) {
     externalPort.setVisible(isEditable);
     setHoverable(isEditable);
     parameterLabel.setEditable(isEditable, isEditable);
-
     parameterLabel.setColour(Label::textColourId,
                              (isEditable ? Colours::whitesmoke : Colours::black));
-
     editMode = isEditable;
-
     setInterceptsMouseClicks(editMode, true);
+
+    if (editMode) {
+        //todo
+    } else {
+        parameterLabel.setTopLeftPosition(5,5);
+        parameterComponent->setTopLeftPosition(5, 15);
+        setSize(parameterComponent->getWidth() + 5, 40);
+    }
 
     repaint();
 }

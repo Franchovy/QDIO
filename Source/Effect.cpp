@@ -702,7 +702,7 @@ void Effect::resized() {
         parameterFlexBox.alignContent = FlexBox::AlignContent::flexStart;
         parameterFlexBox.alignItems = FlexBox::AlignItems::flexStart;
         parameterFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
-        parameterFlexBox.performLayout(Rectangle<int>(30, 30, getWidth() - 30, getHeight() - 30));
+        parameterFlexBox.performLayout(Rectangle<int>(30, 30, getWidth() - 30, getHeight() - 60));
     }
 
 
