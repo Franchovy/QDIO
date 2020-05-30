@@ -47,7 +47,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
             button->setColour(TextButton::buttonColourId, Colours::darkgrey);
             button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
 
-            button->setBounds(0, 30, 120, 40);
+            button->setBounds(0, 30, 100, 30);
             addAndMakeVisible(button);
         } else if (param->isDiscrete() && !param->getAllValueStrings().isEmpty()) {
             jassert(type == combo || type == null);
@@ -148,7 +148,7 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
             button->setName("Button");
 
-            button->setBounds(0, 30, 150, 40);
+            button->setBounds(0, 30, 100, 30);
             addAndMakeVisible(button);
         }
     }
@@ -221,7 +221,7 @@ void Parameter::setEditMode(bool isEditable) {
         //todo
     } else {
         parameterLabel.setTopLeftPosition(5,5);
-        parameterComponent->setTopLeftPosition(5, 15);
+        parameterComponent->setTopLeftPosition(5, 5);
         setSize(parameterComponent->getWidth() + 5, 40);
     }
 

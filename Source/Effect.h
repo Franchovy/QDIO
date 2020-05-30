@@ -221,7 +221,6 @@ private:
     FlexBox outputPortFlexBox;
     FlexBox internalInputPortFlexBox;
     FlexBox internalOutputPortFlexBox;
-    FlexBox paramPortsFlexBox;
 
     Resizer resizer;
 

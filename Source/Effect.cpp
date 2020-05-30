@@ -346,9 +346,6 @@ Effect::Effect() : MenuItem(2)
             outputPortFlexBox.flexDirection = inputPortFlexBox.flexDirection = FlexBox::Direction::column;
     internalInputPortFlexBox.justifyContent = internalOutputPortFlexBox.justifyContent =
         outputPortFlexBox.justifyContent = inputPortFlexBox.justifyContent = FlexBox::JustifyContent::center;
-
-    paramPortsFlexBox.flexDirection = FlexBox::Direction::row;
-    paramPortsFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
 }
 
 void Effect::setupTitle() {
@@ -672,13 +669,11 @@ void Effect::resized() {
     internalInputPortFlexBox.performLayout(Rectangle<int>(80, 30, 60, getHeight()));
     internalOutputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 120, 30, 60, getHeight()));
 
-    paramPortsFlexBox.performLayout(Rectangle<int>(40, getHeight() - 50, getWidth() - 40, 60));
-
-
     if (! editMode) {
 
         // Parameters
         FlexBox parameterFlexBox;
+        FlexBox paramPortsFlexBox;
 
         for (auto parameter : getParameterChildren()) {
             FlexItem paramFlexItem;
@@ -696,17 +691,33 @@ void Effect::resized() {
             paramFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
 
             parameterFlexBox.items.add(paramFlexItem);
+
+            FlexItem paramPortFlexItem(*parameter->getPort(true));
+            paramPortFlexItem.width = 60;
+            paramPortFlexItem.height = 60;
+            paramPortFlexItem.margin = 5;
+            paramPortFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
+
+            paramPortsFlexBox.items.add(paramPortFlexItem);
         }
 
         parameterFlexBox.flexDirection = FlexBox::Direction::column;
         parameterFlexBox.alignContent = FlexBox::AlignContent::flexStart;
         parameterFlexBox.alignItems = FlexBox::AlignItems::flexStart;
         parameterFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
-        parameterFlexBox.performLayout(Rectangle<int>(30, 30, getWidth() - 30, getHeight() - 60));
+
+        paramPortsFlexBox.flexDirection = FlexBox::Direction::row;
+        paramPortsFlexBox.alignItems = FlexBox::AlignItems::flexStart;
+        paramPortsFlexBox.alignContent = FlexBox::AlignContent::flexStart;
+        paramPortsFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
+
+        parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 60 : 15
+                , 50, (outputPortFlexBox.items.size() > 0) ? getWidth() - 60 : getWidth() - 15
+                , getHeight() - 60));
+        paramPortsFlexBox.performLayout(Rectangle<int>(40, getHeight() - 60
+                , getWidth() - 80, 60));
+
     }
-
-
-    // Layout using flexbox
 
     title.setBounds(30,30,200, title.getFont().getHeight());
 }
@@ -724,7 +735,6 @@ void Effect::paint(Graphics& g) {
     Path hoverRectangle;
     hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
     PathStrokeType strokeType(3);
-
 
     if (selectMode) {
         strokeType.createStrokedPath(hoverRectangle, hoverRectangle);
@@ -1189,19 +1199,7 @@ void Effect::addPort(AudioPort *port) {
 }
 
 void Effect::childrenChanged() {
-    for (auto p : getParameterChildren()) {
-        if (! parameterArray.contains(p)) {
-            parameterArray.add(p);
-
-            FlexItem paramPortFlexItem(*p->getPort(true));
-            paramPortFlexItem.width = 60;
-            paramPortFlexItem.height = 60;
-            paramPortFlexItem.margin = 20;
-            paramPortFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
-
-            paramPortsFlexBox.items.add(paramPortFlexItem);
-        }
-    }
+    resized();
     Component::childrenChanged();
 }
 
