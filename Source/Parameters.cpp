@@ -92,11 +92,11 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
 void Parameter::positionParameterComponent() {
     if (type == button) {
-        parameterComponent->setBounds(0, 30, 100, 30);
+        parameterComponent->setBounds(20, 30, 100, 30);
     } else if (type == combo) {
         parameterComponent->setBounds(20, 60, 250, 40);
     } else if (type == slider) {
-        parameterComponent->setBounds(0, 60, 100, 70);
+        parameterComponent->setBounds(20, 60, 100, 70);
     }
     parameterLabel.setTopLeftPosition(15, 55);
 

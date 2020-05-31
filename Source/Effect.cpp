@@ -512,6 +512,8 @@ ConnectionPort* Effect::checkPort(Point<int> pos) {
 */
 
 void Effect::setEditMode(bool isEditMode) {
+    editMode = isEditMode;
+
     // Turn on edit mode
     if (isEditMode) {
         // Set child effects and connections to editable
@@ -546,6 +548,19 @@ void Effect::setEditMode(bool isEditMode) {
         title.setInterceptsMouseClicks(true, true);
 
         title.setColour(title.textColourId, Colours::whitesmoke);
+
+        auto newBounds = getLocalBounds();
+
+        for (auto c : getChildren()) {
+            if (! newBounds.contains(c->getBoundsInParent())) {
+                newBounds = newBounds.getUnion(c->getBoundsInParent());
+            }
+        }
+
+        newBounds.expand(50, 20);
+
+        newBounds.setPosition(getPosition());
+        setBounds(newBounds);
     }
 
     // Turn off edit mode
@@ -588,11 +603,9 @@ void Effect::setEditMode(bool isEditMode) {
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
         title.setColour(title.textColourId, Colours::black);
-
-        resized();
     }
 
-    editMode = isEditMode;
+    resized();
     repaint();
 }
 
@@ -713,12 +726,40 @@ void Effect::resized() {
         paramPortsFlexBox.alignContent = FlexBox::AlignContent::flexStart;
         paramPortsFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
 
+
+        // Resize
+
+        auto newWidth = 250;
+        auto newHeight = 200;
+
+        if (parameterFlexBox.items.size() > 0) {
+            for (auto c : parameterFlexBox.items) {
+                int widthToAdd;
+                if (auto parameter = dynamic_cast<Parameter*>(c.associatedComponent)) {
+                    if (parameter->type == Parameter::combo) {
+                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 40);
+                    } else {
+                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 10);
+                    }
+                }
+            }
+
+            //newWidth = parameterFlexBox.items.getLast().associatedComponent->getRight() + 40;
+            newHeight = parameterFlexBox.items.size() * 50 + 90;
+        }
+        if (outputPortFlexBox.items.size() > 0) {
+            //newWidth += 20;
+        }
+
+        setSize(newWidth, newHeight);
+
+        // Perform layout
+
         parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 60 : 15
                 , 50, (outputPortFlexBox.items.size() > 0) ? getWidth() - 60 : getWidth() - 15
                 , getHeight() - 90));
         paramPortsFlexBox.performLayout(Rectangle<int>(20, getHeight() - 60
                 , getWidth() - 20, 60));
-
     }
 
     title.setBounds(30,30,200, title.getFont().getHeight());
