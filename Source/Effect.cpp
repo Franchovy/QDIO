@@ -588,6 +588,8 @@ void Effect::setEditMode(bool isEditMode) {
         title.setMouseCursor(getMouseCursor());
         title.setInterceptsMouseClicks(false,false);
         title.setColour(title.textColourId, Colours::black);
+
+        resized();
     }
 
     editMode = isEditMode;

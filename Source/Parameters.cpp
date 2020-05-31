@@ -80,12 +80,9 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
         parameterLabel.setVisible(false);
     }
 
-    parameterLabel.setTopLeftPosition(15, 55);
     parameterLabel.setColour(Label::textColourId, Colours::black);
     parameterLabel.setText(getName(), dontSendNotification);
     //parameterComponent->setTopLeftPosition(0,60);
-
-    setBounds(0, 0, 150, 120);
 
     externalPort.setCentrePosition(75, 30);
 
@@ -94,7 +91,16 @@ Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
 
 
 void Parameter::positionParameterComponent() {
+    if (type == button) {
+        parameterComponent->setBounds(0, 30, 100, 30);
+    } else if (type == combo) {
+        parameterComponent->setBounds(20, 60, 250, 40);
+    } else if (type == slider) {
+        parameterComponent->setBounds(0, 60, 100, 70);
+    }
+    parameterLabel.setTopLeftPosition(15, 55);
 
+    setSize(150, 120);
 }
 
 void Parameter::createParameterComponent() {
@@ -122,8 +128,6 @@ void Parameter::createParameterComponent() {
         button->setColour(TextButton::buttonColourId, Colours::darkgrey);
         button->setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
 
-        button->setBounds(0, 30, 100, 30);
-        addAndMakeVisible(button);
     } else if (type == combo) {
         parameterComponent = std::make_unique<ComboBox>();
         auto combo = dynamic_cast<ComboBox *>(parameterComponent.get());
@@ -146,9 +150,6 @@ void Parameter::createParameterComponent() {
         } else {
             combo->setSelectedItemIndex(0, sendNotificationSync);
         }
-
-        combo->setBounds(20, 60, 250, 40);
-        addAndMakeVisible(combo);
     } else if (type == slider) {
         parameterComponent = std::make_unique<Slider>();
         auto slider = dynamic_cast<Slider *>(parameterComponent.get());
@@ -170,15 +171,14 @@ void Parameter::createParameterComponent() {
         slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 
         slider->setTextBoxIsEditable(true);
-
         slider->setValue(referencedParameter != nullptr ? referencedParameter->getValue() : 1);
-
-        slider->setBounds(0, 60, 100, 70);
-        addAndMakeVisible(slider);
 
         slider->hideTextBox(false);
         slider->hideTextBox(true);
     }
+
+    addAndMakeVisible(parameterComponent.get());
+    positionParameterComponent();
 }
 
 
@@ -211,7 +211,7 @@ void Parameter::setEditMode(bool isEditable) {
     setInterceptsMouseClicks(editMode, true);
 
     if (editMode) {
-        //todo
+        positionParameterComponent();
     } else {
         parameterLabel.setTopLeftPosition(5,5);
         parameterComponent->setTopLeftPosition(5, 5);
@@ -400,7 +400,7 @@ bool Parameter::isInEditMode() const {
 }
 
 void Parameter::moved() {
-   internalPort.setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
+   //internalPort.setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
     Component::moved();
 }
 
