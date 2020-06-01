@@ -181,36 +181,18 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         h = jmax(portBounds.getY() + portBounds.getHeight(), h);
     }
 
-    // Set new bounds
-    effect->setBounds(x, y, w, h);
+    //effect->setBounds(x, y, w, h);
 
     //==============================================================
     // Set up Menu
-
     effect->setupMenu();
-
-    /*if (! effect->isIndividual()) {
-        PopupMenu::Item saveEffect("Save Effect");
-        saveEffect.setAction([=]() {
-            auto saveTree = storeEffect(tree);
-
-            saveTree.setProperty("editMode", false, nullptr);
-
-            if (saveTree.isValid()) {
-                EffectLoader::saveEffect(saveTree);
-                effect->getParentComponent()->postCommandMessage(0);
-            } else {
-                std::cout << "invalid, mothafucka." << newLine;
-            }
-        });
-
-        effect->addMenuItem(effect->menu, saveEffect);
-        effect->addMenuItem(effect->editMenu, saveEffect);
-    }*/
-
 
     // Set up Title
     effect->setupTitle();
+
+    // Set new bounds
+    effect->setTopLeftPosition(x,y);
+    effect->resized();
 
     return effect;
 }
@@ -255,14 +237,16 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
                 getTree(effect).setProperty(Effect::IDs::h, effect->getHeight(), undoManager);
             }
         } else if (auto parameter = dynamic_cast<Parameter*>(&component)) {
-            auto effect = dynamic_cast<Effect*>(parameter->getParentComponent());
-            jassert(effect != nullptr);
+            if (! parameter->isInEditMode()) {
+                auto effect = dynamic_cast<Effect *>(parameter->getParentComponent());
+                jassert(effect != nullptr);
 
-            auto parameterTree = getTree(effect).getChildWithProperty(IDs::component, parameter);
+                auto parameterTree = getTree(effect).getChildWithProperty(IDs::component, parameter);
 
-            if (wasMoved) {
-                parameterTree.setProperty("x", component.getX(), undoManager);
-                parameterTree.setProperty("y", component.getY(), undoManager);
+                if (wasMoved) {
+                    parameterTree.setProperty("x", component.getX(), undoManager);
+                    parameterTree.setProperty("y", component.getY(), undoManager);
+                }
             }
         }
     }
