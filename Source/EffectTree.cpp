@@ -437,6 +437,7 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         auto component = getFromTree<Component>(childWhichHasBeenAdded);
         auto parent = getFromTree<EffectTreeBase>(parentTree);
 
+
         // Type-specific operations
         if (auto line = dynamic_cast<ConnectionLine *>(component)) {
             line->connect();
@@ -468,9 +469,11 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
             line->disconnect();
         }
         else if (auto effect = dynamic_cast<Effect*>(component)) {
-            for (auto c : effect->getConnectionsToThis()) {
-                auto connectionTree = getTree(c);
-                connectionTree.getParent().removeChild(connectionTree, undoManager);
+            if (! undoManager->isPerformingUndoRedo()) {
+                for (auto c : effect->getConnectionsToThis()) {
+                    auto connectionTree = getTree(c);
+                    connectionTree.getParent().removeChild(connectionTree, undoManager);
+                }
             }
         }
 

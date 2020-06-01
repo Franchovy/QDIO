@@ -905,8 +905,12 @@ void Effect::mouseDrag(const MouseEvent &event) {
                                             outgoingConnection = c_out;
                                         }
                                     }
-                                    jassert(outgoingConnection != nullptr);
-                                    shortenConnection(c, outgoingConnection);
+                                    if (outgoingConnection != nullptr) {
+                                        shortenConnection(c, outgoingConnection);
+                                    } else {
+                                        oldParent->removeChildComponent(c);
+                                    }
+
                                 } else {
                                     if (c->getOutPort()->getParentComponent() == oldParent) {
                                         // Remove port
