@@ -887,81 +887,40 @@ void Effect::mouseDrag(const MouseEvent &event) {
                         // Position effect inside parent
                         setTopLeftPosition(getPosWithinParent());
                     }
+
+                    //auto outParent = (newParent->isParentOf(oldParent)) ? newParent : oldParent;
+                    auto parent = (newParent->isParentOf(oldParent)) ? oldParent : newParent;
+
                     // Adjust connections accordingly
-                    if (newParent->isParentOf(oldParent)) {
-                        // Exit parent effect
-                        std::cout << "exit parent - numConnections: " << connections.size() << newLine;
+                    for (auto c : connections) {
+                        // Check if line is connected to an internal port
+                        if (c->getInPort().get()->getParentComponent() == parent
+                                || c->getOutPort().get()->getParentComponent() == parent)
+                        {
+                            auto connectionsToShorten = (newParent->isParentOf(oldParent))
+                                    ? parent->getConnectionsToThis() : parent->getConnectionsInside();
 
-                        for (auto c : connections) {
-                            // Check if line is connected to an internal port
-                            if (c->getInPort().get()->getParentComponent() == oldParent
-                                    || c->getOutPort().get()->getParentComponent() == oldParent)
-                            {
-                                if (c->isConnected()) {
-                                    // Connection to shorten
-                                    for (auto c_out : oldParent->getConnectionsToThis()) {
-                                        if (c_out->getOutPort() == c->getInPort()->getLinkedPort()
-                                            || c_out->getInPort() == c->getOutPort()->getLinkedPort()) {
-                                            outgoingConnection = c_out;
-                                        }
-                                    }
-                                    if (outgoingConnection != nullptr) {
-                                        shortenConnection(c, outgoingConnection);
-                                    } else {
-                                        oldParent->removeChildComponent(c);
-                                    }
-
-                                } else {
-                                    if (c->getOutPort()->getParentComponent() == oldParent) {
-                                        // Remove port
-                                        auto oldParentEffect = dynamic_cast<Effect*>(oldParent);
-                                        jassert(oldParentEffect != nullptr);
-                                        oldParentEffect->removePort(c->getOutPort().get());
-                                    } else if (c->getInPort()->getParentComponent() == oldParent) {
-                                        // Remove port
-                                        auto oldParentEffect = dynamic_cast<Effect*>(oldParent);
-                                        jassert(oldParentEffect != nullptr);
-                                        oldParentEffect->removePort(c->getInPort().get());
-                                    } else {
-                                        jassertfalse;
-                                    }
-                                    oldParent->removeChildComponent(c);
+                            for (auto c_out : connectionsToShorten) {
+                                if (c_out->getOutPort() == c->getInPort()->getLinkedPort()
+                                    || c_out->getInPort() == c->getOutPort()->getLinkedPort()) {
+                                    outgoingConnection = c_out;
                                 }
-                            } else {
-                                // Connection to extend
-                                extendConnection(c, dynamic_cast<Effect*>(oldParent));
                             }
-                        }
-                    } else if (oldParent->isParentOf(newParent)) {
-                        // Join parent effect
-                        std::cout << "enter parent - numConnections: " << connections.size() << newLine;
 
-                        for (auto c : connections) {
-                            // Check if line is connected to an internal port
-                            if (c->getInPort().get()->getParentComponent() == newParent
-                                || c->getOutPort().get()->getParentComponent() == newParent)
-                            {
-                                // Connections to shorten
-                                if (c->isConnected()) {
-                                    for (auto c_out : newParent->getConnectionsInside()) {
-                                        if (c_out->getOutPort() == c->getInPort()->getLinkedPort()
-                                            || c_out->getInPort() == c->getOutPort()->getLinkedPort()) {
-                                            outgoingConnection = c_out;
-                                        }
-                                    }
-                                    jassert(outgoingConnection != nullptr);
+                            if (outgoingConnection != nullptr) {
+                                if (newParent->isParentOf(oldParent)) {
+                                    shortenConnection(c, outgoingConnection);
+                                } else {
                                     shortenConnection(outgoingConnection, c);
-                                } else {
-
                                 }
                             } else {
-                                // Connections to extend
-                                extendConnection(c, dynamic_cast<Effect *>(newParent));
+                                parent->removeChildComponent(c);
                             }
-
+                        } else {
+                            // Connection to extend
+                            extendConnection(c, dynamic_cast<Effect*>(parent));
                         }
                     }
-
                 }
             }
         } else if (event.mods.isRightButtonDown()) {
