@@ -192,6 +192,11 @@ Effect* EffectTree::createEffect(ValueTree tree) {
 
     // Set new bounds
     effect->setTopLeftPosition(x,y);
+
+    if (effect->isInEditMode()) {
+        effect->expandToFitChildren();
+    }
+
     effect->resized();
 
     return effect;
@@ -210,12 +215,6 @@ ValueTree EffectTree::newEffect(String name, Point<int> pos, int processorID) {
     if (processorID != -1) {
         newEffect.setProperty(Effect::IDs::processorID, processorID, nullptr);
     }
-
-    //this->getTree().appendChild(newEffect, &undoManager);
-
-    //todo set edit mode
-    /*auto effect = getFromTree<Effect>(newEffect);
-    effect->setEditMode(true);*/
 
     return newEffect;
 }
@@ -269,7 +268,6 @@ void EffectTree::componentChildrenChanged(Component &component) {
     if (auto effectTreeBase = dynamic_cast<EffectTreeBase*>(&component)) {
 
         auto effectTree = getTree(effectTreeBase);
-        //jassert(effectTree.isValid());
         if (effectTree.isValid()) {
 
             for (auto c : component.getChildren()) {
@@ -287,20 +285,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
                     }
 
                     if (childTree.isValid()) {
-                        /*if (auto line = dynamic_cast<ConnectionLine*>(c)) {
-                            if (Effect::appState != Effect::loading && effectTreeBase->state != Effect::loading) {
-                                if (! (line->getInPort()->isShowing() && line->getOutPort()->isShowing())) {
-                                    effectTree.removeChild(childTree, undoManager);
-                                }
-                            }
-                        }*//* else if (auto effect = dynamic_cast<Effect*>(c)) {
-                            auto newChildParent = getTree(
-                                    dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
-                            if (childTree.getParent() != newChildParent) {
-                                childTree.getParent().removeChild(childTree, undoManager);
-                                newChildParent.appendChild(childTree, undoManager);
-                            }
-                        }*/
+
                     } else {
                         // Create ConnectionLine tree
                         if (auto line = dynamic_cast<ConnectionLine *>(c)) {
@@ -343,19 +328,6 @@ void EffectTree::componentChildrenChanged(Component &component) {
                     }
                 }
             }
-
-            /*if (! undoManager->isPerformingUndoRedo()) {
-                for (int i = 0; i < effectTree.getNumChildren(); i++) {
-                    auto child = effectTree.getChild(i);
-
-                    if (child.hasProperty(IDs::component)) {
-                        auto childComponent = getFromTree<Component>(child);
-                        if (! effectTreeBase->isParentOf(childComponent)) {
-                            effectTreeBase->addAndMakeVisible(childComponent);
-                        }
-                    }
-                }
-            }*/
         }
     }
 
@@ -417,18 +389,6 @@ void EffectTree::componentEnablementChanged(Component &component) {
     ComponentListener::componentEnablementChanged(component);
 }
 
-/*void EffectTree::componentVisibilityChanged(Component &component) {
-    *//*if (! undoManager->isPerformingUndoRedo()) {
-        if (auto line = dynamic_cast<ConnectionLine *>(&component)) {
-            auto lineTree = getTree(line);
-            if (! line->isVisible()) {
-                lineTree.getParent().removeChild(lineTree, undoManager);
-            }
-        }
-    }*//*
-    ComponentListener::componentVisibilityChanged(component);
-}*/
-
 /**
  * Finds tree based on component hierarchy - meant to be efficient.
  * @param component
@@ -464,11 +424,8 @@ EffectTree::~EffectTree() {
 
     removeAllListeners();
 
-/*    auto test = effectTree.getChild(0);
-    std::cout << test.getReferenceCount() << newLine;*/
-
-    effectTree = ValueTree(); // clear ValueTree
-    //std::cout << test.getReferenceCount() << newLine;
+    // Clear ValueTree
+    effectTree = ValueTree();
 
     effectScene->decReferenceCountWithoutDeleting();
 }
@@ -523,8 +480,6 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
     }
     Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
 }
-
-
 
 void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     auto component = getFromTree<Component>(treeWhosePropertyHasChanged);

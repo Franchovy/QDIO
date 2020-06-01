@@ -1248,6 +1248,13 @@ void Effect::expandToFitChildren() {
 
     newBounds.setPosition(getPosition());
     setBounds(newBounds);
+
+    if (getParentComponent() != nullptr) {
+        if (!getParentComponent()->getLocalBounds().contains(getBoundsInParent())) {
+            auto effect = dynamic_cast<Effect *>(getParentComponent());
+            effect->expandToFitChildren();
+        }
+    }
 }
 
 Point<int> Effect::getPosWithinParent() {
