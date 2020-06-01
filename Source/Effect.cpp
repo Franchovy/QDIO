@@ -1178,10 +1178,11 @@ void Effect::shortenConnection(ConnectionLine *interiorLine, ConnectionLine *ext
         interiorLine->unsetPort(portToRemove->getLinkedPort());
         interiorLine->setPort(portToReconnect);
 
+        // Remove line
+        parent->removeChildComponent(exteriorLine);
+
         // Remove unused port
         targetEffect->removePort(portToRemove);
-
-        parent->removeChildComponent(exteriorLine);
     }
 }
 
