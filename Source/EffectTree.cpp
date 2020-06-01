@@ -326,6 +326,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
                             auto newChildParent = getTree(
                                     dynamic_cast<SelectHoverObject *>(effect->getParentComponent()));
                             if (childTree.getParent() != newChildParent) {
+                                // All we're doing here is updating the trees to match components
                                 childTree.getParent().removeChild(childTree, undoManager);
                                 newChildParent.appendChild(childTree, undoManager);
                             }
@@ -480,18 +481,16 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         auto parent = getFromTree<EffectTreeBase>(parentTree);
 
         // Type-specific operations
-        if (auto line = dynamic_cast<ConnectionLine*>(component)) {
+        if (auto line = dynamic_cast<ConnectionLine *>(component)) {
             line->connect();
         }
         if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
             std::cout << "add parameter" << newLine;
         }
 
-        if (parent != nullptr) {
+
+        if (parent != nullptr && parent != component->getParentComponent()) {
             parent->addAndMakeVisible(component);
-        } else {
-            component->setVisible(true);
-            jassertfalse;
         }
     }
 
@@ -506,6 +505,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         auto component = getFromTree<Component>(childWhichHasBeenRemoved);
         auto parent = component->getParentComponent();
 
+        auto parentFromTree = getFromTree<Component>(parentTree);
         // Type-specific operations
         if (auto line = dynamic_cast<ConnectionLine*>(component)) {
             line->disconnect();
@@ -517,7 +517,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
             }
         }
 
-        if (parent != nullptr) {
+        if (parent != nullptr && parent == parentFromTree) {
             parent->removeChildComponent(component);
         }
     }

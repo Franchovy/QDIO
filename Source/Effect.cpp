@@ -857,11 +857,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
         SelectHoverObject::mouseDrag(event);
 
         dragger.dragComponent(this, event, nullptr);
-        // Manual constraint
-        auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
-        auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
 
-        setTopLeftPosition(newX, newY);
+        setTopLeftPosition(getPosWithinParent());
 
         auto dragIntoObject = getDragIntoObject();
 
@@ -874,9 +871,22 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     ConnectionLine *outgoingConnection = nullptr;
 
                     // Reassign effect parent
-                    setTopLeftPosition(newParent->getLocalPoint(this, getPosition()));
+                    /**/
                     newParent->addAndMakeVisible(this);
 
+                    if (getParentHeight() - getHeight() < 0 && getParentWidth() - getWidth() < 0) {
+                        // Expand child to fit
+                        auto newPos = newParent->getBoundsInParent().getConstrainedPoint(getPosition());
+                        newPos = newParent->getLocalPoint(newParent->getParentComponent(), newPos);
+                        setTopLeftPosition(newPos);
+                        auto parentEffect = dynamic_cast<Effect*>(newParent);
+                        jassert(parentEffect != nullptr);
+                        parentEffect->expandToFitChildren();
+                        setTopLeftPosition(getPosWithinParent());
+                    } else {
+                        // Position effect inside parent
+                        setTopLeftPosition(getPosWithinParent());
+                    }
                     // Adjust connections accordingly
                     if (newParent->isParentOf(oldParent)) {
                         // Exit parent effect
@@ -1214,13 +1224,13 @@ void Effect::mouseDoubleClick(const MouseEvent &event) {
 }
 
 void Effect::childrenChanged() {
-    for (auto c : getChildren()) {
+    /*for (auto c : getChildren()) {
         if (auto effect = dynamic_cast<Effect*>(c)) {
             if (! getLocalBounds().contains(effect->getBoundsInParent())) {
                 expandToFitChildren();
             }
         }
-    }
+    }*/
 
     Component::childrenChanged();
 }
@@ -1238,6 +1248,14 @@ void Effect::expandToFitChildren() {
 
     newBounds.setPosition(getPosition());
     setBounds(newBounds);
+}
+
+Point<int> Effect::getPosWithinParent() {
+    // Manual constraint
+    auto newX = jlimit<int>(0, getParentWidth() - getWidth(), getX());
+    auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
+
+    return Point<int>(newX, newY);
 }
 
 

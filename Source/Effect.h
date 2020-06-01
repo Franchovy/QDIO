@@ -126,6 +126,8 @@ public:
     void expandToFitChildren();
     void childrenChanged() override;
 
+    Point<int> getPosWithinParent();
+
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
     void mouseDrag(const MouseEvent &event) override;
