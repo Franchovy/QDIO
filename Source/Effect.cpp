@@ -442,13 +442,6 @@ Effect::~Effect()
         removeChildComponent(p);
         removeChildComponent(p->getPort(true));
     }
-
-    /*if (node != nullptr) {
-        std::cout << "Reference count: " << node->getReferenceCount() << newLine;
-        while (node->getReferenceCount() > 1) {
-            node->decReferenceCount();
-        }
-    }*/
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -465,51 +458,6 @@ void Effect::setProcessor(AudioProcessor *processor) {
     // Save AudioProcessorParameterGroup
     parameters = &processor->getParameterTree();
 }
-
-
-
-
-/**
- * Loads parameter from value tree data
- * @param parameterData This stupid motherfucker is a reference because of the effect tree loading shit.
- * Fucking hell man. I'm stuck doing this 9-5 and I have no friends. Every day I
- * think of ways to kill myself. Fuck all this shit man.
- * @return parameter created
- */
-/*
-*/
-
-
-/**
- * Get the port at the given location, if there is one
- * @param pos relative to this component (no conversion needed here)
- * @return nullptr if no match, ConnectionPort* if found
- */
-/*
-ConnectionPort* Effect::checkPort(Point<int> pos) {
-    //todo === unnecessary, can loop through all
-    for (auto p : inputPorts) {
-        if (p->contains(p->getLocalPoint(this, pos)))
-        {
-            return p;
-        } else if (p->getInternalConnectionPort()->contains(
-                p->getInternalConnectionPort()->getLocalPoint(this, pos)))
-        {
-            return p->getInternalConnectionPort().get();
-        }
-    }
-    for (auto p : outputPorts) {
-        if (p->contains(p->getLocalPoint(this, pos)))
-        {
-            return p;
-        } else if (p->getInternalConnectionPort()->contains(p->getInternalConnectionPort()->getLocalPoint(this, pos)))
-        {
-            return p->getInternalConnectionPort().get();
-        }
-    }
-    return nullptr;
-}
-*/
 
 void Effect::setEditMode(bool isEditMode) {
     editMode = isEditMode;
@@ -549,18 +497,7 @@ void Effect::setEditMode(bool isEditMode) {
 
         title.setColour(title.textColourId, Colours::whitesmoke);
 
-        auto newBounds = getLocalBounds();
-
-        for (auto c : getChildren()) {
-            if (! newBounds.contains(c->getBoundsInParent())) {
-                newBounds = newBounds.getUnion(c->getBoundsInParent());
-            }
-        }
-
-        newBounds.expand(50, 20);
-
-        newBounds.setPosition(getPosition());
-        setBounds(newBounds);
+        expandToFitChildren();
     }
 
     // Turn off edit mode
@@ -608,25 +545,6 @@ void Effect::setEditMode(bool isEditMode) {
     resized();
     repaint();
 }
-
-
-/*
-Parameter& Effect::addParameterFromProcessorParam(AudioProcessorParameter *param)
-{
-    Parameter* parameterGui;
-
-    auto paramName = param->getName(30).trim();
-
-    ValueTree parameter(PARAMETER_ID);
-
-    parameterGui = new Parameter(param);
-    parameter.setProperty(Parameter::IDs::parameterObject, parameterGui, nullptr);
-
-    tree.appendChild(parameter, &undoManager);
-
-    return *parameterGui;
-}
-*/
 
 
 AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
@@ -818,45 +736,6 @@ void Effect::paint(Graphics& g) {
 
 }
 
-/*
-int Effect::getPortID(const ConnectionPort *port) {
-    if (auto p = dynamic_cast<const AudioPort*>(port)) {
-        if (inputPorts.contains(p)) {
-            return inputPorts.indexOf(p);
-        } else if (outputPorts.contains(p)) {
-            return inputPorts.size() + outputPorts.indexOf(p);
-        }
-    } else if (auto p = dynamic_cast<const InternalConnectionPort*>(port)) {
-        for (int i = 0; i < inputPorts.size(); i++) {
-            if (inputPorts[i]->internalPort == p) {
-                return i;
-            }
-        }
-        for (int i = 0; i < outputPorts.size(); i++) {
-            if (outputPorts[i]->internalPort == p) {
-                return inputPorts.size() + i;
-            }
-        }
-    }
-    return -1;
-}
-
-ConnectionPort* Effect::getPortFromID(const int id, bool internal) {
-    AudioPort* port;
-    if (id < inputPorts.size()) {
-        port = inputPorts[id].get();
-    } else {
-        port = outputPorts[id - inputPorts.size()].get();
-    }
-
-    if (internal) {
-        return port->getInternalConnectionPort().get();
-    } else {
-        return port;
-    }
-}
-*/
-
 
 bool Effect::hasProcessor(AudioProcessor *processor) {
     return processor == this->processor;
@@ -889,47 +768,12 @@ bool Effect::hasProcessor(AudioProcessor *processor) {
 
 bool Effect::hasPort(const ConnectionPort *port) {
     return (port->getParentComponent() == this);
-
-    /*if (auto p = dynamic_cast<const AudioPort*>(port)) {
-        return (inputPorts.contains(p) || outputPorts.contains(p));
-    } else if (auto p = dynamic_cast<const InternalConnectionPort*>(port)) {
-        for (auto list : {inputPorts, outputPorts}) {
-            for (auto portToCheck : list) {
-                if (portToCheck->internalPort == p) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;*/
 }
 
 bool Effect::hasConnection(const ConnectionLine *line) {
     return (hasPort(line->getOutPort().get())
         || hasPort(line->getInPort().get()));
 }
-
-/*ValueTree Effect::storeParameters() {
-    if (parameters == nullptr) {
-        return ValueTree();
-    } else {
-        ValueTree parameterValues("parameters");
-        for (auto p : parameters->getParameters(false)) {
-            parameterValues.setProperty(p->getName(30), p->getValue(), nullptr);
-        }
-        return parameterValues;
-    }
-}
-
-void Effect::loadParameters(ValueTree parameterValues) {
-    auto parameterList = parameters->getParameters(false);
-    for (auto p : parameters->getParameters(false)) {
-        if (parameterValues.hasProperty(p->getName(30))){
-            float val = parameterValues.getProperty(p->getName(30));
-            p->setValueNotifyingHost(val);
-        }
-    }
-}*/
 
 Parameter *Effect::getParameterForPort(ParameterPort *port) {
     for (auto c : getChildren()) {
@@ -985,18 +829,6 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
             }
         }
     }
-
-    /*if (isInput <= 0) {
-        for (auto p : outputPorts) {
-            list.add(p);
-        }
-    }
-
-    if (isInput != 0) {
-        for (auto p : inputPorts) {
-            list.add(p);
-        }
-    }*/
 
     return list;
 }
@@ -1381,6 +1213,33 @@ void Effect::mouseDoubleClick(const MouseEvent &event) {
     Component::mouseDoubleClick(event);
 }
 
+void Effect::childrenChanged() {
+    for (auto c : getChildren()) {
+        if (auto effect = dynamic_cast<Effect*>(c)) {
+            if (! getLocalBounds().contains(effect->getBoundsInParent())) {
+                expandToFitChildren();
+            }
+        }
+    }
+
+    Component::childrenChanged();
+}
+
+void Effect::expandToFitChildren() {
+    auto newBounds = getLocalBounds();
+
+    for (auto c : getChildren()) {
+        if (! newBounds.contains(c->getBoundsInParent())) {
+            newBounds = newBounds.getUnion(c->getBoundsInParent());
+        }
+    }
+
+    newBounds.expand(50, 20);
+
+    newBounds.setPosition(getPosition());
+    setBounds(newBounds);
+}
+
 
 bool ConnectionLine::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return dynamic_cast<const Effect*>(other);
@@ -1397,60 +1256,4 @@ bool ConnectionPort::canDragHover(const SelectHoverObject *other, bool isRightCl
 bool ConnectionPort::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
-
-
-
-/*
-
-Point<int> Position::fromVar(const var &v) {
-    Array<var>* array = v.getArray();
-
-    int x = (*array)[0];
-    int y = (*array)[1];
-
-    return Point<int>(x, y);
-}
-
-var Position::toVar(const Point<int> &t) {
-    var x = t.getX();
-    var y = t.getY();
-
-    auto array = Array<var>();
-    array.add(x);
-    array.add(y);
-
-    var v = array;
-
-    return v;
-}
-
-
-ReferenceCountedArray<ConnectionLine> ConnectionVar::fromVarArray(const var &v) {
-    Array<var>* varArray = v.getArray();
-    ReferenceCountedArray<ConnectionLine> array;
-    for (auto i : *varArray) {
-        array.add(dynamic_cast<ConnectionLine*>(i.getObject()));
-    }
-
-    return array;
-}
-
-var ConnectionVar::toVarArray(const ReferenceCountedArray<ConnectionLine> &t) {
-    Array<var> varArray;
-    for (auto i : t) {
-        varArray.add(i);
-    }
-
-    return varArray;
-}
-
-ConnectionLine::Ptr ConnectionVar::fromVar(const var &v) {
-    return dynamic_cast<ConnectionLine*>(v.getObject());
-}
-
-var* ConnectionVar::toVar(const ConnectionLine::Ptr &t) {
-    //var v = t.get();
-    return reinterpret_cast<var *>(t.get());
-}
-*/
 

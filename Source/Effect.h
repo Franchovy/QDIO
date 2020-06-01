@@ -123,7 +123,8 @@ public:
 
     void setName(const String &newName) override;
 
-    //void childrenChanged() override;
+    void expandToFitChildren();
+    void childrenChanged() override;
 
     using Ptr = ReferenceCountedObjectPtr<Effect>;
 
