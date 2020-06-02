@@ -400,7 +400,9 @@ bool Parameter::isInEditMode() const {
 }
 
 void Parameter::moved() {
-   //internalPort.setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
+    if (editMode) {
+        internalPort.setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
+    }
     Component::moved();
 }
 
