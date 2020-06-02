@@ -114,7 +114,7 @@ void Parameter::createParameterComponent() {
         }
 
         button->setToggleState(referencedParameter == nullptr ? false : referencedParameter->getValue(),
-                               sendNotificationAsync);
+                               sendNotificationSync);
         button->setClickingTogglesState(true);
 
         if (referencedParameter != nullptr) {
@@ -401,7 +401,7 @@ bool Parameter::isInEditMode() const {
 
 void Parameter::moved() {
     if (editMode) {
-        internalPort.setCentrePosition(getX(), getParentComponent()->getHeight() - 15);
+        internalPort.setCentrePosition(getX() + getWidth() / 2, getParentComponent()->getHeight() - 20);
     }
     Component::moved();
 }

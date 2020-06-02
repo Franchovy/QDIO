@@ -413,14 +413,14 @@ void Effect::setupMenu() {
 
         auto parameter = new Parameter(nullptr, 2, true);
         addAndMakeVisible(parameter);
-        parameter->setCentrePosition(getMouseXYRelative());
+        //parameter->setCentrePosition(getMouseXYRelative());
     });
     parameterSubMenu->addItem("Selection Box", [=] () {
         undoManager.beginNewTransaction("Add combo parameter");
 
         auto parameter = new Parameter(nullptr, 1, true);
         addAndMakeVisible(parameter);
-        parameter->setCentrePosition(getMouseXYRelative());
+        //parameter->setCentrePosition(getMouseXYRelative());
     });
     addParamSubMenuItem.subMenu = std::move(parameterSubMenu);
 
@@ -679,9 +679,49 @@ void Effect::resized() {
         paramPortsFlexBox.performLayout(Rectangle<int>(20, getHeight() - 60
                 , getWidth() - 20, 60));
     } else {
-        for (auto parameter : getParameterChildren()) {
-            auto port = parameter->getPort(true);
-            port->setTopLeftPosition(parameter->getX(), getHeight() - 40);
+        if (getParameterChildren().size() > 0) {
+
+            FlexBox parameterFlexBox;
+
+            auto parametersY = 0;
+            for (auto c : getChildren()) {
+                if (auto e = dynamic_cast<Effect *>(c)) {
+                    parametersY = jmax(parametersY, e->getBottom());
+                }
+            }
+            parametersY += 20;
+
+            for (auto parameter : getParameterChildren()) {
+
+                FlexItem parameterFlexItem(*parameter);
+                if (parameter->type == Parameter::slider) {
+                    parameterFlexItem.width = 150;
+                    parameterFlexItem.height = 120;
+                } else if (parameter->type == Parameter::combo) {
+                    parameterFlexItem.width = 150;
+                    parameterFlexItem.height = 110;
+                } else if (parameter->type == Parameter::button) {
+                    parameterFlexItem.width = 120;
+                    parameterFlexItem.height = 110;
+                }
+                parameterFlexBox.items.add(parameterFlexItem);
+
+                /*// Set internal port position
+                auto port = parameter->getPort(true);
+                port->setTopLeftPosition(parameter->getX() + getWidth() / 2, getHeight() - 40);*/
+            }
+
+            parameterFlexBox.flexDirection = FlexBox::Direction::row;
+            parameterFlexBox.flexWrap = FlexBox::Wrap::noWrap;
+            parameterFlexBox.justifyContent = FlexBox::JustifyContent::center;
+            parameterFlexBox.alignContent = FlexBox::AlignContent::center;
+            parameterFlexBox.alignItems = FlexBox::AlignItems::center;
+
+            if (getHeight() < parametersY + 180) {
+                setSize(getWidth(), parametersY + 180);
+            }
+
+            parameterFlexBox.performLayout(Rectangle<int>(20, parametersY, getWidth() - 40, 180));
         }
     }
 
@@ -1205,6 +1245,7 @@ void Effect::childrenChanged() {
             }
         }
     }*/
+    resized();
 
     Component::childrenChanged();
 }
