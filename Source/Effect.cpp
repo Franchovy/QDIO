@@ -346,6 +346,8 @@ Effect::Effect() : MenuItem(2)
             outputPortFlexBox.flexDirection = inputPortFlexBox.flexDirection = FlexBox::Direction::column;
     internalInputPortFlexBox.justifyContent = internalOutputPortFlexBox.justifyContent =
         outputPortFlexBox.justifyContent = inputPortFlexBox.justifyContent = FlexBox::JustifyContent::center;
+
+    title.setBounds(30,30,200, title.getFont().getHeight());
 }
 
 void Effect::setupTitle() {
@@ -724,8 +726,6 @@ void Effect::resized() {
             parameterFlexBox.performLayout(Rectangle<int>(20, parametersY, getWidth() - 40, 180));
         }
     }
-
-    title.setBounds(30,30,200, title.getFont().getHeight());
 }
 
 void Effect::paint(Graphics& g) {

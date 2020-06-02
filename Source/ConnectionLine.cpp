@@ -139,12 +139,26 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
     }
     setBounds(Rectangle<int>(inPos, outPos));
 
+    auto oldPort = dynamic_cast<ConnectionPort*>(getHoverObject());
+
     if (auto obj = getDragIntoObject()) {
         if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
             if (canConnect(port)) {
                 setHoverObject(port);
+                port->repaint();
+            } else {
+                resetHoverObject();
             }
+        } else {
+            resetHoverObject();
         }
+    } else {
+        if (oldPort != nullptr && ! oldPort->contains(oldPort->getMouseXYRelative())) {
+            resetHoverObject();
+        }
+    }
+    if (oldPort != nullptr) {
+        oldPort->repaint();
     }
 }
 
