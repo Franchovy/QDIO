@@ -181,7 +181,6 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         h = jmax(portBounds.getY() + portBounds.getHeight(), h);
     }
 
-    //effect->setBounds(x, y, w, h);
 
     //==============================================================
     // Set up Menu
@@ -191,7 +190,8 @@ Effect* EffectTree::createEffect(ValueTree tree) {
     effect->setupTitle();
 
     // Set new bounds
-    effect->setTopLeftPosition(x,y);
+    effect->setBounds(x, y, w, h);
+    //effect->setTopLeftPosition(x,y);
 
     if (effect->isInEditMode()) {
         effect->expandToFitChildren();

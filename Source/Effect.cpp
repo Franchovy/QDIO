@@ -678,6 +678,11 @@ void Effect::resized() {
                 , getHeight() - 90));
         paramPortsFlexBox.performLayout(Rectangle<int>(20, getHeight() - 60
                 , getWidth() - 20, 60));
+    } else {
+        for (auto parameter : getParameterChildren()) {
+            auto port = parameter->getPort(true);
+            port->setTopLeftPosition(parameter->getX(), getHeight() - 40);
+        }
     }
 
     title.setBounds(30,30,200, title.getFont().getHeight());
