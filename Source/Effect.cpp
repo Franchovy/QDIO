@@ -874,7 +874,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     /**/
                     newParent->addAndMakeVisible(this);
 
-                    if (getParentHeight() - getHeight() < 0 && getParentWidth() - getWidth() < 0) {
+                    if (getParentHeight() - getHeight() < 0 || getParentWidth() - getWidth() < 0) {
                         // Expand child to fit
                         auto newPos = newParent->getBoundsInParent().getConstrainedPoint(getPosition());
                         newPos = newParent->getLocalPoint(newParent->getParentComponent(), newPos);
@@ -893,32 +893,37 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
                     // Adjust connections accordingly
                     for (auto c : connections) {
-                        // Check if line is connected to an internal port
-                        if (c->getInPort().get()->getParentComponent() == parent
-                                || c->getOutPort().get()->getParentComponent() == parent)
-                        {
-                            auto connectionsToShorten = (newParent->isParentOf(oldParent))
-                                    ? parent->getConnectionsToThis() : parent->getConnectionsInside();
+                        if (dynamic_cast<ParameterPort*>(c->getInPort().get())) {
+                            // Remove parameter connection
+                            c->getParentComponent()->removeChildComponent(c);
+                        } else {
+                            // Check if line is connected to an internal port
+                            if (c->getInPort().get()->getParentComponent() == parent
+                                || c->getOutPort().get()->getParentComponent() == parent) {
+                                auto connectionsToShorten = (newParent->isParentOf(oldParent))
+                                                            ? parent->getConnectionsToThis()
+                                                            : parent->getConnectionsInside();
 
-                            for (auto c_out : connectionsToShorten) {
-                                if (c_out->getOutPort() == c->getInPort()->getLinkedPort()
-                                    || c_out->getInPort() == c->getOutPort()->getLinkedPort()) {
-                                    outgoingConnection = c_out;
+                                for (auto c_out : connectionsToShorten) {
+                                    if (c_out->getOutPort() == c->getInPort()->getLinkedPort()
+                                        || c_out->getInPort() == c->getOutPort()->getLinkedPort()) {
+                                        outgoingConnection = c_out;
+                                    }
                                 }
-                            }
 
-                            if (outgoingConnection != nullptr) {
-                                if (newParent->isParentOf(oldParent)) {
-                                    shortenConnection(c, outgoingConnection);
+                                if (outgoingConnection != nullptr) {
+                                    if (newParent->isParentOf(oldParent)) {
+                                        shortenConnection(c, outgoingConnection);
+                                    } else {
+                                        shortenConnection(outgoingConnection, c);
+                                    }
                                 } else {
-                                    shortenConnection(outgoingConnection, c);
+                                    parent->removeChildComponent(c);
                                 }
                             } else {
-                                parent->removeChildComponent(c);
+                                // Connection to extend
+                                extendConnection(c, dynamic_cast<Effect *>(parent));
                             }
-                        } else {
-                            // Connection to extend
-                            extendConnection(c, dynamic_cast<Effect*>(parent));
                         }
                     }
                 }
