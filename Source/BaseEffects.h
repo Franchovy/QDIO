@@ -104,6 +104,7 @@ public:
 private:
     AudioParameterFloat* gain;
     AudioParameterFloat* cutoff;
+    AudioParameterFloat* postGain;
     std::atomic<float> gainVal;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistortionEffect)
