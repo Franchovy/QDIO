@@ -652,8 +652,8 @@ void Effect::resized() {
         auto newWidth = 250;
         auto newHeight = 200;
 
-        if (parameterFlexBox.items.size() > 0) {
-            for (auto c : parameterFlexBox.items) {
+        /*if (parameterFlexBox.items.size() > 0) {
+            *//*for (auto c : parameterFlexBox.items) {
                 int widthToAdd;
                 if (auto parameter = dynamic_cast<Parameter*>(c.associatedComponent)) {
                     if (parameter->type == Parameter::combo) {
@@ -662,14 +662,15 @@ void Effect::resized() {
                         newWidth = jmax(newWidth, c.associatedComponent->getRight() + 10);
                     }
                 }
-            }
+            }*//*
 
-            //newWidth = parameterFlexBox.items.getLast().associatedComponent->getRight() + 40;
+            newWidth += 40;
             newHeight = parameterFlexBox.items.size() * 50 + 90;
         }
         if (outputPortFlexBox.items.size() > 0) {
             //newWidth += 20;
-        }
+        }*/
+        newHeight = parameterFlexBox.items.size() * 50 + 90;
 
         setSize(newWidth, newHeight);
 
@@ -719,11 +720,11 @@ void Effect::resized() {
             parameterFlexBox.alignContent = FlexBox::AlignContent::center;
             parameterFlexBox.alignItems = FlexBox::AlignItems::center;
 
-            if (getHeight() < parametersY + 180) {
-                setSize(getWidth(), parametersY + 180);
+            if (getHeight() < parametersY + 100) {
+                setSize(getWidth(), parametersY + 100);
             }
 
-            parameterFlexBox.performLayout(Rectangle<int>(20, parametersY, getWidth() - 40, 180));
+            parameterFlexBox.performLayout(Rectangle<int>(20, parametersY, getWidth() - 40, 100));
         }
     }
 }
