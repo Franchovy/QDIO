@@ -1290,7 +1290,8 @@ Point<int> Effect::getPosWithinParent() {
 
 
 bool ConnectionLine::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
-    return dynamic_cast<const Effect*>(other);
+    return dynamic_cast<const Effect*>(other) != nullptr
+        || dynamic_cast<const Parameter*>(other) != nullptrgi;
 }
 
 bool ConnectionLine::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
