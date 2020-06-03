@@ -1030,7 +1030,15 @@ void Effect::mouseUp(const MouseEvent &event) {
     endDragHoverDetect();
     if (event.originalComponent == this) {
         SelectHoverObject::mouseUp(event);
-        getParentComponent()->mouseUp(event);
+
+        if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
+            if (editMode) {
+                callMenu(editMenu);
+            } else {
+                callMenu(menu);
+            }
+        }
+        //getParentComponent()->mouseUp(event);
     } else {
         EffectTreeBase::mouseUp(event);
     }
