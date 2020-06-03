@@ -14,19 +14,19 @@
 
 #pragma once
 
+class Parameter;
+
 class ButtonListener : public Button::Listener
 {
 public:
-    explicit ButtonListener(AudioProcessorParameter* parameter) : Button::Listener() {
+    explicit ButtonListener(Parameter* parameter) : Button::Listener() {
         linkedParameter = parameter;
     }
 
-    void buttonClicked(Button *button) override {
-        linkedParameter->setValueNotifyingHost(button->getToggleState());
-    }
+    void buttonClicked(Button *button) override;
 
 private:
-    AudioProcessorParameter* linkedParameter;
+    Parameter* linkedParameter = nullptr;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ButtonListener)
 };
 
@@ -34,42 +34,33 @@ private:
 class ComboListener : public ComboBox::Listener
 {
 public:
-    explicit ComboListener(AudioProcessorParameter* parameter) : ComboBox::Listener(){
+    explicit ComboListener(Parameter* parameter) : ComboBox::Listener() {
         linkedParameter = parameter;
     }
 
-    void comboBoxChanged(ComboBox *comboBoxThatHasChanged) override {
-        linkedParameter->setValueNotifyingHost(comboBoxThatHasChanged->getSelectedItemIndex());
-    }
+    void comboBoxChanged(ComboBox *comboBoxThatHasChanged) override;
 
 private:
-    AudioProcessorParameter* linkedParameter = nullptr;
+    Parameter* linkedParameter = nullptr;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComboListener)
 };
 
 class SliderListener : public Slider::Listener
 {
 public:
-    explicit SliderListener(AudioProcessorParameter* parameter) : Slider::Listener(){
+    explicit SliderListener(Parameter* parameter) : Slider::Listener() {
         linkedParameter = parameter;
     }
 
-    void sliderValueChanged(Slider *slider) override {
-        linkedParameter->setValueNotifyingHost(slider->getValueObject().getValue());
-    }
+    void sliderValueChanged(Slider *slider) override;
 
-    void sliderDragStarted(Slider *slider) override {
+    void sliderDragStarted(Slider *slider) override;
 
-        linkedParameter->beginChangeGesture();
-    }
-
-    void sliderDragEnded(Slider *slider) override {
-        linkedParameter->endChangeGesture();
-    }
+    void sliderDragEnded(Slider *slider) override;
 
 
 private:
-    AudioProcessorParameter* linkedParameter = nullptr;
+    Parameter* linkedParameter = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SliderListener)
 };

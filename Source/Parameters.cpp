@@ -118,7 +118,7 @@ void Parameter::createParameterComponent() {
         button->setClickingTogglesState(true);
 
         if (referencedParameter != nullptr) {
-            buttonListener = new ButtonListener(referencedParameter);
+            buttonListener = new ButtonListener(this);
             button->addListener(buttonListener);
         }
 
@@ -140,7 +140,7 @@ void Parameter::createParameterComponent() {
                 combo->addItem(s.substring(0, 20), i++);
             }
 
-            comboListener = new ComboListener(referencedParameter);
+            comboListener = new ComboListener(this);
             combo->addListener(comboListener);
 
             auto comboParam = dynamic_cast<AudioParameterChoice*>(referencedParameter);
@@ -163,7 +163,7 @@ void Parameter::createParameterComponent() {
                                                                paramRange.interval, paramRange.skew));
 
         if (referencedParameter != nullptr) {
-            sliderListener = new SliderListener(referencedParameter);
+            sliderListener = new SliderListener(this);
             slider->addListener(sliderListener);
         }
 
@@ -308,7 +308,7 @@ void Parameter::connect(Parameter *otherParameter) {
 
         if (type == slider) {
             if (sliderListener == nullptr) {
-                sliderListener = new SliderListener(param);
+                sliderListener = new SliderListener(this);
             }
 
             auto slider = dynamic_cast<Slider *>(parameterComponent.get());
@@ -322,7 +322,7 @@ void Parameter::connect(Parameter *otherParameter) {
             }
         } else if (type == combo) {
             if (comboListener == nullptr) {
-                comboListener = new ComboListener(param);
+                comboListener = new ComboListener(this);
             }
 
             int i = 1;
@@ -342,7 +342,7 @@ void Parameter::connect(Parameter *otherParameter) {
             }
         } else if (type == button) {
             if (buttonListener == nullptr) {
-                buttonListener = new ButtonListener(param);
+                buttonListener = new ButtonListener(this);
             }
 
             auto button = dynamic_cast<TextButton *>(parameterComponent.get());
@@ -514,3 +514,37 @@ String MetaParameter::newID(String name) {
 
 
 */
+void ButtonListener::buttonClicked(Button *button) {
+    if (linkedParameter != nullptr) {
+        linkedParameter->setValue(button->getToggleState());
+    }
+}
+
+void ComboListener::comboBoxChanged(ComboBox *comboBoxThatHasChanged) {
+    linkedParameter->setValue(comboBoxThatHasChanged->getSelectedItemIndex());
+}
+
+void SliderListener::sliderValueChanged(Slider *slider) {
+    linkedParameter->setValue(slider->getValueObject().getValue());
+
+    auto param = linkedParameter->getParameter();
+    if (param != nullptr) {
+        param->setValueNotifyingHost(slider->getValueObject().getValue());
+    }
+}
+
+void SliderListener::sliderDragStarted(Slider *slider) {
+    auto param = linkedParameter->getParameter();
+    if (param != nullptr) {
+        param->beginChangeGesture();
+    }
+    Listener::sliderDragStarted(slider);
+}
+
+void SliderListener::sliderDragEnded(Slider *slider) {
+    auto param = linkedParameter->getParameter();
+    if (param != nullptr) {
+        param->endChangeGesture();
+    }
+    Listener::sliderDragEnded(slider);
+}
