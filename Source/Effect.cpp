@@ -73,7 +73,14 @@ bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
 }
 
 void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) {
+    auto externalPort = dynamic_cast<ParameterPort*>(connectionLine.getOutPort().get());
+    jassert(externalPort != nullptr);
 
+    auto parameter = dynamic_cast<Parameter*>(externalPort->getParentComponent());
+    jassert(parameter != nullptr);
+    if (parameter->isConnected()) {
+        parameter->disconnect(false);
+    }
 }
 
 

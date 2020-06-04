@@ -269,7 +269,7 @@ void ConnectionLine::disconnect(ConnectionPort* port) {
 
     // Parameter connection case
     if (inParamPort != nullptr && outParamPort != nullptr) {
-        //Effect::disconnectParameters
+        Effect::disconnectParameters(*this);
     }
         // Audio connection case
     else if ((dynamic_cast<AudioPort*>(inPort.get())

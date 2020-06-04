@@ -358,6 +358,40 @@ void Parameter::connect(Parameter *otherParameter) {
     }
 }
 
+
+void Parameter::disconnect(bool toThis) {
+    if (toThis) {
+        // Disconnect this as target
+        isConnectedTo = false;
+
+    } else {
+        // Disconnect to whatever this is connected to
+        auto param = connectedParameter->getParameter();
+        if (param != nullptr) {
+            param->removeListener(this);
+        }
+
+        if (type == slider) {
+            auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+            slider->removeListener(sliderListener);
+        } else if (type == combo) {
+            auto combo = dynamic_cast<ComboBox*>(parameterComponent.get());
+            combo->removeListener(comboListener);
+            combo->clear(sendNotificationAsync);
+        } else if (type == button) {
+            auto button = dynamic_cast<ToggleButton*>(parameterComponent.get());
+            button->removeListener(buttonListener);
+            button->setToggleState(false, sendNotificationAsync);
+        }
+
+        if (connectedParameter != nullptr && connectedParameter->isConnectedTo) {
+            connectedParameter->disconnect(true);
+        }
+
+        connectedParameter = nullptr;
+    }
+}
+
 void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarting) {
 
 }
@@ -460,6 +494,7 @@ void Parameter::setName(const String& name) {
     parameterLabel.setText(name, dontSendNotification);
     Component::setName(name);
 }
+
 
 /*
 

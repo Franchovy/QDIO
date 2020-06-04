@@ -117,6 +117,7 @@ public:
     Point<int> getPortPosition();
 
     void connect(Parameter* otherParameter);
+    void disconnect(bool toThis);
 
     struct IDs {
         static const Identifier parameterObject;
