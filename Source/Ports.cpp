@@ -84,7 +84,7 @@ ConnectionPort::ConnectionPort() {
     setColour(portColour, Colours::black);
 }
 
-ConnectionPort *ConnectionPort::getLinkedPort() {
+ConnectionPort *ConnectionPort::getLinkedPort() const {
     return linkedPort;
 }
 
@@ -102,8 +102,12 @@ void ConnectionPort::setLinkedPort(ConnectionPort *port) {
 }
 
 bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
+    if (dynamic_cast<const ParameterPort*>(other)) {
+        return false;
+    }
     // Return false if the port is AP and belongs to the same parent
-    return !(dynamic_cast<const AudioPort *>(other)
+    return (other->isInput ^ isInput)
+        && ! (dynamic_cast<const AudioPort *>(other)
              && this->getParentComponent() == other->getParentComponent());
 }
 
@@ -127,6 +131,10 @@ Component *InternalConnectionPort::getDragLineParent() {
 
 bool ParameterPort::canConnect(const ConnectionPort* other) const {
     if (auto p = dynamic_cast<const ParameterPort*>(other)) {
+        if (p->getParentComponent() == getLinkedPort()->getParentComponent()) {
+            return false;
+        }
+
         return isInput ^ p->isInput;
     }
     return false;

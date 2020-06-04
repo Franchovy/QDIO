@@ -50,7 +50,7 @@ public:
         portColour = 0
     };
 
-    ConnectionPort* getLinkedPort();
+    ConnectionPort* getLinkedPort() const;
     void setLinkedPort(ConnectionPort* port);
 
 protected:
