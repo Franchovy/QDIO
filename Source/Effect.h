@@ -67,7 +67,8 @@ public:
 
     enum AppState {
         loading = 0,
-        neutral = 1
+        neutral = 1,
+        stopping = 2
     }
     //todo change usage of appState to effectScene->state
     static appState;

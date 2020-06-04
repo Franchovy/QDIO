@@ -1274,7 +1274,18 @@ void Effect::childrenChanged() {
             }
         }
     }*/
-    //resized();
+    
+    if (appState != stopping) {
+        resized();
+        
+        if (! isInEditMode()) {
+            for (auto c : getChildren()) {
+                if (dynamic_cast<Effect*>(c) || dynamic_cast<ConnectionLine*>(c)) {
+                    c->setVisible(false);
+                }
+            }
+        }
+    }
 
     Component::childrenChanged();
 }

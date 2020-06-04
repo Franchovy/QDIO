@@ -176,6 +176,8 @@ void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
 
 EffectScene::~EffectScene()
 {
+    appState = stopping;
+    
     instance = nullptr;
     //todo remove this ptr from EffectTree before destructor.
 
