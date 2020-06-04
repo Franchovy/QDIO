@@ -1006,6 +1006,16 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     // Join this connection
                     auto inPorts = getPorts(true);
                     auto outPorts = getPorts(false);
+                    // Add port if we want to connect this up
+                    if (!isIndividual()
+                        && (inPorts.size() == 0 || outPorts.size() == 0)) {
+                        if (inPorts.size() == 0) {
+                            addPort(getDefaultBus(), true);
+                        }
+                        if (outPorts.size() == 0) {
+                            addPort(getDefaultBus(), false);
+                        }
+                    }
                     // Replace single port with this one
                     if (inPorts.size() == 0) {
                         lineToJoin->unsetPort(lineToJoin->getOutPort().get());
@@ -1261,7 +1271,7 @@ void Effect::childrenChanged() {
             }
         }
     }*/
-    resized();
+    //resized();
 
     Component::childrenChanged();
 }
