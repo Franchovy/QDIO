@@ -1010,11 +1010,14 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     if (!isIndividual()
                         && (inPorts.size() == 0 || outPorts.size() == 0)) {
                         if (inPorts.size() == 0) {
-                            addPort(getDefaultBus(), true);
+                            auto newPort = addPort(getDefaultBus(), true);
+                            inPorts.add(newPort.get());
                         }
                         if (outPorts.size() == 0) {
-                            addPort(getDefaultBus(), false);
+                            auto newPort = addPort(getDefaultBus(), false);
+                            outPorts.add(newPort.get());
                         }
+                        resized();
                     }
                     // Replace single port with this one
                     if (inPorts.size() == 0) {
