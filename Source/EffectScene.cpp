@@ -64,6 +64,42 @@ EffectScene::EffectScene()
 
     audioGraph.enableAllBuses();
    
+    //======================
+    // Set up devices
+    if (loadInitialCase) {
+        auto inNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
+        auto outNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
+        
+        ComboBox inputDevice;
+        ComboBox outputDevices;
+    inputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true), 0);
+    outputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(false), 0);
+        
+        inputDevices.onChange = [=] {
+            auto newDevice = deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true)[inputDevices.getSelectedItemIndex()];
+             auto setup = deviceManager.getAudioDeviceSetup();
+        
+             setup.inputDeviceName = newDevice;
+            
+             deviceManager.setAudioDeviceSetup(setup, true);
+        };
+        
+        outputDevices.onChange = [=] {
+            auto newDevice = deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true)[inputDevices.getSelectedItemIndex()];
+            auto setup = deviceManager.getAudioDeviceSetup();
+
+            setup.outputDeviceName = newDevice;
+
+            deviceManager.setAudioDeviceSetup(setup, true);
+        };
+        
+        DialogWindow deviceSelectWindow("Device Select", Colours::whitesmoke, false);
+        
+        
+    }
+    
+    
+    
     if (dontLoadDevices) {
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
         deviceManager.initialiseWithDefaultDevices(2, 2);
@@ -117,7 +153,7 @@ void EffectScene::timerCallback() {
     // Load
     if (loadInitialCase) {
         // Load initial template
-        auto initialTemplate = ValueTree::readFromData(BinaryData::BasicInOutLayout, BinaryData::BasicInOutLayoutSize);
+        auto initialTemplate = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
 
         jassert(initialTemplate.getType() == Identifier(EFFECTSCENE_ID));
         EffectLoader::saveTemplate(initialTemplate);
@@ -130,19 +166,19 @@ void EffectScene::timerCallback() {
         getAppProperties().getUserSettings()->setValue(KEYNAME_INITIAL_USE, true);
 
         // Load effects and templates to EffectLoader
-        auto data = ValueTree::readFromData(BinaryData::Guitar_Rig, BinaryData::Guitar_RigSize);
+        auto data = ValueTree::readFromData(BinaryData::Basic_Setup, BinaryData::Basic_SetupSize);
         EffectLoader::saveTemplate(data);
 
-        data = ValueTree::readFromData(BinaryData::GuitarInputEffect, BinaryData::GuitarInputEffectSize);
+        data = ValueTree::readFromData(BinaryData::Guitar_Input, BinaryData::Guitar_InputSize);
         EffectLoader::saveEffect(data);
 
-        data = ValueTree::readFromData(BinaryData::OutputAmpEffect, BinaryData::OutputAmpEffectSize);
+        data = ValueTree::readFromData(BinaryData::Amp_Output, BinaryData::Amp_OutputSize);
         EffectLoader::saveEffect(data);
 
-        data = ValueTree::readFromData(BinaryData::MegaGrunge, BinaryData::MegaGrungeSize);
+        data = ValueTree::readFromData(BinaryData::Grungey_Echo, BinaryData::Grungey_EchoSize);
         EffectLoader::saveEffect(data);
 
-        data = ValueTree::readFromData(BinaryData::SuperDelay, BinaryData::SuperDelaySize);
+        data = ValueTree::readFromData(BinaryData::Double_Echo, BinaryData::Double_EchoSize);
         EffectLoader::saveEffect(data);
 
         // Refresh effect and template menus
