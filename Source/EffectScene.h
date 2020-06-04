@@ -43,9 +43,9 @@ public:
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
 
     void menuCreateEffect(ValueTree effect);
-    void loadNewLayout(String layout);
+    void loadNewTemplate(String newTemplate);
 
-    int callSaveLayoutDialog(String& name, bool dontSaveButton);
+    int callSaveTemplateDialog(String& name, bool dontSaveButton);
     int callSaveEffectDialog(String &name);
 
     void mouseDown(const MouseEvent &event) override;

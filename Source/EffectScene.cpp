@@ -116,22 +116,22 @@ void EffectScene::timerCallback() {
     stopTimer();
     // Load
     if (loadInitialCase) {
-        // Load initial layout
-        auto initialLayout = ValueTree::readFromData(BinaryData::BasicInOutLayout, BinaryData::BasicInOutLayoutSize);
+        // Load initial template
+        auto initialTemplate = ValueTree::readFromData(BinaryData::BasicInOutLayout, BinaryData::BasicInOutLayoutSize);
 
-        jassert(initialLayout.getType() == Identifier(EFFECTSCENE_ID));
-        EffectLoader::saveLayout(initialLayout);
+        jassert(initialTemplate.getType() == Identifier(EFFECTSCENE_ID));
+        EffectLoader::saveTemplate(initialTemplate);
 
-        auto name = initialLayout.getProperty("name");
-        tree.loadLayout(name);
+        auto name = initialTemplate.getProperty("name");
+        tree.loadTemplate(name);
 
-        std::cout << "Initial layout load!" << newLine;
+        std::cout << "Initial template load!" << newLine;
 
         getAppProperties().getUserSettings()->setValue(KEYNAME_INITIAL_USE, true);
 
-        // Load effects and layouts to EffectLoader
+        // Load effects and templates to EffectLoader
         auto data = ValueTree::readFromData(BinaryData::Guitar_Rig, BinaryData::Guitar_RigSize);
-        EffectLoader::saveLayout(data);
+        EffectLoader::saveTemplate(data);
 
         data = ValueTree::readFromData(BinaryData::GuitarInputEffect, BinaryData::GuitarInputEffectSize);
         EffectLoader::saveEffect(data);
@@ -145,16 +145,16 @@ void EffectScene::timerCallback() {
         data = ValueTree::readFromData(BinaryData::SuperDelay, BinaryData::SuperDelaySize);
         EffectLoader::saveEffect(data);
 
-        // Refresh effect and layout menus
+        // Refresh effect and template menus
         postCommandMessage(0);
     } else if (! dontLoad) {
-        // Load layout
+        // Load template
         appState = loading;
 
-        // Load previously loaded layout
+        // Load previously loaded template
         String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
-        std::cout << "Load layout: " << name << newLine;
-        tree.loadLayout(name);
+        std::cout << "Load template: " << name << newLine;
+        tree.loadTemplate(name);
 
         undoManager.clearUndoHistory();
         appState = neutral;
@@ -502,13 +502,13 @@ bool EffectScene::keyPressed(const KeyPress &key)
                     }
                 }
             } else {
-                // Save layout
+                // Save template
                 String name;
-                int result = callSaveLayoutDialog(name, false);
+                int result = callSaveTemplateDialog(name, false);
 
                 if (result == 1) {
-                    tree.storeLayout(name);
-                    std::cout << "Save layout: " << name << newLine;
+                    tree.storeTemplate(name);
+                    std::cout << "Save template: " << name << newLine;
                     postCommandMessage(0);
                 }
             }
@@ -524,9 +524,9 @@ bool EffectScene::keyPressed(const KeyPress &key)
                     EffectLoader::writeToFile(effectData);
                 }
             } else {
-                // Export Layout
-                auto layoutData = EffectLoader::loadLayout(tree.getCurrentLayoutName());
-                EffectLoader::writeToFile(layoutData);
+                // Export Template
+                auto templateData = EffectLoader::loadTemplate(tree.getCurrentTemplateName());
+                EffectLoader::writeToFile(templateData);
             }
         }
         // super secret load from file op
@@ -535,10 +535,10 @@ bool EffectScene::keyPressed(const KeyPress &key)
             std::cout << "load data type: " << loadData.getType().toString() << newLine;
             jassert(loadData.hasProperty("name"));
             if (loadData.getType() == Identifier(EFFECTSCENE_ID)) {
-                // Import layout
-                EffectLoader::saveLayout(loadData);
-                String layoutName = loadData.getProperty("name");
-                loadNewLayout(layoutName);
+                // Import template
+                EffectLoader::saveTemplate(loadData);
+                String templateName = loadData.getProperty("name");
+                loadNewTemplate(templateName);
             } else if (loadData.getType() == Identifier(EFFECT_ID)) {
                 // Import effect
                 EffectLoader::saveEffect(loadData);
@@ -553,8 +553,8 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
             // If shift is down also erase all saved content
             if (key.getModifiers().isShiftDown()) {
-                for (auto l : EffectLoader::getLayoutsAvailable()) {
-                    EffectLoader::clearLayout(l);
+                for (auto l : EffectLoader::getTemplatesAvailable()) {
+                    EffectLoader::clearTemplate(l);
                 }
                 for (auto e : EffectLoader::getEffectsAvailable()) {
                     EffectLoader::clearEffect(e);
@@ -571,8 +571,8 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
 
 void EffectScene::storeState() {
-    //auto name = tree.getCurrentLayoutName();
-    tree.storeLayout();
+    //auto name = tree.getCurrentTemplateName();
+    tree.storeTemplate();
 
     getAppProperties().getUserSettings()->setValue(KEYNAME_CURRENT_LOADOUT, "default");
 }
@@ -587,27 +587,27 @@ void EffectScene::storeState() {
 
     // Update num ins and outs
     for (auto node : audioGraph.getNodes()) {
-        //todo dgaf about buses layout. Only channels within buses.
+        //todo dgaf about buses template. Only channels within buses.
         // How about a follow-through method that changes channels if possible given port?
 
-        // Set buses layout or whatever
-        auto layout = node->getProcessor()->getBusesLayout();
+        // Set buses template or whatever
+        auto template = node->getProcessor()->getBusesTemplate();
 
         auto inputs = deviceManager.getAudioDeviceSetup().inputChannels;
         auto outputs = deviceManager.getAudioDeviceSetup().outputChannels;
 
         for (int i = 0; i < inputs.getHighestBit(); i++) {
             if (inputs[i] == 1) {
-                layout.inputBuses.add(defaultInChannel);
+                template.inputBuses.add(defaultInChannel);
             }
         }
 
         for (int i = 0; i < outputs.getHighestBit(); i++) {
             if (inputs[i] == 1) {
-                layout.outputBuses.add(defaultOutChannel);
+                template.outputBuses.add(defaultOutChannel);
             }
         }
-        node->getProcessor()->setBusesLayout(layout);
+        node->getProcessor()->setBusesTemplate(template);
 
         // Tell gui to update
         Effect::updateEffectProcessor(node->getProcessor(), tree);
@@ -635,29 +635,29 @@ void EffectScene::menuCreateEffect(ValueTree effectData) {
     tree.loadEffect(effectData);
 }
 
-void EffectScene::loadNewLayout(String layout) {
+void EffectScene::loadNewTemplate(String newTemplate) {
     if (tree.isNotEmpty()) {
-        String layoutToSaveName;
-        int result = callSaveLayoutDialog(layoutToSaveName, true);
+        String templateToSaveName;
+        int result = callSaveTemplateDialog(templateToSaveName, true);
 
         if (result == -1) {
             return;
         } else if (result == 0) {
             tree.clear();
         } if (result == 1) {
-            std::cout << "Save layout: " << layoutToSaveName << newLine;
+            std::cout << "Save template: " << templateToSaveName << newLine;
 
-            tree.storeLayout(layoutToSaveName);
+            tree.storeTemplate(templateToSaveName);
             tree.clear();
         }
     }
 
-    std::cout << "Load layout: " << layout << newLine;
-    tree.loadLayout(layout);
+    std::cout << "Load template: " << newTemplate << newLine;
+    tree.loadTemplate(newTemplate);
 }
 
-int EffectScene::callSaveLayoutDialog(String &name, bool dontSaveButton) {
-    AlertWindow saveDialog("Save current layout?", "Enter Layout Name", AlertWindow::AlertIconType::NoIcon);
+int EffectScene::callSaveTemplateDialog(String &name, bool dontSaveButton) {
+    AlertWindow saveDialog("Save current template?", "Enter Template Name", AlertWindow::AlertIconType::NoIcon);
 
     saveDialog.addButton("Save", 1, KeyPress(KeyPress::returnKey));
     if (dontSaveButton) {
@@ -665,10 +665,10 @@ int EffectScene::callSaveLayoutDialog(String &name, bool dontSaveButton) {
     }
     saveDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
 
-    String currentName = tree.getCurrentLayoutName();
-    saveDialog.addTextEditor("Layout Name", currentName);
+    String currentName = tree.getCurrentTemplateName();
+    saveDialog.addTextEditor("Template Name", currentName);
 
-    auto nameEditor = saveDialog.getTextEditor("Layout Name");
+    auto nameEditor = saveDialog.getTextEditor("Template Name");
 
     auto result = saveDialog.runModalLoop();
 

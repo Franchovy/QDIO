@@ -30,11 +30,11 @@ public:
     static StringArray getEffectsAvailable();
     static void clearEffect(String effectName);
 
-    // Layouts
-    static void saveLayout(ValueTree& layout);
-    static ValueTree loadLayout(String layoutName);
-    static StringArray getLayoutsAvailable();
-    static void clearLayout(String layoutName);
+    // Templates
+    static void saveTemplate(ValueTree& newTemplate);
+    static ValueTree loadTemplate(String templateName);
+    static StringArray getTemplatesAvailable();
+    static void clearTemplate(String templateName);
 
     //
     static void writeToFile(ValueTree data);

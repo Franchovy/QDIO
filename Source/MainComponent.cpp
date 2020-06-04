@@ -85,18 +85,18 @@ MainComponent::MainComponent()
     effectSelectMenu.setText("Effects");
 
     //
-    layoutMenu.onChange = [=] {
-        auto selectedIndex = layoutMenu.getSelectedItemIndex();
+    templateMenu.onChange = [=] {
+        auto selectedIndex = templateMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
-            auto layoutName = layoutMenu.getItemText(selectedIndex);
-            main.loadNewLayout(layoutName);
+            auto templateName = templateMenu.getItemText(selectedIndex);
+            main.loadNewTemplate(templateName);
 
-            layoutMenu.setText("Layout");
+            templateMenu.setText("Template");
         }
     };
 
-    updateLayoutMenu();
-    layoutMenu.setText("Layout");
+    updateTemplateMenu();
+    templateMenu.setText("Template");
 
     //
     toolBoxMenu.setText("ToolBox");
@@ -112,7 +112,7 @@ MainComponent::MainComponent()
 
     populateToolBoxMenu();
 
-    addAndMakeVisible(layoutMenu);
+    addAndMakeVisible(templateMenu);
     addAndMakeVisible(toolBoxMenu);
     addAndMakeVisible(effectSelectMenu);
     /*auto menu = effectSelectMenu.getRootMenu();
@@ -184,7 +184,7 @@ void MainComponent::resized() {
     settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
 
     auto menu1 = FlexItem(settingsButton);
-    auto menu2 = FlexItem(layoutMenu);
+    auto menu2 = FlexItem(templateMenu);
     auto menu3 = FlexItem(effectSelectMenu);
     auto menu4 = FlexItem(toolBoxMenu);
 
@@ -224,24 +224,24 @@ void MainComponent::updateEffectSelectMenu() {
     effectSelectMenu.setText("Effects");
 }
 
-void MainComponent::updateLayoutMenu() {
-    layoutMenu.clear(dontSendNotification);
+void MainComponent::updateTemplateMenu() {
+    templateMenu.clear(dontSendNotification);
     Image img = ImageCache::getFromMemory(BinaryData::settings_png, BinaryData::settings_pngSize);
 
     int i = 1;
-    for (auto e : EffectLoader::getLayoutsAvailable()) {
-        if (e.compare("default") != 0) { // Don't add default (working) layout to list
-            layoutMenu.getRootMenu()->addItem(i++, e, true, false, img);
+    for (auto e : EffectLoader::getTemplatesAvailable()) {
+        if (e.compare("default") != 0) { // Don't add default (working) template to list
+            templateMenu.getRootMenu()->addItem(i++, e, true, false, img);
         }
     }
-    layoutMenu.setText("Layout");
+    templateMenu.setText("Template");
 }
 
 void MainComponent::handleCommandMessage(int commandId) {
     if (commandId == 0) {
         std::cout << "Update menus" << newLine;
         updateEffectSelectMenu();
-        updateLayoutMenu();
+        updateTemplateMenu();
     }
 }
 

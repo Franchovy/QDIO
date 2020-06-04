@@ -93,85 +93,85 @@ void EffectLoader::clearEffect(String effectName) {
     getAppProperties().getUserSettings()->save();
 }
 
-void EffectLoader::saveLayout(ValueTree &layout) {
+void EffectLoader::saveTemplate(ValueTree &newTemplate) {
 
-    std::cout << "Saving layout: " << layout.getType().toString() << newLine;
-    std::cout << layout.toXmlString() << newLine;
+    std::cout << "Saving template: " << newTemplate.getType().toString() << newLine;
+    std::cout << newTemplate.toXmlString() << newLine;
 
-    ValueTree effectLib("Layouts");
+    ValueTree effectLib("Templates");
 
     auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
     if (loadedEffectsData != nullptr) {
         effectLib = ValueTree::fromXml(*loadedEffectsData);
     }
 
-    auto layoutToOverWrite = effectLib.getChildWithProperty("name",
-                                                            layout.getProperty("name").toString());
+    auto templateToOverWrite = effectLib.getChildWithProperty("name",
+                                                              newTemplate.getProperty("name").toString());
 
-    if (layoutToOverWrite.isValid()) {
-        std::cout << "Overwriting layout" << newLine;
-        effectLib.removeChild(layoutToOverWrite, nullptr);
+    if (templateToOverWrite.isValid()) {
+        std::cout << "Overwriting template" << newLine;
+        effectLib.removeChild(templateToOverWrite, nullptr);
     }
 
-    effectLib.appendChild(layout, nullptr);
+    effectLib.appendChild(newTemplate, nullptr);
 
     auto dataToStore = effectLib.createXml();
     getAppProperties().getUserSettings()->setValue(KEYNAME_LOADOUTS, dataToStore.get());
     getAppProperties().getUserSettings()->save();
 }
 
-ValueTree EffectLoader::loadLayout(String layoutName) {
-    ValueTree layouts("Layouts");
+ValueTree EffectLoader::loadTemplate(String templateName) {
+    ValueTree templates("Templates");
 
-    auto loadedLayoutsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
-    if (loadedLayoutsData != nullptr) {
-        layouts = ValueTree::fromXml(*loadedLayoutsData);
-        //std::cout << "Stored layouts:" << newLine << layouts.toXmlString() << newLine;
+    auto loadedTemplatesData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
+    if (loadedTemplatesData != nullptr) {
+        templates = ValueTree::fromXml(*loadedTemplatesData);
+        //std::cout << "Stored templates:" << newLine << templates.toXmlString() << newLine;
     }
 
-    auto layoutToLoad = layouts.getChildWithProperty("name", layoutName);
-    if (layoutToLoad.isValid()) {
-        return layoutToLoad;
+    auto templateToLoad = templates.getChildWithProperty("name", templateName);
+    if (templateToLoad.isValid()) {
+        return templateToLoad;
     } else {
         return ValueTree();
     }
 }
 
-StringArray EffectLoader::getLayoutsAvailable() {
-    StringArray layoutsList;
+StringArray EffectLoader::getTemplatesAvailable() {
+    StringArray templatesList;
 
     std::cout << "Effects available: " << newLine;
 
-    ValueTree layouts("Layouts");
-    auto loadedLayoutsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
-    if (loadedLayoutsData != nullptr) {
-        layouts = ValueTree::fromXml(*loadedLayoutsData);
+    ValueTree templates("Templates");
+    auto loadedTemplatesData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
+    if (loadedTemplatesData != nullptr) {
+        templates = ValueTree::fromXml(*loadedTemplatesData);
 
-        for (int i = 0; i < layouts.getNumChildren(); i++) {
-            std::cout << layouts.getChild(i).getProperty("name").toString() << newLine;
-            layoutsList.add(layouts.getChild(i).getProperty("name").toString());
+        for (int i = 0; i < templates.getNumChildren(); i++) {
+            std::cout << templates.getChild(i).getProperty("name").toString() << newLine;
+            templatesList.add(templates.getChild(i).getProperty("name").toString());
         }
     }
 
-    return layoutsList;
+    return templatesList;
 }
 
-void EffectLoader::clearLayout(String layoutName) {
-    ValueTree layouts("Layouts");
+void EffectLoader::clearTemplate(String templateName) {
+    ValueTree templates("Templates");
 
-    auto loadedLayoutsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
-    if (loadedLayoutsData != nullptr) {
-        layouts = ValueTree::fromXml(*loadedLayoutsData);
+    auto loadedTemplatesData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
+    if (loadedTemplatesData != nullptr) {
+        templates = ValueTree::fromXml(*loadedTemplatesData);
     }
 
-    auto layoutToRemove = layouts.getChildWithProperty("name", layoutName);
+    auto templateToRemove = templates.getChildWithProperty("name", templateName);
 
-    if (layoutToRemove.isValid()) {
+    if (templateToRemove.isValid()) {
         std::cout << "Removing effect" << newLine;
-        layouts.removeChild(layoutToRemove, nullptr);
+        templates.removeChild(templateToRemove, nullptr);
     }
 
-    auto dataToStore = layouts.createXml();
+    auto dataToStore = templates.createXml();
 
     getAppProperties().getUserSettings()->setValue(KEYNAME_LOADOUTS, dataToStore.get());
     getAppProperties().getUserSettings()->save();

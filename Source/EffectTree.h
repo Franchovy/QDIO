@@ -44,10 +44,10 @@ public:
     Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
     ConnectionLine::Ptr loadConnection(ValueTree connectionData);
 
-    String getCurrentLayoutName();
+    String getCurrentTemplateName();
 
-    void loadLayout(String name = "");
-    void storeLayout(String saveName = "");
+    void loadTemplate(String name = "");
+    void storeTemplate(String saveName = "");
 
     void clear();
     bool isNotEmpty();
@@ -80,7 +80,7 @@ public:
     void removeAllListeners(ValueTree component = ValueTree());
 
 private:
-    String currentLayoutName;
+    String currentTemplateName;
 
     ValueTree effectTree;
     UndoManager* undoManager;

@@ -527,19 +527,19 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
 
 
 
-void EffectTree::loadLayout(String name) {
+void EffectTree::loadTemplate(String name) {
     if (name.isEmpty()) {
         // Load user state
         name = "default";
     }
 
-    auto effectLoadDataTree = EffectLoader::loadLayout(name);
-    currentLayoutName = name;
+    auto effectLoadDataTree = EffectLoader::loadTemplate(name);
+    currentTemplateName = name;
 
     if (effectLoadDataTree.isValid()) {
         loadEffect(effectTree, effectLoadDataTree);
     } else {
-        std::cout << "empty layout." << newLine;
+        std::cout << "empty template." << newLine;
     }
 
 
@@ -556,7 +556,7 @@ void EffectTree::loadLayout(String name) {
     }*/
 }
 
-void EffectTree::storeLayout(String name) {
+void EffectTree::storeTemplate(String name) {
     if (name.isEmpty()) {
         // Name is default loadout
         name = "default";
@@ -564,7 +564,7 @@ void EffectTree::storeLayout(String name) {
 
     auto saveState = storeEffect(effectTree);
     saveState.setProperty("name", name, nullptr);
-    EffectLoader::saveLayout(saveState);
+    EffectLoader::saveTemplate(saveState);
 
 /*    auto savedState = storeEffect(effectTree).createXml();
 
@@ -987,8 +987,8 @@ bool EffectTree::isNotEmpty() {
     return effectTree.getNumChildren() > 0;
 }
 
-String EffectTree::getCurrentLayoutName() {
-    return currentLayoutName;
+String EffectTree::getCurrentTemplateName() {
+    return currentTemplateName;
 }
 
 void EffectTree::removeAllListeners(ValueTree component) {

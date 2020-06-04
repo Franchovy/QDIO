@@ -36,7 +36,7 @@ public:
     /*void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;*/
 
     void updateEffectSelectMenu();
-    void updateLayoutMenu();
+    void updateTemplateMenu();
     void populateToolBoxMenu();
     
     bool keyPressed(const KeyPress &key) override;
@@ -59,7 +59,7 @@ private:
     SettingsComponent settingsMenu;
 
     ComboBox effectSelectMenu;
-    ComboBox layoutMenu;
+    ComboBox templateMenu;
     ComboBox toolBoxMenu;
 
     ValueTree effectTree;
