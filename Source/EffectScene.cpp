@@ -67,22 +67,31 @@ EffectScene::EffectScene()
     //======================
     // Set up devices
     if (loadInitialCase) {
-        auto inNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
+        /*auto inNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
         auto outNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
-        
-        ComboBox inputDevice;
+        */
+        ComboBox inputDevices;
         ComboBox outputDevices;
-    inputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true), 0);
-    outputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(false), 0);
-        
-        inputDevices.onChange = [=] {
-            auto newDevice = deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true)[inputDevices.getSelectedItemIndex()];
+
+        //inputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true), 0);
+        //outputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(false), 0);
+
+        /*TextButton testButton("TestButton", "Test Setup");
+        testButton.onClick = [=] {
+            audioGraph.addConnection({{inNode->nodeID, 0}, {outNode->nodeID, 0}});
+            audioGraph.addConnection({{inNode->nodeID, 1}, {outNode->nodeID, 1}});
+        };*/
+
+        /*inputDevices.onChange = [=] {
+            std::cout << inputDevices.getText();
+        };
+        *//*    auto newDevice = deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true)[inputDevices.getSelectedItemIndex()];
              auto setup = deviceManager.getAudioDeviceSetup();
         
              setup.inputDeviceName = newDevice;
             
              deviceManager.setAudioDeviceSetup(setup, true);
-        };
+        };*//*
         
         outputDevices.onChange = [=] {
             auto newDevice = deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true)[inputDevices.getSelectedItemIndex()];
@@ -91,20 +100,32 @@ EffectScene::EffectScene()
             setup.outputDeviceName = newDevice;
 
             deviceManager.setAudioDeviceSetup(setup, true);
-        };
+        };*/
+
+        deviceManager.initialiseWithDefaultDevices(2, 2);
         
-        DialogWindow deviceSelectWindow("Device Select", Colours::whitesmoke, false);
-        
-        
+        AlertWindow deviceSelectWindow("Select your devices", "Select input and output", AlertWindow::AlertIconType::InfoIcon);
+        deviceSelectWindow.addComboBox("Input Device", deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true));
+        deviceSelectWindow.addComboBox("Output Device", deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(false));
+
+        deviceSelectWindow.addButton("Let's Go!", 1);
+
+        deviceSelectWindow.runModalLoop();
+
+        auto newSetup = deviceManager.getAudioDeviceSetup();
+        newSetup.inputDeviceName = deviceSelectWindow.getComboBoxComponent("Input Device")->getText();
+        newSetup.outputDeviceName = deviceSelectWindow.getComboBoxComponent("Output Device")->getText();
+
+        deviceManager.setAudioDeviceSetup(newSetup, true);
     }
     
     
     
-    if (dontLoadDevices) {
+
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
-        deviceManager.initialiseWithDefaultDevices(2, 2);
-    } else {
-        std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
+
+    if (! dontLoadDevices) {
+        //std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
 
         deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
@@ -169,6 +190,9 @@ void EffectScene::timerCallback() {
         auto data = ValueTree::readFromData(BinaryData::Basic_Setup, BinaryData::Basic_SetupSize);
         EffectLoader::saveTemplate(data);
 
+        /*data = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
+        EffectLoader::saveTemplate(data);
+*/
         data = ValueTree::readFromData(BinaryData::Guitar_Input, BinaryData::Guitar_InputSize);
         EffectLoader::saveEffect(data);
 
@@ -222,7 +246,7 @@ EffectScene::~EffectScene()
 
     processorPlayer.setProcessor(nullptr);
 
-    std::cout << "Closing with device settings: " << getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS)->toString() << newLine;
+    //std::cout << "Closing with device settings: " << getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS)->toString() << newLine;
 
     deviceManager.closeAudioDevice();
 
