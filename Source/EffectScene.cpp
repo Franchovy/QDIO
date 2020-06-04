@@ -21,7 +21,7 @@ EffectScene::EffectScene()
 
     // Don't load anything if this isn't the right version.
 
-    String currentVersion = "1.5";
+    String currentVersion = "1.6";
     std::cout << "App version: " << currentVersion << newLine;
     auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
 
