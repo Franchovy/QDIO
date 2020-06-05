@@ -562,10 +562,10 @@ void ComboListener::comboBoxChanged(ComboBox *comboBoxThatHasChanged) {
 void SliderListener::sliderValueChanged(Slider *slider) {
     linkedParameter->setValue(slider->getValueObject().getValue());
 
-    auto param = linkedParameter->getParameter();
+    /*auto param = linkedParameter->getParameter();
     if (param != nullptr) {
         param->setValueNotifyingHost(slider->getValueObject().getValue());
-    }
+    }*/
 }
 
 void SliderListener::sliderDragStarted(Slider *slider) {

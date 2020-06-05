@@ -9,6 +9,7 @@
 */
 
 #include "EffectTree.h"
+#include "Audio-Effects/Chorus.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1012,7 +1013,7 @@ void EffectTree::removeAllListeners(ValueTree component) {
 
 StringArray EffectTree::getProcessorNames() {
     StringArray names;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         names.add(getProcessorName(i));
     }
     return names;
@@ -1032,6 +1033,8 @@ String EffectTree::getProcessorName(int processorID) {
             return "Delay";
         case 5:
             return "Reverb";
+        case 6:
+            return "Chorus";
         default:
             jassertfalse;
             return String();
@@ -1057,6 +1060,9 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
             break;
         case 5:
             newProcessor = std::make_unique<ReverbEffect>();
+            break;
+        case 6:
+            newProcessor = std::make_unique<ChorusAudioProcessor>();
             break;
         default:
             jassertfalse;
