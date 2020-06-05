@@ -3,6 +3,12 @@
 <JUCERPROJECT id="XyrfN6" name="QDIO" projectType="guiapp" jucerVersion="5.4.7"
               compilerFlagSchemes="NewScheme" defines="JUCE_COREGRAPHICS_DRAW_ASYNC=1">
   <MAINGROUP id="T8wAiB" name="QDIO">
+    <GROUP id="{12B49D5D-5299-4AF7-0AA8-7A4F218B6BAB}" name="Audio-Effects">
+      <FILE id="BtUerZ" name="PluginParameter.h" compile="0" resource="0"
+            file="Source/Audio-Effects/PluginParameter.h"/>
+      <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
+      <FILE id="lux4uJ" name="Chorus.h" compile="1" resource="0" file="Source/Audio-Effects/Chorus.h"/>
+    </GROUP>
     <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
       <FILE id="BBGZC6" name="Amp Output" compile="0" resource="1" file="Resources/Loadout/Amp Output"/>
       <FILE id="Hh0UJL" name="Basic Setup" compile="0" resource="1" file="Resources/Loadout/Basic Setup"/>
