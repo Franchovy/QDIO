@@ -85,7 +85,17 @@ void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) 
 
 
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
-    for (auto connection : getAudioConnection(connectionLine)) {
+    auto connections = getAudioConnection(connectionLine);
+
+    if (connections.isEmpty()) {
+        return false;
+    }
+
+    auto connection = connections.getFirst();
+    for (auto c = 0; c < 2; c++) { // default 2 channels
+        connection.source.channelIndex = c;
+        connection.destination.channelIndex = c;
+
         if (!EffectTreeBase::audioGraph->isConnected(connection) &&
             EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
             // Make audio connection
