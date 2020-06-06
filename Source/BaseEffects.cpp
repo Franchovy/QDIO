@@ -31,6 +31,11 @@ void BaseEffect::setLayout(int numInputs, int numOutputs) {
     setBusesLayout(layout);
 }
 
+void BaseEffect::makeLog(AudioParameterFloat *parameter) {
+    auto range = parameter->getNormalisableRange();
+    parameter->range.setSkewForCentre (sqrt (range.start * range.end));
+}
+
 DelayEffect::DelayEffect() : BaseEffect()
         , delay(new AudioParameterFloat("length", "Length",
                                         NormalisableRange<float>(0.1f, 1.f, 0.001, 0.5f), 0.3f))

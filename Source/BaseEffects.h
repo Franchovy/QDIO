@@ -30,7 +30,13 @@ public:
     //TODO fix const shit
     const String getName() const override;
 
+    //=========================================================================
+
     void setLayout(int numInputs, int numOutputs);
+
+    void makeLog(AudioParameterFloat* parameter);
+
+    //=========================================================================
 
     virtual void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override = 0;
     virtual void releaseResources() override = 0;
