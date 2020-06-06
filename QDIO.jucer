@@ -14,6 +14,8 @@
             file="Source/Audio-Effects/CompressorExpander.h"/>
       <FILE id="b49qU3" name="Delay.cpp" compile="1" resource="0" file="Source/Audio-Effects/Delay.cpp"/>
       <FILE id="RDDdic" name="Delay.h" compile="1" resource="0" file="Source/Audio-Effects/Delay.h"/>
+      <FILE id="fnB9bV" name="Distortion.cpp" compile="1" resource="0" file="Source/Audio-Effects/Distortion.cpp"/>
+      <FILE id="R1Ot35" name="Distortion.h" compile="0" resource="0" file="Source/Audio-Effects/Distortion.h"/>
       <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
       <FILE id="lux4uJ" name="Chorus.h" compile="1" resource="0" file="Source/Audio-Effects/Chorus.h"/>
     </GROUP>

@@ -13,6 +13,7 @@
 #include "Audio-Effects/Delay.h"
 #include "Audio-Effects/CompressorExpander.h"
 #include "Audio-Effects/ChannelSplitter.h"
+#include "Audio-Effects/Distortion.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1016,7 +1017,7 @@ void EffectTree::removeAllListeners(ValueTree component) {
 
 StringArray EffectTree::getProcessorNames() {
     StringArray names;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 9; i++) {
         names.add(getProcessorName(i));
     }
     return names;
@@ -1039,10 +1040,8 @@ String EffectTree::getProcessorName(int processorID) {
         case 6:
             return "Chorus";
         case 7:
-            return "Delay";
-        case 8:
             return "Compressor";
-        case 9:
+        case 8:
             return "Channel Splitter";
         default:
             jassertfalse;
@@ -1062,10 +1061,10 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
             newProcessor = std::make_unique<IOEffect>(false);
             break;
         case 3:
-            newProcessor = std::make_unique<DistortionEffect>();
+            newProcessor = std::make_unique<DistortionAudioProcessor>();
             break;
         case 4:
-            newProcessor = std::make_unique<DelayEffect>();
+            newProcessor = std::make_unique<DelayAudioProcessor>();
             break;
         case 5:
             newProcessor = std::make_unique<ReverbEffect>();
@@ -1074,12 +1073,9 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
             newProcessor = std::make_unique<ChorusAudioProcessor>();
             break;
         case 7:
-            newProcessor = std::make_unique<DelayAudioProcessor>();
-            break;
-        case 8:
             newProcessor = std::make_unique<CompressorExpanderAudioProcessor>();
             break;
-        case 9:
+        case 8:
             newProcessor = std::make_unique<ChannelSplitterProcessor>();
             break;
         default:
