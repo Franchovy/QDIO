@@ -4,8 +4,8 @@
               compilerFlagSchemes="NewScheme" defines="JUCE_COREGRAPHICS_DRAW_ASYNC=1">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{12B49D5D-5299-4AF7-0AA8-7A4F218B6BAB}" name="Audio-Effects">
-      <FILE id="BtUerZ" name="PluginParameter.h" compile="0" resource="0"
-            file="Source/Audio-Effects/PluginParameter.h"/>
+      <FILE id="b49qU3" name="Delay.cpp" compile="1" resource="0" file="Source/Audio-Effects/Delay.cpp"/>
+      <FILE id="RDDdic" name="Delay.h" compile="1" resource="0" file="Source/Audio-Effects/Delay.h"/>
       <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
       <FILE id="lux4uJ" name="Chorus.h" compile="1" resource="0" file="Source/Audio-Effects/Chorus.h"/>
     </GROUP>
