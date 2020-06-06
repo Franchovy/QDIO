@@ -4,6 +4,10 @@
               compilerFlagSchemes="NewScheme" defines="JUCE_COREGRAPHICS_DRAW_ASYNC=1">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{12B49D5D-5299-4AF7-0AA8-7A4F218B6BAB}" name="Audio-Effects">
+      <FILE id="s7T9Hb" name="ChannelSplitter.cpp" compile="1" resource="0"
+            file="Source/Audio-Effects/ChannelSplitter.cpp"/>
+      <FILE id="PcpTO6" name="ChannelSplitter.h" compile="1" resource="0"
+            file="Source/Audio-Effects/ChannelSplitter.h"/>
       <FILE id="A0P0C5" name="CompressorExpander.cpp" compile="1" resource="0"
             file="Source/Audio-Effects/CompressorExpander.cpp"/>
       <FILE id="g5j7iN" name="CompressorExpander.h" compile="1" resource="0"
