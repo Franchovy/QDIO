@@ -4,6 +4,10 @@
               compilerFlagSchemes="NewScheme" defines="JUCE_COREGRAPHICS_DRAW_ASYNC=1">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{12B49D5D-5299-4AF7-0AA8-7A4F218B6BAB}" name="Audio-Effects">
+      <FILE id="A0P0C5" name="CompressorExpander.cpp" compile="1" resource="0"
+            file="Source/Audio-Effects/CompressorExpander.cpp"/>
+      <FILE id="g5j7iN" name="CompressorExpander.h" compile="1" resource="0"
+            file="Source/Audio-Effects/CompressorExpander.h"/>
       <FILE id="b49qU3" name="Delay.cpp" compile="1" resource="0" file="Source/Audio-Effects/Delay.cpp"/>
       <FILE id="RDDdic" name="Delay.h" compile="1" resource="0" file="Source/Audio-Effects/Delay.h"/>
       <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
