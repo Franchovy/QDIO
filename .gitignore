@@ -2,8 +2,4 @@ Builds/*
 JuceLibraryCode/*
 Source/Audio-Effects-old/*
 !JuceLibraryCode/modules/juce_gui_basics/native/juce_mac_NSViewComponentPeer.mm
-<<<<<<< HEAD
-Audio-Effects-old/*
-=======
-
->>>>>>> master
+Audio-Effects-old
