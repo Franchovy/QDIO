@@ -366,7 +366,6 @@ void EffectScene::resized()
 }
 
 void EffectScene::mouseDown(const MouseEvent &event) {
-
     // EffectScene
     if (event.originalComponent == this && event.mods.isLeftButtonDown()) {
         lasso.setVisible(true);
