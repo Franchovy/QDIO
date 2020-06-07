@@ -14,6 +14,7 @@
 #include "Audio-Effects/CompressorExpander.h"
 #include "Audio-Effects/ChannelSplitter.h"
 #include "Audio-Effects/Distortion.h"
+#include "Audio-Effects/Flanger.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1017,7 +1018,7 @@ void EffectTree::removeAllListeners(ValueTree component) {
 
 StringArray EffectTree::getProcessorNames() {
     StringArray names;
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 10; i++) {
         names.add(getProcessorName(i));
     }
     return names;
@@ -1043,6 +1044,8 @@ String EffectTree::getProcessorName(int processorID) {
             return "Compressor";
         case 8:
             return "Channel Splitter";
+        case 9:
+            return "Flanger";
         default:
             jassertfalse;
             return String();
@@ -1077,6 +1080,9 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
             break;
         case 8:
             newProcessor = std::make_unique<ChannelSplitterProcessor>();
+            break;
+        case 9:
+            newProcessor = std::make_unique<FlangerAudioProcessor>();
             break;
         default:
             jassertfalse;
