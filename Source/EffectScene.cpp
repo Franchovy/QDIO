@@ -430,14 +430,14 @@ bool EffectScene::keyPressed(const KeyPress &key)
 #define DEBUG_UTILITIES
 #ifdef DEBUG_UTILITIES
     if (key.getKeyCode() == 's') {
-        std::cout << "Audiograph status: " << newLine;
+        std::cout << "Audiograph Nodes: " << newLine;
         for (auto node : audioGraph.getNodes()) {
-            if (node != nullptr) {
-                std::cout << "node: " << node->nodeID.uid << newLine;
-                std::cout << node->getProcessor()->getName() << newLine;
-            } else {
-                std::cout << "Null node." << newLine;
-            }
+            std::cout << "node: " << node->nodeID.uid << newLine;
+            std::cout << node->getProcessor()->getName() << newLine;
+        }
+        std::cout << "Connections: " << newLine;
+        for (auto connection : audioGraph.getConnections()) {
+            std::cout << "Connection: " << connection.source.nodeID.uid << " to " << connection.destination.nodeID.uid << newLine;
         }
     }
     if (key.getKeyCode() == 'p') {
