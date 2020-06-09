@@ -445,6 +445,7 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         auto component = getFromTree<Component>(childWhichHasBeenAdded);
         auto parent = getFromTree<EffectTreeBase>(parentTree);
 
+        component->addComponentListener(this);
 
         // Type-specific operations
         if (auto line = dynamic_cast<ConnectionLine *>(component)) {
@@ -470,6 +471,8 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
     if (childWhichHasBeenRemoved.hasProperty(IDs::component)) {
         auto component = getFromTree<Component>(childWhichHasBeenRemoved);
         auto parent = component->getParentComponent();
+
+        component->removeComponentListener(this);
 
         auto parentFromTree = getFromTree<Component>(parentTree);
         // Type-specific operations

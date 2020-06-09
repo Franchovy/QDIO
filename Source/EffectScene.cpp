@@ -166,6 +166,8 @@ EffectScene::EffectScene()
         getAppProperties().getUserSettings()->save();
     }
 
+    Thread::sleep(10000);
+
     startTimer(500);
 }
 
