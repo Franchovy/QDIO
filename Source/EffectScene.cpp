@@ -446,6 +446,15 @@ bool EffectScene::keyPressed(const KeyPress &key)
         std::cout << "Main Position: " << getMouseXYRelative().toString() << newLine;
         std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
     }
+    if (key.getKeyCode() == 'r') {
+        auto setup = deviceManager.getAudioDeviceSetup();
+        auto bufferSizes = deviceManager.getCurrentAudioDevice()->getAvailableBufferSizes();
+        auto bufferElement = bufferSizes.indexOf(setup.bufferSize);
+        setup.bufferSize = bufferSizes[bufferElement + 1];
+        deviceManager.setAudioDeviceSetup(setup, true);
+        setup.bufferSize = bufferSizes[bufferElement];
+        deviceManager.setAudioDeviceSetup(setup, true);
+    }
     /*if (key.getKeyCode() == 'e') {
         if (auto e = dynamic_cast<EffectTreeBase*>(getComponentAt(getMouseXYRelative()))) {
             auto tree = e->getTree();
