@@ -441,6 +441,13 @@ void Effect::setupMenu() {
         addAndMakeVisible(parameter);
         //parameter->setCentrePosition(getMouseXYRelative());
     });
+    parameterSubMenu->addItem("Toggle Button", [=] () {
+        undoManager.beginNewTransaction("Add button parameter");
+
+        auto parameter = new Parameter(nullptr, 0, true);
+        addAndMakeVisible(parameter);
+        //parameter->setCentrePosition(getMouseXYRelative());
+    });
     addParamSubMenuItem.subMenu = std::move(parameterSubMenu);
 
     addMenuItem(editMenu, toggleEditMode);
