@@ -36,23 +36,25 @@ void ChannelSplitterProcessor::releaseResources() {
 }
 
 void ChannelSplitterProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &) {
-    int numSamples = buffer.getNumSamples();
+    if (! *bypass) {
+        int numSamples = buffer.getNumSamples();
 
-    if (numOutputChannels == 1) { // Mono
-        // Apply gain to keep level
-        float gain = 1.0f / (float) numInputChannels;
-        buffer.applyGain(gain);
+        if (numOutputChannels == 1) { // Mono
+            // Apply gain to keep level
+            float gain = 1.0f / (float) numInputChannels;
+            buffer.applyGain(gain);
 
-        for (int c = 1; c < numInputChannels; c++) {
-            // Put all channels into buffer
-            buffer.addFrom(0, 0, buffer, c, 0, numSamples);
+            for (int c = 1; c < numInputChannels; c++) {
+                // Put all channels into buffer
+                buffer.addFrom(0, 0, buffer, c, 0, numSamples);
+            }
+        } else if (numOutputChannels == 2) { // Stereo
+
+            buffer.copyFrom(1, 0, buffer, 0, 0, numSamples);
+            /*for (int c = 1; c < numOutputChannels; c++) {
+                buffer.copyFrom(c, 0, buffer, c % numInputChannels, 0, numSamples);
+            }*/
         }
-    } else if (numOutputChannels == 2) { // Stereo
-
-        buffer.copyFrom(1, 0, buffer, 0, 0, numSamples);
-        /*for (int c = 1; c < numOutputChannels; c++) {
-            buffer.copyFrom(c, 0, buffer, c % numInputChannels, 0, numSamples);
-        }*/
     }
 }
 

@@ -72,54 +72,57 @@ void DelayAudioProcessor::releaseResources()
 
 void DelayAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
-    ScopedNoDenormals noDenormals;
+    if (! *bypass) {
+        ScopedNoDenormals noDenormals;
 
-    const int numInputChannels = getTotalNumInputChannels();
-    const int numOutputChannels = getTotalNumOutputChannels();
-    const int numSamples = buffer.getNumSamples();
+        const int numInputChannels = getTotalNumInputChannels();
+        const int numOutputChannels = getTotalNumOutputChannels();
+        const int numSamples = buffer.getNumSamples();
 
-    //======================================
+        //======================================
 
-    float currentDelayTime = *paramDelayTime * (float)getSampleRate();
-    float currentFeedback = *paramFeedback;
-    float currentMix = *paramMix;
+        float currentDelayTime = *paramDelayTime * (float) getSampleRate();
+        float currentFeedback = *paramFeedback;
+        float currentMix = *paramMix;
 
-    int localWritePosition;
+        int localWritePosition;
 
-    for (int channel = 0; channel < numInputChannels; ++channel) {
-        float* channelData = buffer.getWritePointer (channel);
-        float* delayData = delayBuffer.getWritePointer (channel);
-        localWritePosition = delayWritePosition;
+        for (int channel = 0; channel < numInputChannels; ++channel) {
+            float *channelData = buffer.getWritePointer(channel);
+            float *delayData = delayBuffer.getWritePointer(channel);
+            localWritePosition = delayWritePosition;
 
-        for (int sample = 0; sample < numSamples; ++sample) {
-            const float in = channelData[sample];
-            float out = 0.0f;
+            for (int sample = 0; sample < numSamples; ++sample) {
+                const float in = channelData[sample];
+                float out = 0.0f;
 
-            float readPosition =
-                fmodf ((float)localWritePosition - currentDelayTime + (float)delayBufferSamples, delayBufferSamples);
-            int localReadPosition = floorf (readPosition);
+                float readPosition =
+                        fmodf((float) localWritePosition - currentDelayTime + (float) delayBufferSamples,
+                              delayBufferSamples);
+                int localReadPosition = floorf(readPosition);
 
-            if (localReadPosition != localWritePosition) {
-                float fraction = readPosition - (float)localReadPosition;
-                float delayed1 = delayData[(localReadPosition + 0)];
-                float delayed2 = delayData[(localReadPosition + 1) % delayBufferSamples];
-                out = delayed1 + fraction * (delayed2 - delayed1);
+                if (localReadPosition != localWritePosition) {
+                    float fraction = readPosition - (float) localReadPosition;
+                    float delayed1 = delayData[(localReadPosition + 0)];
+                    float delayed2 = delayData[(localReadPosition + 1) % delayBufferSamples];
+                    out = delayed1 + fraction * (delayed2 - delayed1);
 
-                channelData[sample] = in + currentMix * (out - in);
-                delayData[localWritePosition] = in + out * currentFeedback;
+                    channelData[sample] = in + currentMix * (out - in);
+                    delayData[localWritePosition] = in + out * currentFeedback;
+                }
+
+                if (++localWritePosition >= delayBufferSamples)
+                    localWritePosition -= delayBufferSamples;
             }
-
-            if (++localWritePosition >= delayBufferSamples)
-                localWritePosition -= delayBufferSamples;
         }
+
+        delayWritePosition = localWritePosition;
+
+        //======================================
+
+        for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
+            buffer.clear(channel, 0, numSamples);
     }
-
-    delayWritePosition = localWritePosition;
-
-    //======================================
-
-    for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
-        buffer.clear (channel, 0, numSamples);
 }
 
 //==============================================================================

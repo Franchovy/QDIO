@@ -77,77 +77,79 @@ void DistortionAudioProcessor::releaseResources()
 
 void DistortionAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
-    ScopedNoDenormals noDenormals;
+    if (! *bypass) {
+        ScopedNoDenormals noDenormals;
 
-    const int numInputChannels = getTotalNumInputChannels();
-    const int numOutputChannels = getTotalNumOutputChannels();
-    const int numSamples = buffer.getNumSamples();
+        const int numInputChannels = getTotalNumInputChannels();
+        const int numOutputChannels = getTotalNumOutputChannels();
+        const int numSamples = buffer.getNumSamples();
 
-    //======================================
+        //======================================
 
-    for (int channel = 0; channel < numInputChannels; ++channel) {
-        float* channelData = buffer.getWritePointer (channel);
+        for (int channel = 0; channel < numInputChannels; ++channel) {
+            float *channelData = buffer.getWritePointer(channel);
 
-        float out;
-        for (int sample = 0; sample < numSamples; ++sample) {
-            const float in = channelData[sample] * powf(10.0f, *paramInputGain * 0.05f);
+            float out;
+            for (int sample = 0; sample < numSamples; ++sample) {
+                const float in = channelData[sample] * powf(10.0f, *paramInputGain * 0.05f);
 
-            switch ((int) paramDistortionType->getIndex()) {
-                case distortionTypeHardClipping: {
-                    float threshold = 0.5f;
-                    if (in > threshold)
-                        out = threshold;
-                    else if (in < -threshold)
-                        out = -threshold;
-                    else
-                        out = in;
-                    break;
+                switch ((int) paramDistortionType->getIndex()) {
+                    case distortionTypeHardClipping: {
+                        float threshold = 0.5f;
+                        if (in > threshold)
+                            out = threshold;
+                        else if (in < -threshold)
+                            out = -threshold;
+                        else
+                            out = in;
+                        break;
+                    }
+                    case distortionTypeSoftClipping: {
+                        float threshold1 = 1.0f / 3.0f;
+                        float threshold2 = 2.0f / 3.0f;
+                        if (in > threshold2)
+                            out = 1.0f;
+                        else if (in > threshold1)
+                            out = 1.0f - powf(2.0f - 3.0f * in, 2.0f) / 3.0f;
+                        else if (in < -threshold2)
+                            out = -1.0f;
+                        else if (in < -threshold1)
+                            out = -1.0f + powf(2.0f + 3.0f * in, 2.0f) / 3.0f;
+                        else
+                            out = 2.0f * in;
+                        out *= 0.5f;
+                        break;
+                    }
+                    case distortionTypeExponential: {
+                        if (in > 0.0f)
+                            out = 1.0f - expf(-in);
+                        else
+                            out = -1.0f + expf(in);
+                        break;
+                    }
+                    case distortionTypeFullWaveRectifier: {
+                        out = fabsf(in);
+                        break;
+                    }
+                    case distortionTypeHalfWaveRectifier: {
+                        if (in > 0.0f)
+                            out = in;
+                        else
+                            out = 0.0f;
+                        break;
+                    }
                 }
-                case distortionTypeSoftClipping: {
-                    float threshold1 = 1.0f / 3.0f;
-                    float threshold2 = 2.0f / 3.0f;
-                    if (in > threshold2)
-                        out = 1.0f;
-                    else if (in > threshold1)
-                        out = 1.0f - powf (2.0f - 3.0f * in, 2.0f) / 3.0f;
-                    else if (in < -threshold2)
-                        out = -1.0f;
-                    else if (in < -threshold1)
-                        out = -1.0f + powf (2.0f + 3.0f * in, 2.0f) / 3.0f;
-                    else
-                        out = 2.0f * in;
-                    out *= 0.5f;
-                    break;
-                }
-                case distortionTypeExponential: {
-                    if (in > 0.0f)
-                        out = 1.0f - expf (-in);
-                    else
-                        out = -1.0f + expf (in);
-                    break;
-                }
-                case distortionTypeFullWaveRectifier: {
-                    out = fabsf (in);
-                    break;
-                }
-                case distortionTypeHalfWaveRectifier: {
-                    if (in > 0.0f)
-                        out = in;
-                    else
-                        out = 0.0f;
-                    break;
-                }
+
+                float filtered = filters[channel]->processSingleSampleRaw(out);
+                channelData[sample] = filtered * powf(10.0f, *paramOutputGain * 0.05f);
             }
-
-            float filtered = filters[channel]->processSingleSampleRaw (out);
-            channelData[sample] = filtered * powf(10.0f, *paramOutputGain * 0.05f);
         }
+
+        //======================================
+
+        for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
+            buffer.clear(channel, 0, numSamples);
     }
-
-    //======================================
-
-    for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
-        buffer.clear (channel, 0, numSamples);
 }
 
 //==============================================================================

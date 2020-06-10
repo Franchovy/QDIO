@@ -84,82 +84,84 @@ void CompressorExpanderAudioProcessor::releaseResources()
 
 void CompressorExpanderAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
-    ScopedNoDenormals noDenormals;
+    if (! *bypass) {
+        ScopedNoDenormals noDenormals;
 
-    const int numInputChannels = getTotalNumInputChannels();
-    const int numOutputChannels = getTotalNumOutputChannels();
-    const int numSamples = buffer.getNumSamples();
+        const int numInputChannels = getTotalNumInputChannels();
+        const int numOutputChannels = getTotalNumOutputChannels();
+        const int numSamples = buffer.getNumSamples();
 
-    //======================================
+        //======================================
 
-    if ((bool)*bypass)
-        return;
+        if ((bool) *bypass)
+            return;
 
-    //======================================
+        //======================================
 
-    mixedDownInput.clear();
-    for (int channel = 0; channel < numInputChannels; ++channel)
-        mixedDownInput.addFrom (0, 0, buffer, channel, 0, numSamples, 1.0f / numInputChannels);
+        mixedDownInput.clear();
+        for (int channel = 0; channel < numInputChannels; ++channel)
+            mixedDownInput.addFrom(0, 0, buffer, channel, 0, numSamples, 1.0f / numInputChannels);
 
-    for (int sample = 0; sample < numSamples; ++sample) {
-        bool expander = (bool)*paramMode;
-        float T = *paramThreshold;
-        float R = *paramRatio;
-        float alphaA = calculateAttackOrRelease (*paramAttack * 0.001f);
-        float alphaR = calculateAttackOrRelease (*paramRelease * 0.001f);
-        float makeupGain = *paramMakeupGain;
+        for (int sample = 0; sample < numSamples; ++sample) {
+            bool expander = (bool) *paramMode;
+            float T = *paramThreshold;
+            float R = *paramRatio;
+            float alphaA = calculateAttackOrRelease(*paramAttack * 0.001f);
+            float alphaR = calculateAttackOrRelease(*paramRelease * 0.001f);
+            float makeupGain = *paramMakeupGain;
 
-        float inputSquared = powf (mixedDownInput.getSample (0, sample), 2.0f);
-        if (expander) {
-            const float averageFactor = 0.9999f;
-            inputLevel = averageFactor * inputLevel + (1.0f - averageFactor) * inputSquared;
-        } else {
-            inputLevel = inputSquared;
+            float inputSquared = powf(mixedDownInput.getSample(0, sample), 2.0f);
+            if (expander) {
+                const float averageFactor = 0.9999f;
+                inputLevel = averageFactor * inputLevel + (1.0f - averageFactor) * inputSquared;
+            } else {
+                inputLevel = inputSquared;
+            }
+            xg = (inputLevel <= 1e-6f) ? -60.0f : 10.0f * log10f(inputLevel);
+
+            // Expander
+            if (expander) {
+                if (xg > T)
+                    yg = xg;
+                else
+                    yg = T + (xg - T) * R;
+
+                xl = xg - yg;
+
+                if (xl < ylPrev)
+                    yl = alphaA * ylPrev + (1.0f - alphaA) * xl;
+                else
+                    yl = alphaR * ylPrev + (1.0f - alphaR) * xl;
+
+                // Compressor
+            } else {
+                if (xg < T)
+                    yg = xg;
+                else
+                    yg = T + (xg - T) / R;
+
+                xl = xg - yg;
+
+                if (xl > ylPrev)
+                    yl = alphaA * ylPrev + (1.0f - alphaA) * xl;
+                else
+                    yl = alphaR * ylPrev + (1.0f - alphaR) * xl;
+            }
+
+            control = powf(10.0f, (makeupGain - yl) * 0.05f);
+            ylPrev = yl;
+
+            for (int channel = 0; channel < numInputChannels; ++channel) {
+                float newValue = buffer.getSample(channel, sample) * control;
+                buffer.setSample(channel, sample, newValue);
+            }
         }
-        xg = (inputLevel <= 1e-6f) ? -60.0f : 10.0f * log10f (inputLevel);
 
-        // Expander
-        if (expander) {
-            if (xg > T)
-                yg = xg;
-            else
-                yg = T + (xg - T) * R;
+        //======================================
 
-            xl = xg - yg;
-
-            if (xl < ylPrev)
-                yl = alphaA * ylPrev + (1.0f - alphaA) * xl;
-            else
-                yl = alphaR * ylPrev + (1.0f - alphaR) * xl;
-
-        // Compressor
-        } else {
-            if (xg < T)
-                yg = xg;
-            else
-                yg = T + (xg - T) / R;
-
-            xl = xg - yg;
-
-            if (xl > ylPrev)
-                yl = alphaA * ylPrev + (1.0f - alphaA) * xl;
-            else
-                yl = alphaR * ylPrev + (1.0f - alphaR) * xl;
-        }
-
-        control = powf (10.0f, (makeupGain - yl) * 0.05f);
-        ylPrev = yl;
-
-        for (int channel = 0; channel < numInputChannels; ++channel) {
-            float newValue = buffer.getSample (channel, sample) * control;
-            buffer.setSample (channel, sample, newValue);
-        }
+        for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
+            buffer.clear(channel, 0, numSamples);
     }
-
-    //======================================
-
-    for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
-        buffer.clear (channel, 0, numSamples);
 }
 
 //==============================================================================

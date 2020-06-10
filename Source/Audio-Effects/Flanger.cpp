@@ -98,98 +98,101 @@ void FlangerAudioProcessor::releaseResources()
 
 void FlangerAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
-    ScopedNoDenormals noDenormals;
+    if (! *bypass) {
+        ScopedNoDenormals noDenormals;
 
-    const int numInputChannels = getTotalNumInputChannels();
-    const int numOutputChannels = getTotalNumOutputChannels();
-    const int numSamples = buffer.getNumSamples();
+        const int numInputChannels = getTotalNumInputChannels();
+        const int numOutputChannels = getTotalNumOutputChannels();
+        const int numSamples = buffer.getNumSamples();
 
-    //======================================
+        //======================================
 
-    float currentDelay = *paramDelay * 0.001f;
-    float currentWidth = *paramWidth * 0.001f;
-    float currentDepth = *paramDepth;
-    float currentFeedback = *paramFeedback;
-    float currentInverted = (float) *paramInverted * (-2.0f) + 1.0f;
-    float currentFrequency = *paramFrequency;
+        float currentDelay = *paramDelay * 0.001f;
+        float currentWidth = *paramWidth * 0.001f;
+        float currentDepth = *paramDepth;
+        float currentFeedback = *paramFeedback;
+        float currentInverted = (float) *paramInverted * (-2.0f) + 1.0f;
+        float currentFrequency = *paramFrequency;
 
-    int localWritePosition;
-    float phase;
-    float phaseMain;
+        int localWritePosition;
+        float phase;
+        float phaseMain;
 
-    for (int channel = 0; channel < numInputChannels; ++channel) {
-        float* channelData = buffer.getWritePointer (channel);
-        float* delayData = delayBuffer.getWritePointer (channel);
-        localWritePosition = delayWritePosition;
-        phase = lfoPhase;
-        if ((bool)*paramStereo && channel != 0)
-            phase = fmodf (phase + 0.25f, 1.0f);
+        for (int channel = 0; channel < numInputChannels; ++channel) {
+            float *channelData = buffer.getWritePointer(channel);
+            float *delayData = delayBuffer.getWritePointer(channel);
+            localWritePosition = delayWritePosition;
+            phase = lfoPhase;
+            if ((bool) *paramStereo && channel != 0)
+                phase = fmodf(phase + 0.25f, 1.0f);
 
-        for (int sample = 0; sample < numSamples; ++sample) {
-            const float in = channelData[sample];
-            float out = 0.0f;
+            for (int sample = 0; sample < numSamples; ++sample) {
+                const float in = channelData[sample];
+                float out = 0.0f;
 
-            float localDelayTime =
-                (currentDelay + currentWidth * lfo (phase, (int)*paramWaveform)) * (float)getSampleRate();
+                float localDelayTime =
+                        (currentDelay + currentWidth * lfo(phase, (int) *paramWaveform)) * (float) getSampleRate();
 
-            float readPosition =
-                fmodf ((float)localWritePosition - localDelayTime + (float)delayBufferSamples, delayBufferSamples);
-            int localReadPosition = floorf (readPosition);
+                float readPosition =
+                        fmodf((float) localWritePosition - localDelayTime + (float) delayBufferSamples,
+                              delayBufferSamples);
+                int localReadPosition = floorf(readPosition);
 
-            switch ((int)*paramInterpolation) {
-                case interpolationNearestNeighbour: {
-                    float closestSample = delayData[localReadPosition % delayBufferSamples];
-                    out = closestSample;
-                    break;
+                switch ((int) *paramInterpolation) {
+                    case interpolationNearestNeighbour: {
+                        float closestSample = delayData[localReadPosition % delayBufferSamples];
+                        out = closestSample;
+                        break;
+                    }
+                    case interpolationLinear: {
+                        float fraction = readPosition - (float) localReadPosition;
+                        float delayed0 = delayData[(localReadPosition + 0)];
+                        float delayed1 = delayData[(localReadPosition + 1) % delayBufferSamples];
+                        out = delayed0 + fraction * (delayed1 - delayed0);
+                        break;
+                    }
+                    case interpolationCubic: {
+                        float fraction = readPosition - (float) localReadPosition;
+                        float fractionSqrt = fraction * fraction;
+                        float fractionCube = fractionSqrt * fraction;
+
+                        float sample0 = delayData[(localReadPosition - 1 + delayBufferSamples) % delayBufferSamples];
+                        float sample1 = delayData[(localReadPosition + 0)];
+                        float sample2 = delayData[(localReadPosition + 1) % delayBufferSamples];
+                        float sample3 = delayData[(localReadPosition + 2) % delayBufferSamples];
+
+                        float a0 = -0.5f * sample0 + 1.5f * sample1 - 1.5f * sample2 + 0.5f * sample3;
+                        float a1 = sample0 - 2.5f * sample1 + 2.0f * sample2 - 0.5f * sample3;
+                        float a2 = -0.5f * sample0 + 0.5f * sample2;
+                        float a3 = sample1;
+                        out = a0 * fractionCube + a1 * fractionSqrt + a2 * fraction + a3;
+                        break;
+                    }
                 }
-                case interpolationLinear: {
-                    float fraction = readPosition - (float)localReadPosition;
-                    float delayed0 = delayData[(localReadPosition + 0)];
-                    float delayed1 = delayData[(localReadPosition + 1) % delayBufferSamples];
-                    out = delayed0 + fraction * (delayed1 - delayed0);
-                    break;
-                }
-                case interpolationCubic: {
-                    float fraction = readPosition - (float)localReadPosition;
-                    float fractionSqrt = fraction * fraction;
-                    float fractionCube = fractionSqrt * fraction;
 
-                    float sample0 = delayData[(localReadPosition - 1 + delayBufferSamples) % delayBufferSamples];
-                    float sample1 = delayData[(localReadPosition + 0)];
-                    float sample2 = delayData[(localReadPosition + 1) % delayBufferSamples];
-                    float sample3 = delayData[(localReadPosition + 2) % delayBufferSamples];
+                channelData[sample] = in + out * currentDepth * currentInverted;
+                delayData[localWritePosition] = in + out * currentFeedback;
 
-                    float a0 = - 0.5f * sample0 + 1.5f * sample1 - 1.5f * sample2 + 0.5f * sample3;
-                    float a1 = sample0 - 2.5f * sample1 + 2.0f * sample2 - 0.5f * sample3;
-                    float a2 = - 0.5f * sample0 + 0.5f * sample2;
-                    float a3 = sample1;
-                    out = a0 * fractionCube + a1 * fractionSqrt + a2 * fraction + a3;
-                    break;
-                }
+                if (++localWritePosition >= delayBufferSamples)
+                    localWritePosition -= delayBufferSamples;
+
+                phase += currentFrequency * inverseSampleRate;
+                if (phase >= 1.0f)
+                    phase -= 1.0f;
             }
 
-            channelData[sample] = in + out * currentDepth * currentInverted;
-            delayData[localWritePosition] = in + out * currentFeedback;
-
-            if (++localWritePosition >= delayBufferSamples)
-                localWritePosition -= delayBufferSamples;
-
-            phase += currentFrequency * inverseSampleRate;
-            if (phase >= 1.0f)
-                phase -= 1.0f;
+            if (channel == 0)
+                phaseMain = phase;
         }
 
-        if (channel == 0)
-            phaseMain = phase;
+        delayWritePosition = localWritePosition;
+        lfoPhase = phaseMain;
+
+        //======================================
+
+        for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
+            buffer.clear(channel, 0, numSamples);
     }
-
-    delayWritePosition = localWritePosition;
-    lfoPhase = phaseMain;
-
-    //======================================
-
-    for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
-        buffer.clear (channel, 0, numSamples);
 }
 
 //==============================================================================

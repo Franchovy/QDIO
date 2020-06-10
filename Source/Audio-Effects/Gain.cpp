@@ -31,5 +31,7 @@ void GainAudioProcessor::releaseResources() {
 }
 
 void GainAudioProcessor::processBlock(AudioSampleBuffer &buffer, MidiBuffer &) {
-    buffer.applyGain(*gain);
+    if (! *bypass) {
+        buffer.applyGain(*gain);
+    }
 }
