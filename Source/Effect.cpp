@@ -1323,8 +1323,9 @@ void Effect::expandToFitChildren() {
 
     if (getParentComponent() != nullptr) {
         if (!getParentComponent()->getLocalBounds().contains(getBoundsInParent())) {
-            auto effect = dynamic_cast<Effect *>(getParentComponent());
-            effect->expandToFitChildren();
+            if (auto effect = dynamic_cast<Effect *>(getParentComponent())) {
+                effect->expandToFitChildren();
+            }
         }
     }
 }
