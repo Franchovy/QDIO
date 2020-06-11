@@ -17,6 +17,7 @@
 #include "Audio-Effects/Flanger.h"
 #include "Audio-Effects/Gain.h"
 #include "Audio-Effects/Panning.h"
+#include "Audio-Effects/ParametricEQ.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1050,6 +1051,7 @@ void EffectTree::setupProcessors() {
          , "Flanger"
          , "Gain"
          , "Panning"
+         , "EQ"
     };
 
     makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
@@ -1063,7 +1065,7 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] { newProcessor = std::make_unique<FlangerAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<GainAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<PanningAudioProcessor>(); });
-
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<ParametricEQAudioProcessor>(); });
 }
 
 
