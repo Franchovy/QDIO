@@ -16,6 +16,7 @@
 #include "Audio-Effects/Distortion.h"
 #include "Audio-Effects/Flanger.h"
 #include "Audio-Effects/Gain.h"
+#include "Audio-Effects/Panning.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1022,7 +1023,7 @@ void EffectTree::removeAllListeners(ValueTree component) {
 
 StringArray EffectTree::getProcessorNames() {
     StringArray names;
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < 12; i++) {
         names.add(getProcessorName(i));
     }
     return names;
@@ -1052,6 +1053,8 @@ String EffectTree::getProcessorName(int processorID) {
             return "Flanger";
         case 10:
             return "Gain";
+        case 11:
+            return "Panning";
         default:
             jassertfalse;
             return String();
@@ -1092,6 +1095,9 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
             break;
         case 10:
             newProcessor = std::make_unique<GainAudioProcessor>();
+            break;
+        case 11:
+            newProcessor = std::make_unique<PanningAudioProcessor>();
             break;
         default:
             jassertfalse;

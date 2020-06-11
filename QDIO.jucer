@@ -20,6 +20,8 @@
       <FILE id="R1Ot35" name="Distortion.h" compile="0" resource="0" file="Source/Audio-Effects/Distortion.h"/>
       <FILE id="lqdCU7" name="Gain.cpp" compile="1" resource="0" file="Source/Audio-Effects/Gain.cpp"/>
       <FILE id="TBTlij" name="Gain.h" compile="0" resource="0" file="Source/Audio-Effects/Gain.h"/>
+      <FILE id="a5Pt1f" name="Panning.cpp" compile="1" resource="0" file="Source/Audio-Effects/Panning.cpp"/>
+      <FILE id="N1sKMm" name="Panning.h" compile="0" resource="0" file="Source/Audio-Effects/Panning.h"/>
       <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
       <FILE id="lux4uJ" name="Chorus.h" compile="1" resource="0" file="Source/Audio-Effects/Chorus.h"/>
     </GROUP>
