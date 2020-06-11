@@ -151,8 +151,8 @@ void Parameter::createParameterComponent() {
             combo->setSelectedItemIndex(0, sendNotificationSync);
         }
     } else if (type == slider) {
-        parameterComponent = std::make_unique<Slider>();
-        auto slider = dynamic_cast<Slider *>(parameterComponent.get());
+        parameterComponent = std::make_unique<SliderParameter>();
+        auto slider = dynamic_cast<SliderParameter *>(parameterComponent.get());
 
         auto paramRange = NormalisableRange<double>(0, 1);
         if (referencedParameter != nullptr) {
@@ -168,7 +168,7 @@ void Parameter::createParameterComponent() {
         }
 
         slider->setName("Slider");
-        slider->setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
+        slider->setTextBoxStyle(SliderParameter::NoTextBox, false, 0, 0);
 
         slider->setTextBoxIsEditable(true);
         slider->setValue(referencedParameter != nullptr ? referencedParameter->getValue() : 1);
@@ -194,7 +194,7 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
         case combo:
             break;
         case slider:
-            auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+            auto slider = dynamic_cast<SliderParameter*>(parameterComponent.get());
             slider->setValue(newValue, dontSendNotification);
             break;
     }
@@ -311,7 +311,7 @@ void Parameter::connect(Parameter *otherParameter) {
                 sliderListener = new SliderListener(this);
             }
 
-            auto slider = dynamic_cast<Slider *>(parameterComponent.get());
+            auto slider = dynamic_cast<SliderParameter *>(parameterComponent.get());
 
             slider->addListener(sliderListener);
 
@@ -372,7 +372,7 @@ void Parameter::disconnect(bool toThis) {
         }
 
         if (type == slider) {
-            auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+            auto slider = dynamic_cast<SliderParameter*>(parameterComponent.get());
             slider->removeListener(sliderListener);
         } else if (type == combo) {
             auto combo = dynamic_cast<ComboBox*>(parameterComponent.get());
@@ -582,4 +582,8 @@ void SliderListener::sliderDragEnded(Slider *slider) {
         param->endChangeGesture();
     }
     Listener::sliderDragEnded(slider);
+}
+
+bool SliderParameter::hitTest(int x, int y) {
+    return (Rectangle<int>(10, 30, getWidth()-10, getHeight() - 30).contains(x, y));
 }
