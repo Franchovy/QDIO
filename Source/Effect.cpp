@@ -1316,7 +1316,7 @@ void Effect::expandToFitChildren() {
         }
     }
 
-    newBounds.expand(50, 20);
+    newBounds.expand(50, 80);
 
     newBounds.setPosition(getPosition());
     setBounds(newBounds);
