@@ -174,7 +174,7 @@ void Parameter::createParameterComponent() {
 
         slider->setValue(referencedParameter != nullptr ? referencedParameter->getValue() : 1);
         //slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
-        
+
         slider->setPopupDisplayEnabled(true, true,
                 getParentComponent(), -1);
 
@@ -294,6 +294,14 @@ void Parameter::paint(Graphics &g) {
         strokeType.createDashedStroke(p, p, thiccness, 2);
         g.strokePath(p, strokeType);
     }
+
+    /*if (editMode) {
+        g.setColour(Colours::lightgrey);
+        g.fillRect(getBounds());
+    } else {
+        g.setColour(Colours::whitesmoke);
+        g.fillRect(getBounds());
+    }*/
 
     Component::paint(g);
 }
@@ -499,6 +507,12 @@ ParameterPort *Parameter::getPortWithID(String portID) {
 void Parameter::setName(const String& name) {
     parameterLabel.setText(name, dontSendNotification);
     Component::setName(name);
+}
+
+void Parameter::mouseDoubleClick(const MouseEvent &event) {
+    //editMode = ! editMode;
+
+    Component::mouseDoubleClick(event);
 }
 
 

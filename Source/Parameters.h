@@ -105,6 +105,8 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
+    void mouseDoubleClick(const MouseEvent &event) override;
+
     void setEditMode(bool isEditable);
     bool isInEditMode() const;
 
