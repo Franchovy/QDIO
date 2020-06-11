@@ -33,6 +33,7 @@ public:
     StringArray getProcessorNames();
     String getProcessorName(int processorID);
     std::unique_ptr<AudioProcessor> createProcessor(int processorID);
+    void setupProcessors();
 
     void remove(SelectHoverObject* c);
 
@@ -80,6 +81,10 @@ public:
     void removeAllListeners(ValueTree component = ValueTree());
 
 private:
+    StringArray processorNames;
+    Array<std::function<void()>> makeProcessorArray;
+    std::unique_ptr<AudioProcessor> newProcessor = nullptr;
+
     String currentTemplateName;
 
     ValueTree effectTree;

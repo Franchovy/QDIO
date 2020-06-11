@@ -26,6 +26,8 @@ EffectTree::EffectTree(EffectTreeBase* effectScene)
     : effectTree(EFFECTSCENE_ID)
     , undoManager(&effectScene->getUndoManager())
 {
+    setupProcessors();
+
     effectTree.setProperty(IDs::component, effectScene, nullptr);
     effectTree.addListener(this);
     effectScene->addComponentListener(this);
@@ -1022,87 +1024,46 @@ void EffectTree::removeAllListeners(ValueTree component) {
 }
 
 StringArray EffectTree::getProcessorNames() {
-    StringArray names;
-    for (int i = 0; i < 12; i++) {
-        names.add(getProcessorName(i));
-    }
-    return names;
+    return processorNames;
 }
 
 String EffectTree::getProcessorName(int processorID) {
-    switch (processorID) {
-        case 0:
-            return "Empty Effect";
-        case 1:
-            return "Input Device";
-        case 2: //todo remove arguments
-            return "Output Device";
-        case 3:
-            return "Distortion";
-        case 4:
-            return "Delay";
-        case 5:
-            return "Reverb";
-        case 6:
-            return "Chorus";
-        case 7:
-            return "Compressor";
-        case 8:
-            return "Channel Splitter";
-        case 9:
-            return "Flanger";
-        case 10:
-            return "Gain";
-        case 11:
-            return "Panning";
-        default:
-            jassertfalse;
-            return String();
-    }
+    return processorNames[processorID];
 }
 
 std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
-    std::unique_ptr<AudioProcessor> newProcessor;
+    makeProcessorArray[processorID-1]();
+    return std::move(newProcessor);
+}
 
+void EffectTree::setupProcessors() {
+    processorNames = {
+        "Empty Effect"
+         , "Input Device"
+         , "Output Device"
+         , "Distortion"
+         , "Delay"
+         , "Reverb"
+         , "Chorus"
+         , "Compressor"
+         , "Channel Splitter"
+         , "Flanger"
+         , "Gain"
+         , "Panning"
+    };
 
-    switch (processorID) {
-        case 1:
-            newProcessor = std::make_unique<IOEffect>(true);
-            break;
-        case 2:
-            newProcessor = std::make_unique<IOEffect>(false);
-            break;
-        case 3:
-            newProcessor = std::make_unique<DistortionAudioProcessor>();
-            break;
-        case 4:
-            newProcessor = std::make_unique<DelayAudioProcessor>();
-            break;
-        case 5:
-            newProcessor = std::make_unique<ReverbEffect>();
-            break;
-        case 6:
-            newProcessor = std::make_unique<ChorusAudioProcessor>();
-            break;
-        case 7:
-            newProcessor = std::make_unique<CompressorExpanderAudioProcessor>();
-            break;
-        case 8:
-            newProcessor = std::make_unique<ChannelSplitterProcessor>();
-            break;
-        case 9:
-            newProcessor = std::make_unique<FlangerAudioProcessor>();
-            break;
-        case 10:
-            newProcessor = std::make_unique<GainAudioProcessor>();
-            break;
-        case 11:
-            newProcessor = std::make_unique<PanningAudioProcessor>();
-            break;
-        default:
-            jassertfalse;
-    }
-    return newProcessor;
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(false); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<DistortionAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<DelayAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<ReverbEffect>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<ChorusAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<CompressorExpanderAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<ChannelSplitterProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<FlangerAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<GainAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<PanningAudioProcessor>(); });
+
 }
 
 
