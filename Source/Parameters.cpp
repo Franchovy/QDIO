@@ -174,10 +174,10 @@ void Parameter::createParameterComponent() {
 
         slider->setValue(referencedParameter != nullptr ? referencedParameter->getValue() : 1);
         //slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
-
-        slider->setPopupDisplayEnabled(true, true,
-                getParentComponent(), 10000);
         
+        slider->setPopupDisplayEnabled(true, true,
+                getParentComponent(), -1);
+
 
         slider->hideTextBox(false);
         slider->hideTextBox(true);
