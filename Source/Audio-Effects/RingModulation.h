@@ -26,7 +26,7 @@
 #pragma once
 
 #define _USE_MATH_DEFINES
-#include <cmath>using juce_dsp
+#include <cmath>
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../Source/BaseEffects.h"

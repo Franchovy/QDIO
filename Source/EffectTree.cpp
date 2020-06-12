@@ -18,6 +18,9 @@
 #include "Audio-Effects/Gain.h"
 #include "Audio-Effects/Panning.h"
 #include "Audio-Effects/ParametricEQ.h"
+#include "Audio-Effects/Phaser.h"
+#include "Audio-Effects/PitchShift.h"
+#include "Audio-Effects/RingModulation.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1052,6 +1055,9 @@ void EffectTree::setupProcessors() {
          , "Gain"
          , "Panning"
          , "EQ"
+         , "Phaser"
+         , "RingModulation"
+         //, "PitchShift"
     };
 
     makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
@@ -1066,6 +1072,9 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] { newProcessor = std::make_unique<GainAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<PanningAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<ParametricEQAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<PhaserAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<RingModulationAudioProcessor>(); });
+    //makeProcessorArray.add([=] { newProcessor = std::make_unique<PitchShiftAudioProcessor>(); });
 }
 
 

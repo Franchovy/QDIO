@@ -27,7 +27,7 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include <xf86drm.h>
+//#include <xf86drm.h>
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "../Source/BaseEffects.h"

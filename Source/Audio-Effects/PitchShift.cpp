@@ -72,11 +72,11 @@ PitchShiftAudioProcessor::PitchShiftAudioProcessor():
     addParameter(paramWindowType);
 
 
-    startTimerHz(10);
 }
 
 PitchShiftAudioProcessor::~PitchShiftAudioProcessor()
 {
+
 }
 
 //==============================================================================
@@ -94,6 +94,9 @@ void PitchShiftAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     //======================================
 
     needToResetPhases = true;
+
+    startTimerHz(1);
+
 }
 
 void PitchShiftAudioProcessor::releaseResources()
@@ -337,10 +340,10 @@ float PitchShiftAudioProcessor::princArg (const float phase)
 }
 
 void PitchShiftAudioProcessor::timerCallback() {
-    updateAnalysisWindow();
+    /*updateAnalysisWindow();
     updateFftSize();
     updateHopSize();
-    updateWindowScaleFactor();
+    updateWindowScaleFactor();*/
 
 }
 
