@@ -70,6 +70,9 @@ PitchShiftAudioProcessor::PitchShiftAudioProcessor():
     addParameter(paramFftSize);
     addParameter(paramHopSize);
     addParameter(paramWindowType);
+
+
+    startTimerHz(10);
 }
 
 PitchShiftAudioProcessor::~PitchShiftAudioProcessor()
@@ -331,6 +334,14 @@ float PitchShiftAudioProcessor::princArg (const float phase)
         return fmod (phase + M_PI,  2.0f * M_PI) - M_PI;
     else
         return fmod (phase + M_PI, -2.0f * M_PI) + M_PI;
+}
+
+void PitchShiftAudioProcessor::timerCallback() {
+    updateAnalysisWindow();
+    updateFftSize();
+    updateHopSize();
+    updateWindowScaleFactor();
+
 }
 
 //==============================================================================

@@ -34,7 +34,7 @@
 
 //==============================================================================
 
-class PitchShiftAudioProcessor : public BaseEffect
+class PitchShiftAudioProcessor : public BaseEffect, public Timer
 {
 public:
     //==============================================================================
@@ -52,7 +52,7 @@ public:
 
     //==============================================================================
 
-
+    void timerCallback() override;
 
     StringArray fftSizeItemsUI = {
         "32",
