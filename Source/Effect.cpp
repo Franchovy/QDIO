@@ -57,16 +57,16 @@ EffectTreeBase::EffectTreeBase() {
 }
 
 bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
-    auto inPort = connectionLine.getInPort();
-    auto outPort = connectionLine.getOutPort();
+    auto inPort = dynamic_cast<ParameterPort*>(connectionLine.getInPort().get());
+    auto outPort = dynamic_cast<ParameterPort*>(connectionLine.getOutPort().get());
 
     auto inEffect = dynamic_cast<Effect*>(inPort->getParentEffect());
     auto outEffect = dynamic_cast<Effect*>(outPort->getParentEffect());
 
     jassert(inEffect != nullptr && outEffect != nullptr);
 
-    auto inParam = inEffect->getParameterForPort(dynamic_cast<ParameterPort*>(inPort.get()));
-    auto outParam = dynamic_cast<Parameter*>(outPort->getParentComponent());
+    auto inParam = inEffect->getParameterForPort(inPort);
+    auto outParam = dynamic_cast<Parameter*>(outEffect->getParameterForPort(outPort));
 
     outParam->connect(inParam);
     return outParam->isConnected();
@@ -846,17 +846,17 @@ bool Effect::hasConnection(const ConnectionLine *line) {
 }
 
 Parameter *Effect::getParameterForPort(ParameterPort *port) {
-    
-    for (auto c : getChildren()) {
-        if (auto param = dynamic_cast<Parameter*>(c)) {
-            if (param->getPort(true) == port) {
-                return param;
+    if (port->isInternal) {
+        for (auto c : getChildren()) {
+            if (auto param = dynamic_cast<Parameter *>(c)) {
+                if (param->getPort(true) == port) {
+                    return param;
+                }
             }
         }
+    } else {
+        return dynamic_cast<Parameter*>(port->getParentComponent());
     }
-
-
-    return nullptr;
 }
 
 Array<AudioProcessorParameter *> Effect::getParameters(bool recursive) {
