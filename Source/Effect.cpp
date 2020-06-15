@@ -60,8 +60,8 @@ bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
     auto inPort = connectionLine.getInPort();
     auto outPort = connectionLine.getOutPort();
 
-    auto inEffect = dynamic_cast<Effect*>(inPort->getParentComponent());
-    auto outEffect = dynamic_cast<Effect*>(outPort->getParentComponent()->getParentComponent());
+    auto inEffect = dynamic_cast<Effect*>(inPort->getParentEffect());
+    auto outEffect = dynamic_cast<Effect*>(outPort->getParentEffect());
 
     jassert(inEffect != nullptr && outEffect != nullptr);
 
@@ -846,6 +846,7 @@ bool Effect::hasConnection(const ConnectionLine *line) {
 }
 
 Parameter *Effect::getParameterForPort(ParameterPort *port) {
+    
     for (auto c : getChildren()) {
         if (auto param = dynamic_cast<Parameter*>(c)) {
             if (param->getPort(true) == port) {
@@ -853,6 +854,8 @@ Parameter *Effect::getParameterForPort(ParameterPort *port) {
             }
         }
     }
+
+
     return nullptr;
 }
 

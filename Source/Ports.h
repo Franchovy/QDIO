@@ -37,6 +37,7 @@ public:
 
     virtual bool canConnect(const ConnectionPort* other) const = 0;
     virtual Component* getDragLineParent() = 0;
+    virtual Component* getParentEffect() {return getParentComponent(); }
 
     bool isInput;
     bool isInternal = false;
@@ -72,6 +73,8 @@ class ParameterPort : public ConnectionPort
 public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
     ParameterPort(bool isInternal);
+
+    Component *getParentEffect() override;
 
     bool canConnect(const ConnectionPort* other) const override;
 

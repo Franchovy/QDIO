@@ -157,3 +157,12 @@ Component *ParameterPort::getDragLineParent() {
     return getParentComponent()->getParentComponent();
 }
 
+Component *ParameterPort::getParentEffect() {
+    if (isInternal) {
+        return getParentComponent();
+    } else {
+        return getParentComponent()->getParentComponent();
+    }
+}
+
+
