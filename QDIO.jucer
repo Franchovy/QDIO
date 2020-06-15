@@ -33,6 +33,11 @@
             file="Source/Audio-Effects/RingModulation.h"/>
       <FILE id="HuRHT1" name="Phaser.cpp" compile="1" resource="0" file="Source/Audio-Effects/Phaser.cpp"/>
       <FILE id="M9RrT4" name="Phaser.h" compile="0" resource="0" file="Source/Audio-Effects/Phaser.h"/>
+      <FILE id="kG0hjg" name="RobotizationWhisperization.cpp" compile="1"
+            resource="0" file="Source/Audio-Effects/RobotizationWhisperization.cpp"/>
+      <FILE id="jzpFP2" name="RobotizationWhisperization.h" compile="0" resource="0"
+            file="Source/Audio-Effects/RobotizationWhisperization.h"/>
+      <FILE id="gJXvJx" name="STFT.h" compile="0" resource="0" file="Source/Audio-Effects/STFT.h"/>
       <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
       <FILE id="lux4uJ" name="Chorus.h" compile="1" resource="0" file="Source/Audio-Effects/Chorus.h"/>
     </GROUP>
