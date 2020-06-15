@@ -272,7 +272,9 @@ void EffectTree::componentNameChanged(Component &component) {
     if (auto effect = dynamic_cast<Effect*>(&component)) {
         auto effectTree = getTree(effect);
         if (effectTree.isValid()) {
+            effect->incReferenceCount();
             effectTree.setProperty(Effect::IDs::name, component.getName(), undoManager);
+            effect->decReferenceCountWithoutDeleting();
         }
     }
 
