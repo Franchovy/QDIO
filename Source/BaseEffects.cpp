@@ -50,6 +50,11 @@ void BaseEffect::timerCallback() {
     }
 }
 
+void BaseEffect::addOutputParameter(AudioProcessorParameter *parameter) {
+    outputParameters.add(parameter);
+    addParameter(parameter);
+}
+
 DelayEffect::DelayEffect() : BaseEffect()
         , delay(new AudioParameterFloat("length", "Length",
                                         NormalisableRange<float>(0.1f, 1.f, 0.001, 0.5f), 0.3f))

@@ -17,7 +17,7 @@ LevelAudioProcessor::LevelAudioProcessor() :
     , paramDecay(new AudioParameterFloat("Decay Speed", "decay",
                                          NormalisableRange<float>(1.0f, 1.2f, 0.01f), 1.05f))
 {
-    addParameter(paramLevel);
+    addOutputParameter(paramLevel);
     addParameter(paramDecay);
 
     setLayout(1,1);

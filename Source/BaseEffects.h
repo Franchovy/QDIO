@@ -27,6 +27,12 @@ public:
         addParameter(bypass);
     }
 
+    //=========================================================================
+    void addOutputParameter(AudioProcessorParameter* parameter);
+    Array<AudioProcessorParameter*> outputParameters;
+
+    //=========================================================================
+
     //TODO fix const shit
     const String getName() const override;
 
