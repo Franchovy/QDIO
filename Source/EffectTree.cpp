@@ -22,6 +22,7 @@
 #include "Audio-Effects/PitchShift.h"
 #include "Audio-Effects/RingModulation.h"
 #include "Audio-Effects/RobotizationWhisperization.h"
+#include "Level.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1062,6 +1063,7 @@ void EffectTree::setupProcessors() {
          , "RingModulation"
          //, "PitchShift"
          , "Robotization"
+         , "Level Detector"
     };
 
     makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
@@ -1080,6 +1082,7 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] { newProcessor = std::make_unique<RingModulationAudioProcessor>(); });
     //makeProcessorArray.add([=] { newProcessor = std::make_unique<PitchShiftAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<RobotizationWhisperizationAudioProcessor>(); });
+    makeProcessorArray.add( [=] { newProcessor = std::make_unique<LevelAudioProcessor>(); });
 }
 
 

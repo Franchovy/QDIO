@@ -18,6 +18,8 @@ class LevelAudioProcessor : public BaseEffect
 public:
     LevelAudioProcessor();
 
+    void timerCallback() override;
+
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
 
     void releaseResources() override;
@@ -25,6 +27,7 @@ public:
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
 
     AudioParameterFloat* paramLevel;
+    AudioParameterFloat* paramDecay;
 
 private:
     std::atomic<float> recordedLevel;

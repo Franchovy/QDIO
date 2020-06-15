@@ -14,10 +14,13 @@ LevelAudioProcessor::LevelAudioProcessor() :
         BaseEffect()
     , paramLevel(new AudioParameterFloat("Level", "level",
                                          NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.0f))
+    , paramDecay(new AudioParameterFloat("Decay Speed", "decay",
+                                         NormalisableRange<float>(1.0f, 1.2f, 0.01f), 1.05f))
 {
     addParameter(paramLevel);
+    addParameter(paramDecay);
 
-    setLayout(1,0);
+    setLayout(1,1);
 
     addRefreshParameterFunction([=] {
         paramLevel->setValueNotifyingHost(recordedLevel);
@@ -36,6 +39,12 @@ void LevelAudioProcessor::releaseResources() {
 
 void LevelAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
     for (int c = 0; c < buffer.getNumChannels(); c++) {
-        recordedLevel = (recordedLevel + buffer.getRMSLevel(c, 0, buffer.getNumSamples())) / 2;
+        recordedLevel = jmax((float) recordedLevel, buffer.getRMSLevel(c, 0, buffer.getNumSamples()));
     }
+}
+
+void LevelAudioProcessor::timerCallback() {
+    recordedLevel = recordedLevel / *paramDecay;
+
+    BaseEffect::timerCallback();
 }
