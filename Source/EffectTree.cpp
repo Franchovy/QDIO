@@ -21,6 +21,7 @@
 #include "Audio-Effects/Phaser.h"
 #include "Audio-Effects/PitchShift.h"
 #include "Audio-Effects/RingModulation.h"
+#include "Audio-Effects/RobotizationWhisperization.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1058,6 +1059,7 @@ void EffectTree::setupProcessors() {
          , "Phaser"
          , "RingModulation"
          //, "PitchShift"
+         , "Robotization"
     };
 
     makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
@@ -1075,6 +1077,7 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] { newProcessor = std::make_unique<PhaserAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<RingModulationAudioProcessor>(); });
     //makeProcessorArray.add([=] { newProcessor = std::make_unique<PitchShiftAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<RobotizationWhisperizationAudioProcessor>(); });
 }
 
 
