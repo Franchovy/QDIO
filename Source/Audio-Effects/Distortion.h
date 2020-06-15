@@ -33,7 +33,7 @@
 
 //==============================================================================
 
-class DistortionAudioProcessor : public BaseEffect, public Timer
+class DistortionAudioProcessor : public BaseEffect
 {
 public:
     //==============================================================================
@@ -46,8 +46,6 @@ public:
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     void processBlock (AudioSampleBuffer&, MidiBuffer&) override;
-
-    void timerCallback() override;
 
     //==============================================================================
 

@@ -20,7 +20,14 @@ ChannelSplitterProcessor::ChannelSplitterProcessor()
     addParameter(paramNumInputs);
     addParameter(paramNumOutputs);
 
-    startTimer(1000);
+    addRefreshParameterFunction([=] {
+        auto newNumInputs = paramNumInputs->getIndex() + 1;
+        auto newNumOutputs = paramNumOutputs->getIndex() + 1;
+
+        numInputChannels = newNumInputs;
+        numOutputChannels = newNumOutputs;
+    });
+    setRefreshRate(1);
 }
 
 ChannelSplitterProcessor::~ChannelSplitterProcessor() {
@@ -62,12 +69,3 @@ bool ChannelSplitterProcessor::isBusesLayoutSupported(const AudioProcessor::Buse
     return AudioProcessor::isBusesLayoutSupported(layouts);
 }
 
-void ChannelSplitterProcessor::timerCallback() {
-    auto newNumInputs = paramNumInputs->getIndex() + 1;
-    auto newNumOutputs = paramNumOutputs->getIndex() + 1;
-
-    numInputChannels = newNumInputs;
-    numOutputChannels = newNumOutputs;
-
-    startTimer(1000);
-}

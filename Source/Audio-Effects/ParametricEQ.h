@@ -32,7 +32,7 @@
 #include "../Source/BaseEffects.h"
 //==============================================================================
 
-class ParametricEQAudioProcessor : public BaseEffect, public Timer
+class ParametricEQAudioProcessor : public BaseEffect
 {
 public:
     //==============================================================================
@@ -46,8 +46,6 @@ public:
     void releaseResources() override;
     void processBlock (AudioSampleBuffer&, MidiBuffer&) override;
 
-
-    void timerCallback() override;
     //==============================================================================
 
     StringArray filterTypeItemsUI = {

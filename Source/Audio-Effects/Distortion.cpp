@@ -44,7 +44,10 @@ DistortionAudioProcessor::DistortionAudioProcessor():
     addParameter(paramOutputGain);
     addParameter(paramTone);
 
-    startTimer(500);
+    addRefreshParameterFunction([=] {
+        updateFilters();
+    });
+    setRefreshRate(2);
 }
 
 DistortionAudioProcessor::~DistortionAudioProcessor()
@@ -187,11 +190,6 @@ bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 
     return true;
   #endif
-}
-
-void DistortionAudioProcessor::timerCallback() {
-    updateFilters();
-    startTimer(500);
 }
 
 #endif

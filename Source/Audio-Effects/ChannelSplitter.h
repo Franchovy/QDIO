@@ -15,7 +15,7 @@
 
 //==============================================================================
 
-class ChannelSplitterProcessor : public BaseEffect, public Timer
+class ChannelSplitterProcessor : public BaseEffect
 {
 public:
     //==============================================================================
@@ -28,8 +28,6 @@ public:
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     void processBlock (AudioBuffer<float> &buffer, MidiBuffer&) override;
-
-    void timerCallback() override;
     //==============================================================================
 
 #ifndef JucePlugin_PreferredChannelConfigurations

@@ -22,12 +22,10 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DSPEffect)
 };
 
-class ReverbEffect : public DSPEffect, public Timer
+class ReverbEffect : public DSPEffect
 {
 public:
     ReverbEffect();
-
-    void timerCallback() override;
 
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
     void releaseResources() override;

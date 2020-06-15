@@ -28,7 +28,13 @@ ReverbEffect::ReverbEffect()
     addParameter(roomSize);
     //addParameter(&strength);
 
-    startTimer(1000);
+    addRefreshParameterFunction([=] {
+        if (reverbParameters.roomSize != *roomSize) {
+            reverbParameters.roomSize = *roomSize;
+            reverbProcessor.setParameters(reverbParameters);
+        }
+    });
+    setRefreshRate(10);
 }
 
 void ReverbEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
@@ -60,18 +66,6 @@ void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMess
     /*for (int c = 0; c < buffer.getNumChannels(); c++) {
         reverbProcessor.processMono(buffer.getWritePointer(c), buffer.getNumSamples());
     }*/
-}
-
-void ReverbEffect::timerCallback() {
-    if (reverbParameters.roomSize != *roomSize) {
-        reverbParameters.roomSize = *roomSize;
-        reverbProcessor.setParameters(reverbParameters);
-    }
-    /*if (reverbParameters.damping != strength) {
-        reverbParameters.damping = strength;
-        reverbProcessor.setParameters(reverbParameters);
-    }*/
-    startTimer(100);
 }
 
 
