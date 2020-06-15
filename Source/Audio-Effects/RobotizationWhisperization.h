@@ -126,7 +126,7 @@ public:
         {
             fft->perform (timeDomainBuffer, frequencyDomainBuffer, false);
 
-            auto size = (float)(1 << ((int)fftSize + 5));
+            auto size = (int)(float)(1 << ((int)fftSize + 5));
 
             switch ((int)parent.paramEffect->getIndex()) {
                 case effectPassThrough: {
