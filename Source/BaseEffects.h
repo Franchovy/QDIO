@@ -37,6 +37,8 @@ public:
     void makeLog(AudioParameterFloat* parameter);
 
     //=========================================================================
+    void timerCallback() override;
+
 
     virtual void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override = 0;
     virtual void releaseResources() override = 0;
@@ -68,22 +70,17 @@ protected:
     void addRefreshParameterFunction(std::function<void()> function);
     void setRefreshRate(int refreshRateInHz);
 private:
-public:
-    void timerCallback() override;
 
-private:
     Array<std::function<void()>> refreshParameterFunctions;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BaseEffect)
 };
 
 
-class DelayEffect : public BaseEffect, public Timer
+class DelayEffect : public BaseEffect
 {
 public:
     DelayEffect();
-
-    void timerCallback() override;
 
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
     void releaseResources() override;
@@ -93,7 +90,6 @@ private:
     AudioParameterFloat* delay;
     AudioParameterFloat* fade;
     std::atomic<float> fadeVal;
-    //std::atomic<float> delayVal;
     AudioBuffer<float> delayBuffer;
 
     int minSize;

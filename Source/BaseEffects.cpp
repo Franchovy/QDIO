@@ -62,40 +62,31 @@ DelayEffect::DelayEffect() : BaseEffect()
     addParameter(fade);
 
     setLayout(1,1);
-    startTimer(1000);
-}
 
-
-/**
- * Use this to asynchronously update the buffer size
- */
-void DelayEffect::timerCallback() {
-    if (fadeVal != fade->get()) {
-        fadeVal = fade->get();
-    }
-
-
-    newDelayBufferSize = ceil(delay->get() * currentSampleRate );
-    if (newDelayBufferSize != delayBufferSize){
-        if (numChannels < 0 || newDelayBufferSize < 0) {
-            startTimer(1000);
-            return;
+    addRefreshParameterFunction([=] {
+        if (fadeVal != fade->get()) {
+            fadeVal = fade->get();
         }
 
 
-        std::cout << "Updating buffer size to: " << newDelayBufferSize << newLine;
+        newDelayBufferSize = ceil(delay->get() * currentSampleRate );
+        if (newDelayBufferSize != delayBufferSize){
+            if (numChannels < 0 || newDelayBufferSize < 0) {
+                startTimer(1000);
+                return;
+            }
 
-        delayBuffer.setSize(numChannels, newDelayBufferSize
-                , true, true, true);
-        if (delayBufferPt > newDelayBufferSize){
-            delayBufferPt = 1;
+            delayBuffer.setSize(numChannels, newDelayBufferSize
+                    , true, true, true);
+            if (delayBufferPt > newDelayBufferSize){
+                delayBufferPt = 1;
+            }
+
+            delayBufferSize = newDelayBufferSize;
         }
-        /*delayBuffer.clear();*/
+    });
 
-        delayBufferSize = newDelayBufferSize;
-    }
-    startTimer(500);
-
+    setRefreshRate(1);
 }
 
 void DelayEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
