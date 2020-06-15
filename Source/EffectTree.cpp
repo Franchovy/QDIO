@@ -870,6 +870,14 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         parameter->setEditMode(effect->isInEditMode());
     }
 
+    if (param != nullptr) { //todo for loading from tree
+        if (auto baseEffect = dynamic_cast<BaseEffect*>(effect->getProcessor())) {
+            if (baseEffect->outputParameters.contains(param)) {
+                parameter->setIsOutput(true);
+            }
+        }
+    }
+
     parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
     effect->addAndMakeVisible(parameter.get());

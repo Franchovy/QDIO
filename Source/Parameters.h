@@ -117,6 +117,8 @@ public:
     bool isConnected();
     Parameter* getConnectedParameter();
 
+    void setIsOutput(bool isOutput);
+
     AudioProcessorParameter* getParameter();
 
     ParameterPort* getPort(bool internal);
@@ -142,6 +144,8 @@ public:
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
 private:
+    bool isOutputParameter = false;
+
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
     AudioProcessorParameter* referencedParameter;

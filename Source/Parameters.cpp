@@ -515,6 +515,17 @@ void Parameter::mouseDoubleClick(const MouseEvent &event) {
     Component::mouseDoubleClick(event);
 }
 
+void Parameter::setIsOutput(bool isOutput) {
+    isOutputParameter = isOutput;
+    if (isOutputParameter) {
+        jassert(parameterComponent != nullptr);
+
+        parameterComponent->setInterceptsMouseClicks(false,false);
+
+        internalPort.isInput = false;
+    }
+}
+
 
 /*
 
