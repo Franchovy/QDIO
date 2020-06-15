@@ -40,6 +40,8 @@
       <FILE id="gJXvJx" name="STFT.h" compile="0" resource="0" file="Source/Audio-Effects/STFT.h"/>
       <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
       <FILE id="lux4uJ" name="Chorus.h" compile="1" resource="0" file="Source/Audio-Effects/Chorus.h"/>
+      <FILE id="caF8vX" name="Level.cpp" compile="1" resource="0" file="Source/Level.cpp"/>
+      <FILE id="piFpaa" name="Level.h" compile="0" resource="0" file="Source/Level.h"/>
     </GROUP>
     <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
       <FILE id="BBGZC6" name="Amp Output" compile="0" resource="1" file="Resources/Loadout/Amp Output"/>
