@@ -17,7 +17,7 @@
  * Slightly more specialised (but still abstract) AudioProcessor. Avoids having all the same
  * overrides taking up so much space.
  */
-class BaseEffect : public AudioProcessor
+class BaseEffect : public AudioProcessor, public Timer
 {
 public:
     BaseEffect()
@@ -65,7 +65,15 @@ protected:
     String name;
     BusesLayout layout;
 
+    void addRefreshParameterFunction(std::function<void()> function);
+    void setRefreshRate(int refreshRateInHz);
 private:
+public:
+    void timerCallback() override;
+
+private:
+    Array<std::function<void()>> refreshParameterFunctions;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BaseEffect)
 };
 

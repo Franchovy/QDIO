@@ -36,6 +36,20 @@ void BaseEffect::makeLog(AudioParameterFloat *parameter) {
     parameter->range.setSkewForCentre (sqrt (range.start * range.end));
 }
 
+void BaseEffect::addRefreshParameterFunction(std::function<void()> function) {
+    refreshParameterFunctions.add(function);
+}
+
+void BaseEffect::setRefreshRate(int refreshRateInHz) {
+    startTimerHz(refreshRateInHz);
+}
+
+void BaseEffect::timerCallback() {
+    for (auto && refreshParameterFunction : refreshParameterFunctions) {
+        refreshParameterFunction();
+    }
+}
+
 DelayEffect::DelayEffect() : BaseEffect()
         , delay(new AudioParameterFloat("length", "Length",
                                         NormalisableRange<float>(0.1f, 1.f, 0.001, 0.5f), 0.3f))
