@@ -201,7 +201,13 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
             break;
         case slider:
             auto slider = dynamic_cast<SliderParameter*>(parameterComponent.get());
-            slider->setValue(newValue, dontSendNotification);
+
+            if (isOutputParameter) {
+                slider->setValue(newValue, sendNotificationAsync);
+            } else {
+                slider->setValue(newValue, dontSendNotification);
+            }
+
             break;
     }
 }
@@ -312,11 +318,22 @@ void Parameter::paint(Graphics &g) {
  * @param otherParameter belongs to a lower-down effect.
  */
 void Parameter::connect(Parameter *otherParameter) {
+    bool outputConnetion = otherParameter->isOutput();
+
     connectedParameter = otherParameter;
     otherParameter->isConnectedTo = true;
 
     //todo canConnect() checks types for ports
-    auto param = otherParameter->getParameter();
+    AudioProcessorParameter* param = nullptr;
+    if (outputConnetion) {
+        jassert(referencedParameter != nullptr);
+        param = referencedParameter;
+    } else {
+        param = otherParameter->getParameter();
+    }
+
+    param = otherParameter->getParameter();
+
     if (param != nullptr) {
         param->addListener(this);
 
@@ -325,14 +342,22 @@ void Parameter::connect(Parameter *otherParameter) {
                 sliderListener = new SliderListener(this);
             }
 
-            auto slider = dynamic_cast<SliderParameter *>(parameterComponent.get());
+            Slider* slider = nullptr;
+
+            if (outputConnetion) {
+                slider = dynamic_cast<SliderParameter *>(otherParameter->parameterComponent.get());
+            } else {
+                slider = dynamic_cast<SliderParameter *>(parameterComponent.get());
+            }
 
             slider->addListener(sliderListener);
 
-            if (valueStored) {
-                 slider->setValue(value, dontSendNotification);
-            } else {
-                slider->setValue(param->getValue(), dontSendNotification);
+            if (! outputConnetion) {
+                if (valueStored) {
+                    slider->setValue(value, dontSendNotification);
+                } else {
+                    slider->setValue(param->getValue(), dontSendNotification);
+                }
             }
         } else if (type == combo) {
             if (comboListener == nullptr) {
@@ -370,8 +395,8 @@ void Parameter::connect(Parameter *otherParameter) {
             }
         }
     }
-}
 
+}
 
 void Parameter::disconnect(bool toThis) {
     if (toThis) {
@@ -523,6 +548,10 @@ void Parameter::setIsOutput(bool isOutput) {
         parameterComponent->setInterceptsMouseClicks(false,false);
 
         internalPort.isInput = false;
+
+        if (type == slider) {
+            referencedParameter->addListener(this);
+        }
     }
 }
 
@@ -618,6 +647,10 @@ void SliderListener::sliderDragEnded(Slider *slider) {
         param->endChangeGesture();
     }
     Listener::sliderDragEnded(slider);
+}
+
+void SliderListener::setReferencedParameter(Parameter *parameter) {
+    linkedParameter = parameter;
 }
 
 bool SliderParameter::hitTest(int x, int y) {

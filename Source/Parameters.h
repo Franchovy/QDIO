@@ -58,6 +58,7 @@ public:
 
     void sliderDragEnded(Slider *slider) override;
 
+    void setReferencedParameter(Parameter* parameter);
 
 private:
     Parameter* linkedParameter = nullptr;
