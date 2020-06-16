@@ -526,6 +526,10 @@ void Parameter::setIsOutput(bool isOutput) {
     }
 }
 
+bool Parameter::isOutput() const {
+    return isOutputParameter || referencedParameter == nullptr;
+}
+
 
 /*
 
@@ -591,6 +595,7 @@ void ComboListener::comboBoxChanged(ComboBox *comboBoxThatHasChanged) {
 }
 
 void SliderListener::sliderValueChanged(Slider *slider) {
+
     linkedParameter->setValue(slider->getValueObject().getValue());
 
     /*auto param = linkedParameter->getParameter();

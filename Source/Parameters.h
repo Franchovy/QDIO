@@ -118,6 +118,7 @@ public:
     Parameter* getConnectedParameter();
 
     void setIsOutput(bool isOutput);
+    bool isOutput() const;
 
     AudioProcessorParameter* getParameter();
 
