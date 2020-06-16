@@ -68,15 +68,29 @@ bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
     auto inParam = inEffect->getParameterForPort(inPort);
     auto outParam = dynamic_cast<Parameter*>(outEffect->getParameterForPort(outPort));
 
-    outParam->connect(inParam);
+    if (outParam->isOutput()) {
+        inParam->connect(outParam);
+    } else {
+        outParam->connect(inParam);
+    }
     return outParam->isConnected();
 }
 
 void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) {
-    auto externalPort = dynamic_cast<ParameterPort*>(connectionLine.getOutPort().get());
-    jassert(externalPort != nullptr);
+    auto port = dynamic_cast<ParameterPort*>(connectionLine.getOutPort().get());
+    jassert(port != nullptr);
 
-    auto parameter = dynamic_cast<Parameter*>(externalPort->getParentComponent());
+    auto parameter = dynamic_cast<Parameter*>(dynamic_cast<Effect*>(
+            port->getParentEffect())->getParameterForPort(port));
+
+    if (parameter->isOutput()) {
+        port = dynamic_cast<ParameterPort*>(connectionLine.getInPort().get());
+        jassert(port != nullptr);
+
+        parameter = dynamic_cast<Parameter*>(dynamic_cast<Effect*>(
+                port->getParentEffect())->getParameterForPort(port));
+    }
+
     jassert(parameter != nullptr);
     if (parameter->isConnected()) {
         parameter->disconnect(false);
