@@ -54,6 +54,13 @@ PhaserAudioProcessor::PhaserAudioProcessor():
     addParameter(paramLFOfrequency);
     addParameter(paramLFOwaveform);
     addParameter(paramStereo);
+
+    /*addRefreshParameterFunction([=] {
+        if (numFiltersPerChannel != (*paramNumFilters + 1) * 2 ) {
+            updateNumFilters();
+        }
+    });
+    setRefreshRate(1);*/
 }
 
 PhaserAudioProcessor::~PhaserAudioProcessor()
@@ -76,13 +83,14 @@ void PhaserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 */
     //======================================
 
-    numFiltersPerChannel = 2 ^ (paramNumFilters->getIndex() + 1);//.items[(int)value].getFloatValue();paramNumFilters.callback (paramNumFilters.items.size() - 1);
+    //updateNumFilters();
+    numFiltersPerChannel = paramNumFilters->choices[(int)paramNumFilters->choices.size() - 1].getFloatValue();
 
     filters.clear();
     for (int i = 0; i < getTotalNumInputChannels() * numFiltersPerChannel; ++i) {
         Filter* filter;
         filters.add (filter = new Filter());
-    }
+    } //todo update filters on parameter change
 
     filteredOutputs.clear();
     for (int i = 0; i < getTotalNumInputChannels(); ++i)
@@ -136,7 +144,7 @@ void PhaserAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
                 updateFilters (centreFrequency);
 
             float filtered = in + *paramFeedback * filteredOutputs[channel];
-            for (int i = 0; i < *paramNumFilters; ++i)
+            for (int i = 0; i < *paramNumFilters; ++i) //todo loop through filters size instead
                 filtered = filters[channel * *paramNumFilters + i]->processSingleSampleRaw (filtered);
 
             filteredOutputs.set (channel, filtered);
@@ -202,6 +210,20 @@ float PhaserAudioProcessor::lfo (float phase, int waveform)
     }
 
     return out;
+}
+
+void PhaserAudioProcessor::updateNumFilters() {
+    numFiltersPerChannel = (*paramNumFilters + 1) * 2;
+
+    filters.clear();
+    for (int i = 0; i < getTotalNumInputChannels() * numFiltersPerChannel; ++i) {
+        Filter* filter;
+        filters.add (filter = new Filter());
+    } //todo update filters on parameter change
+
+    filteredOutputs.clear();
+    for (int i = 0; i < getTotalNumInputChannels(); ++i)
+        filteredOutputs.add (0.0f);
 }
 
 //==============================================================================

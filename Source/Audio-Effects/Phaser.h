@@ -94,6 +94,8 @@ public:
     unsigned int sampleCountToUpdateFilters;
     unsigned int updateFiltersInterval;
 
+    void updateNumFilters();
+
     float lfoPhase;
     float inverseSampleRate;
     float twoPi;
