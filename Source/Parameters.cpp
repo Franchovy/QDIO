@@ -325,12 +325,6 @@ void Parameter::connect(Parameter *otherParameter) {
 
     //todo canConnect() checks types for ports
     AudioProcessorParameter* param = nullptr;
-    if (outputConnetion) {
-        jassert(referencedParameter != nullptr);
-        param = referencedParameter;
-    } else {
-        param = otherParameter->getParameter();
-    }
 
     param = otherParameter->getParameter();
 
@@ -556,7 +550,7 @@ void Parameter::setIsOutput(bool isOutput) {
 }
 
 bool Parameter::isOutput() const {
-    return isOutputParameter || referencedParameter == nullptr;
+    return isOutputParameter;
 }
 
 
