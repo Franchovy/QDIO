@@ -211,22 +211,3 @@ float PhaserAudioProcessor::lfo (float phase, int waveform)
 
     return out;
 }
-
-void PhaserAudioProcessor::updateNumFilters() {
-    numFiltersPerChannel = (*paramNumFilters + 1) * 2;
-
-    filters.clear();
-    for (int i = 0; i < getTotalNumInputChannels() * numFiltersPerChannel; ++i) {
-        Filter* filter;
-        filters.add (filter = new Filter());
-    } //todo update filters on parameter change
-
-    filteredOutputs.clear();
-    for (int i = 0; i < getTotalNumInputChannels(); ++i)
-        filteredOutputs.add (0.0f);
-}
-
-//==============================================================================
-
-
-
