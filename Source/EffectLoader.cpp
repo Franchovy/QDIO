@@ -192,17 +192,34 @@ void EffectLoader::writeToFile(ValueTree data) {
 }
 
 ValueTree EffectLoader::loadFromFile() {
-    FileChooser fileChooser("Load file");
-    auto result = fileChooser.browseForFileToOpen();
+    FileChooser fileChooser("Load file, files or effect folder");
+    auto confirmed = fileChooser.browseForMultipleFilesOrDirectories();
 
-    if (result == 0) {
+    if (confirmed == 0) {
         return ValueTree();
     } else {
-        File inputFile(fileChooser.getResult());
+        ValueTree loadData("data");
 
-        FileInputStream in(inputFile);
-        ValueTree loadData;
-        loadData = ValueTree::readFromStream(in);
+        for (auto result : fileChooser.getResults()) {
+            if (result.isDirectory()) {
+                for (auto file : result.findChildFiles(File::findFiles, true)) {
+                    File inputFile(fileChooser.getResult());
+
+                    FileInputStream in(inputFile);
+                    ValueTree effectData;
+                    effectData = ValueTree::readFromStream(in);
+                    loadData.appendChild(effectData, nullptr);
+                }
+            } else {
+                File inputFile(result);
+
+                FileInputStream in(inputFile);
+                ValueTree effectData;
+                effectData = ValueTree::readFromStream(in);
+                loadData.appendChild(effectData, nullptr);
+            }
+        }
+
         return loadData;
     }
 }

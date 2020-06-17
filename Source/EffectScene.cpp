@@ -605,17 +605,30 @@ bool EffectScene::keyPressed(const KeyPress &key)
         if (key.getKeyCode() == 'o' || key.getKeyCode() == 'O') {
             auto loadData = EffectLoader::loadFromFile();
             std::cout << "load data type: " << loadData.getType().toString() << newLine;
-            jassert(loadData.hasProperty("name"));
-            if (loadData.getType() == Identifier(EFFECTSCENE_ID)) {
-                // Import template
-                EffectLoader::saveTemplate(loadData);
-                String templateName = loadData.getProperty("name");
-                loadNewTemplate(templateName);
-            } else if (loadData.getType() == Identifier(EFFECT_ID)) {
-                // Import effect
-                EffectLoader::saveEffect(loadData);
-                String effectName = loadData.getProperty("name");
-                tree.loadEffect(loadData);
+
+            auto numChildren = loadData.getNumChildren();
+            if (loadData.getType() == Identifier("data")) {
+                for (int i = 0; i < numChildren; i++) {
+                    auto child = loadData.getChild(0);
+                    loadData.removeChild(child, nullptr);
+
+                    // Basic check for file validity
+                    if (! child.hasProperty("name")) {
+                        continue;
+                    }
+
+                    if (child.getType() == Identifier(EFFECTSCENE_ID)) {
+                        // Import template
+                        EffectLoader::saveTemplate(child);
+                        String templateName = child.getProperty("name");
+                        loadNewTemplate(templateName);
+                    } else if (child.getType() == Identifier(EFFECT_ID)) {
+                        // Import effect
+                        EffectLoader::saveEffect(child);
+                        tree.loadEffect(child);
+
+                    }
+                }
             }
         }
         // reset initial use command
