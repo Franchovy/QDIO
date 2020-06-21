@@ -109,6 +109,7 @@ public:
     void mouseDoubleClick(const MouseEvent &event) override;
 
     void setEditMode(bool isEditable);
+    void setParentEditMode(bool parentIsInEditMode);
     bool isInEditMode() const;
 
     void moved() override;
@@ -161,6 +162,7 @@ private:
     ParameterPort internalPort;
     ParameterPort externalPort;
 
+    bool parentIsInEditMode = false;
     bool editMode = false;
     Parameter* connectedParameter = nullptr;
     bool isConnectedTo = false;

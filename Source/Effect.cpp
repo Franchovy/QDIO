@@ -528,7 +528,7 @@ void Effect::setEditMode(bool isEditMode) {
 
         for (auto c : getChildren()) {
             if (auto p = dynamic_cast<Parameter*>(c)) {
-                p->setEditMode(true);
+                p->setParentEditMode(true);
             }
         }
 
@@ -572,7 +572,7 @@ void Effect::setEditMode(bool isEditMode) {
 
         for (auto c : getChildren()) {
             if (auto p = dynamic_cast<Parameter*>(c)) {
-                p->setEditMode(false);
+                p->setParentEditMode(false);
                 p->setInterceptsMouseClicks(false, true);
             }
         }

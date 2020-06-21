@@ -15,6 +15,7 @@ const Identifier Parameter::IDs::parameterObject = "parameterObject";
 
 Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
     : editMode(editMode)
+    , parentIsInEditMode(editMode)
     , internalPort(true)
     , externalPort(false)
 {
@@ -213,21 +214,30 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
 }
 
 void Parameter::setEditMode(bool isEditable) {
-    // change between editable and non-editable version
-    externalPort.setVisible(isEditable);
-    setHoverable(isEditable);
-    parameterLabel.setEditable(isEditable, isEditable);
-    parameterLabel.setColour(Label::textColourId,
-                             (isEditable ? Colours::whitesmoke : Colours::black));
     editMode = isEditable;
-    setInterceptsMouseClicks(editMode, true);
 
-    if (editMode) {
+    // change between editable and non-editable version
+    externalPort.setVisible(parentIsInEditMode);
+    parameterLabel.setEditable(parentIsInEditMode, parentIsInEditMode);
+    parameterLabel.setColour(Label::textColourId,
+                             (parentIsInEditMode ? Colours::whitesmoke : Colours::black));
+
+    if (type == slider) {
+        auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+        slider->setSliderStyle(editMode
+             ? Slider::SliderStyle::ThreeValueHorizontal : Slider::SliderStyle::LinearHorizontal);
+
+    }
+
+    setHoverable(true);
+    setInterceptsMouseClicks(true, true);
+
+    if (parentIsInEditMode) {
         positionParameterComponent();
     } else {
         parameterLabel.setTopLeftPosition(5,5);
         parameterComponent->setTopLeftPosition(5, 5);
-        setSize(parameterComponent->getWidth() + 5, 40);
+        setSize(getWidth(), 40);
     }
 
     repaint();
@@ -289,16 +299,26 @@ void Parameter::paint(Graphics &g) {
         g.strokePath(p, strokeType);
     }
 
-    g.setColour(Colours::blue);
-    if (selectMode) {
-        g.drawRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f, 3);
-    } else if (hoverMode) {
-        Path p;
-        p.addRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f);
-        PathStrokeType strokeType(3);
-        float thiccness[] = {5, 5};
-        strokeType.createDashedStroke(p, p, thiccness, 2);
-        g.strokePath(p, strokeType);
+    if (editMode) {
+        g.setColour(Colours::blue);
+        if (selectMode) {
+            g.drawRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f, 3);
+        } else if (hoverMode) {
+            Path p;
+            p.addRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f);
+            PathStrokeType strokeType(3);
+            float thiccness[] = {5, 5};
+            strokeType.createDashedStroke(p, p, thiccness, 2);
+            g.strokePath(p, strokeType);
+        }
+    } else {
+        g.setColour(Colours::blue);
+        if (selectMode) {
+            g.drawRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f, 3);
+        } else if (hoverMode) {
+            g.setColour(Colours::lightgrey);
+            g.drawRoundedRectangle(outline.toFloat(), 3, 2);
+        }
     }
 
     /*if (editMode) {
@@ -529,7 +549,8 @@ void Parameter::setName(const String& name) {
 }
 
 void Parameter::mouseDoubleClick(const MouseEvent &event) {
-    //editMode = ! editMode;
+    setEditMode(! editMode);
+    removeSelectObject(this);
 
     Component::mouseDoubleClick(event);
 }
@@ -551,6 +572,11 @@ void Parameter::setIsOutput(bool isOutput) {
 
 bool Parameter::isOutput() const {
     return isOutputParameter;
+}
+
+void Parameter::setParentEditMode(bool parentIsInEditMode) {
+    this->parentIsInEditMode = parentIsInEditMode;
+    setEditMode(parentIsInEditMode);
 }
 
 
