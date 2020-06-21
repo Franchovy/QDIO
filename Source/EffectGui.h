@@ -56,6 +56,7 @@ public:
 
     static void close();
 
+    void setDraggable(bool isDraggable);
     void mouseDrag(const MouseEvent &event) override;
 
     /// "Recurse to check inside"
@@ -72,6 +73,7 @@ protected:
 
     bool hoverMode = false;
     bool selectMode = false;
+    bool isDraggable = true;
 
     bool hoverable = true;
 

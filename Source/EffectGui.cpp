@@ -107,19 +107,20 @@ void SelectHoverObject::mouseDown(const MouseEvent &event) {
 }
 
 void SelectHoverObject::mouseDrag(const MouseEvent &event) {
-    if (auto obj = dynamic_cast<SelectHoverObject*>(event.eventComponent)) {
-        auto parent = dynamic_cast<SelectHoverObject*>(obj->getParentComponent());
-        jassert(parent != nullptr);
-        if (parent != nullptr) {
-            auto newDragIntoComponent = findDragHovered(parent, event.mods.isRightButtonDown());
-            if (dragIntoComponent == newDragIntoComponent) {
-                dragIntoComponent = nullptr;
-            } else {
-                dragIntoComponent = newDragIntoComponent;
+    if (isDraggable) {
+        if (auto obj = dynamic_cast<SelectHoverObject *>(event.eventComponent)) {
+            auto parent = dynamic_cast<SelectHoverObject *>(obj->getParentComponent());
+            jassert(parent != nullptr);
+            if (parent != nullptr) {
+                auto newDragIntoComponent = findDragHovered(parent, event.mods.isRightButtonDown());
+                if (dragIntoComponent == newDragIntoComponent) {
+                    dragIntoComponent = nullptr;
+                } else {
+                    dragIntoComponent = newDragIntoComponent;
+                }
             }
         }
     }
-
     Component::mouseDrag(event);
 }
 
@@ -214,6 +215,10 @@ SelectHoverObject* SelectHoverObject::findDragHovered(SelectHoverObject* objectT
 
         return parent;
     }
+}
+
+void SelectHoverObject::setDraggable(bool isDraggable) {
+    this->isDraggable = isDraggable;
 }
 
 void ComponentSelection::itemSelected(SelectHoverObject::Ptr object){

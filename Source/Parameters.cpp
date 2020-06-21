@@ -231,6 +231,7 @@ void Parameter::setEditMode(bool isEditable) {
 
     setHoverable(true);
     setInterceptsMouseClicks(true, true);
+    setDraggable(parentIsInEditMode);
 
     if (parentIsInEditMode) {
         positionParameterComponent();
