@@ -248,7 +248,7 @@ void Parameter::mouseDown(const MouseEvent &event) {
     if (event.originalComponent == &externalPort) {
         getParentComponent()->mouseDown(event);
     }
-    else if (editMode)
+    else if (parentIsInEditMode)
     {
         startDragHoverDetect();
         SelectHoverObject::mouseDown(event);
@@ -260,7 +260,7 @@ void Parameter::mouseDrag(const MouseEvent &event) {
     if (event.originalComponent == &externalPort) {
         getParentComponent()->mouseDrag(event);
     }
-    else if (editMode)
+    else if (parentIsInEditMode)
     {
         dragger.dragComponent(this, event, nullptr);
     }
@@ -271,7 +271,7 @@ void Parameter::mouseUp(const MouseEvent &event) {
     if (event.originalComponent == &externalPort) {
         getParentComponent()->mouseUp(event);
     }
-    else if (editMode) {
+    else if (parentIsInEditMode) {
         endDragHoverDetect();
         SelectHoverObject::mouseUp(event);
     }
