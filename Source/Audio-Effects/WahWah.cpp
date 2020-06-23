@@ -51,7 +51,8 @@ WahWahAudioProcessor::WahWahAudioProcessor():
     setLayout(1,1);
     addParameter(paramMode);
     addParameter(paramMix);
-    addParameter(paramFrequency);
+    //addParameter(paramFrequency);
+    addOutputParameter(paramFrequency);
     addParameter(paramQfactor);
     addParameter(paramGain);
     addParameter(paramFilterType);
@@ -60,10 +61,13 @@ WahWahAudioProcessor::WahWahAudioProcessor():
     addParameter(paramEnvelopeAttack);
     addParameter(paramEnvelopeRelease);
 
+
+
     //parameters.valueTreeState.state = ValueTree (Identifier (getName().removeCharacters ("- ")));
 
-    addRefreshParameterFunction([=]{ updateFilters(); });
-    setRefreshRate(10);
+    //addRefreshParameterFunction([=]{ updateFilters(); });
+    addRefreshParameterFunction([=] { paramFrequency->setValueNotifyingHost(centreFrequency); });
+    setRefreshRate(60);
 }
 
 WahWahAudioProcessor::~WahWahAudioProcessor()
@@ -152,7 +156,7 @@ void WahWahAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
                 if (phase >= 1.0f)
                     phase -= 1.0f;
 
-                *paramFrequency = centreFrequency;
+                freqValue = centreFrequency;
                 updateFilters();
             }
 
@@ -172,7 +176,7 @@ void WahWahAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& 
 
 void WahWahAudioProcessor::updateFilters()
 {
-    double discreteFrequency = 2.0 * M_PI * (double) *paramFrequency / getSampleRate();
+    double discreteFrequency = 2.0 * M_PI * (double) freqValue / getSampleRate();
     double qFactor = (double) *paramQfactor;
     double gain = pow (10.0, (double) *paramGain * 0.05);
     int type = (int) *paramFilterType;

@@ -151,6 +151,7 @@ public:
     AudioParameterFloat* paramEnvelopeRelease;
 
 private:
+    std::atomic<float> freqValue;
     //==============================================================================
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WahWahAudioProcessor)
