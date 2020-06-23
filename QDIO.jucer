@@ -40,6 +40,12 @@
       <FILE id="gJXvJx" name="STFT.h" compile="0" resource="0" file="Source/Audio-Effects/STFT.h"/>
       <FILE id="hlBpYV" name="Chorus.cpp" compile="1" resource="0" file="Source/Audio-Effects/Chorus.cpp"/>
       <FILE id="lux4uJ" name="Chorus.h" compile="1" resource="0" file="Source/Audio-Effects/Chorus.h"/>
+      <FILE id="y2JXQx" name="Tremolo.cpp" compile="1" resource="0" file="Source/Audio-Effects/Tremolo.cpp"/>
+      <FILE id="bRyk7p" name="Tremolo.h" compile="0" resource="0" file="Source/Audio-Effects/Tremolo.h"/>
+      <FILE id="hCwavb" name="Vibrato.cpp" compile="1" resource="0" file="Source/Audio-Effects/Vibrato.cpp"/>
+      <FILE id="hQyr7B" name="Vibrato.h" compile="0" resource="0" file="Source/Audio-Effects/Vibrato.h"/>
+      <FILE id="DTPPdH" name="WahWah.cpp" compile="1" resource="0" file="Source/Audio-Effects/WahWah.cpp"/>
+      <FILE id="qcFuA2" name="WahWah.h" compile="0" resource="0" file="Source/Audio-Effects/WahWah.h"/>
       <FILE id="caF8vX" name="Level.cpp" compile="1" resource="0" file="Source/Level.cpp"/>
       <FILE id="piFpaa" name="Level.h" compile="0" resource="0" file="Source/Level.h"/>
     </GROUP>
