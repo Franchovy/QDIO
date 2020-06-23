@@ -23,6 +23,9 @@
 #include "Audio-Effects/RingModulation.h"
 #include "Audio-Effects/RobotizationWhisperization.h"
 #include "Level.h"
+#include "Audio-Effects/Tremolo.h"
+#include "Audio-Effects/WahWah.h"
+#include "Audio-Effects/Vibrato.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1072,6 +1075,9 @@ void EffectTree::setupProcessors() {
          //, "PitchShift"
          , "Robotization"
          , "Level Detector"
+         , "Tremolo"
+         , "Wahwah"
+         , "Vibrato"
     };
 
     makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
@@ -1091,6 +1097,9 @@ void EffectTree::setupProcessors() {
     //makeProcessorArray.add([=] { newProcessor = std::make_unique<PitchShiftAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<RobotizationWhisperizationAudioProcessor>(); });
     makeProcessorArray.add( [=] { newProcessor = std::make_unique<LevelAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<TremoloAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<WahWahAudioProcessor>(); });
+    makeProcessorArray.add([=] {newProcessor = std::make_unique<VibratoAudioProcessor>(); });
 }
 
 
