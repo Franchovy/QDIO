@@ -31,7 +31,7 @@ public:
 
     void setLayout(int numInputChannels, int numOutputChannels) {
         if (numInputChannels == 1 && numOutputChannels == 2) {
-
+            multiplyChannels = true;
         }
     }
 

@@ -233,6 +233,11 @@ void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
         getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
         getAppProperties().getUserSettings()->save();
 
+
+        int numInputChannels = deviceManager.getCurrentAudioDevice()->getActiveInputChannels().countNumberOfSetBits();
+        int numOutputChannels = deviceManager.getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
+
+        audioGraph.setLayout(numInputChannels, numOutputChannels);
     }
 }
 
