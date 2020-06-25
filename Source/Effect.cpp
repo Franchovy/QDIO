@@ -950,6 +950,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
         auto dragIntoObject = getDragIntoObject();
 
         if (event.mods.isLeftButtonDown()) {
+            resetHoverObject();
+
             if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
                 std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
                 if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
