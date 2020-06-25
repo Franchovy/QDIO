@@ -165,17 +165,19 @@ EffectScene::EffectScene()
         getAppProperties().getUserSettings()->save();
     }
 
-    Thread::sleep(10000);
+    Thread::sleep(1000);
 
     startTimer(500);
 }
 
 void EffectScene::timerCallback() {
     stopTimer();
+    appState = loading;
+
     // Load
     if (loadInitialCase) {
         // Load initial template
-        auto initialTemplate = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
+        /*auto initialTemplate = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
 
         jassert(initialTemplate.getType() == Identifier(EFFECTSCENE_ID));
         EffectLoader::saveTemplate(initialTemplate);
@@ -191,9 +193,9 @@ void EffectScene::timerCallback() {
         auto data = ValueTree::readFromData(BinaryData::Basic_Setup, BinaryData::Basic_SetupSize);
         EffectLoader::saveTemplate(data);
 
-        /*data = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
+        *//*data = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
         EffectLoader::saveTemplate(data);
-*/
+*//*
         data = ValueTree::readFromData(BinaryData::Guitar_Input, BinaryData::Guitar_InputSize);
         EffectLoader::saveEffect(data);
 
@@ -204,13 +206,13 @@ void EffectScene::timerCallback() {
         EffectLoader::saveEffect(data);
 
         data = ValueTree::readFromData(BinaryData::Double_Echo, BinaryData::Double_EchoSize);
-        EffectLoader::saveEffect(data);
+        EffectLoader::saveEffect(data);*/
 
         // Refresh effect and template menus
         postCommandMessage(0);
     } else if (! dontLoad) {
         // Load template
-        appState = loading;
+
 
         // Load previously loaded template
         String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
@@ -218,22 +220,26 @@ void EffectScene::timerCallback() {
         tree.loadTemplate(name);
 
         undoManager.clearUndoHistory();
-        appState = neutral;
+
     }
 
     changeListenerCallback(&deviceManager);
+
+    appState = neutral;
 }
 
 
 void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
     if (source == &deviceManager) {
         // DeviceManager change
-        std::cout << "Device manager change state: " << newLine;
-        auto deviceData = deviceManager.createStateXml();
-        std::cout << deviceData->toString() << newLine;
-        getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
-        getAppProperties().getUserSettings()->save();
+        if (appState != loading) {
+            std::cout << "Device manager change state: " << newLine;
+            auto deviceData = deviceManager.createStateXml();
+            std::cout << deviceData->toString() << newLine;
+            getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
+            getAppProperties().getUserSettings()->save();
 
+        }
 
         int numInputChannels = deviceManager.getCurrentAudioDevice()->getActiveInputChannels().countNumberOfSetBits();
         int numOutputChannels = deviceManager.getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();

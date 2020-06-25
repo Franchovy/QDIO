@@ -36,11 +36,11 @@ public:
     }
 
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiBuffer) override {
-        AudioProcessorGraph::processBlock(buffer, midiBuffer);
-
         if (multiplyChannels) {
             buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
         }
+
+        AudioProcessorGraph::processBlock(buffer, midiBuffer);
     }
 private:
     bool multiplyChannels = false;
