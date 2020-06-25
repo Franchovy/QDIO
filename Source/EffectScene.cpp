@@ -132,10 +132,10 @@ EffectScene::EffectScene()
     }
 
     deviceManager.addAudioCallback(&processorPlayer);
-    //deviceManager.addAudioCallback(this);
 
     deviceManager.addChangeListener(this);
     processorPlayer.setProcessor(&audioGraph);
+
 
     setMouseClickGrabsKeyboardFocus(true);
 
@@ -781,19 +781,6 @@ int EffectScene::callSaveEffectDialog(String &name) {
 
 StringArray EffectScene::getProcessorNames() {
     return tree.getProcessorNames();
-}
-
-void EffectScene::audioDeviceIOCallback(const float **inputChannelData, int numInputChannels, float **outputChannelData,
-                                        int numOutputChannels, int numSamples) {
-
-}
-
-void EffectScene::audioDeviceAboutToStart(AudioIODevice *device) {
-
-}
-
-void EffectScene::audioDeviceStopped() {
-
 }
 
 

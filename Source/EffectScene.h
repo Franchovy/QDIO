@@ -23,7 +23,7 @@
 /**
  *
  */
-class EffectScene : public EffectTreeBase, public MenuItem, public Timer, public ChangeListener, public AudioIODeviceCallback
+class EffectScene : public EffectTreeBase, public MenuItem, public Timer, public ChangeListener
 {
 public:
 
