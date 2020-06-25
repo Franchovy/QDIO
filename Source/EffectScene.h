@@ -78,13 +78,6 @@ public:
     bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
-    void audioDeviceIOCallback(const float **inputChannelData, int numInputChannels, float **outputChannelData,
-                               int numOutputChannels, int numSamples) override;
-
-    void audioDeviceAboutToStart(AudioIODevice *device) override;
-
-    void audioDeviceStopped() override;
-
 private:
     //todo replace usage of this instance with EffectTreeBase::effectScene
     static EffectScene* instance;
