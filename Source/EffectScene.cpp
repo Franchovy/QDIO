@@ -132,7 +132,6 @@ EffectScene::EffectScene()
     }
 
     deviceManager.addAudioCallback(&processorPlayer);
-
     deviceManager.addChangeListener(this);
     processorPlayer.setProcessor(&audioGraph);
 
@@ -221,6 +220,8 @@ void EffectScene::timerCallback() {
         undoManager.clearUndoHistory();
         appState = neutral;
     }
+
+    changeListenerCallback(&deviceManager);
 }
 
 
