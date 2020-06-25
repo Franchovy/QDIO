@@ -20,6 +20,32 @@
 #include "MenuItem.h"
 #include "IOEffects.h"
 
+
+class QdioGraph : public AudioProcessorGraph
+{
+public:
+    QdioGraph() : AudioProcessorGraph()
+    {
+
+    }
+
+    void setLayout(int numInputChannels, int numOutputChannels) {
+        if (numInputChannels == 1 && numOutputChannels == 2) {
+
+        }
+    }
+
+    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiBuffer) override {
+        AudioProcessorGraph::processBlock(buffer, midiBuffer);
+
+        if (multiplyChannels) {
+            buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
+        }
+    }
+private:
+    bool multiplyChannels = false;
+};
+
 /**
  *
  */
@@ -90,7 +116,7 @@ private:
 
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
-    AudioProcessorGraph audioGraph;
+    QdioGraph audioGraph;
 
     //==============================================================================
     // Audio shit

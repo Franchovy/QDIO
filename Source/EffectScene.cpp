@@ -232,6 +232,7 @@ void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
         std::cout << deviceData->toString() << newLine;
         getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
         getAppProperties().getUserSettings()->save();
+
     }
 }
 
