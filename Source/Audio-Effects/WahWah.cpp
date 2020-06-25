@@ -46,7 +46,7 @@ WahWahAudioProcessor::WahWahAudioProcessor():
     , paramEnvelopeRelease (new AudioParameterFloat("Env. Release", "envrelease", NormalisableRange<float>(10.0f, 1000.f, 1.0f), 300.f, "ms"))
                         //[](float value){ return value * 0.001f; })
 {
-    centreFrequency = *paramFrequency;
+    freqValue = centreFrequency = *paramFrequency;
 
     setLayout(1,1);
     addParameter(paramMode);
@@ -66,7 +66,8 @@ WahWahAudioProcessor::WahWahAudioProcessor():
     //parameters.valueTreeState.state = ValueTree (Identifier (getName().removeCharacters ("- ")));
 
     //addRefreshParameterFunction([=]{ updateFilters(); });
-    addRefreshParameterFunction([=] { paramFrequency->setValueNotifyingHost(centreFrequency); });
+    addRefreshParameterFunction([=] { paramFrequency->setValueNotifyingHost(
+            paramFrequency->getNormalisableRange().convertTo0to1(freqValue)); });
     setRefreshRate(60);
 }
 
