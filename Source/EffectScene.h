@@ -36,14 +36,28 @@ public:
     }
 
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiBuffer) override {
+        if (multiplyStart && multiplyChannels && (buffer.getNumChannels() > 1)) {
+            buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
+        }
+
         AudioProcessorGraph::processBlock(buffer, midiBuffer);
 
-        if (multiplyChannels && (buffer.getNumChannels() > 1)) {
+        if (! multiplyStart && multiplyChannels && (buffer.getNumChannels() > 1)) {
             buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
         }
     }
+
+    void toggleStereoTransform() {
+        setStereoTransform(!multiplyStart);
+    }
+
+    void setStereoTransform(bool atStart) {
+        multiplyStart = atStart;
+    }
+
 private:
     bool multiplyChannels = false;
+    bool multiplyStart = false;
 };
 
 /**

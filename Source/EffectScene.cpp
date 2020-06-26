@@ -444,17 +444,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
 {
 #define DEBUG_UTILITIES
 #ifdef DEBUG_UTILITIES
-    if (key.getKeyCode() == 's') {
-        std::cout << "Audiograph Nodes: " << newLine;
-        for (auto node : audioGraph.getNodes()) {
-            std::cout << "node: " << node->nodeID.uid << newLine;
-            std::cout << node->getProcessor()->getName() << newLine;
-        }
-        std::cout << "Connections: " << newLine;
-        for (auto connection : audioGraph.getConnections()) {
-            std::cout << "Connection: " << connection.source.nodeID.uid << " to " << connection.destination.nodeID.uid << newLine;
-        }
-    }
+
     if (key.getKeyCode() == 'p') {
         std::cout << "Main Position: " << getMouseXYRelative().toString() << newLine;
         std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
@@ -551,6 +541,10 @@ bool EffectScene::keyPressed(const KeyPress &key)
     if (key.getKeyCode() == KeyPress::escapeKey)
     {
         deselectAll();
+    }
+
+    if (key.getKeyCode() == 's') {
+        audioGraph.toggleStereoTransform();
     }
 
     // CTRL
