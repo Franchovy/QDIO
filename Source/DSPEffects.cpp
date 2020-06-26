@@ -96,10 +96,12 @@ void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMess
     if (! bypass->get()) {
         if (! *stereo) {
             reverbProcessor.processMono(buffer.getWritePointer(0), buffer.getNumSamples());
-        } else {
+        }
+        // too dangerous...
+        /*else {
             reverbProcessor.processStereo(buffer.getWritePointer(0),
                     buffer.getWritePointer(1), buffer.getNumSamples());
-        }
+        }*/
     }
     /*for (int c = 0; c < buffer.getNumChannels(); c++) {
         reverbProcessor.processMono(buffer.getWritePointer(c), buffer.getNumSamples());
