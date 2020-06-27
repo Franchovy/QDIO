@@ -149,6 +149,9 @@ public:
 private:
     bool isOutputParameter = false;
 
+    NormalisableRange<double> fullRange;
+    Range<double> limitedRange;
+
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
     AudioProcessorParameter* referencedParameter;

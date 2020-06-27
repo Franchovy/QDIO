@@ -155,15 +155,16 @@ void Parameter::createParameterComponent() {
         parameterComponent = std::make_unique<SliderParameter>();
         auto slider = dynamic_cast<SliderParameter *>(parameterComponent.get());
 
-        auto paramRange = NormalisableRange<double>(0, 1);
+        fullRange = NormalisableRange<double>(0, 1);
         if (referencedParameter != nullptr) {
             auto range = dynamic_cast<RangedAudioParameter *>(referencedParameter)->getNormalisableRange();
-            paramRange = NormalisableRange<double>(range.start, range.end, range.interval, range.skew);
+            fullRange = NormalisableRange<double>(range.start, range.end, range.interval, range.skew);
             slider->setTextValueSuffix(referencedParameter->getLabel());
         }
+        limitedRange.setStart(fullRange.start);
+        limitedRange.setEnd(fullRange.end);
 
-        slider->setNormalisableRange(paramRange);
-
+        slider->setNormalisableRange(fullRange);
 
         if (referencedParameter != nullptr) {
             sliderListener = new SliderListener(this);
@@ -226,9 +227,19 @@ void Parameter::setEditMode(bool isEditable) {
 
     if (type == slider) {
         auto slider = dynamic_cast<Slider*>(parameterComponent.get());
-        slider->setSliderStyle(editMode
-             ? Slider::SliderStyle::ThreeValueHorizontal : Slider::SliderStyle::LinearHorizontal);
+        if (editMode) {
+            slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
+            slider->setNormalisableRange(fullRange);
+            slider->setMinAndMaxValues(limitedRange.getStart(), limitedRange.getEnd());
+        } else {
+            if (slider->getSliderStyle() == Slider::ThreeValueHorizontal) {
+                limitedRange.setStart(slider->getMinValue());
+                limitedRange.setEnd(slider->getMaxValue());
+            }
 
+            slider->setSliderStyle(Slider::SliderStyle::LinearHorizontal);
+            slider->setRange(limitedRange, fullRange.interval);
+        }
     }
 
     setHoverable(true);
@@ -239,7 +250,7 @@ void Parameter::setEditMode(bool isEditable) {
         positionParameterComponent();
     } else {
         parameterLabel.setTopLeftPosition(5,5);
-        parameterComponent->setTopLeftPosition(5, 5);
+        parameterComponent->setTopLeftPosition(5, 0);
         setSize(getWidth(), 40);
     }
 
