@@ -147,7 +147,7 @@ void Parameter::createParameterComponent() {
             auto comboParam = dynamic_cast<AudioParameterChoice*>(referencedParameter);
             jassert(comboParam != nullptr);
 
-            combo->setSelectedItemIndex(comboParam->getIndex(), sendNotificationSync);
+            combo->setSelectedItemIndex(*comboParam, sendNotificationSync);
         } else {
             combo->setSelectedItemIndex(0, sendNotificationSync);
         }
@@ -157,11 +157,13 @@ void Parameter::createParameterComponent() {
 
         auto paramRange = NormalisableRange<double>(0, 1);
         if (referencedParameter != nullptr) {
-            auto paramRange = dynamic_cast<RangedAudioParameter *>(referencedParameter)->getNormalisableRange();
+            auto range = dynamic_cast<RangedAudioParameter *>(referencedParameter)->getNormalisableRange();
+            paramRange = NormalisableRange<double>(range.start, range.end, range.interval, range.skew);
+            slider->setTextValueSuffix(referencedParameter->getLabel());
         }
 
-        slider->setNormalisableRange(NormalisableRange<double>(paramRange.start, paramRange.end,
-                                                               paramRange.interval, paramRange.skew));
+        slider->setNormalisableRange(paramRange);
+
 
         if (referencedParameter != nullptr) {
             sliderListener = new SliderListener(this);
