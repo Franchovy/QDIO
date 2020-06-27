@@ -161,8 +161,8 @@ void Parameter::createParameterComponent() {
             fullRange = NormalisableRange<double>(range.start, range.end, range.interval, range.skew);
             slider->setTextValueSuffix(referencedParameter->getLabel());
         }
-        limitedRange.setStart(fullRange.start);
-        limitedRange.setEnd(fullRange.end);
+        limitedRange.start = fullRange.start;
+        limitedRange.end = fullRange.end;
 
         slider->setNormalisableRange(fullRange);
 
@@ -232,17 +232,17 @@ void Parameter::setEditMode(bool isEditable) {
         if (editMode) {
             slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
             slider->setNormalisableRange(fullRange);
-            slider->setMinAndMaxValues(limitedRange.getStart(), limitedRange.getEnd());
-            slider->setValue(limitedRange.clipValue(value));
+            slider->setMinAndMaxValues(limitedRange.start, limitedRange.end);
+            slider->setValue(limitedRange.snapToLegalValue(value));
         } else {
             if (slider->getSliderStyle() == Slider::ThreeValueHorizontal) {
-                limitedRange.setStart(slider->getMinValue());
-                limitedRange.setEnd(slider->getMaxValue());
+                limitedRange.start = slider->getMinValue();
+                limitedRange.end = slider->getMaxValue();
             }
 
             slider->setSliderStyle(Slider::SliderStyle::LinearHorizontal);
-            slider->setRange(limitedRange, fullRange.interval);
-            slider->setValue(limitedRange.clipValue(value));
+            slider->setNormalisableRange(limitedRange);
+            slider->setValue(limitedRange.snapToLegalValue(value));
         }
     }
 
@@ -356,7 +356,7 @@ void Parameter::paint(Graphics &g) {
  * @param otherParameter belongs to a lower-down effect.
  */
 void Parameter::connect(Parameter *otherParameter) {
-    bool outputConnetion = otherParameter->isOutput();
+    bool outputConnection = otherParameter->isOutput();
 
     connectedParameter = otherParameter;
     otherParameter->isConnectedTo = true;
@@ -376,15 +376,18 @@ void Parameter::connect(Parameter *otherParameter) {
 
             Slider* slider = nullptr;
 
-            if (outputConnetion) {
+            if (outputConnection) {
                 slider = dynamic_cast<SliderParameter *>(otherParameter->parameterComponent.get());
             } else {
                 slider = dynamic_cast<SliderParameter *>(parameterComponent.get());
+
+                // Adopted range of connected param
+                fullRange = connectedParameter->limitedRange;
             }
 
             slider->addListener(sliderListener);
-
-            if (! outputConnetion) {
+            
+            if (! outputConnection) { //todo check this
                 if (valueStored) {
                     slider->setValue(value, dontSendNotification);
                 } else {
@@ -465,6 +468,22 @@ void Parameter::disconnect(bool toThis) {
 
 void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarting) {
 
+}
+
+void Parameter::setValueDirect(float newVal, bool notifyHost) {
+    if (connectedParameter != nullptr) {
+        connectedParameter->setValueDirect(newVal, notifyHost);
+    } else {
+        setValue(limitedRange.snapToLegalValue(newVal), notifyHost);
+    }
+}
+
+void Parameter::setValueNormalised(float newVal, bool notifyHost) {
+    if (connectedParameter != nullptr) {
+        connectedParameter->setValueNormalised(newVal, notifyHost);
+    } else {
+        setValue(limitedRange.convertFrom0to1(newVal), notifyHost);
+    }
 }
 
 void Parameter::setValue(float newVal, bool notifyHost) {
@@ -605,6 +624,8 @@ void Parameter::setParentEditMode(bool parentIsInEditMode) {
 }
 
 
+
+
 /*
 
 MetaParameter::MetaParameter(String name)
@@ -669,8 +690,13 @@ void ComboListener::comboBoxChanged(ComboBox *comboBoxThatHasChanged) {
 }
 
 void SliderListener::sliderValueChanged(Slider *slider) {
+    if (dynamic_cast<Parameter*>(slider->getParentComponent())->isOutput()) {
+        auto normalisedRange = NormalisableRange<double>(slider->getRange().getStart(), slider->getRange().getEnd());
+        linkedParameter->setValueNormalised(normalisedRange.convertTo0to1(slider->getValue()));
+    } else {
+        linkedParameter->setValueDirect(slider->getValue());
+    }
 
-    linkedParameter->setValue(slider->getValueObject().getValue());
 
     /*auto param = linkedParameter->getParameter();
     if (param != nullptr) {

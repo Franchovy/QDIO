@@ -99,6 +99,8 @@ public:
 
     void setName(const String& name) override;
 
+    void setValueDirect(float newVal, bool notifyHost = true);
+    void setValueNormalised(float newVal, bool notifyHost = true);
     void setValue(float newVal, bool notifyHost = true);
 
     void paint(Graphics& g) override;
@@ -150,7 +152,7 @@ private:
     bool isOutputParameter = false;
 
     NormalisableRange<double> fullRange;
-    Range<double> limitedRange;
+    NormalisableRange<double> limitedRange;
 
     Label parameterLabel;
     std::unique_ptr<Component> parameterComponent;
