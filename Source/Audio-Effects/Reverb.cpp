@@ -8,17 +8,11 @@
   ==============================================================================
 */
 
-#include "DSPEffects.h"
-
-DSPEffect::DSPEffect()
-    : BaseEffect()
-{
-    setLayout(1,1);
-}
+#include "Reverb.h"
 
 
 ReverbEffect::ReverbEffect()
-    : DSPEffect()
+    : BaseEffect()
     , roomSize(new AudioParameterFloat("Room Size", "roomsize",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.3f))
     , width(new AudioParameterFloat("Width", "width",
@@ -40,6 +34,8 @@ ReverbEffect::ReverbEffect()
     addParameter(wetLevel);
     addParameter(freezeMode);
     addParameter(stereo);
+
+    setLayout(1,1);
 
     addRefreshParameterFunction([=] {
         bool parametersChanged = false;

@@ -20,6 +20,7 @@
 #include "Audio-Effects/ParametricEQ.h"
 #include "Audio-Effects/Phaser.h"
 #include "Audio-Effects/PitchShift.h"
+#include "Audio-Effects/Reverb.h"
 #include "Audio-Effects/RingModulation.h"
 #include "Audio-Effects/RobotizationWhisperization.h"
 #include "Level.h"

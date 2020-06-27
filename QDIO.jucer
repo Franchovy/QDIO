@@ -46,6 +46,8 @@
       <FILE id="hQyr7B" name="Vibrato.h" compile="0" resource="0" file="Source/Audio-Effects/Vibrato.h"/>
       <FILE id="DTPPdH" name="WahWah.cpp" compile="1" resource="0" file="Source/Audio-Effects/WahWah.cpp"/>
       <FILE id="qcFuA2" name="WahWah.h" compile="0" resource="0" file="Source/Audio-Effects/WahWah.h"/>
+      <FILE id="j8Cebz" name="Reverb.cpp" compile="1" resource="0" file="Source/Audio-Effects/Reverb.cpp"/>
+      <FILE id="W9pquZ" name="Reverb.h" compile="0" resource="0" file="Source/Audio-Effects/Reverb.h"/>
       <FILE id="caF8vX" name="Level.cpp" compile="1" resource="0" file="Source/Level.cpp"/>
       <FILE id="piFpaa" name="Level.h" compile="0" resource="0" file="Source/Level.h"/>
     </GROUP>
@@ -87,8 +89,6 @@
             xcodeResource="1"/>
       <FILE id="QX8rPO" name="IOEffects.h" compile="1" resource="1" file="Source/IOEffects.h"
             xcodeResource="1"/>
-      <FILE id="GJ5h2L" name="DSPEffects.cpp" compile="1" resource="0" file="Source/DSPEffects.cpp"/>
-      <FILE id="bN3huF" name="DSPEffects.h" compile="0" resource="0" file="Source/DSPEffects.h"/>
       <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="1" file="Source/Main.cpp"
             xcodeResource="1"/>
       <FILE id="NBQqHO" name="Parameters.cpp" compile="1" resource="0" file="Source/Parameters.cpp"/>

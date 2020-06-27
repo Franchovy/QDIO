@@ -11,18 +11,9 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "BaseEffects.h"
+#include "../Source/BaseEffects.h"
 
-class DSPEffect : public BaseEffect
-{
-public:
-    DSPEffect();
-
-private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DSPEffect)
-};
-
-class ReverbEffect : public DSPEffect
+class ReverbEffect : public BaseEffect
 {
 public:
     ReverbEffect();
