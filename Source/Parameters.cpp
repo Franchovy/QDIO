@@ -494,7 +494,7 @@ void Parameter::setValue(float newVal, bool notifyHost) {
             if (type == combo) {
                 auto combo = dynamic_cast<AudioParameterChoice*>(referencedParameter);
                 //combo->setValueNotifyingHost((float) newVal);
-                *combo = newVal;
+                combo->setValueNotifyingHost(newVal);
                 std::cout << "New combo value: " << combo->getIndex() << newLine;
             }
         } else {
@@ -686,7 +686,9 @@ void ButtonListener::buttonClicked(Button *button) {
 }
 
 void ComboListener::comboBoxChanged(ComboBox *comboBoxThatHasChanged) {
-    linkedParameter->setValue(comboBoxThatHasChanged->getSelectedItemIndex());
+    if (linkedParameter->getParameter()->getCurrentValueAsText().compare(comboBoxThatHasChanged->getText()) != 0) {
+        linkedParameter->setValue(comboBoxThatHasChanged->getSelectedItemIndex());
+    }
 }
 
 void SliderListener::sliderValueChanged(Slider *slider) {
