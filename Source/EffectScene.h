@@ -21,45 +21,6 @@
 #include "IOEffects.h"
 
 
-class QdioGraph : public AudioProcessorGraph
-{
-public:
-    QdioGraph() : AudioProcessorGraph()
-    {
-
-    }
-
-    void setLayout(int numInputChannels, int numOutputChannels) {
-        if (numInputChannels == 1 && numOutputChannels == 2) {
-            multiplyChannels = true;
-        }
-    }
-
-    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiBuffer) override {
-        if (multiplyStart && multiplyChannels && (buffer.getNumChannels() > 1)) {
-            buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
-        }
-
-        AudioProcessorGraph::processBlock(buffer, midiBuffer);
-
-        if (! multiplyStart && multiplyChannels && (buffer.getNumChannels() > 1)) {
-            buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
-        }
-    }
-
-    void toggleStereoTransform() {
-        setStereoTransform(!multiplyStart);
-    }
-
-    void setStereoTransform(bool atStart) {
-        multiplyStart = atStart;
-    }
-
-private:
-    bool multiplyChannels = false;
-    bool multiplyStart = false;
-};
-
 /**
  *
  */
@@ -130,7 +91,7 @@ private:
 
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
-    QdioGraph audioGraph;
+    AudioProcessorGraph audioGraph;
 
     //==============================================================================
     // Audio shit

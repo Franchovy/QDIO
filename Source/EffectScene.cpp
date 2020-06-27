@@ -125,7 +125,7 @@ EffectScene::EffectScene()
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
 
     if (! dontLoadDevices) {
-        //std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
+        std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
 
         deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
@@ -240,11 +240,6 @@ void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
             getAppProperties().getUserSettings()->save();
 
         }
-
-        int numInputChannels = deviceManager.getCurrentAudioDevice()->getActiveInputChannels().countNumberOfSetBits();
-        int numOutputChannels = deviceManager.getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits();
-
-        audioGraph.setLayout(numInputChannels, numOutputChannels);
     }
 }
 
@@ -541,10 +536,6 @@ bool EffectScene::keyPressed(const KeyPress &key)
     if (key.getKeyCode() == KeyPress::escapeKey)
     {
         deselectAll();
-    }
-
-    if (key.getKeyCode() == 's') {
-        audioGraph.toggleStereoTransform();
     }
 
     // CTRL

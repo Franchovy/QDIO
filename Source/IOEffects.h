@@ -20,11 +20,54 @@ public:
         : AudioGraphIOProcessor(isInput ? AudioGraphIOProcessor::audioInputNode : AudioGraphIOProcessor::audioOutputNode)
         , deviceParam(new AudioParameterChoice(isInput ? "inputdevice" : "outputDevice", "Device"
             , SettingsComponent::getDevicesList(isInput), SettingsComponent::getCurrentDeviceIndex(isInput)))
+        , forceStereo(new AudioParameterBool("Force Stereo", "forcestereo", isInput))
     {
         this->isInput = isInput;
         addParameter(deviceParam);
+        addParameter(forceStereo);
+
+        if (isInput) {
+            setChannelLayoutOfBus(false, 0, AudioChannelSet::stereo());
+        }
+
 
         deviceParam->addListener(this);
+    }
+
+    void prepareToPlay(double newSampleRate, int estimatedSamplesPerBlock) override {
+
+        if (isInput && getMainBusNumOutputChannels() == 1) {
+            needsStereoForcing = true;
+
+            getBusesLayout().getMainOutputChannelSet().addChannel(AudioChannelSet::right);
+
+            stereoBuffer = AudioBuffer<float>(2, estimatedSamplesPerBlock);
+        }
+
+        AudioGraphIOProcessor::prepareToPlay(newSampleRate, estimatedSamplesPerBlock);
+    }
+
+    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiBuffer) override {
+        if (! isInput) {
+            if (*forceStereo && buffer.getNumChannels() > 1) {
+                buffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
+            }/* else if (! *forceStereo) {
+                for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); i++) {
+                    buffer.clear(i, buffer.getNumSamples());
+                }
+            }*/
+        }
+
+        AudioGraphIOProcessor::processBlock(buffer, midiBuffer);
+
+        if (isInput) {
+            if (*forceStereo && needsStereoForcing) {
+                stereoBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
+                stereoBuffer.copyFrom(1, 0, buffer, 0, 0, buffer.getNumSamples());
+
+                buffer = stereoBuffer;
+            }
+        }
     }
 
     void parameterValueChanged(int parameterIndex, float newValue) override {
@@ -37,7 +80,13 @@ public:
 
 private:
     bool isInput;
+
+    AudioBuffer<float> stereoBuffer;
+
     AudioParameterChoice* deviceParam;
+    AudioParameterBool* forceStereo;
+
+    bool needsStereoForcing = false;
 };
 
 /*class InputDeviceEffect : public AudioProcessorGraph::AudioGraphIOProcessor
