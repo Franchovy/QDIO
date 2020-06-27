@@ -227,10 +227,13 @@ void Parameter::setEditMode(bool isEditable) {
 
     if (type == slider) {
         auto slider = dynamic_cast<Slider*>(parameterComponent.get());
+        auto value = slider->getValue();
+
         if (editMode) {
             slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
             slider->setNormalisableRange(fullRange);
             slider->setMinAndMaxValues(limitedRange.getStart(), limitedRange.getEnd());
+            slider->setValue(limitedRange.clipValue(value));
         } else {
             if (slider->getSliderStyle() == Slider::ThreeValueHorizontal) {
                 limitedRange.setStart(slider->getMinValue());
@@ -239,6 +242,7 @@ void Parameter::setEditMode(bool isEditable) {
 
             slider->setSliderStyle(Slider::SliderStyle::LinearHorizontal);
             slider->setRange(limitedRange, fullRange.interval);
+            slider->setValue(limitedRange.clipValue(value));
         }
     }
 
