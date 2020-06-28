@@ -665,9 +665,9 @@ void Effect::resized() {
             parameterFlexBox.items.add(paramFlexItem);
 
             FlexItem paramPortFlexItem(*parameter->getPort(true));
-            paramPortFlexItem.width = 60;
-            paramPortFlexItem.height = 60;
-            paramPortFlexItem.margin = 5;
+            paramPortFlexItem.width = 40;
+            paramPortFlexItem.height = 40;
+            paramPortFlexItem.margin = 0;
             paramPortFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
 
             paramPortsFlexBox.items.add(paramPortFlexItem);
@@ -679,9 +679,10 @@ void Effect::resized() {
         parameterFlexBox.justifyContent = FlexBox::JustifyContent::center;
 
         paramPortsFlexBox.flexDirection = FlexBox::Direction::row;
-        paramPortsFlexBox.alignItems = FlexBox::AlignItems::flexStart;
-        paramPortsFlexBox.alignContent = FlexBox::AlignContent::flexStart;
-        paramPortsFlexBox.justifyContent = FlexBox::JustifyContent::flexStart;
+        paramPortsFlexBox.alignItems = FlexBox::AlignItems::center;
+        paramPortsFlexBox.alignContent = FlexBox::AlignContent::center;
+        paramPortsFlexBox.justifyContent = FlexBox::JustifyContent::center;
+        paramPortsFlexBox.flexWrap = FlexBox::Wrap::wrap;
 
 
         // Resize
@@ -709,15 +710,28 @@ void Effect::resized() {
         }*/
         newHeight = parameterFlexBox.items.size() * 50 + 90;
 
-        setSize(newWidth, newHeight);
+
 
         // Perform layout
 
+
+        int numPortsHorizontally = (newWidth - 10) / 40;
+        int numWraps = ceil(paramPortsFlexBox.items.size() / numPortsHorizontally);
+        auto portsHeight = (60 + numWraps * 40);
+
+        newHeight += numWraps * 40;
+        setSize(newWidth, newHeight);
+
         parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 60 : 15
                 , 50, (outputPortFlexBox.items.size() > 0) ? getWidth() - 60 : getWidth() - 15
-                , getHeight() - 90));
-        paramPortsFlexBox.performLayout(Rectangle<int>(20, getHeight() - 60
-                , getWidth() - 20, 60));
+                , getHeight() - (30 + portsHeight)));
+
+        paramPortsFlexBox.performLayout(Rectangle<int>(5, getHeight() - portsHeight
+                , getWidth() - 5, portsHeight));
+
+
+
+
     } else {
         if (getParameterChildren().size() > 0) {
 
