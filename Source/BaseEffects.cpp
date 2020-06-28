@@ -15,6 +15,7 @@ const String BaseEffect::getName() const {
 }
 
 void BaseEffect::setLayout(int numInputs, int numOutputs) {
+    auto emptyChannel = AudioChannelSet();
     auto defaultInChannel = AudioChannelSet();
     defaultInChannel.addChannel(AudioChannelSet::ChannelType::left);
     defaultInChannel.addChannel(AudioChannelSet::ChannelType::right);
@@ -28,6 +29,13 @@ void BaseEffect::setLayout(int numInputs, int numOutputs) {
     for (int i = 0; i < numOutputs; i++) {
         layout.outputBuses.add(defaultOutChannel);
     }
+    if (numInputs == 0) {
+        layout.inputBuses.add(emptyChannel);
+    }
+    if (numOutputs == 0) {
+        layout.outputBuses.add(emptyChannel);
+    }
+
     setBusesLayout(layout);
 }
 

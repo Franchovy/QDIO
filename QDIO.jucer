@@ -48,6 +48,8 @@
       <FILE id="qcFuA2" name="WahWah.h" compile="0" resource="0" file="Source/Audio-Effects/WahWah.h"/>
       <FILE id="j8Cebz" name="Reverb.cpp" compile="1" resource="0" file="Source/Audio-Effects/Reverb.cpp"/>
       <FILE id="W9pquZ" name="Reverb.h" compile="0" resource="0" file="Source/Audio-Effects/Reverb.h"/>
+      <FILE id="UHECgY" name="Oscillator.cpp" compile="1" resource="0" file="Source/Audio-Effects/Oscillator.cpp"/>
+      <FILE id="pJOgOS" name="Oscillator.h" compile="0" resource="0" file="Source/Audio-Effects/Oscillator.h"/>
       <FILE id="caF8vX" name="Level.cpp" compile="1" resource="0" file="Source/Level.cpp"/>
       <FILE id="piFpaa" name="Level.h" compile="0" resource="0" file="Source/Level.h"/>
     </GROUP>

@@ -27,6 +27,7 @@
 #include "Audio-Effects/Tremolo.h"
 #include "Audio-Effects/WahWah.h"
 #include "Audio-Effects/Vibrato.h"
+#include "Audio-Effects/Oscillator.h"
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1079,6 +1080,7 @@ void EffectTree::setupProcessors() {
          , "Tremolo"
          , "Wahwah"
          , "Vibrato"
+         , "Parameter Oscillator"
     };
 
     makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
@@ -1101,6 +1103,7 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] { newProcessor = std::make_unique<TremoloAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<WahWahAudioProcessor>(); });
     makeProcessorArray.add([=] {newProcessor = std::make_unique<VibratoAudioProcessor>(); });
+    makeProcessorArray.add([=] {newProcessor = std::make_unique<Oscillator>(); });
 }
 
 
