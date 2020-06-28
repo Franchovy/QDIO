@@ -161,8 +161,7 @@ void Parameter::createParameterComponent() {
             fullRange = NormalisableRange<double>(range.start, range.end, range.interval, range.skew);
             slider->setTextValueSuffix(referencedParameter->getLabel());
         }
-        limitedRange.start = fullRange.start;
-        limitedRange.end = fullRange.end;
+        limitedRange = NormalisableRange<double>(fullRange);
 
         slider->setNormalisableRange(fullRange);
 
@@ -474,7 +473,7 @@ void Parameter::setValueDirect(float newVal, bool notifyHost) {
     if (connectedParameter != nullptr) {
         connectedParameter->setValueDirect(newVal, notifyHost);
     } else {
-        setValue(limitedRange.snapToLegalValue(newVal), notifyHost);
+        setValue(limitedRange.snapToLegalValue(newVal), isOutputParameter || isConnectedTo);
     }
 }
 
