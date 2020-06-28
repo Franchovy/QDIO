@@ -494,7 +494,7 @@ void Parameter::setValue(float newVal, bool notifyHost) {
             if (type == combo) {
                 auto combo = dynamic_cast<AudioParameterChoice*>(referencedParameter);
                 //combo->setValueNotifyingHost((float) newVal);
-                combo->setValueNotifyingHost(newVal);
+                *combo = newVal;
                 std::cout << "New combo value: " << combo->getIndex() << newLine;
             }
         } else {
