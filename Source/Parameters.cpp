@@ -488,13 +488,13 @@ void Parameter::setValueNormalised(float newVal, bool notifyHost) {
 void Parameter::setValue(float newVal, bool notifyHost) {
     if (referencedParameter != nullptr) {
         if (notifyHost) {
-            referencedParameter->setValueNotifyingHost(newVal);
-
             if (type == combo) {
                 auto combo = dynamic_cast<AudioParameterChoice*>(referencedParameter);
                 //combo->setValueNotifyingHost((float) newVal);
                 *combo = newVal;
                 std::cout << "New combo value: " << combo->getIndex() << newLine;
+            } else {
+                referencedParameter->setValueNotifyingHost(newVal);
             }
         } else {
             referencedParameter->setValue(newVal);
