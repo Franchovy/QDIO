@@ -13,18 +13,19 @@
 Oscillator::Oscillator()
     : BaseEffect()
     , frequency(new AudioParameterFloat("Frequency", "frequency",
-            NormalisableRange<float>(0.1f, 1000.f, 0.01f, 100.f), 10.0f, "s"))
+            NormalisableRange<float>(0.01f, 10.f, 0.01f), 10.0f, " Hz"))
     , lfoOutput(new AudioParameterFloat("Output", "output",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.0f))
     , waveform(new AudioParameterChoice("Waveform Type", "waveform", waveformItemsUI, waveformSine))
 {
+    setLayout(0,0);
+
     addParameter(frequency);
     addOutputParameter(lfoOutput);
     addParameter(waveform);
 
-    setLayout(0,0);
-
     addRefreshParameterFunction([=] {
+        std::cout << "frequency: " << *frequency << newLine;
         lfoOutput->setValueNotifyingHost(lfo(lfoPhase));
     });
 
@@ -44,19 +45,16 @@ void Oscillator::releaseResources() {
 void Oscillator::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
     float currentFrequency = *frequency;
 
-    int localWritePosition;
-    float phase;
-    float phaseMain;
+    float phase = lfoPhase;
 
+    for (int sample = 0; sample < buffer.getNumSamples(); ++sample) {
+        phase += currentFrequency * inverseSampleRate;
+        if (phase >= 1.0f)
+            phase -= 1.0f;
+    }
 
-    phase = lfoPhase;
-    phase += currentFrequency * inverseSampleRate;
-    if (phase >= 1.0f)
-        phase -= 1.0f;
+    lfoPhase = phase;
 
-    phaseMain = phase;
-
-    lfoPhase = phaseMain;
 }
 
 float Oscillator::lfo (float phase)

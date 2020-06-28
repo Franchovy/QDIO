@@ -473,7 +473,7 @@ void Parameter::setValueDirect(float newVal, bool notifyHost) {
     if (connectedParameter != nullptr) {
         connectedParameter->setValueDirect(newVal, notifyHost);
     } else {
-        setValue(limitedRange.snapToLegalValue(newVal), isOutputParameter || isConnectedTo);
+        setValue(limitedRange.snapToLegalValue(newVal), notifyHost);
     }
 }
 
@@ -494,7 +494,8 @@ void Parameter::setValue(float newVal, bool notifyHost) {
                 *combo = newVal;
                 std::cout << "New combo value: " << combo->getIndex() << newLine;
             } else {
-                referencedParameter->setValueNotifyingHost(newVal);
+                referencedParameter->setValue(fullRange.convertTo0to1(newVal));
+                referencedParameter->sendValueChangedMessageToListeners(newVal);
             }
         } else {
             referencedParameter->setValue(newVal);
