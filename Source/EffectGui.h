@@ -48,6 +48,7 @@ public:
     static SelectHoverObject* getHoverObject();
     static void setHoverObject(SelectHoverObject::Ptr item);
     static void resetHoverObject();
+    void hover(bool hoverMode = true);
 
     static void addSelectObject(const SelectHoverObject::Ptr& item);
     static void removeSelectObject(const SelectHoverObject::Ptr& item);

@@ -16,8 +16,8 @@ const Identifier Parameter::IDs::parameterObject = "parameterObject";
 Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
     : editMode(editMode)
     , parentIsInEditMode(editMode)
-    , internalPort(true)
-    , externalPort(false)
+    , internalPort(true, this)
+    , externalPort(false, this)
 {
     internalPort.setLinkedPort(&externalPort);
     externalPort.setLinkedPort(&internalPort);

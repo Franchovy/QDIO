@@ -140,8 +140,9 @@ bool ParameterPort::canConnect(const ConnectionPort* other) const {
     return false;
 }
 
-ParameterPort::ParameterPort(bool isInternal)
+ParameterPort::ParameterPort(bool isInternal, SelectHoverObject* parameterParent)
     : ConnectionPort()
+    , parameterParent(parameterParent)
 {
     hoverBox = Rectangle<int>(0,0,36,36);
     outline = Rectangle<int>(12,12,12,12);
@@ -162,6 +163,22 @@ Component *ParameterPort::getParentEffect() {
         return getParentComponent();
     } else {
         return getParentComponent()->getParentComponent();
+    }
+}
+
+void ParameterPort::mouseEnter(const MouseEvent &event) {
+    SelectHoverObject::mouseEnter(event);
+
+    if (isInternal) {
+        parameterParent->hover();
+    }
+}
+
+void ParameterPort::mouseExit(const MouseEvent &event) {
+    SelectHoverObject::mouseExit(event);
+
+    if (isInternal) {
+        parameterParent->hover(false);
     }
 }
 

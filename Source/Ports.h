@@ -72,13 +72,20 @@ class ParameterPort : public ConnectionPort
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
-    ParameterPort(bool isInternal);
+    ParameterPort(bool isInternal, SelectHoverObject* parameterParent);
 
     Component *getParentEffect() override;
 
     bool canConnect(const ConnectionPort* other) const override;
 
     Component *getDragLineParent() override;
+
+    void mouseEnter(const MouseEvent &event) override;
+
+    void mouseExit(const MouseEvent &event) override;
+
+private:
+    SelectHoverObject* parameterParent;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterPort)
 };

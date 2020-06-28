@@ -221,6 +221,11 @@ void SelectHoverObject::setDraggable(bool isDraggable) {
     this->isDraggable = isDraggable;
 }
 
+void SelectHoverObject::hover(bool hoverMode) {
+    this->hoverMode = hoverMode;
+    repaint();
+}
+
 void ComponentSelection::itemSelected(SelectHoverObject::Ptr object){
     SelectHoverObject::addSelectObject(object);
     SelectedItemSet::itemSelected(object);
