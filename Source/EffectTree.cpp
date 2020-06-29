@@ -669,7 +669,15 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 childParam.setProperty("y", childParamObject->getY(), nullptr);
 
                 childParam.setProperty("name", childParamObject->getName(), nullptr);
-                childParam.setProperty("type", childParamObject->type, nullptr);
+
+                if (dynamic_cast<SliderParameter*>(childParamObject->getParameter()) != nullptr) {
+                    childParam.setProperty("type", 2, nullptr); /// BUTTON = 0, COMBO = 1, SLIDER = 2
+                } else if (dynamic_cast<ComboParameter*>(childParamObject->getParameter()) != nullptr) {
+                    childParam.setProperty("type", 1, nullptr);
+                } else if (dynamic_cast<ButtonParameter*>(childParamObject->getParameter()) != nullptr) {
+                    childParam.setProperty("type", 0, nullptr);
+                }
+
                 if (childParamObject->getParameter() != nullptr) {
                     childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
                 }
@@ -845,14 +853,22 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         jassert(param != nullptr);
     }
 
-    int type = parameterData.getProperty("type", Parameter::null);
+    int type = parameterData.getProperty("type", 0);
     float value = parameterData.getProperty("value");
 
     if (param != nullptr && ! dynamic_cast<IOEffect*>(effect->getProcessor())) {
         param->setValue(value);
     }
 
-    parameter = new Parameter(param, type);
+    if (type == 0) {
+        parameter = new ButtonParameter(param);
+    } else if (type == 1) {
+        parameter = new ComboParameter(param);
+    } else if (type == 2) {
+        parameter = new SliderParameter(param);
+    }
+
+    parameter->setParentEditMode(effect->isInEditMode());
 
     if (parameter->getName() == "Parameter" && name != "") {
         parameter->setName(name);

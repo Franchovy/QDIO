@@ -89,7 +89,7 @@ class ButtonComponent : public ParameterComponent, public ToggleButton
 
 };
 
-class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener, public AsyncUpdater
+class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<Parameter>;
@@ -148,9 +148,9 @@ protected:
 
     ParameterComponent* parameterComponent;
     ParameterListener* parameterListener;
-    AudioProcessorParameter* referencedParameter;
+    AudioProcessorParameter* referencedParameter = nullptr;
     // Parameter to update on slider value changes -- in the meantime of every Parameter containing its own
-    AudioProcessorParameter* connectedParameter;
+    AudioProcessorParameter* connectedParameter = nullptr;
 
     ParameterPort internalPort;
     ParameterPort externalPort;

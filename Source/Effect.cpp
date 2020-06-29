@@ -72,28 +72,23 @@ bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
     } else {
         outParam->connect(inParam);
     }
-    return outParam->isConnected();
+    return true; //outParam->isConnected();
 }
 
 void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) {
-    auto port = dynamic_cast<ParameterPort*>(connectionLine.getOutPort().get());
-    jassert(port != nullptr);
+    auto port1 = dynamic_cast<ParameterPort*>(connectionLine.getOutPort().get());
+    auto port2 = dynamic_cast<ParameterPort*>(connectionLine.getInPort().get());
 
-    auto parameter = dynamic_cast<Parameter*>(dynamic_cast<Effect*>(
-            port->getParentEffect())->getParameterForPort(port));
+    jassert(port1 != nullptr && port2 != nullptr);
 
-    if (parameter->isOutput()) {
-        port = dynamic_cast<ParameterPort*>(connectionLine.getInPort().get());
-        jassert(port != nullptr);
+    auto parameter1 = dynamic_cast<Parameter*>(dynamic_cast<Effect*>(
+            port1->getParentEffect())->getParameterForPort(port1));
+    auto parameter2 = dynamic_cast<Parameter*>(dynamic_cast<Effect*>(
+            port2->getParentEffect())->getParameterForPort(port2));
 
-        parameter = dynamic_cast<Parameter*>(dynamic_cast<Effect*>(
-                port->getParentEffect())->getParameterForPort(port));
-    }
+    jassert(parameter1 != nullptr && parameter2 != nullptr);
 
-    jassert(parameter != nullptr);
-    if (parameter->isConnected()) {
-        parameter->disconnect(false);
-    }
+    parameter1->disconnect(parameter2);
 }
 
 
@@ -443,21 +438,24 @@ void Effect::setupMenu() {
     parameterSubMenu->addItem("Slider", [=] () {
         undoManager.beginNewTransaction("Add slider parameter");
 
-        auto parameter = new Parameter(nullptr, 2, true);
+        auto parameter = new SliderParameter(nullptr);
+        parameter->setParentEditMode(true);
         addAndMakeVisible(parameter);
         //parameter->setCentrePosition(getMouseXYRelative());
     });
     parameterSubMenu->addItem("Selection Box", [=] () {
         undoManager.beginNewTransaction("Add combo parameter");
 
-        auto parameter = new Parameter(nullptr, 1, true);
+        auto parameter = new ComboParameter(nullptr);
+        parameter->setParentEditMode(true);
         addAndMakeVisible(parameter);
         //parameter->setCentrePosition(getMouseXYRelative());
     });
     parameterSubMenu->addItem("Toggle Button", [=] () {
         undoManager.beginNewTransaction("Add button parameter");
 
-        auto parameter = new Parameter(nullptr, 0, true);
+        auto parameter = new ButtonParameter(nullptr);
+        parameter->setParentEditMode(true);
         addAndMakeVisible(parameter);
         //parameter->setCentrePosition(getMouseXYRelative());
     });
@@ -475,12 +473,11 @@ Effect::~Effect()
 {
     //audioGraph->removeAllChangeListeners();
 
-    for (auto p : parameterArray) {
+    /*for (auto p : parameterArray) {
         // Remove listeners
-        p->removeListeners();
         removeChildComponent(p);
         removeChildComponent(p->getPort(true));
-    }
+    }*/
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
@@ -650,16 +647,9 @@ void Effect::resized() {
         for (auto parameter : getParameterChildren()) {
             FlexItem paramFlexItem;
             paramFlexItem.associatedComponent = parameter;
-            if (parameter->type == Parameter::slider) {
-                paramFlexItem.width = 150;
-                paramFlexItem.height = 120;
-            } else if (parameter->type == Parameter::combo) {
-                paramFlexItem.width = 150;
-                paramFlexItem.height = 110;
-            } else if (parameter->type == Parameter::button) {
-                paramFlexItem.width = 120;
-                paramFlexItem.height = 110;
-            }
+            paramFlexItem.width = parameter->getWidth();
+            paramFlexItem.height = parameter->getHeight();
+
             paramFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
 
             parameterFlexBox.items.add(paramFlexItem);
@@ -748,16 +738,9 @@ void Effect::resized() {
             for (auto parameter : getParameterChildren()) {
 
                 FlexItem parameterFlexItem(*parameter);
-                if (parameter->type == Parameter::slider) {
-                    parameterFlexItem.width = 150;
-                    parameterFlexItem.height = 120;
-                } else if (parameter->type == Parameter::combo) {
-                    parameterFlexItem.width = 150;
-                    parameterFlexItem.height = 110;
-                } else if (parameter->type == Parameter::button) {
-                    parameterFlexItem.width = 120;
-                    parameterFlexItem.height = 110;
-                }
+
+                parameterFlexItem.width = parameter->getWidth();
+                parameterFlexItem.height = parameter->getHeight();
                 parameterFlexBox.items.add(parameterFlexItem);
 
                 /*// Set internal port position
