@@ -64,8 +64,9 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
         connectedParameter->setValue(newValue);
     }
 
-    value = newValue;
-    valueStored = true;
+    if (isOutputParameter) {
+        setParameterValueAsync(newValue);
+    }
 }
 
 
@@ -163,15 +164,13 @@ void Parameter::connect(Parameter *otherParameter) {
 
     if (otherParam != nullptr) {
         otherParam->addListener(this);
-    } else {
-        otherParameter->connectedParameter = referencedParameter;
     }
+    otherParameter->connectedParameter = referencedParameter;
 
     if (referencedParameter != nullptr) {
         referencedParameter->addListener(otherParameter);
-    } else {
-        connectedParameter = otherParam;
     }
+    connectedParameter = otherParam;
 
     /*
     bool outputConnection = otherParameter->isOutput();
@@ -345,12 +344,12 @@ bool Parameter::canDragHover(const SelectHoverObject *other, bool isRightClickDr
     return false; //todo return other is Parameter && output-input match
 }
 
-/*void Parameter::parentHierarchyChanged() {
+void Parameter::parentHierarchyChanged() {
     if (getParentComponent() != nullptr) {
         getParentComponent()->addAndMakeVisible(internalPort);
     }
     Component::parentHierarchyChanged();
-}*/
+}
 
 ParameterPort *Parameter::getPortWithID(String portID) {
     if (internalPort.getComponentID() == portID) {
@@ -464,7 +463,12 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
     slider.hideTextBox(false);
     slider.hideTextBox(true);
 
+    setBounds(0, 0, 130, 40);
     slider.setBounds(20, 60, 100, 70);
+
+    parameterLabel.setTopLeftPosition(5,5);
+    slider.setTopLeftPosition(5, 0);
+    setSize(getWidth(), 40);
 
     addAndMakeVisible(slider);
 }
@@ -501,6 +505,7 @@ void SliderParameter::disconnect(Parameter *otherParameter) {
 }
 
 void SliderParameter::setParameterValueAsync(float value) {
+    auto sliderRange = slider.getRange();
     slider.setValue(value, sendNotificationAsync);
 }
 
@@ -525,7 +530,14 @@ ComboParameter::ComboParameter(AudioProcessorParameter* param) : Parameter(param
         combo.setSelectedItemIndex(0, sendNotificationSync);
     }
 
-    combo.setBounds(20, 60, 250, 40);
+    setBounds(0,0,200, 55);
+    combo.setBounds(5, 10, 190, 40);
+
+    outline = Rectangle<int>();
+
+    parameterLabel.setTopLeftPosition(5,5);
+    combo.setTopLeftPosition(5, 0);
+    setSize(getWidth(), 40);
 
     addAndMakeVisible(combo);
 }
@@ -567,7 +579,16 @@ ButtonParameter::ButtonParameter(AudioProcessorParameter* param) : Parameter(par
     button.setColour(TextButton::buttonColourId, Colours::darkgrey);
     button.setColour(TextButton::ColourIds::buttonOnColourId, Colours::darkslategrey);
 
-    button.setBounds(20, 30, 100, 30);
+    outline = Rectangle<int>();
+
+    setBounds(0,0,120, 45);
+    button.setBounds(20, 10, 100, 30);
+
+    setSize(150, 120);
+
+    parameterLabel.setTopLeftPosition(5,5);
+    button.setTopLeftPosition(5, 0);
+    setSize(getWidth(), 40);
 
     addAndMakeVisible(button);
 }

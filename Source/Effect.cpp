@@ -648,9 +648,8 @@ void Effect::resized() {
             FlexItem paramFlexItem;
             paramFlexItem.associatedComponent = parameter;
             paramFlexItem.width = parameter->getWidth();
-            paramFlexItem.height = parameter->getHeight();
-
-            paramFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
+            paramFlexItem.height = parameter->getHeight() + 15;
+            paramFlexItem.alignSelf = FlexItem::AlignSelf::center;
 
             parameterFlexBox.items.add(paramFlexItem);
 

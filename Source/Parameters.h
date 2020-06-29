@@ -84,7 +84,7 @@ class ComboComponent : public ParameterComponent, public ComboBox
 
 };
 
-class ButtonComponent : public ParameterComponent, public ToggleButton
+class ButtonComponent : public ParameterComponent, public TextButton
 {
 
 };
@@ -117,7 +117,7 @@ public:
     void moved() override;
 
     virtual void setParameterValueAsync(float value) = 0;
-    //void parentHierarchyChanged() override;
+    void parentHierarchyChanged() override;
 
     void setIsOutput(bool isOutput);
     bool isOutput() const;

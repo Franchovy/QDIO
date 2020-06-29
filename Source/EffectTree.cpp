@@ -670,11 +670,11 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
 
                 childParam.setProperty("name", childParamObject->getName(), nullptr);
 
-                if (dynamic_cast<SliderParameter*>(childParamObject->getParameter()) != nullptr) {
+                if (dynamic_cast<SliderParameter*>(childParamObject) != nullptr) {
                     childParam.setProperty("type", 2, nullptr); /// BUTTON = 0, COMBO = 1, SLIDER = 2
-                } else if (dynamic_cast<ComboParameter*>(childParamObject->getParameter()) != nullptr) {
+                } else if (dynamic_cast<ComboParameter*>(childParamObject) != nullptr) {
                     childParam.setProperty("type", 1, nullptr);
-                } else if (dynamic_cast<ButtonParameter*>(childParamObject->getParameter()) != nullptr) {
+                } else if (dynamic_cast<ButtonParameter*>(childParamObject) != nullptr) {
                     childParam.setProperty("type", 0, nullptr);
                 }
 
@@ -853,7 +853,19 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         jassert(param != nullptr);
     }
 
-    int type = parameterData.getProperty("type", 0);
+    int type = parameterData.getProperty("type", -1);
+    if (type == -1 && param != nullptr) {
+        if (dynamic_cast<AudioParameterBool*>(param) != nullptr) {
+            type = 0;
+        } else if (dynamic_cast<AudioParameterChoice*>(param) != nullptr) {
+            type = 1;
+        } else if (dynamic_cast<AudioParameterFloat*>(param) != nullptr) {
+            type = 2;
+        }
+    }
+    jassert (type != -1);
+
+
     float value = parameterData.getProperty("value");
 
     if (param != nullptr && ! dynamic_cast<IOEffect*>(effect->getProcessor())) {
