@@ -526,7 +526,7 @@ AudioProcessorParameter *Parameter::getParameter() {
 void Parameter::setActionOnComboSelect(std::function<void()> funct) {
     if (type == combo) {
         auto combo = dynamic_cast<ComboBox*>(parameterComponent.get());
-        combo->onChange = funct;
+        combo->onChange = std::move(funct);
     }
 }
 

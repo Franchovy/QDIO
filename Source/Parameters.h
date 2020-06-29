@@ -93,7 +93,6 @@ public:
         slider = 2
     } type;
 
-
     void parameterValueChanged(int parameterIndex, float newValue) override;
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
 
