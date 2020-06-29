@@ -16,7 +16,12 @@
 
 class Parameter;
 
-class ButtonListener : public Button::Listener
+class ParameterListener
+{
+
+};
+
+class ButtonListener : public Button::Listener, public ParameterListener
 {
 public:
     explicit ButtonListener(Parameter* parameter) : Button::Listener() {
@@ -31,7 +36,7 @@ private:
 };
 
 
-class ComboListener : public ComboBox::Listener
+class ComboListener : public ComboBox::Listener, public ParameterListener
 {
 public:
     explicit ComboListener(Parameter* parameter) : ComboBox::Listener() {
@@ -45,7 +50,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComboListener)
 };
 
-class SliderListener : public Slider::Listener
+class SliderListener : public Slider::Listener, public ParameterListener
 {
 public:
     explicit SliderListener(Parameter* parameter) : Slider::Listener() {
@@ -66,15 +71,24 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SliderListener)
 };
 
-class SliderParameter : public Slider
+class ParameterComponent
 {
-public:
-    SliderParameter() = default;
 
-    bool hitTest(int x, int y) override;
+};
 
-private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SliderParameter);
+class SliderComponent : public ParameterComponent, public Slider
+{
+
+};
+
+class ComboComponent : public ParameterComponent, public ComboBox
+{
+
+};
+
+class ButtonComponent : public ParameterComponent, public ToggleButton
+{
+
 };
 
 class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener
@@ -82,25 +96,16 @@ class Parameter : public SelectHoverObject, public AudioProcessorParameter::List
 public:
     using Ptr = ReferenceCountedObjectPtr<Parameter>;
 
-    explicit Parameter(AudioProcessorParameter *param = nullptr, int type = null, bool editMode = false);
+    explicit Parameter(AudioProcessorParameter *param);
 
     ~Parameter() override;
-
-    enum Type {
-        null = -1,
-        button = 0,
-        combo = 1,
-        slider = 2
-    } type;
 
     void parameterValueChanged(int parameterIndex, float newValue) override;
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
 
     void setName(const String& name) override;
 
-    void setValueDirect(float newVal, bool notifyHost = true);
-    void setValueNormalised(float newVal, bool notifyHost = true);
-    void setValue(float newVal, bool notifyHost = true);
+    void setValue(float newVal);
 
     void paint(Graphics& g) override;
     void mouseDown(const MouseEvent &event) override;
@@ -115,10 +120,7 @@ public:
 
     void moved() override;
 
-    void parentHierarchyChanged() override;
-
-    bool isConnected();
-    Parameter* getConnectedParameter();
+    //void parentHierarchyChanged() override;
 
     void setIsOutput(bool isOutput);
     bool isOutput() const;
@@ -128,17 +130,8 @@ public:
     ParameterPort* getPort(bool internal);
     ParameterPort* getPortWithID(String portID);
 
-    void createParameterComponent();
-    void positionParameterComponent();
-
-    Point<int> getPortPosition();
-
     void connect(Parameter* otherParameter);
-    void disconnect(bool toThis);
-
-    struct IDs {
-        static const Identifier parameterObject;
-    };
+    void disconnect(Parameter* otherParameter);
 
     void setActionOnComboSelect(std::function<void()> funct);
 
@@ -147,38 +140,55 @@ public:
     bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
-private:
+protected:
     bool isOutputParameter = false;
 
     NormalisableRange<double> fullRange;
     NormalisableRange<double> limitedRange;
 
+    Rectangle<int> outline;
     Label parameterLabel;
-    std::unique_ptr<Component> parameterComponent;
-    AudioProcessorParameter* referencedParameter;
     bool valueStored = false;
     float value = -1;
 
-    SliderListener* sliderListener = nullptr;
-    ComboListener* comboListener = nullptr;
-    ButtonListener* buttonListener = nullptr;
+    ParameterComponent* parameterComponent;
+    ParameterListener* parameterListener;
+    AudioProcessorParameter* referencedParameter;
 
     ParameterPort internalPort;
     ParameterPort externalPort;
 
     bool parentIsInEditMode = false;
-    bool editMode = false;
-    Parameter* connectedParameter = nullptr;
-    bool isConnectedTo = false;
+    bool openMode = false;
 
-    bool editable = false;
-    ComponentDragger dragger;
-
-    Rectangle<int> outline;
-
+private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Parameter)
 };
 
+class SliderParameter : public Parameter
+{
+
+private:
+    SliderComponent slider;
+    SliderListener listener;
+};
+
+class ComboParameter : public Parameter
+{
+
+private:
+    ComboComponent combo;
+    ComboListener listener;
+};
+
+class ButtonParameter : public Parameter
+{
+public:
+
+private:
+    ButtonComponent button;
+    ButtonListener listener;
+};
 
 /*
 class MetaParameter : public RangedAudioParameter

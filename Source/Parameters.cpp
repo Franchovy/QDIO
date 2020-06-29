@@ -14,7 +14,7 @@ const Identifier Parameter::IDs::parameterObject = "parameterObject";
 
 
 Parameter::Parameter(AudioProcessorParameter *param, int type, bool editMode)
-    : editMode(editMode)
+    : openMode(editMode)
     , parentIsInEditMode(editMode)
     , internalPort(true, this)
     , externalPort(false, this)
@@ -193,7 +193,7 @@ void Parameter::createParameterComponent() {
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     // This is called on audio thread! Use async updater for messages.
-    if (editMode && connectedParameter != nullptr) {
+    if (openMode && connectedParameter != nullptr) {
         connectedParameter->setValue(newValue, false);
     }
 
@@ -216,7 +216,7 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
 }
 
 void Parameter::setEditMode(bool isEditable) {
-    editMode = isEditable;
+    openMode = isEditable;
 
     // change between editable and non-editable version
     externalPort.setVisible(parentIsInEditMode);
@@ -228,7 +228,7 @@ void Parameter::setEditMode(bool isEditable) {
         auto slider = dynamic_cast<Slider*>(parameterComponent.get());
         auto value = slider->getValue();
 
-        if (editMode) {
+        if (openMode) {
             slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
             slider->setNormalisableRange(fullRange);
             slider->setMinAndMaxValues(limitedRange.start, limitedRange.end);
@@ -306,7 +306,7 @@ Point<int> Parameter::getPortPosition() {
 
 void Parameter::paint(Graphics &g) {
     // Draw outline (edit mode)
-    if (editMode) {
+    if (openMode) {
         Path p;
         g.setColour(Colours::whitesmoke);
         p.addRoundedRectangle(outline, 3.0f);
@@ -316,7 +316,7 @@ void Parameter::paint(Graphics &g) {
         g.strokePath(p, strokeType);
     }
 
-    if (editMode) {
+    if (openMode) {
         g.setColour(Colours::blue);
         if (selectMode) {
             g.drawRoundedRectangle(0, 0, getWidth(), getHeight(), 3.0f, 3);
@@ -338,7 +338,7 @@ void Parameter::paint(Graphics &g) {
         }
     }
 
-    /*if (editMode) {
+    /*if (openMode) {
         g.setColour(Colours::lightgrey);
         g.fillRect(getBounds());
     } else {
@@ -531,11 +531,11 @@ void Parameter::setActionOnComboSelect(std::function<void()> funct) {
 }
 
 bool Parameter::isInEditMode() const {
-    return editMode;
+    return openMode;
 }
 
 void Parameter::moved() {
-    if (editMode) {
+    if (openMode) {
         internalPort.setCentrePosition(getX() + getWidth() / 2, getParentComponent()->getHeight() - 20);
     }
     Component::moved();
@@ -575,12 +575,12 @@ bool Parameter::canDragHover(const SelectHoverObject *other, bool isRightClickDr
     return false;
 }
 
-void Parameter::parentHierarchyChanged() {
+/*void Parameter::parentHierarchyChanged() {
     if (getParentComponent() != nullptr) {
         getParentComponent()->addAndMakeVisible(internalPort);
     }
     Component::parentHierarchyChanged();
-}
+}*/
 
 ParameterPort *Parameter::getPortWithID(String portID) {
     if (internalPort.getComponentID() == portID) {
@@ -597,7 +597,7 @@ void Parameter::setName(const String& name) {
 }
 
 void Parameter::mouseDoubleClick(const MouseEvent &event) {
-    setEditMode(! editMode);
+    setEditMode(! openMode);
     removeSelectObject(this);
 
     Component::mouseDoubleClick(event);
