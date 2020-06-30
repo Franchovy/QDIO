@@ -38,7 +38,7 @@ EffectScene::EffectScene()
     }
 
 
-    dontLoad = true;
+    //dontLoad = true;
     //bool dontLoadDevices = false;
 
     loadInitialCase = dontLoad;

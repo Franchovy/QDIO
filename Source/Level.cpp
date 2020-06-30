@@ -16,11 +16,14 @@ LevelAudioProcessor::LevelAudioProcessor() :
                                          NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.0f))
     , paramDecay(new AudioParameterFloat("Decay Speed", "decay",
                                          NormalisableRange<float>(1.0f, 1.2f, 0.01f), 1.05f))
+    , paramSensitivity(new AudioParameterFloat("Sensitivity/Gain", "sensitivity",
+            NormalisableRange<float>(0.0f, 10.0f, 0.01f), 5.0f, "dB"))
 {
     addOutputParameter(paramLevel);
     addParameter(paramDecay);
+    addParameter(paramSensitivity);
 
-    setLayout(1,1);
+    setLayout(1,0);
 
     addRefreshParameterFunction([=] {
         paramLevel->setValueNotifyingHost(recordedLevel);
@@ -39,7 +42,9 @@ void LevelAudioProcessor::releaseResources() {
 
 void LevelAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
     for (int c = 0; c < buffer.getNumChannels(); c++) {
-        recordedLevel = jmax((float) recordedLevel, buffer.getRMSLevel(c, 0, buffer.getNumSamples()));
+        recordedLevel = jmax((float) recordedLevel
+                ,buffer.getRMSLevel(c, 0, buffer.getNumSamples())
+                * *paramSensitivity);
     }
 }
 

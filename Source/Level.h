@@ -28,6 +28,7 @@ public:
 
     AudioParameterFloat* paramLevel;
     AudioParameterFloat* paramDecay;
+    AudioParameterFloat* paramSensitivity;
 
 private:
     std::atomic<float> recordedLevel;
