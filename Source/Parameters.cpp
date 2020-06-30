@@ -54,6 +54,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     //jassert(jlimit(0.0f, 1.0f, newValue) == newValue);
+    //todo override this for different types.
 
     // This is called on audio thread! Use async updater for messages.
     if (referencedParam != nullptr && referencedParam->getValue() != newValue) {
@@ -405,7 +406,7 @@ void ButtonListener::buttonClicked(Button *button) {
 void ComboListener::comboBoxChanged(ComboBox *comboBoxThatHasChanged) {
     if (linkedParameter != nullptr
             && linkedParameter->getCurrentValueAsText().compare(comboBoxThatHasChanged->getText()) != 0) {
-        linkedParameter->setValueNotifyingHost(comboBoxThatHasChanged->getSelectedId());
+        linkedParameter->setValueNotifyingHost(comboBoxThatHasChanged->getSelectedItemIndex());
     }
 }
 
@@ -580,7 +581,7 @@ void ComboParameter::disconnect(Parameter *otherParameter) {
 }
 
 void ComboParameter::setParameterValueAsync(float value) {
-    combo.setSelectedId((int) value, sendNotificationAsync);
+    combo.setSelectedItemIndex((int) value, sendNotificationAsync);
 }
 
 ButtonParameter::ButtonParameter(AudioProcessorParameter* param) : Parameter(param)
