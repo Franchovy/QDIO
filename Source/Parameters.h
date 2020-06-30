@@ -151,9 +151,10 @@ protected:
 
     ParameterComponent* parameterComponent;
     ParameterListener* parameterListener;
-    AudioProcessorParameter* referencedParameter = nullptr;
+    AudioProcessorParameter* referencedParam = nullptr;
     // Parameter to update on slider value changes -- in the meantime of every Parameter containing its own
-    AudioProcessorParameter* connectedParameter = nullptr;
+    AudioProcessorParameter* connectedParam = nullptr;
+    Parameter* connectedParameter;
 
     ParameterPort internalPort;
     ParameterPort externalPort;
