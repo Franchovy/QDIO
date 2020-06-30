@@ -151,6 +151,7 @@ protected:
 
     ParameterComponent* parameterComponent;
     ParameterListener* parameterListener;
+    
     AudioProcessorParameter* referencedParam = nullptr;
     // Parameter to update on slider value changes -- in the meantime of every Parameter containing its own
     AudioProcessorParameter* connectedParam = nullptr;

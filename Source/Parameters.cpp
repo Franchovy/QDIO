@@ -21,7 +21,6 @@ Parameter::Parameter(AudioProcessorParameter *param)
     externalPort.incReferenceCount();
 
     referencedParam = param;
-
     outline = Rectangle<int>(10, 20, 130, 90);
 
     if (param != nullptr) {
@@ -452,6 +451,7 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
         , listener(this)
 {
     fullRange = NormalisableRange<double>(0, 1);
+
     if (referencedParam != nullptr) {
         auto range = dynamic_cast<RangedAudioParameter *>(referencedParam)->getNormalisableRange();
         fullRange = NormalisableRange<double>(range.start, range.end, range.interval, range.skew);
@@ -471,6 +471,7 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
     slider.setTextBoxIsEditable(true);
 
     slider.setValue(referencedParam != nullptr ? referencedParam->getValue() : 1);
+
     //slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
 
     slider.setPopupDisplayEnabled(true, true,
