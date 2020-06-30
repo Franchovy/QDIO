@@ -20,7 +20,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
     internalPort.incReferenceCount();
     externalPort.incReferenceCount();
 
-    referencedParameter = param;
+    param = param;
 
     outline = Rectangle<int>(10, 20, 130, 90);
 
@@ -57,11 +57,11 @@ Parameter::Parameter(AudioProcessorParameter *param)
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     // This is called on audio thread! Use async updater for messages.
-    if (referencedParameter != nullptr && referencedParameter->getValue() != newValue) {
-        referencedParameter->setValue(newValue);
+    if (param != nullptr && param->getValue() != newValue) {
+        param->setValue(newValue);
     }
-    if (connectedParameter != nullptr && connectedParameter->getValue() != newValue) {
-        connectedParameter->setValue(newValue);
+    if (connectedParameter != nullptr && connectedParameter->getParameter()->getValue() != newValue) {
+        connectedParameter->getParameter()->setValue(newValue);
     }
 
     if (isAuto) {
@@ -165,12 +165,12 @@ void Parameter::connect(Parameter *otherParameter) {
     if (otherParam != nullptr) {
         otherParam->addListener(this);
     }
-    otherParameter->connectedParameter = referencedParameter;
+    otherParameter->connectedParameter = this;
 
-    if (referencedParameter != nullptr) {
-        referencedParameter->addListener(otherParameter);
+    if (param != nullptr) {
+        param->addListener(otherParameter);
     }
-    connectedParameter = otherParam;
+    connectedParameter = otherParameter;
 
     isAuto = otherParameter->isOutputParameter || otherParameter->isOutputParameter;
 
@@ -257,13 +257,13 @@ void Parameter::disconnect(Parameter* otherParameter) {
 
     if (otherParam != nullptr) {
         otherParam->removeListener(this);
-    } else if (otherParameter->connectedParameter == referencedParameter) {
+    } else if (otherParameter->connectedParameter == this) {
         otherParameter->connectedParameter = nullptr;
     }
 
-    if (referencedParameter != nullptr) {
-        referencedParameter->removeListener(otherParameter);
-    } else if (connectedParameter == otherParam) {
+    if (param != nullptr) {
+        param->removeListener(otherParameter);
+    } else if (connectedParameter == otherParameter) {
         connectedParameter = nullptr;
     }
 
@@ -306,10 +306,10 @@ void Parameter::parameterGestureChanged(int parameterIndex, bool gestureIsStarti
 }
 
 AudioProcessorParameter *Parameter::getParameter() {
-    if (referencedParameter != nullptr) {
-        return referencedParameter;
+    if (param != nullptr) {
+        return param;
     } else if (connectedParameter != nullptr) {
-        return connectedParameter;
+        return connectedParameter->getParameter();
     } else {
         return nullptr;
     }
@@ -452,16 +452,16 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
         , listener(this)
 {
     fullRange = NormalisableRange<double>(0, 1);
-    if (referencedParameter != nullptr) {
-        auto range = dynamic_cast<RangedAudioParameter *>(referencedParameter)->getNormalisableRange();
+    if (param != nullptr) {
+        auto range = dynamic_cast<RangedAudioParameter *>(param)->getNormalisableRange();
         fullRange = NormalisableRange<double>(range.start, range.end, range.interval, range.skew);
-        slider.setTextValueSuffix(referencedParameter->getLabel());
+        slider.setTextValueSuffix(param->getLabel());
     }
     limitedRange = NormalisableRange<double>(fullRange);
 
     slider.setNormalisableRange(fullRange);
 
-    if (referencedParameter != nullptr) {
+    if (param != nullptr) {
         slider.addListener(&listener);
     }
 
@@ -470,7 +470,7 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
     slider.setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
     slider.setTextBoxIsEditable(true);
 
-    slider.setValue(referencedParameter != nullptr ? referencedParameter->getValue() : 1);
+    slider.setValue(param != nullptr ? param->getValue() : 1);
     //slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
 
     slider.setPopupDisplayEnabled(true, true,
@@ -533,19 +533,19 @@ void SliderParameter::setParameterValueAsync(float value) {
 }
 
 ComboParameter::ComboParameter(AudioProcessorParameter* param) : Parameter(param)
-        , listener(referencedParameter)
+        , listener(param)
 {
     combo.setName("Combo");
 
-    if (referencedParameter != nullptr) {
+    if (param != nullptr) {
         int i = 1;
-        for (auto s : referencedParameter->getAllValueStrings()) {
+        for (auto s : param->getAllValueStrings()) {
             combo.addItem(s.substring(0, 20), i++);
         }
 
         combo.addListener(&listener);
 
-        auto comboParam = dynamic_cast<AudioParameterChoice*>(referencedParameter);
+        auto comboParam = dynamic_cast<AudioParameterChoice*>(param);
         jassert(comboParam != nullptr);
 
         combo.setSelectedItemIndex(*comboParam, sendNotificationSync);
@@ -582,17 +582,17 @@ void ComboParameter::setParameterValueAsync(float value) {
 }
 
 ButtonParameter::ButtonParameter(AudioProcessorParameter* param) : Parameter(param)
-    , listener(referencedParameter)
+    , listener(param)
 {
-    if (referencedParameter != nullptr) {
-        button.setButtonText(referencedParameter->getName(30));
+    if (param != nullptr) {
+        button.setButtonText(param->getName(30));
     }
 
-    button.setToggleState(referencedParameter == nullptr ? false : referencedParameter->getValue(),
-                           sendNotificationSync);
+    button.setToggleState(param == nullptr ? false : param->getValue(),
+                          sendNotificationSync);
     button.setClickingTogglesState(true);
 
-    if (referencedParameter != nullptr) {
+    if (param != nullptr) {
         button.addListener(&listener);
     }
 
