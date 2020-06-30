@@ -139,6 +139,7 @@ public:
 
 protected:
     bool isOutputParameter = false;
+    bool isAuto = false;
 
     NormalisableRange<double> fullRange;
     NormalisableRange<double> limitedRange;

@@ -64,7 +64,9 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
         connectedParameter->setValue(newValue);
     }
 
-    setParameterValueAsync(newValue);
+    if (isAuto) {
+        setParameterValueAsync(newValue);
+    }
 }
 
 
@@ -170,6 +172,8 @@ void Parameter::connect(Parameter *otherParameter) {
     }
     connectedParameter = otherParam;
 
+    isAuto = otherParameter->isOutputParameter || otherParameter->isOutputParameter;
+
     /*
     bool outputConnection = otherParameter->isOutput();
 
@@ -263,7 +267,7 @@ void Parameter::disconnect(Parameter* otherParameter) {
         connectedParameter = nullptr;
     }
 
-
+    isAuto = isOutputParameter;
 
     /*if (toThis) {
         // Disconnect this as target
@@ -372,6 +376,7 @@ void Parameter::mouseDoubleClick(const MouseEvent &event) {
 
 void Parameter::setIsOutput(bool isOutput) {
     isOutputParameter = isOutput;
+    isAuto = isOutput;
     internalPort.isInput = ! isOutput;
 }
 
