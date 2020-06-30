@@ -53,9 +53,7 @@ private:
 class SliderListener : public Slider::Listener, public ParameterListener
 {
 public:
-    explicit SliderListener(AudioProcessorParameter* parameter) : Slider::Listener() {
-        linkedParameter = dynamic_cast<AudioParameterFloat*>(parameter);
-    }
+    explicit SliderListener(Parameter* parameter);
 
     void sliderValueChanged(Slider *slider) override;
 
@@ -64,6 +62,7 @@ public:
     void sliderDragEnded(Slider *slider) override;
 
 private:
+    Parameter* parent;
     AudioParameterFloat* linkedParameter = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SliderListener)
@@ -134,6 +133,9 @@ public:
 
     bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
+
+    NormalisableRange<double> getFullRange();
+    NormalisableRange<double> getLimitedRange();
 
 protected:
     bool isOutputParameter = false;

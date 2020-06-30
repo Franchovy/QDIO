@@ -64,9 +64,7 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
         connectedParameter->setValue(newValue);
     }
 
-    if (isOutputParameter) {
-        setParameterValueAsync(newValue);
-    }
+    setParameterValueAsync(newValue);
 }
 
 
@@ -386,6 +384,14 @@ void Parameter::setParentEditMode(bool parentIsInEditMode) {
     setEditMode(parentIsInEditMode);
 }
 
+NormalisableRange<double> Parameter::getFullRange() {
+    return fullRange;
+}
+
+NormalisableRange<double> Parameter::getLimitedRange() {
+    return limitedRange;
+}
+
 void ButtonListener::buttonClicked(Button *button) {
     if (linkedParameter != nullptr) {
         linkedParameter->setValueNotifyingHost(button->getToggleState());
@@ -406,8 +412,8 @@ void SliderListener::sliderValueChanged(Slider *slider) {
     } else {
         linkedParameter->setValueDirect(slider->getValue());
     }*/
-    if (linkedParameter != nullptr) {
-        linkedParameter->setValueNotifyingHost(slider->getValue());
+    if (linkedParameter != nullptr && *linkedParameter != slider->getValue()) {
+        linkedParameter->setValueNotifyingHost(parent->getFullRange().convertTo0to1(slider->getValue()));
     }
 }
 
@@ -427,12 +433,18 @@ void SliderListener::sliderDragEnded(Slider *slider) {
     Listener::sliderDragEnded(slider);
 }
 
+SliderListener::SliderListener(Parameter *parent)
+    : Slider::Listener(), parent(parent)
+{
+    linkedParameter = dynamic_cast<AudioParameterFloat*>(parent->getParameter());
+}
+
 /*bool SliderParameter::hitTest(int x, int y) {
     return (Rectangle<int>(10, 30, getWidth()-10, getHeight() - 30).contains(x, y));
 }*/
 
 SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(param)
-        , listener(referencedParameter)
+        , listener(this)
 {
     fullRange = NormalisableRange<double>(0, 1);
     if (referencedParameter != nullptr) {
@@ -505,8 +517,14 @@ void SliderParameter::disconnect(Parameter *otherParameter) {
 }
 
 void SliderParameter::setParameterValueAsync(float value) {
-    auto sliderRange = slider.getRange();
-    slider.setValue(value, sendNotificationAsync);
+    if (! slider.getRange().contains(value)) {
+        // set direct value
+        slider.setValue(limitedRange.convertFrom0to1(value), sendNotificationAsync);
+    } else {
+        // set normalised value
+        slider.setValue(value, sendNotificationAsync);
+    }
+
 }
 
 ComboParameter::ComboParameter(AudioProcessorParameter* param) : Parameter(param)
