@@ -12,7 +12,7 @@
 
 
 ReverbEffect::ReverbEffect()
-    : BaseEffect()
+    : BaseEffect("Reverb")
     , roomSize(new AudioParameterFloat("Room Size", "roomsize",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.3f))
     , width(new AudioParameterFloat("Width", "width",

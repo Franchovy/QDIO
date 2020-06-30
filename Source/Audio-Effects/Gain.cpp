@@ -11,7 +11,7 @@
 #include "Gain.h"
 
 GainAudioProcessor::GainAudioProcessor()
-    : BaseEffect()
+    : BaseEffect("Gain")
     , gain(new AudioParameterFloat("Gain", "gain", NormalisableRange<float>(0.1f,10.0f,0.01f), 2.0f))
 {
     setLayout(1,1);

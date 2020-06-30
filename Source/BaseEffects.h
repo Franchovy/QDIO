@@ -20,11 +20,13 @@
 class BaseEffect : public AudioProcessor, public Timer
 {
 public:
-    BaseEffect()
+    BaseEffect(String processorName)
         : AudioProcessor()
         , bypass(new AudioParameterBool("bypass", "Bypass", false))
     {
+        name = processorName;
         addParameter(bypass);
+
     }
 
     //=========================================================================
@@ -80,48 +82,4 @@ private:
     Array<std::function<void()>> refreshParameterFunctions;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BaseEffect)
-};
-
-
-class DelayEffect : public BaseEffect
-{
-public:
-    DelayEffect();
-
-    void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
-    void releaseResources() override;
-    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
-
-private:
-    AudioParameterFloat* delay;
-    AudioParameterFloat* fade;
-    std::atomic<float> fadeVal;
-    AudioBuffer<float> delayBuffer;
-
-    int minSize;
-
-    int numChannels;
-    double currentSampleRate;
-    int delayBufferSize;
-    int newDelayBufferSize;
-    int delayBufferPt;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DelayEffect)
-};
-
-class DistortionEffect : public BaseEffect {
-public:
-    DistortionEffect();
-
-    void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
-    void releaseResources() override;
-    void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
-
-private:
-    AudioParameterFloat* gain;
-    AudioParameterFloat* cutoff;
-    AudioParameterFloat* postGain;
-    std::atomic<float> gainVal;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistortionEffect)
 };

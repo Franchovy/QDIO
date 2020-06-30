@@ -28,7 +28,7 @@
 //==============================================================================
 
 VibratoAudioProcessor::VibratoAudioProcessor():
-    BaseEffect()
+    BaseEffect("Vibrato")
     , paramWidth (new AudioParameterFloat("Width", "width", NormalisableRange<float>(1.0f, 50.0f, 0.1f), 10.0f, "ms"))
                     //[](float value){ return value * 0.001f; })
     , paramFrequency (new AudioParameterFloat("LFO Frequency", "lfofreq", NormalisableRange<float>(0.0f, 10.0f, 0.1f), 2.0f, "Hz"))

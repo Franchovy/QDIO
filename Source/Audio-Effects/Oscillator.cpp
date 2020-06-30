@@ -11,7 +11,7 @@
 #include "Oscillator.h"
 
 Oscillator::Oscillator()
-    : BaseEffect()
+    : BaseEffect("Oscillator")
     , frequency(new AudioParameterFloat("Frequency", "frequency",
             NormalisableRange<float>(0.01f, 10.f, 0.01f), 10.0f, " Hz"))
     , lfoOutput(new AudioParameterFloat("Output", "output",

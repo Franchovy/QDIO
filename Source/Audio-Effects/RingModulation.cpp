@@ -28,7 +28,7 @@
 //==============================================================================
 
 RingModulationAudioProcessor::RingModulationAudioProcessor():
-    BaseEffect()
+    BaseEffect("Ring Modulation")
     , paramDepth (new AudioParameterFloat("Depth", "depth",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f))
     , paramFrequency (new AudioParameterFloat("Carrier frequency", "carrierfreq",

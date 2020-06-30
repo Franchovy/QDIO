@@ -11,7 +11,7 @@
 #include "Level.h"
 
 LevelAudioProcessor::LevelAudioProcessor() :
-        BaseEffect()
+        BaseEffect("Level Detector")
     , paramLevel(new AudioParameterFloat("Level", "level",
                                          NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.0f))
     , paramDecay(new AudioParameterFloat("Decay Speed", "decay",

@@ -28,7 +28,7 @@
 //==============================================================================
 
 PhaserAudioProcessor::PhaserAudioProcessor():
-    BaseEffect()
+    BaseEffect("Phaser")
     , paramDepth (new AudioParameterFloat("Depth", "depth",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 1.0f))
     , paramFeedback (new AudioParameterFloat("Feedback", "feedback",

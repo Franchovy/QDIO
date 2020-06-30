@@ -28,7 +28,7 @@
 //==============================================================================
 
 CompressorExpanderAudioProcessor::CompressorExpanderAudioProcessor()
-    : BaseEffect()
+    : BaseEffect("Compressor/Expander")
     , paramMode (new AudioParameterChoice("Mode", "mode", {"Compressor / Limiter", "Expander / Noise gate"}, 1))
     , paramThreshold (new AudioParameterFloat("Threshold", "threshold",
             NormalisableRange<float>(-60.0f, 0.0f, 0.1f), -24.0f, "dB"))

@@ -445,6 +445,19 @@ bool EffectScene::keyPressed(const KeyPress &key)
         std::cout << "Main Position: " << getMouseXYRelative().toString() << newLine;
         std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
     }
+    if (key.getKeyCode() == 's') {
+        std::cout << "Audiograph Nodes: " << newLine;
+        for (auto node : audioGraph.getNodes()) {
+            std::cout << "node: " << node->nodeID.uid << newLine;
+            std::cout << node->getProcessor()->getName() << newLine;
+        }
+        std::cout << "Connections: " << newLine;
+        for (auto connection : audioGraph.getConnections()) {
+            auto inputNode = audioGraph.getNodeForId(connection.source.nodeID);
+            auto outputNode = audioGraph.getNodeForId(connection.destination.nodeID);
+            std::cout << "Connection: " << inputNode->getProcessor()->getName() << " to " << outputNode->getProcessor()->getName() << newLine;
+        }
+    }
     if (key.getKeyCode() == 'r') {
         auto setup = deviceManager.getAudioDeviceSetup();
         auto bufferSizes = deviceManager.getCurrentAudioDevice()->getAvailableBufferSizes();

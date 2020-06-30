@@ -28,7 +28,7 @@
 //==============================================================================
 
 PitchShiftAudioProcessor::PitchShiftAudioProcessor():
-    BaseEffect()
+    BaseEffect("Pitch Shift")
     , paramShift (new AudioParameterFloat("Shift", "shift",
             NormalisableRange<float>(-12.0f, 12.0f, 1.0f), 0.0f, " Semitone(s)"))
                   //[this](float value){ return powf (2.0f, value / 12.0f); })

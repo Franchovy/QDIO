@@ -28,7 +28,7 @@
 //==============================================================================
 
 PanningAudioProcessor::PanningAudioProcessor()
-    : BaseEffect()
+    : BaseEffect("Panning")
     , paramMethod (new AudioParameterChoice("Method", "method", methodItemsUI, methodItdIld))
     , paramPanning (new AudioParameterFloat("Panning", "panning",
             NormalisableRange<float>(-1.0f, 1.0f, 0.01f), 0.5f))

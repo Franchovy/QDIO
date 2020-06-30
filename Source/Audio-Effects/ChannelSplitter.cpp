@@ -11,7 +11,7 @@
 #include "ChannelSplitter.h"
 
 ChannelSplitterProcessor::ChannelSplitterProcessor()
-        : BaseEffect()
+        : BaseEffect("Channel Splitter")
         , paramNumInputs(new AudioParameterChoice("Num Input Channels", "numInChans", {"1", "2"}, 1))
         , paramNumOutputs(new AudioParameterChoice("Num Output Channels", "numOutChans", {"1","2"}, 1))
 {

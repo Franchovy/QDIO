@@ -28,7 +28,7 @@
 //==============================================================================
 
 RobotizationWhisperizationAudioProcessor::RobotizationWhisperizationAudioProcessor():
-    BaseEffect()
+    BaseEffect("Robotization/Whisperization")
     , stft(*this)
     , paramEffect (new AudioParameterChoice("Effect", "effect", effectItemsUI, effectPassThrough))
     , paramFftSize (new AudioParameterChoice("FFT size", "fftsize", fftSizeItemsUI, fftSize512))

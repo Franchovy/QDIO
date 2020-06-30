@@ -28,7 +28,7 @@
 //==============================================================================
 
 WahWahAudioProcessor::WahWahAudioProcessor():
-    BaseEffect()
+    BaseEffect("Wah-Wah")
     , paramMode (new AudioParameterChoice("Mode", "mode", modeItemsUI, modeManual))
     , paramMix (new AudioParameterFloat("Mix", "mix", NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f, ""))
     , paramFrequency (new AudioParameterFloat("Frequency", "freq", NormalisableRange<float>(200.f, 1300.0f, 1.0f), 300.f, "Hz"))

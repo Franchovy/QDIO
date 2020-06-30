@@ -28,7 +28,7 @@
 //==============================================================================
 
 ParametricEQAudioProcessor::ParametricEQAudioProcessor()
-    : BaseEffect()
+    : BaseEffect("EQ")
     , paramFrequency (new AudioParameterFloat("Frequency", "frequency",
             NormalisableRange<float>(10.0f, 20000.0f, 1.0f), 1500.0f, "Hz"))
                       //[this](float value){ paramFrequency.setCurrentAndTargetValue (value); updateFilters(); return value; })

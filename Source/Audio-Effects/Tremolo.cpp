@@ -28,7 +28,7 @@
 //==============================================================================
 
 TremoloAudioProcessor::TremoloAudioProcessor():
-    BaseEffect()
+    BaseEffect("Tremolo")
     , paramDepth (new AudioParameterFloat("Depth", "depth", NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.5f, ""))
     , paramFrequency (new AudioParameterFloat("LFO Frequency", "lfoFreq", NormalisableRange<float>(0.0f, 10.0f, 0.01f), 2.0f, "Hz"))
     , paramWaveform (new AudioParameterChoice("LFO Waveform", "lfowaveform", waveformItemsUI, waveformSine))

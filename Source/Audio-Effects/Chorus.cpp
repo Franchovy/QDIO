@@ -28,7 +28,7 @@
 //==============================================================================
 
 ChorusAudioProcessor::ChorusAudioProcessor():
-    BaseEffect ()
+    BaseEffect ("Chorus")
     , paramDelay (new AudioParameterFloat("Delay", "delay",
             NormalisableRange<float>(10.0f, 50.0f, 0.01f), 30.0f, "ms"))
     , paramWidth (new AudioParameterFloat("Width", "width",

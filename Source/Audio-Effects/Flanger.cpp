@@ -28,7 +28,7 @@
 //==============================================================================
 
 FlangerAudioProcessor::FlangerAudioProcessor() :
-        BaseEffect()
+        BaseEffect("Flanger")
     , paramDelay (new AudioParameterFloat("Delay", "delay",
             NormalisableRange<float>(1.0f, 20.0f, 0.01f), 2.5f, "ms"))//, [](float value){ return value ; })
     , paramWidth (new AudioParameterFloat("Width", "width",

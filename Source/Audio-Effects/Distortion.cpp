@@ -28,7 +28,7 @@
 //==============================================================================
 
 DistortionAudioProcessor::DistortionAudioProcessor():
-    BaseEffect()
+    BaseEffect("Distortion")
     , paramDistortionType (new AudioParameterChoice("Distortion type", "disttype",
             distortionTypeItemsUI, distortionTypeFullWaveRectifier))
     , paramInputGain (new AudioParameterFloat("Input gain", "inputgain",
