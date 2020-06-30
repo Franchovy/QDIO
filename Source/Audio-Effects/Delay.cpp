@@ -30,7 +30,7 @@
 DelayAudioProcessor::DelayAudioProcessor():
     BaseEffect()
     , paramDelayTime (new AudioParameterFloat("Delay time", "length", NormalisableRange<float>(0.0f, 5.0f, 0.001f), 0.1f, "s"))
-    , paramFeedback (new AudioParameterFloat("Feedback", "feedback", NormalisableRange<float>(0.0f, 0.9f, 0.01f), 0.7f, ""))
+    , paramFeedback (new AudioParameterFloat("Feedback", "feedback", NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.7f, ""))
     , paramMix (new AudioParameterFloat("Mix", "mix", NormalisableRange<float>(0.0f, 1.0f, 0.01), 1.0f))
 {
     setLayout(1,1);
