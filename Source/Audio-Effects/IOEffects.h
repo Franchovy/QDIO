@@ -10,8 +10,8 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "Settings.h"
-#include "BaseEffects.h"
+#include "../Settings.h"
+#include "../BaseEffects.h"
 
 class IOEffect : public AudioProcessorGraph::AudioGraphIOProcessor, public AudioProcessorParameter::Listener
 {

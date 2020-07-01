@@ -49,10 +49,12 @@
       <FILE id="qcFuA2" name="WahWah.h" compile="0" resource="0" file="Source/Audio-Effects/WahWah.h"/>
       <FILE id="j8Cebz" name="Reverb.cpp" compile="1" resource="0" file="Source/Audio-Effects/Reverb.cpp"/>
       <FILE id="W9pquZ" name="Reverb.h" compile="0" resource="0" file="Source/Audio-Effects/Reverb.h"/>
+      <FILE id="Vf1d6Q" name="Level.cpp" compile="1" resource="0" file="Source/Audio-Effects/Level.cpp"/>
+      <FILE id="Lx6lpp" name="Level.h" compile="0" resource="0" file="Source/Audio-Effects/Level.h"/>
+      <FILE id="Ensy75" name="IOEffects.cpp" compile="1" resource="0" file="Source/Audio-Effects/IOEffects.cpp"/>
+      <FILE id="jpt7c1" name="IOEffects.h" compile="0" resource="0" file="Source/Audio-Effects/IOEffects.h"/>
       <FILE id="UHECgY" name="Oscillator.cpp" compile="1" resource="0" file="Source/Audio-Effects/Oscillator.cpp"/>
       <FILE id="pJOgOS" name="Oscillator.h" compile="0" resource="0" file="Source/Audio-Effects/Oscillator.h"/>
-      <FILE id="caF8vX" name="Level.cpp" compile="1" resource="0" file="Source/Level.cpp"/>
-      <FILE id="piFpaa" name="Level.h" compile="0" resource="0" file="Source/Level.h"/>
     </GROUP>
     <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
       <FILE id="BBGZC6" name="Amp Output" compile="0" resource="1" file="Resources/Loadout/Amp Output"/>
@@ -88,10 +90,6 @@
       <FILE id="md9GHI" name="BaseEffects.h" compile="1" resource="1" file="Source/BaseEffects.h"
             xcodeResource="1"/>
       <FILE id="mbjf0W" name="IDs" compile="0" resource="1" file="Source/IDs"/>
-      <FILE id="NYg3gQ" name="IOEffects.cpp" compile="1" resource="1" file="Source/IOEffects.cpp"
-            xcodeResource="1"/>
-      <FILE id="QX8rPO" name="IOEffects.h" compile="1" resource="1" file="Source/IOEffects.h"
-            xcodeResource="1"/>
       <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="1" file="Source/Main.cpp"
             xcodeResource="1"/>
       <FILE id="NBQqHO" name="Parameters.cpp" compile="1" resource="0" file="Source/Parameters.cpp"/>

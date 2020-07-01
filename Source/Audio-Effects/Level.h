@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "BaseEffects.h"
+#include "../BaseEffects.h"
 
 class LevelAudioProcessor : public BaseEffect
 {

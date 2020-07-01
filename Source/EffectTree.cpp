@@ -23,9 +23,10 @@
 #include "Audio-Effects/Reverb.h"
 #include "Audio-Effects/RingModulation.h"
 #include "Audio-Effects/RobotizationWhisperization.h"
-#include "Level.h"
+#include "Audio-Effects/Level.h"
 #include "Audio-Effects/Tremolo.h"
 #include "Audio-Effects/WahWah.h"
+#include "Audio-Effects/IOEffects.h"
 #include "Audio-Effects/Vibrato.h"
 #include "Audio-Effects/Oscillator.h"
 
