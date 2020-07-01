@@ -16,16 +16,19 @@ class ConnectionLine;
 
 struct AudioConnection
 {
-    Effect* input;
-    Effect* output;
+    AudioConnection();
+
+    Effect* input = nullptr;
+    Effect* output = nullptr;
     Array<ConnectionLine*> connections;
     Array<AudioProcessorGraph::Connection> audioConnections;
+    bool validConnection = false;
 };
 
 class ConnectionGraph : public ComponentListener
 {
 public:
-    ConnectionGraph(AudioProcessorGraph& processorGraph);
+    ConnectionGraph(AudioProcessorGraph& audioGraph);
 
     void addConnection(const ConnectionLine& line);
     void removeConnection(const ConnectionLine& line);
@@ -35,4 +38,5 @@ public:
 private:
     AudioProcessorGraph& audioGraph;
     Array<AudioConnection> connections;
+    HashMap<const ConnectionLine*, const AudioConnection*> lineToAudioConnectionsMap;
 };

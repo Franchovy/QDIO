@@ -8,6 +8,7 @@ EffectScene::EffectScene()
         : EffectTreeBase()
         , MenuItem(1)
         , tree(this)
+        , connectionGraph(audioGraph)
 {
     setComponentID("EffectScene");
     setName("EffectScene");
@@ -62,6 +63,7 @@ EffectScene::EffectScene()
     EffectTreeBase::audioGraph = &audioGraph;
     EffectTreeBase::processorPlayer = &processorPlayer;
     EffectTreeBase::deviceManager = &deviceManager;
+    EffectTreeBase::connectionGraph = &connectionGraph;
 
     audioGraph.enableAllBuses();
    

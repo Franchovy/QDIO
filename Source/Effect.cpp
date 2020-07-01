@@ -96,37 +96,14 @@ void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) 
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
     connectionGraph->addConnection(connectionLine);
 
-/*
-    auto connections = getAudioConnection(connectionLine);
-
-    if (connections.isEmpty()) {
-        return false;
-    }
-
-    auto connection = connections.getFirst();
-    for (auto c = 0; c < 2; c++) { // default 2 channels
-        connection.source.channelIndex = c;
-        connection.destination.channelIndex = c;
-
-        if (!EffectTreeBase::audioGraph->isConnected(connection) &&
-            EffectTreeBase::audioGraph->isConnectionLegal(connection)) {
-            // Make audio connection
-            return EffectTreeBase::audioGraph->addConnection(connection);
-        }
-    }
-*/
 }
 
 void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
     connectionGraph->removeConnection(connectionLine);
 
-/*    for (auto connection : getAudioConnection(connectionLine)) {
-        if (audioGraph->isConnected(connection)) {
-            audioGraph->removeConnection(connection);
-        }
-    }*/
 }
 
+/*
 Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const ConnectionLine& connectionLine) {
     Effect::NodeAndPort in;
     Effect::NodeAndPort out;
@@ -163,6 +140,7 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
     }
     return returnArray;
 }
+*/
 
 
 void EffectTreeBase::close() {
