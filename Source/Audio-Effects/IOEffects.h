@@ -30,7 +30,6 @@ public:
             setChannelLayoutOfBus(false, 0, AudioChannelSet::stereo());
         }
 
-
         deviceParam->addListener(this);
     }
 
@@ -71,7 +70,7 @@ public:
     }
 
     void parameterValueChanged(int parameterIndex, float newValue) override {
-        SettingsComponent::setCurrentDevice(isInput, newValue);
+        SettingsComponent::setCurrentDevice(isInput, deviceParam->getNormalisableRange().convertFrom0to1(newValue));
     }
 
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {

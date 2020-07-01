@@ -235,8 +235,12 @@ void EffectScene::timerCallback() {
 void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
     if (source == &deviceManager) {
         // Update num channels in connections
-        int minChannels = jmin(deviceManager.getCurrentAudioDevice()->getActiveInputChannels().countNumberOfSetBits()
-                , deviceManager.getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits());
+
+        auto inputChannels = deviceManager.getCurrentAudioDevice()->getActiveInputChannels();
+        auto outputChannels = deviceManager.getCurrentAudioDevice()->getActiveOutputChannels();
+
+        int minChannels = jmax(2, jmin(inputChannels.countNumberOfSetBits()
+                , outputChannels.countNumberOfSetBits()));
         connectionGraph.updateNumChannels(minChannels);
 
         // DeviceManager change

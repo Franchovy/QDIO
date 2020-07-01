@@ -405,7 +405,23 @@ void ButtonListener::buttonClicked(Button *button) {
 void ComboListener::comboBoxChanged(ComboBox *comboBoxThatHasChanged) {
     if (linkedParameter != nullptr
             && linkedParameter->getCurrentValueAsText().compare(comboBoxThatHasChanged->getText()) != 0) {
-        linkedParameter->setValueNotifyingHost(comboBoxThatHasChanged->getSelectedItemIndex());
+        auto param = dynamic_cast<AudioParameterChoice*>(linkedParameter);
+
+        auto val = param->getNormalisableRange().convertTo0to1(comboBoxThatHasChanged->getSelectedItemIndex());
+        param->setValueNotifyingHost(val);
+        /*
+        if (! valueFloat) {
+            param->setValueNotifyingHost(comboBoxThatHasChanged->getSelectedItemIndex());
+
+
+            if (param->getIndex() != comboBoxThatHasChanged->getSelectedItemIndex()) {
+                valueFloat = true;
+            }
+        }
+        if (valueFloat) {
+            param->setValueNotifyingHost((float) comboBoxThatHasChanged->getSelectedItemIndex() / (float) comboBoxThatHasChanged->getNumItems());
+        }*/
+        //linkedParameter->setValueNotifyingHost((float) comboBoxThatHasChanged->getSelectedItemIndex() / (float) comboBoxThatHasChanged->getNumItems());
     }
 }
 
@@ -481,12 +497,14 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
     slider.hideTextBox(false);
     slider.hideTextBox(true);
 
-    setBounds(0, 0, 130, 40);
-    slider.setBounds(20, 60, 100, 70);
+    setBounds(0, 0, 200, 55);
+    slider.setBounds(20, 60, 160, 70);
 
     parameterLabel.setTopLeftPosition(5,5);
     slider.setTopLeftPosition(5, 0);
-    setSize(getWidth(), 40);
+    setSize(getWidth(), 50);
+
+    outline = getBounds();
 
     addAndMakeVisible(slider);
 }
@@ -564,6 +582,8 @@ ComboParameter::ComboParameter(AudioProcessorParameter* param) : Parameter(param
     combo.setTopLeftPosition(5, 0);
     setSize(getWidth(), 40);
 
+    outline = getBounds();
+
     addAndMakeVisible(combo);
 }
 
@@ -606,14 +626,16 @@ ButtonParameter::ButtonParameter(AudioProcessorParameter* param) : Parameter(par
 
     outline = Rectangle<int>();
 
-    setBounds(0,0,120, 45);
-    button.setBounds(20, 10, 100, 30);
+    setBounds(0,0,200, 55);
+    button.setBounds(10, 10, 130, 35);
 
     setSize(150, 120);
+
 
     parameterLabel.setTopLeftPosition(5,5);
     button.setTopLeftPosition(5, 0);
     setSize(getWidth(), 40);
+    outline = getBounds();
 
     addAndMakeVisible(button);
 }

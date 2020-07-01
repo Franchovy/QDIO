@@ -47,6 +47,7 @@ public:
 
 private:
     AudioParameterChoice* linkedParameter = nullptr;
+    bool valueFloat = false;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ComboListener)
 };
 
