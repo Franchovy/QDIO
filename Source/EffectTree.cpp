@@ -54,7 +54,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
     auto effect = new Effect();
     effect->state = Effect::loading;
     tree.setProperty(IDs::component, effect, nullptr);
-    effect->addComponentListener(this);
+    //effect->addComponentListener(this);
 
 
     int id = tree.getProperty(Effect::IDs::processorID);
@@ -297,6 +297,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
 
             for (auto c : component.getChildren()) {
 
+                //todo figure out how to better control these listeners
                 c->addComponentListener(this);
 
                 auto child = dynamic_cast<SelectHoverObject *>(c);
@@ -414,6 +415,12 @@ void EffectTree::componentEnablementChanged(Component &component) {
     ComponentListener::componentEnablementChanged(component);
 }
 
+
+void EffectTree::componentBeingDeleted(Component &component) {
+    component.removeComponentListener(this);
+    ComponentListener::componentBeingDeleted(component);
+}
+
 /**
  * Finds tree based on component hierarchy - meant to be efficient.
  * @param component
@@ -489,7 +496,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         auto component = getFromTree<Component>(childWhichHasBeenRemoved);
         auto parent = component->getParentComponent();
 
-        component->removeComponentListener(this);
+        //component->removeComponentListener(this);
 
         auto parentFromTree = getFromTree<Component>(parentTree);
         // Type-specific operations
@@ -508,6 +515,7 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         if (parent != nullptr && parent == parentFromTree) {
             parent->removeChildComponent(component);
         }
+
     }
     Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
 }
@@ -870,7 +878,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
     float value = parameterData.getProperty("value");
 
     if (param != nullptr && ! dynamic_cast<IOEffect*>(effect->getProcessor())) {
-        param->setValue(value);
+        param->setValueNotifyingHost(value);
     }
 
     if (type == 0) {
@@ -1134,6 +1142,7 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] {newProcessor = std::make_unique<VibratoAudioProcessor>(); });
     makeProcessorArray.add([=] {newProcessor = std::make_unique<Oscillator>(); });
 }
+
 
 
 

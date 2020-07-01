@@ -65,6 +65,8 @@ public:
 
     void componentParentHierarchyChanged(Component &component) override;
 
+    void componentBeingDeleted(Component &component) override;
+
     //void componentVisibilityChanged(Component &component) override;
 
     // Access methods
