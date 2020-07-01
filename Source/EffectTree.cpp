@@ -54,7 +54,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
     auto effect = new Effect();
     effect->state = Effect::loading;
     tree.setProperty(IDs::component, effect, nullptr);
-    //effect->addComponentListener(this);
+    effect->addComponentListener(this);
 
 
     int id = tree.getProperty(Effect::IDs::processorID);
@@ -418,6 +418,11 @@ void EffectTree::componentEnablementChanged(Component &component) {
 
 void EffectTree::componentBeingDeleted(Component &component) {
     component.removeComponentListener(this);
+
+    for (auto child : component.getChildren()) {
+        child->removeComponentListener(this);
+    }
+
     ComponentListener::componentBeingDeleted(component);
 }
 

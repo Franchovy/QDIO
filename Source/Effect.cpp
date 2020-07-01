@@ -564,7 +564,7 @@ void Effect::setEditMode(bool isEditMode) {
     }
 
     resized();
-    repaint();
+    //repaint();
 }
 
 
@@ -624,7 +624,6 @@ void Effect::resized() {
     internalOutputPortFlexBox.performLayout(Rectangle<int>(getWidth() - 120, 30, 60, getHeight()));
 
     if (! editMode) {
-
         // Parameters
         FlexBox parameterFlexBox;
         FlexBox paramPortsFlexBox;
@@ -634,6 +633,7 @@ void Effect::resized() {
             paramFlexItem.associatedComponent = parameter;
             paramFlexItem.width = parameter->getWidth();
             paramFlexItem.height = parameter->getHeight() + 15;
+
             paramFlexItem.alignSelf = FlexItem::AlignSelf::center;
 
             parameterFlexBox.items.add(paramFlexItem);
@@ -664,24 +664,24 @@ void Effect::resized() {
         auto newWidth = 250;
         auto newHeight = 200;
 
-        /*if (parameterFlexBox.items.size() > 0) {
-            *//*for (auto c : parameterFlexBox.items) {
-                int widthToAdd;
+        if (parameterFlexBox.items.size() > 0) {
+            for (auto c : parameterFlexBox.items) {
                 if (auto parameter = dynamic_cast<Parameter*>(c.associatedComponent)) {
-                    if (parameter->type == Parameter::combo) {
-                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 40);
+                    if (dynamic_cast<ComboParameter*>(parameter) != nullptr) {
+                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 30);
                     } else {
                         newWidth = jmax(newWidth, c.associatedComponent->getRight() + 10);
                     }
+
                 }
-            }*//*
+            }
 
             newWidth += 40;
             newHeight = parameterFlexBox.items.size() * 50 + 90;
         }
         if (outputPortFlexBox.items.size() > 0) {
             //newWidth += 20;
-        }*/
+        }
         newHeight = parameterFlexBox.items.size() * 50 + 90;
 
 
@@ -696,7 +696,7 @@ void Effect::resized() {
         newHeight += numWraps * 40;
         setSize(newWidth, newHeight);
 
-        parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 60 : 15
+        parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 70 : 15
                 , 50, (outputPortFlexBox.items.size() > 0) ? getWidth() - 60 : getWidth() - 15
                 , getHeight() - (30 + portsHeight)));
 
