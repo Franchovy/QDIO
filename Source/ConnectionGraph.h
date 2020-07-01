@@ -25,6 +25,11 @@ class ConnectionGraph : public ComponentListener
 public:
     ConnectionGraph(AudioProcessorGraph& processorGraph);
 
+    void addConnection(ConnectionLine* line);
+    void removeConnection(ConnectionLine* line);
+
+    void updateNumChannels(int numChannels);
+
 private:
     AudioProcessorGraph& audioGraph;
     Array<AudioConnection> connections;
