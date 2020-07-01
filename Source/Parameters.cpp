@@ -631,5 +631,5 @@ void ButtonParameter::disconnect(Parameter *otherParameter) {
 }
 
 void ButtonParameter::setParameterValueAsync(float value) {
-    button.setToggleState((bool) value, sendNotificationAsync);
+    button.setToggleState((bool) value, sendNotification);
 }

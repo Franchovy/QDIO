@@ -688,7 +688,9 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 }
 
                 if (childParamObject->getParameter() != nullptr) {
-                    childParam.setProperty("value", childParamObject->getParameter()->getValue(), nullptr);
+                    auto value = childParamObject->getParameter()->getValue();
+                    std::cout << "Storing parameter: " << childParamObject->getName() << " value: " << value << newLine;
+                    childParam.setProperty("value", value, nullptr);
                 }
 
                 childParam.setProperty("internalPortID",
@@ -877,10 +879,6 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
 
     float value = parameterData.getProperty("value");
 
-    if (param != nullptr && ! dynamic_cast<IOEffect*>(effect->getProcessor())) {
-        param->setValueNotifyingHost(value);
-    }
-
     if (type == 0) {
         parameter = new ButtonParameter(param);
     } else if (type == 1) {
@@ -919,6 +917,14 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
             }
         }
     }
+
+    // Set value
+
+    if (param != nullptr && name != "Device") {
+        parameter->setParameterValueAsync(value);
+    }
+
+    // Add ValueTree and Component to system
 
     parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
