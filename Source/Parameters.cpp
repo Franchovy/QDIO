@@ -12,14 +12,14 @@
 
 
 Parameter::Parameter(AudioProcessorParameter *param)
-    : internalPort(true, this)
-    , externalPort(false, this)
+    : internalPort(new ParameterPort(true, this))
+    , externalPort(new ParameterPort(false, this))
 {
-    internalPort.setLinkedPort(&externalPort);
-    externalPort.setLinkedPort(&internalPort);
-    internalPort.incReferenceCount();
+    internalPort->setLinkedPort(externalPort.get());
+    externalPort->setLinkedPort(internalPort.get());
+    /*internalPort.incReferenceCount();
     externalPort.incReferenceCount();
-
+*/
     referencedParam = param;
     outline = Rectangle<int>(10, 20, 130, 90);
 
@@ -41,13 +41,13 @@ Parameter::Parameter(AudioProcessorParameter *param)
     }
 
     addAndMakeVisible(parameterLabel);
-    addChildComponent(externalPort);
+    addChildComponent(externalPort.get());
 
     parameterLabel.setColour(Label::textColourId, Colours::black);
     parameterLabel.setText(getName(), dontSendNotification);
     //parameterComponent->setTopLeftPosition(0,60);
 
-    externalPort.setCentrePosition(75, 30);
+    externalPort->setCentrePosition(75, 30);
 
     setEditMode(false);
 }
@@ -73,7 +73,7 @@ void Parameter::setEditMode(bool isEditable) {
     openMode = isEditable;
 
     // change between editable and non-editable version
-    externalPort.setVisible(parentIsInEditMode);
+    externalPort->setVisible(parentIsInEditMode);
     parameterLabel.setEditable(parentIsInEditMode, parentIsInEditMode);
     parameterLabel.setColour(Label::textColourId,
                              (parentIsInEditMode ? Colours::whitesmoke : Colours::black));
@@ -84,25 +84,25 @@ void Parameter::setEditMode(bool isEditable) {
 }
 
 void Parameter::mouseDown(const MouseEvent &event) {
-    if (event.originalComponent == &externalPort) {
+    if (event.originalComponent == externalPort.get()) {
         getParentComponent()->mouseDown(event);
     }
 }
 
 void Parameter::mouseDrag(const MouseEvent &event) {
-    if (event.originalComponent == &externalPort) {
+    if (event.originalComponent == externalPort.get()) {
         getParentComponent()->mouseDrag(event);
     }
 }
 
 void Parameter::mouseUp(const MouseEvent &event) {
-    if (event.originalComponent == &externalPort) {
+    if (event.originalComponent == externalPort.get()) {
         getParentComponent()->mouseUp(event);
     }
 }
 
 ParameterPort *Parameter::getPort(bool internal) {
-    return internal ? &internalPort : &externalPort;
+    return internal ? internalPort.get() : externalPort.get();
 }
 
 void Parameter::paint(Graphics &g) {
@@ -328,14 +328,13 @@ bool Parameter::isInEditMode() const {
 
 void Parameter::moved() {
     if (openMode) {
-        internalPort.setCentrePosition(getX() + getWidth() / 2, getParentComponent()->getHeight() - 20);
+        internalPort->setCentrePosition(getX() + getWidth() / 2, getParentComponent()->getHeight() - 20);
     }
     Component::moved();
 }
 
 Parameter::~Parameter() {
-    internalPort.decReferenceCountWithoutDeleting();
-    externalPort.decReferenceCountWithoutDeleting();
+
 }
 
 bool Parameter::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
@@ -348,16 +347,16 @@ bool Parameter::canDragHover(const SelectHoverObject *other, bool isRightClickDr
 
 void Parameter::parentHierarchyChanged() {
     if (getParentComponent() != nullptr) {
-        getParentComponent()->addAndMakeVisible(internalPort);
+        getParentComponent()->addAndMakeVisible(internalPort.get());
     }
     Component::parentHierarchyChanged();
 }
 
 ParameterPort *Parameter::getPortWithID(String portID) {
-    if (internalPort.getComponentID() == portID) {
-        return &internalPort;
-    } else if (externalPort.getComponentID() == portID) {
-        return &externalPort;
+    if (internalPort->getComponentID() == portID) {
+        return internalPort.get();
+    } else if (externalPort->getComponentID() == portID) {
+        return externalPort.get();
     }
     return nullptr;
 }
@@ -377,7 +376,7 @@ void Parameter::mouseDoubleClick(const MouseEvent &event) {
 void Parameter::setIsOutput(bool isOutput) {
     isOutputParameter = isOutput;
     isAuto = isOutput;
-    internalPort.isInput = ! isOutput;
+    internalPort->isInput = ! isOutput;
 }
 
 bool Parameter::isOutput() const {

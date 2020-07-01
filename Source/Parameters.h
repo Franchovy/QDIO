@@ -157,8 +157,8 @@ protected:
     AudioProcessorParameter* connectedParam = nullptr;
     Parameter* connectedParameter;
 
-    ParameterPort internalPort;
-    ParameterPort externalPort;
+    ParameterPort::Ptr internalPort;
+    ParameterPort::Ptr externalPort;
 
     bool parentIsInEditMode = false;
     bool openMode = false;

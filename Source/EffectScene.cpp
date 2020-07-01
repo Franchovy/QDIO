@@ -498,6 +498,9 @@ bool EffectScene::keyPressed(const KeyPress &key)
             std::cout << EffectLoader::loadEffect(e).toXmlString() << newLine;
         }
     }
+    if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'u') {
+        undoManager.clearUndoHistory();
+    }
     if (key.getKeyCode() == '=') {
         auto scaleFactor = Desktop::getInstance().getGlobalScaleFactor();
         scaleFactor += 0.1f;
