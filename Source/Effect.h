@@ -15,6 +15,8 @@
 #include "Parameters.h"
 #include "Ports.h"
 #include "MenuItem.h"
+#include "ConnectionGraph.h"
+
 
 #pragma once
 
@@ -92,6 +94,8 @@ protected:
     static AudioDeviceManager* deviceManager;
     static AudioProcessorPlayer* processorPlayer;
     static AudioProcessorGraph* audioGraph;
+
+    static ConnectionGraph* connectionGraph;
 
     static UndoManager undoManager;
 

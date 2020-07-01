@@ -232,11 +232,15 @@ void EffectScene::timerCallback() {
 
 void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
     if (source == &deviceManager) {
+        // Update num channels in connections
+        int minChannels = jmin(deviceManager.getCurrentAudioDevice()->getActiveInputChannels().countNumberOfSetBits()
+                , deviceManager.getCurrentAudioDevice()->getActiveOutputChannels().countNumberOfSetBits());
+        connectionGraph.updateNumChannels(minChannels);
+
         // DeviceManager change
         if (appState != loading) {
-            std::cout << "Device manager change state: " << newLine;
             auto deviceData = deviceManager.createStateXml();
-            std::cout << deviceData->toString() << newLine;
+
             getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
             getAppProperties().getUserSettings()->save();
 

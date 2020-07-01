@@ -10,17 +10,19 @@
 
 #include "ConnectionGraph.h"
 
+#include "Effect.h"
+
 ConnectionGraph::ConnectionGraph(AudioProcessorGraph& processorGraph)
     : audioGraph(processorGraph)
 {
 
 }
 
-void ConnectionGraph::addConnection(ConnectionLine *line) {
+void ConnectionGraph::addConnection(const ConnectionLine& line) {
     std::cout << "Add connection" << newLine;
 }
 
-void ConnectionGraph::removeConnection(ConnectionLine *line) {
+void ConnectionGraph::removeConnection(const ConnectionLine& line) {
     std::cout << "Remove connection" << newLine;
 }
 

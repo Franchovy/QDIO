@@ -10,7 +10,9 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "Effect.h"
+
+class Effect;
+class ConnectionLine;
 
 struct AudioConnection
 {
@@ -25,8 +27,8 @@ class ConnectionGraph : public ComponentListener
 public:
     ConnectionGraph(AudioProcessorGraph& processorGraph);
 
-    void addConnection(ConnectionLine* line);
-    void removeConnection(ConnectionLine* line);
+    void addConnection(const ConnectionLine& line);
+    void removeConnection(const ConnectionLine& line);
 
     void updateNumChannels(int numChannels);
 

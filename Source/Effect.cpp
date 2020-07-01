@@ -20,6 +20,7 @@ EffectTreeBase::AppState EffectTreeBase::appState = neutral;
 AudioProcessorGraph* EffectTreeBase::audioGraph = nullptr;
 AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
 AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
+ConnectionGraph* EffectTreeBase::connectionGraph = nullptr;
 UndoManager EffectTreeBase::undoManager;
 
 const Identifier Effect::IDs::x = "x";
@@ -93,6 +94,9 @@ void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) 
 
 
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
+    connectionGraph->addConnection(connectionLine);
+
+/*
     auto connections = getAudioConnection(connectionLine);
 
     if (connections.isEmpty()) {
@@ -110,14 +114,17 @@ bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
             return EffectTreeBase::audioGraph->addConnection(connection);
         }
     }
+*/
 }
 
 void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
-    for (auto connection : getAudioConnection(connectionLine)) {
+    connectionGraph->removeConnection(connectionLine);
+
+/*    for (auto connection : getAudioConnection(connectionLine)) {
         if (audioGraph->isConnected(connection)) {
             audioGraph->removeConnection(connection);
         }
-    }
+    }*/
 }
 
 Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const ConnectionLine& connectionLine) {

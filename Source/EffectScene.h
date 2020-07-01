@@ -92,6 +92,8 @@ private:
     AudioProcessorPlayer processorPlayer;
     AudioProcessorGraph audioGraph;
 
+    ConnectionGraph connectionGraph;
+
     //==============================================================================
     // Audio shit
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
