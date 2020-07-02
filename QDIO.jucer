@@ -57,12 +57,7 @@
       <FILE id="pJOgOS" name="Oscillator.h" compile="0" resource="0" file="Source/Audio-Effects/Oscillator.h"/>
     </GROUP>
     <GROUP id="{67710877-AA3A-C2F6-869E-7C0781D66F80}" name="Loadout">
-      <FILE id="BBGZC6" name="Amp Output" compile="0" resource="1" file="Resources/Loadout/Amp Output"/>
-      <FILE id="Hh0UJL" name="Basic Setup" compile="0" resource="1" file="Resources/Loadout/Basic Setup"/>
-      <FILE id="UTuuA5" name="Double Echo" compile="0" resource="1" file="Resources/Loadout/Double Echo"/>
-      <FILE id="IwiyE9" name="Grungey Echo" compile="0" resource="1" file="Resources/Loadout/Grungey Echo"/>
-      <FILE id="vFVNtB" name="Guitar Setup" compile="0" resource="1" file="Resources/Loadout/Guitar Setup"/>
-      <FILE id="Z9dRTd" name="Guitar Input" compile="0" resource="1" file="Resources/Loadout/Guitar Input"/>
+      <FILE id="rmPAn9" name="Basic In:Out" compile="0" resource="1" file="../Desktop/Basic In:Out"/>
     </GROUP>
     <GROUP id="{3656747D-F630-B6A0-87B7-F4E2A08E98F7}" name="Resources">
       <FILE id="DRvEs5" name="background.png" compile="0" resource="1" file="Resources/background.png"/>

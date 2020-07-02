@@ -74,7 +74,7 @@ RobotizationWhisperizationAudioProcessor::RobotizationWhisperizationAudioProcess
                               (int)(float)(1 << ((int)*paramHopSize + 1)),
                               (int)*paramWindowType);
     });
-    setRefreshRate(2);
+    //setRefreshRate(2);
 }
 
 RobotizationWhisperizationAudioProcessor::~RobotizationWhisperizationAudioProcessor()

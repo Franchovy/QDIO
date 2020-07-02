@@ -22,7 +22,7 @@ EffectScene::EffectScene()
 
     // Don't load anything if this isn't the right version.
 
-    String currentVersion = "1.6";
+    String currentVersion = "1.7";
     std::cout << "App version: " << currentVersion << newLine;
     auto appVersion = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_APP_VERSION);
 
@@ -32,7 +32,6 @@ EffectScene::EffectScene()
             dontLoad = false;
         } else {
             dontLoad = true;
-
         }
     } else {
         dontLoad = true;
@@ -204,9 +203,12 @@ void EffectScene::timerCallback() {
 
         // Load
         if (loadInitialCase) {
-
+            auto defaultInOut = ValueTree::readFromData(BinaryData::Basic_InOut, BinaryData::Basic_InOutSize);
+            EffectLoader::saveTemplate(defaultInOut);
+            String name = defaultInOut.getProperty("name");
+            loadNewTemplate(name);
             // Refresh effect and template menus
-            //        postCommandMessage(0);
+            postCommandMessage(0);
         } else if (!dontLoad) {
             // Load template
 
