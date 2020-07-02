@@ -11,8 +11,8 @@
 #include "EffectLoader.h"
 
 void EffectLoader::saveEffect(ValueTree &storeEffect) {
-    std::cout << "Saving effect: " << storeEffect.getType().toString() << newLine;
-    std::cout << storeEffect.toXmlString() << newLine;
+    //std::cout << "Saving effect: " << storeEffect.getType().toString() << newLine;
+    //std::cout << storeEffect.toXmlString() << newLine;
 
     ValueTree effectLib("EffectLib");
 
@@ -25,7 +25,7 @@ void EffectLoader::saveEffect(ValueTree &storeEffect) {
                                                             storeEffect.getProperty("name").toString());
 
     if (effectToOverWrite.isValid()) {
-        std::cout << "Overwriting effect" << newLine;
+        //std::cout << "Overwriting effect" << newLine;
         effectLib.removeChild(effectToOverWrite, nullptr);
     }
 
@@ -95,8 +95,8 @@ void EffectLoader::clearEffect(String effectName) {
 
 void EffectLoader::saveTemplate(ValueTree &newTemplate) {
 
-    std::cout << "Saving template: " << newTemplate.getType().toString() << newLine;
-    std::cout << newTemplate.toXmlString() << newLine;
+    //std::cout << "Saving template: " << newTemplate.getType().toString() << newLine;
+    //std::cout << newTemplate.toXmlString() << newLine;
 
     ValueTree effectLib("Templates");
 

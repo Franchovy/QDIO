@@ -193,34 +193,43 @@ EffectScene::EffectScene()
 
     Thread::sleep(1000);
 
+    appState = loading;
     startTimer(500);
 }
 
 void EffectScene::timerCallback() {
-    stopTimer();
-    appState = loading;
-
-    // Load
-    if (loadInitialCase) {
-
-        // Refresh effect and template menus
-//        postCommandMessage(0);
-    } else if (! dontLoad) {
-        // Load template
+    if (appState == loading) {
+        stopTimer();
 
 
-        // Load previously loaded template
-        String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
-        std::cout << "Load template: " << name << newLine;
-        tree.loadTemplate(name);
+        // Load
+        if (loadInitialCase) {
 
-        undoManager.clearUndoHistory();
+            // Refresh effect and template menus
+            //        postCommandMessage(0);
+        } else if (!dontLoad) {
+            // Load template
 
+
+            // Load previously loaded template
+            String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
+            std::cout << "Load template: " << name << newLine;
+            tree.loadTemplate(name);
+
+            undoManager.clearUndoHistory();
+
+        }
+
+        changeListenerCallback(&deviceManager);
+
+        appState = neutral;
+    } else {
+        // Save app state regularly
+        std::cout << "autosave" << newLine;
+        storeState();
     }
 
-    changeListenerCallback(&deviceManager);
-
-    appState = neutral;
+    startTimer(15000);
 }
 
 
