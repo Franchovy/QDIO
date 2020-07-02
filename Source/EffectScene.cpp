@@ -680,6 +680,12 @@ void EffectScene::storeState() {
 void EffectScene::handleCommandMessage(int commandId) {
     if (commandId == 0) {
         getParentComponent()->postCommandMessage(0);
+    } else if (commandId == 1) {
+        // Save effect
+        saveEffect();
+    } else if (commandId == 2) {
+        // Export effect
+        exportEffect();
     }
     EffectTreeBase::handleCommandMessage(commandId);
 }
@@ -831,6 +837,7 @@ void EffectScene::exportEffect() {
         auto item = selected.getSelectedItem(0);
         if (auto effect = dynamic_cast<Effect*>(item.get())) {
             // Export effect
+            effect->setEditMode(false);
             auto effectData = tree.storeEffect(tree.getTree(effect));
             EffectLoader::writeToFile(effectData);
         }
@@ -858,6 +865,7 @@ void EffectScene::saveEffect() {
             int result = callSaveEffectDialog(name);
 
             if (result == 1) {
+                effect->setEditMode(false);
                 auto effectTree = tree.getTree(effect);
 
                 // Set name to whatever was entered

@@ -256,6 +256,8 @@ ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
 void EffectTreeBase::handleCommandMessage(int commandId) {
     if (commandId == 9) {
         undoManager.beginNewTransaction();
+    } else {
+        getParentComponent()->handleCommandMessage(commandId);
     }
     Component::handleCommandMessage(commandId);
 }
@@ -387,6 +389,22 @@ void Effect::setupTitle() {
 void Effect::setupMenu() {
     PopupMenu::Item toggleEditMode("Toggle Edit Mode");
     PopupMenu::Item changeEffectImage("Change Effect Image..");
+
+    std::unique_ptr<PopupMenu> saveEffectMenu = std::make_unique<PopupMenu>();
+    PopupMenu::Item saveSubMenuItem("Save Effect..");
+
+    PopupMenu::Item saveEffectToLibItem("Save to Library..");
+    saveEffectToLibItem.action = [=] { getParentComponent()->handleCommandMessage(1); };
+    saveEffectMenu->addItem(saveEffectToLibItem);
+
+    PopupMenu::Item saveEffectExportItem("Export to file..");
+    saveEffectExportItem.action = [=] { getParentComponent()->handleCommandMessage(2); };
+    saveEffectMenu->addItem(saveEffectExportItem);
+
+    saveSubMenuItem.subMenu = std::move(saveEffectMenu);
+
+    addMenuItem(menu, saveSubMenuItem);
+    addMenuItem(editMenu, saveSubMenuItem);
 
     std::unique_ptr<PopupMenu> portSubMenu = std::make_unique<PopupMenu>();
     PopupMenu::Item portSubMenuItem("Add Port..");
