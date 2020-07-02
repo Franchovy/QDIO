@@ -54,6 +54,15 @@ public:
 
     bool keyPressed(const KeyPress &key) override;
 
+    void saveTemplate();
+    void importTemplate();
+    void exportTemplate();
+    void saveEffect();
+    void importEffect();
+    void exportEffect();
+
+    void refreshBuffer();
+
     void storeState();
 
     void handleCommandMessage(int commandId) override;

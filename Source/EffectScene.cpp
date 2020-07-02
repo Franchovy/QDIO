@@ -154,6 +154,29 @@ EffectScene::EffectScene()
     //setupCreateEffectMenu();
 
 
+    PopupMenu::Item templateSubMenu("Template..");
+    templateSubMenu.subMenu = std::make_unique<PopupMenu>();
+
+    auto saveTemplateItem = PopupMenu::Item("Save to Library..");
+    saveTemplateItem.action = [=] { saveTemplate(); };
+    templateSubMenu.subMenu->addItem(saveTemplateItem);
+    auto exportTemplateItem = PopupMenu::Item("Export..");
+    exportTemplateItem.action = [=] { exportTemplate(); };
+    templateSubMenu.subMenu->addItem(exportTemplateItem);
+    auto importTemplateItem = PopupMenu::Item("Load from file..");
+    importTemplateItem.action = [=] { importTemplate(); };
+    templateSubMenu.subMenu->addItem(importTemplateItem);
+    addMenuItem(0, templateSubMenu);
+
+    PopupMenu::Item loadEffectItem("Load Effect from file..");
+    loadEffectItem.action = [=] { importEffect(); };
+    addMenuItem(0, loadEffectItem);
+
+    PopupMenu::Item refreshBufferItem("Refresh buffer");
+    refreshBufferItem.action = [=] { refreshBuffer(); };
+    addMenuItem(0, refreshBufferItem);
+
+
     //==========================================================================
     // Load starting state
 
@@ -179,40 +202,9 @@ void EffectScene::timerCallback() {
 
     // Load
     if (loadInitialCase) {
-        // Load initial template
-        /*auto initialTemplate = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
-
-        jassert(initialTemplate.getType() == Identifier(EFFECTSCENE_ID));
-        EffectLoader::saveTemplate(initialTemplate);
-
-        auto name = initialTemplate.getProperty("name");
-        tree.loadTemplate(name);
-
-        std::cout << "Initial template load!" << newLine;
-
-        getAppProperties().getUserSettings()->setValue(KEYNAME_INITIAL_USE, true);
-
-        // Load effects and templates to EffectLoader
-        auto data = ValueTree::readFromData(BinaryData::Basic_Setup, BinaryData::Basic_SetupSize);
-        EffectLoader::saveTemplate(data);
-
-        *//*data = ValueTree::readFromData(BinaryData::Guitar_Setup, BinaryData::Guitar_SetupSize);
-        EffectLoader::saveTemplate(data);
-*//*
-        data = ValueTree::readFromData(BinaryData::Guitar_Input, BinaryData::Guitar_InputSize);
-        EffectLoader::saveEffect(data);
-
-        data = ValueTree::readFromData(BinaryData::Amp_Output, BinaryData::Amp_OutputSize);
-        EffectLoader::saveEffect(data);
-
-        data = ValueTree::readFromData(BinaryData::Grungey_Echo, BinaryData::Grungey_EchoSize);
-        EffectLoader::saveEffect(data);
-
-        data = ValueTree::readFromData(BinaryData::Double_Echo, BinaryData::Double_EchoSize);
-        EffectLoader::saveEffect(data);*/
 
         // Refresh effect and template menus
-        postCommandMessage(0);
+//        postCommandMessage(0);
     } else if (! dontLoad) {
         // Load template
 
@@ -469,13 +461,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         }
     }
     if (key.getKeyCode() == 'r') {
-        auto setup = deviceManager.getAudioDeviceSetup();
-        auto bufferSizes = deviceManager.getCurrentAudioDevice()->getAvailableBufferSizes();
-        auto bufferElement = bufferSizes.indexOf(setup.bufferSize);
-        setup.bufferSize = bufferSizes[bufferElement + 1];
-        deviceManager.setAudioDeviceSetup(setup, true);
-        setup.bufferSize = bufferSizes[bufferElement];
-        deviceManager.setAudioDeviceSetup(setup, true);
+        refreshBuffer();
     }
     /*if (key.getKeyCode() == 'e') {
         if (auto e = dynamic_cast<EffectTreeBase*>(getComponentAt(getMouseXYRelative()))) {
@@ -511,19 +497,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
     if (key.getModifiers().isCtrlDown() && key.getKeyCode() == 'u') {
         undoManager.clearUndoHistory();
     }
-    if (key.getKeyCode() == '=') {
-        auto scaleFactor = Desktop::getInstance().getGlobalScaleFactor();
-        scaleFactor += 0.1f;
-        Desktop::getInstance().setGlobalScaleFactor(scaleFactor);
-        repaint();
-        return true;
-    } else if (key.getKeyCode() == '-') {
-        auto scaleFactor = Desktop::getInstance().getGlobalScaleFactor();
-        scaleFactor -= 0.1f;
-        Desktop::getInstance().setGlobalScaleFactor(scaleFactor);
-        repaint();
-        return true;
-    }
+
 #endif
 
     if (key.getKeyCode() == KeyPress::spaceKey) {
@@ -577,37 +551,9 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
         if (key.getKeyCode() == 's' || key.getKeyCode() == 'S') {
             if (selected.getItemArray().size() == 1) {
-                auto item = selected.getSelectedItem(0);
-
-                if (auto effect = dynamic_cast<Effect*>(item.get())) {
-                    String name = item->getName();
-
-                    int result = callSaveEffectDialog(name);
-
-                    if (result == 1) {
-                        auto effectTree = tree.getTree(effect);
-
-                        // Set name to whatever was entered
-                        effect->setName(name);
-                        effectTree.setProperty("name", name, nullptr);
-
-                        auto data = tree.storeEffect(tree.getTree(effect));
-                        EffectLoader::saveEffect(data);
-
-                        std::cout << "Saved Effect: " << name << newLine;
-                        postCommandMessage(0);
-                    }
-                }
+                saveEffect();
             } else {
-                // Save template
-                String name;
-                int result = callSaveTemplateDialog(name, false);
-
-                if (result == 1) {
-                    tree.storeTemplate(name);
-                    std::cout << "Save template: " << name << newLine;
-                    postCommandMessage(0);
-                }
+                saveTemplate();
             }
         }
 
@@ -617,13 +563,11 @@ bool EffectScene::keyPressed(const KeyPress &key)
                 auto item = selected.getSelectedItem(0);
                 if (auto effect = dynamic_cast<Effect*>(item.get())) {
                     // Export effect
-                    auto effectData = tree.storeEffect(tree.getTree(effect));
-                    EffectLoader::writeToFile(effectData);
+                    exportEffect();
                 }
             } else {
                 // Export Template
-                auto templateData = EffectLoader::loadTemplate(tree.getCurrentTemplateName());
-                EffectLoader::writeToFile(templateData);
+                exportTemplate();
             }
         }
         // super secret load from file op
@@ -643,19 +587,14 @@ bool EffectScene::keyPressed(const KeyPress &key)
                     }
 
                     if (child.getType() == Identifier(EFFECTSCENE_ID)) {
-                        // Import template
-                        EffectLoader::saveTemplate(child);
-                        String templateName = child.getProperty("name");
-                        loadNewTemplate(templateName);
+                        importTemplate();
                     } else if (child.getType() == Identifier(EFFECT_ID)) {
-                        // Import effect
-                        EffectLoader::saveEffect(child);
-                        tree.loadEffect(child);
-
+                        importEffect();
                     }
                 }
             }
         }
+
         // reset initial use command
         if (key.getKeyCode() == 'I' && key.getModifiers().isCtrlDown())
         {
@@ -673,6 +612,20 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
             getAppProperties().getUserSettings()->clear();
             getAppProperties().getUserSettings()->save();
+        }
+
+        if (key.getKeyCode() == '+' || key.getKeyCode() == '=') {
+            auto scaleFactor = Desktop::getInstance().getGlobalScaleFactor();
+            scaleFactor += 0.1f;
+            Desktop::getInstance().setGlobalScaleFactor(scaleFactor);
+            repaint();
+            return true;
+        } else if (key.getKeyCode() == '-' || key.getKeyCode() == '_') {
+            auto scaleFactor = Desktop::getInstance().getGlobalScaleFactor();
+            scaleFactor -= 0.1f;
+            Desktop::getInstance().setGlobalScaleFactor(scaleFactor);
+            repaint();
+            return true;
         }
     }
     
@@ -806,6 +759,119 @@ int EffectScene::callSaveEffectDialog(String &name) {
 
 StringArray EffectScene::getProcessorNames() {
     return tree.getProcessorNames();
+}
+
+void EffectScene::refreshBuffer() {
+    auto setup = deviceManager.getAudioDeviceSetup();
+    auto bufferSizes = deviceManager.getCurrentAudioDevice()->getAvailableBufferSizes();
+    auto bufferElement = bufferSizes.indexOf(setup.bufferSize);
+    setup.bufferSize = bufferSizes[bufferElement + 1];
+    deviceManager.setAudioDeviceSetup(setup, true);
+    setup.bufferSize = bufferSizes[bufferElement];
+    deviceManager.setAudioDeviceSetup(setup, true);
+}
+
+void EffectScene::importTemplate() {
+    auto loadData = EffectLoader::loadFromFile();
+    std::cout << "load data type: " << loadData.getType().toString() << newLine;
+
+    auto numChildren = loadData.getNumChildren();
+    if (loadData.getType() == Identifier("data")) {
+        for (int i = 0; i < numChildren; i++) {
+            auto child = loadData.getChild(0);
+            loadData.removeChild(child, nullptr);
+
+            // Basic check for file validity
+            if (! child.hasProperty("name")) {
+                continue;
+            }
+
+            if (child.getType() == Identifier(EFFECTSCENE_ID)) {
+                // Import template
+                EffectLoader::saveTemplate(child);
+                String templateName = child.getProperty("name");
+                loadNewTemplate(templateName);
+            }
+        }
+    }
+}
+
+void EffectScene::exportTemplate() {
+    auto templateData = EffectLoader::loadTemplate(tree.getCurrentTemplateName());
+    EffectLoader::writeToFile(templateData);
+}
+
+void EffectScene::importEffect() {
+    auto loadData = EffectLoader::loadFromFile();
+    std::cout << "load data type: " << loadData.getType().toString() << newLine;
+
+    auto numChildren = loadData.getNumChildren();
+    if (loadData.getType() == Identifier("data")) {
+        for (int i = 0; i < numChildren; i++) {
+            auto child = loadData.getChild(0);
+            loadData.removeChild(child, nullptr);
+
+            // Basic check for file validity
+            if (! child.hasProperty("name")) {
+                continue;
+            }
+
+            if (child.getType() == Identifier(EFFECT_ID)) {
+                // Import effect
+                EffectLoader::saveEffect(child);
+                tree.loadEffect(child);
+
+            }
+        }
+    }
+}
+
+void EffectScene::exportEffect() {
+    if (selected.getItemArray().size() == 1) {
+        auto item = selected.getSelectedItem(0);
+        if (auto effect = dynamic_cast<Effect*>(item.get())) {
+            // Export effect
+            auto effectData = tree.storeEffect(tree.getTree(effect));
+            EffectLoader::writeToFile(effectData);
+        }
+    }
+}
+
+void EffectScene::saveTemplate() {
+    String name;
+    int result = callSaveTemplateDialog(name, false);
+
+    if (result == 1) {
+        tree.storeTemplate(name);
+        std::cout << "Save template: " << name << newLine;
+        postCommandMessage(0);
+    }
+}
+
+void EffectScene::saveEffect() {
+    if (selected.getItemArray().size() == 1) {
+        auto item = selected.getSelectedItem(0);
+
+        if (auto effect = dynamic_cast<Effect*>(item.get())) {
+            String name = item->getName();
+
+            int result = callSaveEffectDialog(name);
+
+            if (result == 1) {
+                auto effectTree = tree.getTree(effect);
+
+                // Set name to whatever was entered
+                effect->setName(name);
+                effectTree.setProperty("name", name, nullptr);
+
+                auto data = tree.storeEffect(tree.getTree(effect));
+                EffectLoader::saveEffect(data);
+
+                std::cout << "Saved Effect: " << name << newLine;
+                postCommandMessage(0);
+            }
+        }
+    }
 }
 
 
