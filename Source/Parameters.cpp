@@ -61,7 +61,7 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
         referencedParam->setValue(newValue);
     }
     if (connectedParam != nullptr && connectedParam->getValue() != newValue) {
-        connectedParam->setValue(connectedParameter->limitedRange.convertFrom0to1(newValue));
+        connectedParam->setValue(connectedParameter->fullRange.convertTo0to1(connectedParameter->limitedRange.convertFrom0to1(newValue)));
     }
 
     if (isAuto) {
@@ -167,19 +167,22 @@ void Parameter::paint(Graphics &g) {
 void Parameter::connect(Parameter *otherParameter) {
     auto otherParam = otherParameter->getParameter();
 
-    if (otherParam != nullptr) {
-        otherParam->addListener(this);
+    if (! isOutputParameter) {
+        if (otherParam != nullptr) {
+            otherParam->addListener(this);
+        }
+        otherParameter->connectedParam = referencedParam;
+        otherParameter->connectedParameter = this;
     }
-    otherParameter->connectedParam = referencedParam;
-    otherParameter->connectedParameter = this;
 
-    if (referencedParam != nullptr) {
-        referencedParam->addListener(otherParameter);
+    if (! otherParameter->isOutputParameter) {
+        if (referencedParam != nullptr) {
+            referencedParam->addListener(otherParameter);
+        }
+        connectedParam = otherParam;
+        connectedParameter = otherParameter;
     }
-    connectedParam = otherParam;
-    connectedParameter = otherParameter;
-
-    isAuto = otherParameter->isOutputParameter || otherParameter->isOutputParameter;
+    isAuto = otherParameter->isAuto || otherParameter->isOutputParameter;
 
     /*
     bool outputConnection = otherParameter->isOutput();
@@ -442,8 +445,10 @@ void SliderListener::sliderValueChanged(Slider *slider) {
     } else {
         linkedParameter->setValueDirect(slider->getValue());
     }*/
-    if (linkedParameter != nullptr && *linkedParameter != slider->getValue()) {
-        linkedParameter->setValueNotifyingHost(parent->getFullRange().convertTo0to1(slider->getValue()));
+    if (manualControl) {
+        if (linkedParameter != nullptr && *linkedParameter != slider->getValue()) {
+            linkedParameter->setValueNotifyingHost(parent->getFullRange().convertTo0to1(slider->getValue()));
+        }
     }
 }
 
@@ -452,6 +457,7 @@ void SliderListener::sliderDragStarted(Slider *slider) {
     if (param != nullptr) {
         param->beginChangeGesture();
     }*/
+    manualControl = true;
     Listener::sliderDragStarted(slider);
 }
 
@@ -460,6 +466,7 @@ void SliderListener::sliderDragEnded(Slider *slider) {
     if (param != nullptr) {
         param->endChangeGesture();
     }*/
+    manualControl = false;
     Listener::sliderDragEnded(slider);
 }
 

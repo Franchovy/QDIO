@@ -48,6 +48,11 @@ ParametricEQAudioProcessor::ParametricEQAudioProcessor()
     addParameter(paramGain);
     addParameter(paramFilterType);
 
+    paramFrequency->addListener(this);
+    paramQfactor->addListener(this);
+    paramGain->addListener(this);
+    paramFilterType->addListener(this);
+
 }
 
 ParametricEQAudioProcessor::~ParametricEQAudioProcessor()

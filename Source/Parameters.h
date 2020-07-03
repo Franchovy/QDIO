@@ -63,6 +63,7 @@ public:
     void sliderDragEnded(Slider *slider) override;
 
 private:
+    bool manualControl = false;
     Parameter* parent;
     AudioParameterFloat* linkedParameter = nullptr;
 
