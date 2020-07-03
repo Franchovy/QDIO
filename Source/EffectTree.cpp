@@ -878,7 +878,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
     jassert (type != -1);
 
 
-    float value = parameterData.getProperty("value");
+    float value = parameterData.getProperty("value", param != nullptr ? param->getValue() : 0);
 
     if (type == 0) {
         parameter = new ButtonParameter(param);

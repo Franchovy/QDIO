@@ -486,13 +486,13 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
     slider.setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
     slider.setTextBoxIsEditable(true);
 
-    slider.setValue(referencedParam != nullptr ? referencedParam->getValue() : 1);
-
     //slider->setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
 
     slider.setPopupDisplayEnabled(true, true,
                                    getParentComponent(), -1);
 
+
+    slider.setValue(referencedParam != nullptr ? referencedParam->getValue() : 1);
 
     slider.hideTextBox(false);
     slider.hideTextBox(true);
@@ -507,6 +507,7 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
     outline = getBounds();
 
     addAndMakeVisible(slider);
+
 }
 
 
