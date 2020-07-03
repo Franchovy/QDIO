@@ -27,6 +27,7 @@ ParameterMod::ParameterMod()
     addParameter(in2);
     addParameter(operation);
     addParameter(multiplier);
+    addParameter(multiplyInputs);
     addOutputParameter(output);
 
     addParameterListener(operation);
@@ -74,16 +75,16 @@ void ParameterMod::parameterValueChanged(int parameterIndex, float newValue) {
     if (parameterIndex == operation->getParameterIndex()) {
         switch (*operation) {
             case add:
-                *in2 = 0;
+                in2->setValueNotifyingHost(0);
                 break;
             case subtract:
-                *in2 = 0;
+                in2->setValueNotifyingHost(0);
                 break;
             case multiply:
-                *in2 = 1;
+                in2->setValueNotifyingHost(1);
                 break;
             case divide:
-                *in2 = 1;
+                in2->setValueNotifyingHost(1);
                 break;
         }
     }
