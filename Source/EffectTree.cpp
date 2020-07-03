@@ -623,7 +623,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
     ValueTree copy(storeData.getType());
     copy.copyPropertiesFrom(storeData, nullptr);
 
-    std::cout << "Storing: " << storeData.getType().toString() << newLine;
+    //std::cout << "Storing: " << storeData.getType().toString() << newLine;
 
     if (storeData.hasType(EFFECT_ID)) {
         // Remove unused properties
@@ -692,11 +692,11 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                     if (dynamic_cast<ComboParameter*>(childParamObject) != nullptr) {
                         auto param = dynamic_cast<AudioParameterChoice*>(childParamObject->getParameter());
                         auto value = param->getIndex();
-                                            std::cout << "Storing parameter: " << childParamObject->getName() << " value: " << value << newLine;
+                                            //std::cout << "Storing parameter: " << childParamObject->getName() << " value: " << value << newLine;
                         childParam.setProperty("value", value, nullptr);
                     } else {
                         auto value = childParamObject->getParameter()->getValue();
-                    std::cout << "Storing parameter: " << childParamObject->getName() << " value: " << value << newLine;
+                    //std::cout << "Storing parameter: " << childParamObject->getName() << " value: " << value << newLine;
                     childParam.setProperty("value", value, nullptr);
                     }
                 }

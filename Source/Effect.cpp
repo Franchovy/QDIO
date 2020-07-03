@@ -925,9 +925,10 @@ void Effect::mouseDown(const MouseEvent &event) {
         return;
     } else {
         if (event.mods.isRightButtonDown()) {
-            rightClickDragPos = getPosition();
-            rightClickDragActivated = false;
+
         }
+        rightClickDragPos = getPosition();
+        rightClickDragActivated = false;
 
         undoManager.beginNewTransaction("Move");
         dragger.startDraggingComponent(this, event);
@@ -1015,11 +1016,11 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     }
                 }
             }
-        } else if (event.mods.isRightButtonDown()) {
             if (! rightClickDragActivated
-                    && (getPosition().getDistanceFrom(rightClickDragPos) > 50)) {
+                && (getPosition().getDistanceFrom(rightClickDragPos) > 50)) {
 
                 rightClickDragActivated = true;
+                std::cout << "right click activated" << newLine;
 
                 auto ingoingConnections = getConnectionsToThis(true);
                 auto outgoingConnections = getConnectionsToThis(false);
@@ -1036,6 +1037,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
             }
 
             if (dragIntoObject != nullptr) {
+                std::cout << "right click drag" << newLine;
                 if (auto lineToJoin = dynamic_cast<ConnectionLine*>(dragIntoObject)) {
                     // Join this connection
                     auto inPorts = getPorts(true);
@@ -1073,6 +1075,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     }
                 }
             }
+        } else if (event.mods.isRightButtonDown()) {
+
         }
 
         getParentComponent()->mouseDrag(event);
@@ -1114,7 +1118,6 @@ bool Effect::canDragHover(const SelectHoverObject *other, bool isRightClickDrag)
         if (auto effect = dynamic_cast<const Effect*>(other)) {
             return (effect->isInEditMode() && ! effect->isIndividual());
         }
-    } else {
         if (other == this) {
             return false;
         }

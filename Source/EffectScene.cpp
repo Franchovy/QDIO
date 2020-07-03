@@ -226,7 +226,7 @@ void EffectScene::timerCallback() {
         appState = neutral;
     } else {
         // Save app state regularly
-        std::cout << "autosave" << newLine;
+        //std::cout << "autosave" << newLine;
         storeState();
     }
 

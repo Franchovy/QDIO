@@ -109,7 +109,7 @@ void EffectLoader::saveTemplate(ValueTree &newTemplate) {
                                                               newTemplate.getProperty("name").toString());
 
     if (templateToOverWrite.isValid()) {
-        std::cout << "Overwriting template" << newLine;
+        //std::cout << "Overwriting template" << newLine;
         effectLib.removeChild(templateToOverWrite, nullptr);
     }
 
