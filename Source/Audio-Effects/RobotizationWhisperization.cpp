@@ -30,7 +30,7 @@
 RobotizationWhisperizationAudioProcessor::RobotizationWhisperizationAudioProcessor():
     BaseEffect("Robotization/Whisperization")
     , stft(*this)
-    , paramEffect (new AudioParameterChoice("Effect", "effect", effectItemsUI, effectPassThrough))
+    , paramEffect (new AudioParameterChoice("Effect", "effect", effectItemsUI, effectRobotization))
     , paramFftSize (new AudioParameterChoice("FFT size", "fftsize", fftSizeItemsUI, fftSize512))
                     /*[this](float value){
                         const ScopedLock sl (lock);
@@ -64,7 +64,6 @@ RobotizationWhisperizationAudioProcessor::RobotizationWhisperizationAudioProcess
     setLayout(1,1);
 
     addParameter(paramEffect);
-    *paramFftSize = fftSize64;
     addParameter(paramFftSize);
     addParameter(paramHopSize);
     addParameter(paramWindowType);

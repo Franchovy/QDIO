@@ -39,8 +39,6 @@ class PitchShiftAudioProcessor : public BaseEffect
 public:
     //==============================================================================
 
-
-
     PitchShiftAudioProcessor();
     ~PitchShiftAudioProcessor();
 
@@ -51,6 +49,10 @@ public:
     void processBlock (AudioSampleBuffer&, MidiBuffer&) override;
 
     //==============================================================================
+
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+
+    void handleAsyncUpdate() override;
 
     StringArray fftSizeItemsUI = {
         "32",
@@ -148,7 +150,8 @@ public:
     bool needToResetPhases;
 
     //======================================
-    
+
+    bool isShifting = false;
     AudioParameterFloat* paramShift;
     AudioParameterChoice* paramFftSize;
     AudioParameterChoice* paramHopSize;

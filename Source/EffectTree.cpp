@@ -1125,7 +1125,7 @@ void EffectTree::setupProcessors() {
          , "EQ"
          , "Phaser"
          , "RingModulation"
-         //, "PitchShift"
+         , "PitchShift"
          , "Robotization"
          , "Level Detector"
          , "Tremolo"
@@ -1148,7 +1148,7 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] { newProcessor = std::make_unique<ParametricEQAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<PhaserAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<RingModulationAudioProcessor>(); });
-    //makeProcessorArray.add([=] { newProcessor = std::make_unique<PitchShiftAudioProcessor>(); });
+    makeProcessorArray.add([=] { newProcessor = std::make_unique<PitchShiftAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<RobotizationWhisperizationAudioProcessor>(); });
     makeProcessorArray.add( [=] { newProcessor = std::make_unique<LevelAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<TremoloAudioProcessor>(); });

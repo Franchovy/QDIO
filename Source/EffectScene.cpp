@@ -212,7 +212,6 @@ void EffectScene::timerCallback() {
         } else if (!dontLoad) {
             // Load template
 
-
             // Load previously loaded template
             String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
             std::cout << "Load template: " << name << newLine;

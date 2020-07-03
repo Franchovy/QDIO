@@ -20,14 +20,6 @@ ChannelSplitterProcessor::ChannelSplitterProcessor()
     addParameter(paramNumInputs);
     addParameter(paramNumOutputs);
 
-    addRefreshParameterFunction([=] {
-        auto newNumInputs = paramNumInputs->getIndex() + 1;
-        auto newNumOutputs = paramNumOutputs->getIndex() + 1;
-
-        numInputChannels = newNumInputs;
-        numOutputChannels = newNumOutputs;
-    });
-    setRefreshRate(1);
 }
 
 ChannelSplitterProcessor::~ChannelSplitterProcessor() {
@@ -44,6 +36,16 @@ void ChannelSplitterProcessor::releaseResources() {
 
 void ChannelSplitterProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &) {
     if (! *bypass) {
+        int numInputChannels = paramNumOutputs->getIndex() + 1;
+        int numOutputChannels = paramNumInputs->getIndex() + 1;
+
+        // Make sure there are enough channels.
+        if (getTotalNumInputChannels() < numInputChannels
+            || getTotalNumOutputChannels() < numOutputChannels)
+        {
+            return;
+        }
+
         int numSamples = buffer.getNumSamples();
 
         if (numOutputChannels == 1) { // Mono
@@ -65,7 +67,5 @@ void ChannelSplitterProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuff
     }
 }
 
-bool ChannelSplitterProcessor::isBusesLayoutSupported(const AudioProcessor::BusesLayout &layouts) const {
-    return AudioProcessor::isBusesLayoutSupported(layouts);
-}
+
 

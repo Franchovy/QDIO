@@ -30,28 +30,6 @@ public:
     void processBlock (AudioBuffer<float> &buffer, MidiBuffer&) override;
     //==============================================================================
 
-#ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-#endif
-
-    //==============================================================================
-
-    StringArray waveformItemsUI = {
-            "Sine",
-            "Triangle",
-            "Sawtooth (rising)",
-            "Sawtooth (falling)"
-    };
-
-    enum waveformIndex {
-        waveformSine = 0,
-        waveformTriangle,
-        waveformSawtooth,
-        waveformInverseSawtooth,
-    };
-
-    //======================================
-
     AudioParameterChoice* paramNumInputs;
     AudioParameterChoice* paramNumOutputs;
 

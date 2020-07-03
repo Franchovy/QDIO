@@ -48,10 +48,6 @@ ParametricEQAudioProcessor::ParametricEQAudioProcessor()
     addParameter(paramGain);
     addParameter(paramFilterType);
 
-    addRefreshParameterFunction([=] {
-        updateFilters();
-    });
-    setRefreshRate(20);
 }
 
 ParametricEQAudioProcessor::~ParametricEQAudioProcessor()
@@ -112,6 +108,10 @@ void ParametricEQAudioProcessor::updateFilters()
 
     for (int i = 0; i < filters.size(); ++i)
         filters[i]->updateCoefficients (discreteFrequency, qFactor, gain, type);
+}
+
+void ParametricEQAudioProcessor::parameterValueChanged(int parameterIndex, float newValue) {
+    updateFilters();
 }
 
 //==============================================================================

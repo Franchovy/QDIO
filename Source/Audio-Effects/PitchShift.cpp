@@ -71,13 +71,28 @@ PitchShiftAudioProcessor::PitchShiftAudioProcessor():
     addParameter(paramHopSize);
     addParameter(paramWindowType);
 
-    addRefreshParameterFunction([=] {
+
+    paramShift->addListener(this);
+    paramFftSize->addListener(this);
+    paramHopSize->addListener(this);
+    paramWindowType->addListener(this);
+
+    /*addRefreshParameterFunction([=] {
         updateAnalysisWindow();
         updateFftSize();
         updateHopSize();
         updateWindowScaleFactor();
     });
-    setRefreshRate(2);
+    setRefreshRate(2);*/
+
+    {
+        const ScopedLock sl (lock);
+
+        updateFftSize();
+        updateHopSize();
+        updateAnalysisWindow();
+        updateWindowScaleFactor();
+    }
 }
 
 PitchShiftAudioProcessor::~PitchShiftAudioProcessor()
@@ -97,11 +112,10 @@ void PitchShiftAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     paramWindowType.reset (sampleRate, smoothTime);
 */
 
+
     //======================================
 
     needToResetPhases = true;
-
-    startTimerHz(1);
 
 }
 
@@ -126,7 +140,7 @@ void PitchShiftAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuff
     int currentOutputBufferReadPosition;
     int currentSamplesSinceLastFFT;
 
-    float shift = *paramShift;
+    float shift = powf (2.0f, *paramShift / 12.0f);
     float ratio = roundf (shift * (float)hopSize) / (float)hopSize;
     int resampledLength = floorf ((float)fftSize / ratio);
     HeapBlock<float> resampledOutput (resampledLength, true);
@@ -180,7 +194,7 @@ void PitchShiftAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuff
 
                 fft->perform (fftTimeDomain, fftFrequencyDomain, false);
 
-                if (*paramShift)
+                if (isShifting)
                     needToResetPhases = true;
                 if (shift == *paramShift && needToResetPhases) {
                     inputPhase.clear();
@@ -252,7 +266,7 @@ void PitchShiftAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuff
 
 void PitchShiftAudioProcessor::updateFftSize()
 {
-    fftSize = (int) *paramFftSize;
+    fftSize = (float)(1 << ((int) *paramFftSize + 5));
     fft = std::make_unique<dsp::FFT>(log2 (fftSize));
 
     inputBufferLength = fftSize;
@@ -293,7 +307,7 @@ void PitchShiftAudioProcessor::updateFftSize()
 
 void PitchShiftAudioProcessor::updateHopSize()
 {
-    overlap = (int) *paramHopSize;
+    overlap = (int) (float) (1 << ((int)*paramHopSize + 1));
     if (overlap != 0) {
         hopSize = fftSize / overlap;
         outputBufferWritePosition = hopSize % outputBufferLength;
@@ -343,6 +357,27 @@ float PitchShiftAudioProcessor::princArg (const float phase)
         return fmod (phase + M_PI,  2.0f * M_PI) - M_PI;
     else
         return fmod (phase + M_PI, -2.0f * M_PI) + M_PI;
+}
+
+void PitchShiftAudioProcessor::parameterValueChanged(int parameterIndex, float newValue) {
+
+    if (parameterIndex == paramFftSize->getParameterIndex()
+        || parameterIndex == paramHopSize->getParameterIndex()
+        || parameterIndex == paramWindowType->getParameterIndex())
+    {
+        triggerAsyncUpdate();
+    } else {
+        isShifting = true;
+    }
+}
+
+void PitchShiftAudioProcessor::handleAsyncUpdate() {
+    const ScopedLock sl (lock);
+
+    updateFftSize();
+    updateHopSize();
+    updateAnalysisWindow();
+    updateWindowScaleFactor();
 }
 
 //==============================================================================

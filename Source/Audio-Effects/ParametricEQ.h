@@ -48,6 +48,8 @@ public:
 
     //==============================================================================
 
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+
     StringArray filterTypeItemsUI = {
         "Low-pass",
         "High-pass",
