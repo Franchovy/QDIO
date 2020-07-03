@@ -62,3 +62,19 @@ void BaseEffect::addOutputParameter(AudioProcessorParameter *parameter) {
     outputParameters.add(parameter);
     addParameter(parameter);
 }
+
+void BaseEffect::parameterValueChanged(int parameterIndex, float newValue) {
+
+}
+
+void BaseEffect::parameterGestureChanged(int parameterIndex, bool gestureIsStarting) {
+
+}
+
+void BaseEffect::processBlockBypassed(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
+    AudioProcessor::processBlockBypassed(buffer, midiMessages);
+}
+
+AudioProcessorParameter *BaseEffect::getBypassParameter() const {
+    return bypass;
+}

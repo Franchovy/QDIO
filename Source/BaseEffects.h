@@ -17,7 +17,7 @@
  * Slightly more specialised (but still abstract) AudioProcessor. Avoids having all the same
  * overrides taking up so much space.
  */
-class BaseEffect : public AudioProcessor, public Timer
+class BaseEffect : public AudioProcessor, public Timer, public AudioProcessorParameter::Listener
 {
 public:
     BaseEffect(String processorName)
@@ -26,7 +26,6 @@ public:
     {
         name = processorName;
         addParameter(bypass);
-
     }
 
     //=========================================================================
@@ -47,10 +46,17 @@ public:
     //=========================================================================
     void timerCallback() override;
 
+    //=========================================================================
+    virtual void parameterValueChanged(int parameterIndex, float newValue) override;
+    virtual void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
+
+    //=========================================================================
 
     virtual void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override = 0;
     virtual void releaseResources() override = 0;
     virtual void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override = 0;
+
+    void processBlockBypassed(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
 
     double getTailLengthSeconds() const override { return 0; }
     bool acceptsMidi() const override { return false; }
@@ -68,6 +74,8 @@ public:
 
     void getStateInformation(juce::MemoryBlock &destData) override { }
     void setStateInformation(const void *data, int sizeInBytes) override { }
+
+    AudioProcessorParameter *getBypassParameter() const override;
 
 protected:
     AudioParameterBool* bypass;
