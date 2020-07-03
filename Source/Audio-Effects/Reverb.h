@@ -22,6 +22,10 @@ public:
     void releaseResources() override;
     void processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) override;
 
+    void handleAsyncUpdate() override;
+
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+
 private:
     AudioParameterFloat* width;
     AudioParameterFloat* damping;

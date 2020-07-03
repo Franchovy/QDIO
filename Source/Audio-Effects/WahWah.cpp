@@ -66,8 +66,10 @@ WahWahAudioProcessor::WahWahAudioProcessor():
     //parameters.valueTreeState.state = ValueTree (Identifier (getName().removeCharacters ("- ")));
 
     //addRefreshParameterFunction([=]{ updateFilters(); });
-    addRefreshParameterFunction([=] { paramFrequency->setValueNotifyingHost(
-            paramFrequency->getNormalisableRange().convertTo0to1(freqValue)); });
+    addRefreshParameterFunction([=] {
+        paramFrequency->setValueNotifyingHost(
+            paramFrequency->getNormalisableRange().convertTo0to1(freqValue));
+    });
     setRefreshRate(60);
 }
 

@@ -37,38 +37,6 @@ ReverbEffect::ReverbEffect()
 
     setLayout(1,1);
 
-    addRefreshParameterFunction([=] {
-        bool parametersChanged = false;
-        if (reverbParameters.width != *width) {
-            reverbParameters.width = *width;
-            parametersChanged = true;
-        }
-        if (reverbParameters.damping != *damping) {
-            reverbParameters.damping = *damping;
-            parametersChanged = true;
-        }
-        if (reverbParameters.dryLevel != *dryLevel) {
-            reverbParameters.dryLevel = *dryLevel;
-            parametersChanged = true;
-        }
-        if (reverbParameters.wetLevel != *wetLevel) {
-            reverbParameters.wetLevel = *wetLevel;
-            parametersChanged = true;
-        }
-        if (reverbParameters.roomSize != *roomSize) {
-            reverbParameters.roomSize = *roomSize;
-            parametersChanged = true;
-        }
-        if (reverbParameters.freezeMode != (float) *freezeMode) {
-            reverbParameters.freezeMode = (float) *freezeMode;
-            parametersChanged = true;
-        }
-
-        if (parametersChanged) {
-            reverbProcessor.setParameters(reverbParameters);
-        }
-    });
-    setRefreshRate(10);
 }
 
 void ReverbEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
@@ -102,6 +70,42 @@ void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMess
     /*for (int c = 0; c < buffer.getNumChannels(); c++) {
         reverbProcessor.processMono(buffer.getWritePointer(c), buffer.getNumSamples());
     }*/
+}
+
+void ReverbEffect::handleAsyncUpdate() {
+    bool parametersChanged = false;
+    if (reverbParameters.width != *width) {
+        reverbParameters.width = *width;
+        parametersChanged = true;
+    }
+    if (reverbParameters.damping != *damping) {
+        reverbParameters.damping = *damping;
+        parametersChanged = true;
+    }
+    if (reverbParameters.dryLevel != *dryLevel) {
+        reverbParameters.dryLevel = *dryLevel;
+        parametersChanged = true;
+    }
+    if (reverbParameters.wetLevel != *wetLevel) {
+        reverbParameters.wetLevel = *wetLevel;
+        parametersChanged = true;
+    }
+    if (reverbParameters.roomSize != *roomSize) {
+        reverbParameters.roomSize = *roomSize;
+        parametersChanged = true;
+    }
+    if (reverbParameters.freezeMode != (float) *freezeMode) {
+        reverbParameters.freezeMode = (float) *freezeMode;
+        parametersChanged = true;
+    }
+
+    if (parametersChanged) {
+        reverbProcessor.setParameters(reverbParameters);
+    }
+}
+
+void ReverbEffect::parameterValueChanged(int parameterIndex, float newValue) {
+    triggerAsyncUpdate();
 }
 
 
