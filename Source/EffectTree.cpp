@@ -689,9 +689,16 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 }
 
                 if (childParamObject->getParameter() != nullptr) {
-                    auto value = childParamObject->getParameter()->getValue();
+                    if (dynamic_cast<ComboParameter*>(childParamObject) != nullptr) {
+                        auto param = dynamic_cast<AudioParameterChoice*>(childParamObject->getParameter());
+                        auto value = param->getIndex();
+                                            std::cout << "Storing parameter: " << childParamObject->getName() << " value: " << value << newLine;
+                        childParam.setProperty("value", value, nullptr);
+                    } else {
+                        auto value = childParamObject->getParameter()->getValue();
                     std::cout << "Storing parameter: " << childParamObject->getName() << " value: " << value << newLine;
                     childParam.setProperty("value", value, nullptr);
+                    }
                 }
 
                 childParam.setProperty("internalPortID",

@@ -73,12 +73,6 @@ RobotizationWhisperizationAudioProcessor::RobotizationWhisperizationAudioProcess
     addParameterListener(paramHopSize);
     addParameterListener(paramWindowType);
 
-    /*addRefreshParameterFunction([=] {
-        stft.updateParameters((int)(float)(1 << ((int)*paramFftSize + 5)),
-                              (int)(float)(1 << ((int)*paramHopSize + 1)),
-                              (int)*paramWindowType);
-    });
-    setRefreshRate(2);*/
 }
 
 RobotizationWhisperizationAudioProcessor::~RobotizationWhisperizationAudioProcessor()
