@@ -240,8 +240,8 @@ protected:
     AudioSampleBuffer outputBuffer;
 
     HeapBlock<float> fftWindow;
-    HeapBlock<dsp::Complex<float>> timeDomainBuffer;
-    HeapBlock<dsp::Complex<float>> frequencyDomainBuffer;
+    HeapBlock<dsp::Complex<float>, true> timeDomainBuffer;
+    HeapBlock<dsp::Complex<float>, true> frequencyDomainBuffer;
 
     int overlap;
     int hopSize;

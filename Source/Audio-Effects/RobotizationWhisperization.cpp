@@ -132,6 +132,8 @@ void RobotizationWhisperizationAudioProcessor::parameterValueChanged(int paramet
 }
 
 void RobotizationWhisperizationAudioProcessor::handleAsyncUpdate() {
+    const ScopedLock sl (lock);
+
     stft.updateParameters((int)(float)(1 << ((int)*paramFftSize + 5)),
                           (int)(float)(1 << ((int)*paramHopSize + 1)),
                           (int)*paramWindowType);

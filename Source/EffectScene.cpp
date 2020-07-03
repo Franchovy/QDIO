@@ -126,7 +126,7 @@ EffectScene::EffectScene()
 
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
 
-    if (! dontLoadDevices) {
+    if (! dontLoadDevices && getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS)) != nullptr) {
         std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
 
         deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
@@ -203,10 +203,10 @@ void EffectScene::timerCallback() {
 
         // Load
         if (loadInitialCase) {
-            auto defaultInOut = ValueTree::readFromData(BinaryData::Basic_InOut, BinaryData::Basic_InOutSize);
+            /*auto defaultInOut = ValueTree::readFromData(BinaryData::Basic_InOut, BinaryData::Basic_InOutSize);
             EffectLoader::saveTemplate(defaultInOut);
             String name = defaultInOut.getProperty("name");
-            loadNewTemplate(name);
+            loadNewTemplate(name);*/
             // Refresh effect and template menus
             postCommandMessage(0);
         } else if (!dontLoad) {
@@ -238,21 +238,23 @@ void EffectScene::timerCallback() {
 void EffectScene::changeListenerCallback(ChangeBroadcaster *source) {
     if (source == &deviceManager) {
         // Update num channels in connections
+        if (deviceManager.getCurrentAudioDevice() != nullptr) {
 
-        auto inputChannels = deviceManager.getCurrentAudioDevice()->getActiveInputChannels();
-        auto outputChannels = deviceManager.getCurrentAudioDevice()->getActiveOutputChannels();
+            auto inputChannels = deviceManager.getCurrentAudioDevice()->getActiveInputChannels();
+            auto outputChannels = deviceManager.getCurrentAudioDevice()->getActiveOutputChannels();
 
-        int minChannels = jmax(2, jmin(inputChannels.countNumberOfSetBits()
-                , outputChannels.countNumberOfSetBits()));
-        connectionGraph.updateNumChannels(minChannels);
+            int minChannels = jmax(2,
+                                   jmin(inputChannels.countNumberOfSetBits(), outputChannels.countNumberOfSetBits()));
+            connectionGraph.updateNumChannels(minChannels);
 
-        // DeviceManager change
-        if (appState != loading) {
-            auto deviceData = deviceManager.createStateXml();
+            // DeviceManager change
+            if (appState != loading) {
+                auto deviceData = deviceManager.createStateXml();
 
-            getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
-            getAppProperties().getUserSettings()->save();
+                getAppProperties().getUserSettings()->setValue(KEYNAME_DEVICE_SETTINGS, deviceData.get());
+                getAppProperties().getUserSettings()->save();
 
+            }
         }
     }
 }
