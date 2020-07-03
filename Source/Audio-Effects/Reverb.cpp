@@ -37,6 +37,14 @@ ReverbEffect::ReverbEffect()
 
     setLayout(1,1);
 
+    roomSize->addListener(this);
+    width->addListener(this);
+    damping->addListener(this);
+    dryLevel->addListener(this);
+    wetLevel->addListener(this);
+    freezeMode->addListener(this);
+    stereo->addListener(this);
+
 }
 
 void ReverbEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
