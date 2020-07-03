@@ -598,12 +598,8 @@ void EffectTree::loadTemplate(String name) {
 }
 
 void EffectTree::storeTemplate(String name) {
-    if (name.isEmpty()) {
-        // Name is default loadout
-        name = "default";
-    }
-
     auto saveState = storeEffect(effectTree);
+
     saveState.setProperty("name", name, nullptr);
     EffectLoader::saveTemplate(saveState);
 

@@ -47,6 +47,7 @@ public:
 
     int callSaveTemplateDialog(String& name, bool dontSaveButton);
     int callSaveEffectDialog(String &name);
+    int callConfirmOverwriteDialog(String &name);
 
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;

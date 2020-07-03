@@ -643,10 +643,19 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
 
 void EffectScene::storeState() {
-    //auto name = tree.getCurrentTemplateName();
-    tree.storeTemplate();
+    String templateName = tree.getCurrentTemplateName();
 
-    getAppProperties().getUserSettings()->setValue(KEYNAME_CURRENT_LOADOUT, "default");
+    String name;
+    if (! templateName.startsWith("current:")) {
+        name = "current:";
+        name.append(templateName, 20);
+    } else {
+        name = templateName;
+    }
+
+    tree.storeTemplate(name);
+
+    getAppProperties().getUserSettings()->setValue(KEYNAME_CURRENT_LOADOUT, name);
 }
 
 /*void EffectScene::updateChannels() {
@@ -744,6 +753,9 @@ int EffectScene::callSaveTemplateDialog(String &name, bool dontSaveButton) {
     saveDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
 
     String currentName = tree.getCurrentTemplateName();
+    if (currentName.startsWith("current:")) {
+        currentName = currentName.fromLastOccurrenceOf("current:", false, false);
+    }
     saveDialog.addTextEditor("Template Name", currentName);
 
     auto nameEditor = saveDialog.getTextEditor("Template Name");
@@ -751,6 +763,15 @@ int EffectScene::callSaveTemplateDialog(String &name, bool dontSaveButton) {
     auto result = saveDialog.runModalLoop();
 
     name = nameEditor->getText();
+
+    if (result == 1) {
+        if (EffectLoader::getTemplatesAvailable().contains(name)) {
+            result = callConfirmOverwriteDialog(name);
+            if (result == 0) {
+                return callSaveTemplateDialog(name, dontSaveButton);
+            }
+        }
+    }
 
     return result;
 }
@@ -771,6 +792,20 @@ int EffectScene::callSaveEffectDialog(String &name) {
 
     return result;
 }
+
+int EffectScene::callConfirmOverwriteDialog(String &name) {
+    String dialogText("Overwrite ");
+    dialogText.append(name, 20);
+    dialogText.append("?", 1);
+    AlertWindow confirmOverwriteDialog("Confirm", dialogText, AlertWindow::AlertIconType::WarningIcon);
+
+    confirmOverwriteDialog.addButton("Overwrite", 1, KeyPress(KeyPress::returnKey));
+    confirmOverwriteDialog.addButton("Cancel", -1, KeyPress(KeyPress::escapeKey));
+    confirmOverwriteDialog.addButton("Edit name..", 0, KeyPress(KeyPress::backspaceKey));
+
+    return confirmOverwriteDialog.runModalLoop();
+}
+
 
 StringArray EffectScene::getProcessorNames() {
     return tree.getProcessorNames();
@@ -857,6 +892,7 @@ void EffectScene::saveTemplate() {
     String name;
     int result = callSaveTemplateDialog(name, false);
 
+
     if (result == 1) {
         tree.storeTemplate(name);
         std::cout << "Save template: " << name << newLine;
@@ -890,9 +926,5 @@ void EffectScene::saveEffect() {
         }
     }
 }
-
-
-
-
 
 
