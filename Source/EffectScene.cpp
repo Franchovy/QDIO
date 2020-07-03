@@ -790,6 +790,15 @@ int EffectScene::callSaveEffectDialog(String &name) {
 
     name = nameEditor->getText();
 
+    if (result == 1) {
+        if (EffectLoader::getEffectsAvailable().contains(name)) {
+            result = callConfirmOverwriteDialog(name);
+            if (result == 0) {
+                return callSaveEffectDialog(name);
+            }
+        }
+    }
+
     return result;
 }
 
