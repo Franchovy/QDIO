@@ -104,6 +104,9 @@
             file="Source/ConnectionGraph.cpp"/>
       <FILE id="mAQbaJ" name="ConnectionGraph.h" compile="0" resource="0"
             file="Source/ConnectionGraph.h"/>
+      <FILE id="joL7fy" name="ParameterMod.cpp" compile="1" resource="0"
+            file="Source/Audio-Effects/ParameterMod.cpp"/>
+      <FILE id="sNEbm2" name="ParameterMod.h" compile="0" resource="0" file="Source/Audio-Effects/ParameterMod.h"/>
       <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1" file="Source/EffectScene.cpp"
             xcodeResource="1"/>
       <FILE id="kR0kwB" name="EffectScene.h" compile="1" resource="1" file="Source/EffectScene.h"
