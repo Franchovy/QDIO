@@ -13,7 +13,7 @@
 Oscillator::Oscillator()
     : BaseEffect("Oscillator")
     , frequency(new AudioParameterFloat("Frequency", "frequency",
-            NormalisableRange<float>(0.01f, 10.f, 0.01f), 10.0f, " Hz"))
+            NormalisableRange<float>(0.01f, 3.0f, 0.01f), 0.5f, " Hz"))
     , lfoOutput(new AudioParameterFloat("Output", "output",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.0f))
     , waveform(new AudioParameterChoice("Waveform Type", "waveform", waveformItemsUI, waveformSine))
@@ -24,12 +24,12 @@ Oscillator::Oscillator()
     addOutputParameter(lfoOutput);
     addParameter(waveform);
 
-    addRefreshParameterFunction([=] {
+    /*addRefreshParameterFunction([=] {
         std::cout << "frequency: " << *frequency << newLine;
         lfoOutput->setValueNotifyingHost(lfo(lfoPhase));
-    });
+    });*/
 
-    setRefreshRate(200);
+    //setRefreshRate(200);
 }
 
 void Oscillator::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
@@ -54,6 +54,7 @@ void Oscillator::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessag
     }
 
     lfoPhase = phase;
+    *lfoOutput = lfo(phase);
 
 }
 

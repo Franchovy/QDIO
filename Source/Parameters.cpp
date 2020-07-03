@@ -65,7 +65,16 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     }
 
     if (isAuto) {
-        setParameterValueAsync(newValue);
+        value = newValue;
+        valueStored = true;
+        triggerAsyncUpdate();
+    }
+}
+
+
+void Parameter::handleAsyncUpdate() {
+    if (valueStored) {
+        setParameterValueAsync(value);
     }
 }
 
@@ -395,6 +404,7 @@ NormalisableRange<double> Parameter::getFullRange() {
 NormalisableRange<double> Parameter::getLimitedRange() {
     return limitedRange;
 }
+
 
 void ButtonListener::buttonClicked(Button *button) {
     if (linkedParameter != nullptr) {

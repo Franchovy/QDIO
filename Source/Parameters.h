@@ -89,7 +89,7 @@ class ButtonComponent : public ParameterComponent, public TextButton
 
 };
 
-class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener
+class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener, public AsyncUpdater
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<Parameter>;
@@ -100,6 +100,8 @@ public:
 
     void parameterValueChanged(int parameterIndex, float newValue) override;
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
+
+    void handleAsyncUpdate() override;
 
     void setName(const String& name) override;
 
