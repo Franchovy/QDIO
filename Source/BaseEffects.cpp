@@ -78,3 +78,11 @@ void BaseEffect::processBlockBypassed(AudioBuffer<float> &buffer, MidiBuffer &mi
 AudioProcessorParameter *BaseEffect::getBypassParameter() const {
     return bypass;
 }
+
+void BaseEffect::addParameterListener(AudioProcessorParameter *parameter) {
+    parameter->addListener(this);
+}
+
+void BaseEffect::handleAsyncUpdate() {
+
+}

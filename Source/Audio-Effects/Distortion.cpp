@@ -44,10 +44,7 @@ DistortionAudioProcessor::DistortionAudioProcessor():
     addParameter(paramOutputGain);
     addParameter(paramTone);
 
-    addRefreshParameterFunction([=] {
-        updateFilters();
-    });
-    setRefreshRate(2);
+    addParameterListener(paramTone);
 }
 
 DistortionAudioProcessor::~DistortionAudioProcessor()
@@ -166,30 +163,8 @@ void DistortionAudioProcessor::updateFilters()
         filters[i]->updateCoefficients (discreteFrequency, gain);
 }
 
-//==============================================================================
-
-
-#ifndef JucePlugin_PreferredChannelConfigurations
-bool DistortionAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
-{
-  #if JucePlugin_IsMidiEffect
-    ignoreUnused (layouts);
-    return true;
-  #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
-        return false;
-
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-        return false;
-   #endif
-
-    return true;
-  #endif
+void DistortionAudioProcessor::parameterValueChanged(int parameterIndex, float newValue) {
+    if (parameterIndex == paramTone->getParameterIndex()) {
+        updateFilters();
+    }
 }
-
-#endif

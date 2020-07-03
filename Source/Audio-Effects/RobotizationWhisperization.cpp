@@ -65,16 +65,20 @@ RobotizationWhisperizationAudioProcessor::RobotizationWhisperizationAudioProcess
 
     addParameter(paramEffect);
     *paramFftSize = fftSize64;
-    //addParameter(paramFftSize);
+    addParameter(paramFftSize);
     addParameter(paramHopSize);
     addParameter(paramWindowType);
 
-    addRefreshParameterFunction([=] {
+    addParameterListener(paramFftSize);
+    addParameterListener(paramHopSize);
+    addParameterListener(paramWindowType);
+
+    /*addRefreshParameterFunction([=] {
         stft.updateParameters((int)(float)(1 << ((int)*paramFftSize + 5)),
                               (int)(float)(1 << ((int)*paramHopSize + 1)),
                               (int)*paramWindowType);
     });
-    setRefreshRate(2);
+    setRefreshRate(2);*/
 }
 
 RobotizationWhisperizationAudioProcessor::~RobotizationWhisperizationAudioProcessor()
@@ -121,4 +125,20 @@ void RobotizationWhisperizationAudioProcessor::processBlock (AudioSampleBuffer& 
 
     for (int channel = numInputChannels; channel < numOutputChannels; ++channel)
         buffer.clear (channel, 0, numSamples);
+}
+
+void RobotizationWhisperizationAudioProcessor::parameterValueChanged(int parameterIndex, float newValue) {
+    AudioProcessorParameter* parameterToUpdate;
+    if (parameterIndex == paramFftSize->getParameterIndex()
+        || parameterIndex == paramHopSize->getParameterIndex()
+        || parameterIndex == paramWindowType->getParameterIndex())
+    {
+        triggerAsyncUpdate();
+    }
+}
+
+void RobotizationWhisperizationAudioProcessor::handleAsyncUpdate() {
+    stft.updateParameters((int)(float)(1 << ((int)*paramFftSize + 5)),
+                          (int)(float)(1 << ((int)*paramHopSize + 1)),
+                          (int)*paramWindowType);
 }

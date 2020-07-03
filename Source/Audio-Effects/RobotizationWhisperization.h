@@ -48,8 +48,12 @@ public:
     void releaseResources() override;
     void processBlock (AudioSampleBuffer&, MidiBuffer&) override;
 
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+
+    void handleAsyncUpdate() override;
     //==============================================================================
 
+    void updateParameters();
 
     StringArray effectItemsUI = {
         "Pass-through",

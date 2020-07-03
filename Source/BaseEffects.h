@@ -17,7 +17,7 @@
  * Slightly more specialised (but still abstract) AudioProcessor. Avoids having all the same
  * overrides taking up so much space.
  */
-class BaseEffect : public AudioProcessor, public Timer, public AudioProcessorParameter::Listener
+class BaseEffect : public AudioProcessor, public Timer, public AsyncUpdater, public AudioProcessorParameter::Listener
 {
 public:
     BaseEffect(String processorName)
@@ -40,13 +40,17 @@ public:
     //=========================================================================
 
     void setLayout(int numInputs, int numOutputs);
-
     void makeLog(AudioParameterFloat* parameter);
 
     //=========================================================================
     void timerCallback() override;
 
     //=========================================================================
+    virtual void handleAsyncUpdate() override;
+
+    //=========================================================================
+
+    void addParameterListener(AudioProcessorParameter* parameter);
     virtual void parameterValueChanged(int parameterIndex, float newValue) override;
     virtual void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
 
@@ -86,7 +90,6 @@ protected:
     void addRefreshParameterFunction(std::function<void()> function);
     void setRefreshRate(int refreshRateInHz);
 private:
-
     Array<std::function<void()>> refreshParameterFunctions;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BaseEffect)
