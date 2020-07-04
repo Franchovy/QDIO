@@ -619,7 +619,6 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
 
             // Set size property
             copy.setProperty(Effect::IDs::w, effect->getWidth(), nullptr);
-            std::cout << effect->getWidth() << " " << effect->getHeight() << newLine;
             copy.setProperty(Effect::IDs::h, effect->getHeight(), nullptr);
 
             // Set ID property (for port connections)
@@ -1116,6 +1115,54 @@ void EffectTree::setupProcessors() {
     makeProcessorArray.add([=] { newProcessor = std::make_unique<VibratoAudioProcessor>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<Oscillator>(); });
     makeProcessorArray.add([=] { newProcessor = std::make_unique<ParameterMod>(); });
+}
+
+/**
+ * Looks at all the selected items, and only keeps what would make the
+ * selection "complete" if placed elsewhere. Mainly getting rid of stray lines.
+ * @return *typeless* data representing the useful selection - watch out, the valuetree is invalid.
+ */
+ValueTree EffectTree::getUsefulSelection() {
+    ValueTree data;
+
+    auto selected = SelectHoverObject::getSelected();
+    auto selectOutput = Array<SelectHoverObject*>();
+
+    // Iterate through selection
+    for (auto c : selected)
+    {
+        // If line
+        if (auto line = dynamic_cast<ConnectionLine*>(c))
+        {
+            // Check that both ends of the line are part of the selection
+            if (selected.contains(line->getInPort()->getParentEffect())
+                && selected.contains(line->getOutPort()->getParentEffect()))
+            {
+                selectOutput.add(c);
+            }
+        } else {
+            selectOutput.add(c);
+        }
+    }
+
+    return storeGroup(selectOutput);
+}
+
+ValueTree EffectTree::storeGroup(Array<SelectHoverObject *> items) {
+    // Assume this is from the effectscene level
+    ValueTree data(EFFECTSCENE_ID);
+
+    auto effectScene = dynamic_cast<EffectTreeBase*>(effectTree.getProperty(IDs::component).getObject());
+
+    for (auto c : items) {
+        if (dynamic_cast<Effect*>(c)) {
+            if (c->getParentComponent() == effectScene) {
+                data.appendChild(storeEffect(getTree(c)), nullptr);
+            }
+        }
+    }
+
+    return data;
 }
 
 

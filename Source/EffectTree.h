@@ -37,6 +37,8 @@ public:
 
     void remove(SelectHoverObject* c);
 
+    ValueTree storeGroup(Array<SelectHoverObject*> items);
+
     ValueTree storeEffect(const ValueTree& storeData);
     bool loadEffect(ValueTree& parentTree, const ValueTree& loadData);
     void loadEffect(const ValueTree& loadData);
@@ -65,6 +67,9 @@ public:
     void componentEnablementChanged(Component &component) override;
     void componentParentHierarchyChanged(Component &component) override;
     void componentBeingDeleted(Component &component) override;
+
+    // todo methods to move to EffectManager class
+    ValueTree getUsefulSelection();
 
 
     // Access methods

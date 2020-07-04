@@ -164,11 +164,11 @@ Component *ParameterPort::getDragLineParent() {
     return getParentComponent()->getParentComponent();
 }
 
-Component *ParameterPort::getParentEffect() {
+Effect* ParameterPort::getParentEffect() {
     if (isInternal) {
-        return getParentComponent();
+        return dynamic_cast<Effect*>(getParentComponent());
     } else {
-        return getParentComponent()->getParentComponent();
+        return dynamic_cast<Effect*>(getParentComponent()->getParentComponent());
     }
 }
 

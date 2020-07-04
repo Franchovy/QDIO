@@ -75,7 +75,7 @@ public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
     ParameterPort(bool isInternal, SelectHoverObject* parameterParent);
 
-    Component *getParentEffect() override;
+    Effect *getParentEffect() override;
 
     bool canConnect(const ConnectionPort* other) const override;
 

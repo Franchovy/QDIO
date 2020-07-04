@@ -615,11 +615,23 @@ bool EffectScene::keyPressed(const KeyPress &key)
         // copy
         if (key.getKeyCode() == 'c')
         {
-
-            //SystemClipboard::copyTextToClipboard()
+            if (selected.getItemArray().size() == 1) {
+                auto data = tree.storeEffect(tree.getTree(selected.getItemArray().getFirst().get()));
+                SystemClipboard::copyTextToClipboard(data.toXmlString());
+            }
         }
 
         // paste
+        if (key.getKeyCode() == 'v')
+        {
+            auto stringData = SystemClipboard::getTextFromClipboard();
+
+            auto data = ValueTree::fromXml(stringData);
+
+            if (data.hasProperty("name")) {
+                tree.loadEffect(data);
+            }
+        }
 
         // reset initial use command
         if (key.getKeyCode() == 'I' && key.getModifiers().isCtrlDown())
