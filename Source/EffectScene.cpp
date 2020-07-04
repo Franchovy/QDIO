@@ -612,6 +612,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
             loadNewTemplate("");
         }
 
+        // Select All
         if (key.getKeyCode() == 'a')
         {
             for (auto c : getChildren())
@@ -624,7 +625,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
             repaint();
         }
 
-        // copy
+        // Copy
         if (key.getKeyCode() == 'c')
         {
             if (selected.getItemArray().size() == 1) {
@@ -633,7 +634,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
             }
         }
 
-        // paste
+        // Paste
         if (key.getKeyCode() == 'v')
         {
             auto stringData = SystemClipboard::getTextFromClipboard();
