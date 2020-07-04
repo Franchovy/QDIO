@@ -47,7 +47,9 @@ EffectTree::EffectTree(EffectTreeBase* effectScene)
 }
 
 
-Effect* EffectTree::createEffect(ValueTree tree) {
+bool EffectTree::createEffect(ValueTree tree) {
+    bool success = true;
+
     if (! tree.getParent().isValid()) {
         effectTree.appendChild(tree, undoManager);
     }
@@ -98,7 +100,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
         for (int i = 0; i < tree.getNumChildren(); i++) {
             auto child = tree.getChild(i);
             if (child.hasType(PORT_ID)) {
-                loadPort(child);
+                success &= loadPort(child);
             }
         }
     }
@@ -166,7 +168,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
     // Load parameters from tree
     for (int i = 0; i < tree.getNumChildren(); i++) {
         if (tree.getChild(i).hasType(PARAMETER_ID)) {
-            loadParameter(effect, tree.getChild(i));
+            success &= loadParameter(effect, tree.getChild(i));
         }
     }
 
@@ -222,7 +224,7 @@ Effect* EffectTree::createEffect(ValueTree tree) {
 
     effect->resized();
 
-    return effect;
+    return success;
 }
 
 ValueTree EffectTree::newEffect(String name, Point<int> pos, int processorID) {
@@ -569,22 +571,24 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
 
 
 
-void EffectTree::loadTemplate(String name) {
+bool EffectTree::loadTemplate(String name) {
     if (name.isEmpty()) {
         // Load user state
         name = "default";
     }
 
+    bool success = false;
+
     auto effectLoadDataTree = EffectLoader::loadTemplate(name);
     currentTemplateName = name;
 
     if (effectLoadDataTree.isValid()) {
-        loadEffect(effectTree, effectLoadDataTree);
+        success = loadEffect(effectTree, effectLoadDataTree);
     } else {
         std::cout << "empty template." << newLine;
     }
 
-
+    return success;
 
     /*if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
         auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
@@ -780,8 +784,10 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
     return copy;
 }
 
-void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
+bool EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
+
+    bool success = false;
 
     //auto undoManagerToUse = appState == loading ? nullptr : &undoManager;
 
@@ -825,7 +831,7 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
 
         // Create effect
         parentTree.appendChild(copy, nullptr);
-        createEffect(copy);
+        success &= createEffect(copy);
 
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
@@ -833,7 +839,7 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
 
             if (child.hasType(EFFECT_ID)) {
                 copy.appendChild(child, nullptr);
-                loadEffect(copy, child);
+                success &= loadEffect(copy, child);
             }
         }
 
@@ -847,7 +853,7 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
                 auto child = loadData.getChild(i).createCopy();
                 copy.appendChild(child, nullptr);
                 // Set data
-                loadConnection(child);
+                success &= loadConnection(child);
             }
         }
     }
@@ -855,10 +861,12 @@ void EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     // Set Effect state to neutral
     auto effect = getFromTree<EffectTreeBase>(copy);
     effect->state = Effect::neutral;
+
+    return success;
 }
 
 //todo just use existing parameterData parent instead of effect
-Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
+bool EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
     String name = parameterData.getProperty("name");
 
     Parameter::Ptr parameter = nullptr;
@@ -871,6 +879,9 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         }
 
         jassert(param != nullptr);
+        if (param == nullptr) {
+            return false;
+        }
     }
 
     int type = parameterData.getProperty("type", -1);
@@ -884,6 +895,9 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
         }
     }
     jassert (type != -1);
+    if (type == -1) {
+        return false;
+    }
 
 
     float value = parameterData.getProperty("value", param != nullptr ? param->getValue() : 0);
@@ -946,7 +960,7 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
 
     parameter->setTopLeftPosition(x, y);
 
-    return parameter;
+    return true;
 }
 
 /**
@@ -954,7 +968,8 @@ Parameter::Ptr EffectTree::loadParameter(Effect* effect, ValueTree parameterData
  * @param connectionData is loadable ConnectionLine data, including parent to load to
  * @return newly created line
  */
-ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
+bool EffectTree::loadConnection(ValueTree connectionData) {
+    bool success = true;
 
     if (connectionData.hasProperty("inPortID") && connectionData.hasProperty("outPortID")) {
         auto parentTree = connectionData.getParent();
@@ -968,7 +983,7 @@ ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
 
         if (inPort == nullptr || outPort == nullptr) {
             jassertfalse;
-            return nullptr;
+            return false;
         }
 
         auto line = new ConnectionLine();
@@ -982,9 +997,9 @@ ConnectionLine::Ptr EffectTree::loadConnection(ValueTree connectionData) {
         lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), nullptr);
         lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), nullptr);
 
-        return line;
+        return success;
     }
-    jassertfalse;
+    return false;
 }
 
 
@@ -1026,7 +1041,7 @@ void EffectTree::loadEffect(const ValueTree &loadData) {
     loadEffect(effectTree, loadData);
 }
 
-ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
+bool EffectTree::loadPort(ValueTree portData) {
     auto effect = getFromTree<Effect>(portData.getParent());
     String ID = portData.getProperty("ID");
     bool isInput = portData.getProperty("isInput");
@@ -1047,11 +1062,11 @@ ConnectionPort::Ptr EffectTree::loadPort(ValueTree portData) {
 
             newPort->internalPort->setComponentID(linkedID);
 
-            return newPort;
+            return true;
         }
     }
 
-    return port;
+    return true; // Only audio ports need loading?
 }
 
 ValueTree EffectTree::findTree(ValueTree treeToSearch, GuiObject *component) {

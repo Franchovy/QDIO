@@ -743,7 +743,11 @@ void EffectScene::loadNewTemplate(String newTemplate) {
     }
 
     std::cout << "Load template: " << newTemplate << newLine;
-    tree.loadTemplate(newTemplate);
+    bool success = tree.loadTemplate(newTemplate);
+    if (! success) {
+        std::cout << "Failure loading template! Reloading fresh" << newLine;
+        tree.clear();
+    }
 }
 
 int EffectScene::callSaveTemplateDialog(String &name, bool dontSaveButton) {

@@ -24,7 +24,7 @@ public:
     };
 
     // Create new - from ValueTree data
-    Effect* createEffect(ValueTree tree);
+    bool createEffect(ValueTree tree);
 
     // Create new methods - constructs ValueTree Data needed
     ValueTree newEffect(String name, Point<int> pos, int processorID = -1);
@@ -37,16 +37,16 @@ public:
     void remove(SelectHoverObject* c);
 
     ValueTree storeEffect(const ValueTree& storeData);
-    void loadEffect(ValueTree& parentTree, const ValueTree& loadData);
+    bool loadEffect(ValueTree& parentTree, const ValueTree& loadData);
     void loadEffect(const ValueTree& loadData);
 
-    ConnectionPort::Ptr loadPort(ValueTree port);
-    Parameter::Ptr loadParameter(Effect* effect, ValueTree parameterData);
-    ConnectionLine::Ptr loadConnection(ValueTree connectionData);
+    bool loadPort(ValueTree port);
+    bool loadParameter(Effect* effect, ValueTree parameterData);
+    bool loadConnection(ValueTree connectionData);
 
     String getCurrentTemplateName();
 
-    void loadTemplate(String name = "");
+    bool loadTemplate(String name = "");
     void storeTemplate(String saveName = "");
 
     void clear();
