@@ -787,7 +787,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
 bool EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
-    bool success = false;
+    bool success = true;
 
     //auto undoManagerToUse = appState == loading ? nullptr : &undoManager;
 
