@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "EffectGui.h"
 
+class Effect;
 
 /**
  * Base class - port to connect to other ports
@@ -37,7 +38,7 @@ public:
 
     virtual bool canConnect(const ConnectionPort* other) const = 0;
     virtual Component* getDragLineParent() = 0;
-    virtual Component* getParentEffect() {return getParentComponent(); }
+    virtual Effect* getParentEffect();
 
     bool isInput;
     bool isInternal = false;
