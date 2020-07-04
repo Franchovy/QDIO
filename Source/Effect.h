@@ -168,9 +168,9 @@ public:
     bool hasPort(const ConnectionPort* port);
     bool hasConnection(const ConnectionLine* line);
 
-    void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
-    void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
-    void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
+    static void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
+    static void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
+    static void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
 
     //int getPortID(const ConnectionPort* port);
     //ConnectionPort* getPortFromID(const int id, bool internal = false);

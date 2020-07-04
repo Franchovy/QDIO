@@ -959,9 +959,11 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     ConnectionLine *outgoingConnection = nullptr;
 
                     // Reassign effect parent
-                    /**/
-                    newParent->addAndMakeVisible(this);
+                    // Make invisible while moving.
+                    setVisible(false);
+                    newParent->addChildComponent(this);
 
+                    // Set position inside parent
                     if (getParentHeight() - getHeight() < 0 || getParentWidth() - getWidth() < 0) {
                         // Expand child to fit
                         auto newPos = newParent->getBoundsInParent().getConstrainedPoint(getPosition());
@@ -975,6 +977,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
                         // Position effect inside parent
                         setTopLeftPosition(getPosWithinParent());
                     }
+                    setVisible(true);
 
                     //auto outParent = (newParent->isParentOf(oldParent)) ? newParent : oldParent;
                     auto parent = (newParent->isParentOf(oldParent)) ? oldParent : newParent;
@@ -987,7 +990,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
                         } else {
                             // Check if line is connected to an internal port
                             if (c->getInPort().get()->getParentComponent() == parent
-                                || c->getOutPort().get()->getParentComponent() == parent) {
+                                || c->getOutPort().get()->getParentComponent() == parent)
+                            {
                                 auto connectionsToShorten = (newParent->isParentOf(oldParent))
                                                             ? parent->getConnectionsToThis()
                                                             : parent->getConnectionsInside();
@@ -1173,8 +1177,8 @@ void Effect::setName(const String &newName) {
 }
 
 void Effect::mergeConnection(ConnectionLine *inLine, ConnectionLine *outLine) {
-    jassert(getPorts(true).contains(inLine->getInPort().get()));
-    jassert(getPorts(false).contains(outLine->getOutPort().get()));
+    //jassert(getPorts(true).contains(inLine->getInPort().get()));
+    //jassert(getPorts(false).contains(outLine->getOutPort().get()));
 
     auto newInPort = outLine->getInPort().get();
     outLine->getParentComponent()->removeChildComponent(outLine);
@@ -1209,7 +1213,7 @@ void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExte
         auto isInput = lineToExtend->getInPort()->getDragLineParent() == parentToExtendThrough;
         auto oldPort = isInput ? lineToExtend->getInPort().get() : lineToExtend->getOutPort().get();
 
-        auto newPort = addPort(getDefaultBus(), isInput);
+        auto newPort = parentToExtendThrough->addPort(getDefaultBus(), isInput);
         lineToExtend->unsetPort(oldPort);
         lineToExtend->setPort(newPort.get());
 
