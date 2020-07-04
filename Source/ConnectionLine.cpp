@@ -237,6 +237,7 @@ bool ConnectionLine::connect() {
         // Parameter connection case
         if (inParamPort != nullptr && outParamPort != nullptr) {
             Effect::connectParameters(*this);
+            type = parameter;
         }
         // Audio connection case
         else {
@@ -246,6 +247,7 @@ bool ConnectionLine::connect() {
                  || dynamic_cast<InternalConnectionPort*>(outPort.get()));
 
             Effect::connectAudio(*this);
+            type = audio;
         }
 
         connected = true;

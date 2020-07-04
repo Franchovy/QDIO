@@ -192,14 +192,16 @@ void EffectTreeBase::mouseUp(const MouseEvent &event) {
     }
 }
 
-Array<ConnectionLine *> EffectTreeBase::getConnectionsToThis(bool isInputConnection) {
+Array<ConnectionLine *> EffectTreeBase::getConnectionsToThis(bool isInputConnection, ConnectionLine::Type connectionType) {
     Array<ConnectionLine*> array;
     for (auto c : getParentComponent()->getChildren()) {
         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
-            if (isInputConnection && isParentOf(line->getInPort().get())) {
-                array.add(line);
-            } else if (! isInputConnection && isParentOf(line->getOutPort().get())) {
-                array.add(line);
+            if (line->type == connectionType) {
+                if (isInputConnection && isParentOf(line->getInPort().get())) {
+                    array.add(line);
+                } else if (!isInputConnection && isParentOf(line->getOutPort().get())) {
+                    array.add(line);
+                }
             }
         }
     }
@@ -984,7 +986,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
                     // Adjust connections accordingly
                     for (auto c : connections) {
-                        if (dynamic_cast<ParameterPort*>(c->getInPort().get())) {
+                        if (c->type == ConnectionLine::parameter) {
                             // Remove parameter connection
                             c->getParentComponent()->removeChildComponent(c);
                         } else {
@@ -996,9 +998,12 @@ void Effect::mouseDrag(const MouseEvent &event) {
                                                             ? parent->getConnectionsToThis()
                                                             : parent->getConnectionsInside();
 
-                                for (auto c_out : connectionsToShorten) {
-                                    if (c_out->getOutPort() == c->getInPort()->getLinkedPort()
-                                        || c_out->getInPort() == c->getOutPort()->getLinkedPort()) {
+                                for (auto c_out : connectionsToShorten)
+                                {
+                                    if ((c_out->getOutPort() == c->getInPort()->getLinkedPort()
+                                        || c_out->getInPort() == c->getOutPort()->getLinkedPort())
+                                        && c_out->type == ConnectionLine::audio)
+                                    {
                                         outgoingConnection = c_out;
                                     }
                                 }
@@ -1026,8 +1031,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
                 rightClickDragActivated = true;
                 std::cout << "right click activated" << newLine;
 
-                auto ingoingConnections = getConnectionsToThis(true);
-                auto outgoingConnections = getConnectionsToThis(false);
+                auto ingoingConnections = getConnectionsToThis(true, ConnectionLine::audio);
+                auto outgoingConnections = getConnectionsToThis(false, ConnectionLine::audio);
                 if (ingoingConnections.size() != 0 || outgoingConnections.size() != 0) {
                     // Disconnect from any connections
                     if (ingoingConnections.size() == outgoingConnections.size()) {

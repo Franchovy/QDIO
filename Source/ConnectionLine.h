@@ -79,6 +79,11 @@ public:
 
     bool isConnected() const;
 
+    enum Type {
+        audio = 0,
+        parameter = 1
+    } type;
+
 private:
     AudioProcessorGraph::Connection audioConnection;
 
