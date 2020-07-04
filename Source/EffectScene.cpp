@@ -460,11 +460,11 @@ bool EffectScene::keyPressed(const KeyPress &key)
         std::cout << "Relative Position: " << getComponentAt(getMouseXYRelative())->getLocalPoint(this, getMouseXYRelative()).toString() << newLine;
     }
     if (key.getKeyCode() == 's') {
-        std::cout << "Audiograph Nodes: " << newLine;
+        /*std::cout << "Audiograph Nodes: " << newLine;
         for (auto node : audioGraph.getNodes()) {
             std::cout << "node: " << node->nodeID.uid << newLine;
             std::cout << node->getProcessor()->getName() << newLine;
-        }
+        }*/
         std::cout << "Connections: " << newLine;
         for (auto connection : audioGraph.getConnections()) {
             auto inputNode = audioGraph.getNodeForId(connection.source.nodeID);

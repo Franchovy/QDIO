@@ -10,7 +10,6 @@
 
 #include "Ports.h"
 
-#include "Effect.h"
 
 AudioPort::AudioPort(bool isInput) : ConnectionPort()
         , internalPort(new InternalConnectionPort(this, !isInput))
@@ -91,7 +90,7 @@ ConnectionPort *ConnectionPort::getLinkedPort() const {
 }
 
 
-ConnectionPort::Ptr ConnectionPort::getOtherPort() {
+ConnectionPort* ConnectionPort::getOtherPort() {
     return otherPort;
 }
 
@@ -103,8 +102,8 @@ void ConnectionPort::setLinkedPort(ConnectionPort *port) {
     linkedPort = port;
 }
 
-Effect *ConnectionPort::getParentEffect() {
-    return dynamic_cast<Effect*>(getParentComponent());
+Component *ConnectionPort::getParentEffect() {
+    return getParentComponent();
 }
 
 bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
@@ -164,11 +163,11 @@ Component *ParameterPort::getDragLineParent() {
     return getParentComponent()->getParentComponent();
 }
 
-Effect* ParameterPort::getParentEffect() {
+Component* ParameterPort::getParentEffect() {
     if (isInternal) {
-        return dynamic_cast<Effect*>(getParentComponent());
+        return getParentComponent();
     } else {
-        return dynamic_cast<Effect*>(getParentComponent()->getParentComponent());
+        return getParentComponent()->getParentComponent();
     }
 }
 

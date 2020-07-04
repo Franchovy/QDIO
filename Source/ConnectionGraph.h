@@ -10,6 +10,7 @@
 
 #pragma once
 #include <JuceHeader.h>
+#include "Ports.h"
 
 class Effect;
 class ConnectionLine;
@@ -25,7 +26,7 @@ struct AudioConnection
     bool validConnection = false;
 };
 
-class ConnectionGraph : public ComponentListener
+class ConnectionGraph
 {
 public:
     ConnectionGraph(AudioProcessorGraph& audioGraph);
@@ -37,6 +38,6 @@ public:
 
 private:
     AudioProcessorGraph& audioGraph;
-    Array<AudioConnection> connections;
+    OwnedArray<AudioConnection> connections;
     HashMap<const ConnectionLine*, const AudioConnection*> lineToAudioConnectionsMap;
 };

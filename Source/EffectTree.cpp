@@ -398,18 +398,18 @@ void EffectTree::componentEnablementChanged(Component &component) {
                 jassert(lineTree.isValid());
 
                 // Update tree
-                lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), undoManager);
-                lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), undoManager);
+                lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort(), undoManager);
+                lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort(), undoManager);
 
             } else {
                 // Line is disconnected
                 auto lineTree = getTree(line);
                 if (lineTree.isValid()) {
-                    auto inPort = line->getInPort().get();
+                    auto inPort = line->getInPort();
                     if (inPort == nullptr) {
                         lineTree.removeProperty(ConnectionLine::IDs::InPort, undoManager);
                     }
-                    auto outPort = line->getOutPort().get();
+                    auto outPort = line->getOutPort();
                     if (outPort == nullptr) {
                         lineTree.removeProperty(ConnectionLine::IDs::OutPort, undoManager);
                     }
@@ -552,14 +552,14 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
             if (inPort != nullptr) {
                 line->setPort(inPort);
             } else if (line->isConnected()) {
-                line->unsetPort(line->getInPort().get());
+                line->unsetPort(line->getInPort());
             }
         } else if (property == Identifier(ConnectionLine::IDs::OutPort)) {
             auto outPort = getPropertyFromTree<ConnectionPort>(treeWhosePropertyHasChanged, ConnectionLine::IDs::OutPort);
             if (outPort != nullptr) {
                 line->setPort(outPort);
             } else if (line->isConnected()){
-                line->unsetPort(line->getOutPort().get());
+                line->unsetPort(line->getOutPort());
             }
         }
     }
@@ -706,8 +706,8 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
 
                 ValueTree connectionToSet(CONNECTION_ID);
 
-                connectionToSet.setProperty("inPortID", reinterpret_cast<int64>(inPort.get()), nullptr);
-                connectionToSet.setProperty("outPortID", reinterpret_cast<int64>(outPort.get()), nullptr);
+                connectionToSet.setProperty("inPortID", reinterpret_cast<int64>(inPort), nullptr);
+                connectionToSet.setProperty("outPortID", reinterpret_cast<int64>(outPort), nullptr);
 
                 // Set data to ValueTree
                 copy.appendChild(connectionToSet, nullptr);
@@ -949,8 +949,8 @@ bool EffectTree::loadConnection(ValueTree connectionData) {
         parent->addAndMakeVisible(line);
 
         auto lineTree = getTree(line);
-        lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort().get(), nullptr);
-        lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort().get(), nullptr);
+        lineTree.setProperty(ConnectionLine::IDs::InPort, line->getInPort(), nullptr);
+        lineTree.setProperty(ConnectionLine::IDs::OutPort, line->getOutPort(), nullptr);
 
         return success;
     }
@@ -1141,8 +1141,8 @@ ValueTree EffectTree::getUsefulSelection() {
         if (auto line = dynamic_cast<ConnectionLine*>(c))
         {
             // Check that both ends of the line are part of the selection
-            if (selected.contains(line->getInPort()->getParentEffect())
-                && selected.contains(line->getOutPort()->getParentEffect()))
+            if (selected.contains(dynamic_cast<Effect*>(line->getInPort()->getParentEffect()))
+                && selected.contains(dynamic_cast<Effect*>(line->getOutPort()->getParentEffect())))
             {
                 selectOutput.add(c);
             }

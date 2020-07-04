@@ -21,9 +21,6 @@ ConnectionGraph::ConnectionGraph(AudioProcessorGraph& audioGraph)
 void ConnectionGraph::addConnection(const ConnectionLine& line) {
     std::cout << "Add connection" << newLine;
 
-    Effect::NodeAndPort in;
-    Effect::NodeAndPort out;
-
     auto array = Array<AudioProcessorGraph::Connection>();
 
     auto inPort = line.getOutPort();
@@ -40,52 +37,54 @@ void ConnectionGraph::addConnection(const ConnectionLine& line) {
         return;
     }
 
-    in = inEffect->getNode(inPort);
-    out = outEffect->getNode(outPort);
+    auto inEndPort = dynamic_cast<AudioPort*>(inEffect->getEndPort(inPort));
+    auto outEndPort = dynamic_cast<AudioPort*>(outEffect->getEndPort(outPort));
 
-// todo change to using audioConnection struct
-    if (in.isValid && out.isValid) {
+    if (inEndPort != nullptr && outEndPort != nullptr) {
+        auto inEndEffect = dynamic_cast<Effect*>(inEndPort->getParentEffect());
+        auto outEndEffect = dynamic_cast<Effect*>(outEndPort->getParentEffect());
+
+        auto inNode = inEndEffect->getNodeID();
+        auto outNode = outEndEffect->getNodeID();
+
+        auto newConnection = new AudioConnection();
+        newConnection->input = inEndEffect;
+        newConnection->output = outEndEffect;
+        newConnection->connections.addArray(inEffect->getConnectionsUntilEnd(inPort));
+        newConnection->connections.addArray(outEffect->getConnectionsUntilEnd(outPort));
+        newConnection->validConnection = true;
+
         for (int c = 0; c < jmin(audioGraph.getTotalNumInputChannels(),
                                  audioGraph.getTotalNumOutputChannels()); c++) {
-            AudioProcessorGraph::Connection connection = {{in.node->nodeID,  in.port->bus->getChannelIndexInProcessBlockBuffer(
-                    c)},
-                                                          {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(
-                                                                  c)}};
-            array.add(connection);
-        }
-    }
+            AudioProcessorGraph::Connection connection = {{inNode, inEndPort->bus->getChannelIndexInProcessBlockBuffer(c) },
+                                                          {outNode, outEndPort->bus->getChannelIndexInProcessBlockBuffer(c) }};
 
-
-    //==========================================================
-
-
-
-    //==========================================================
-
-    if (array.isEmpty()) {
-        return;
-    }
-
-    auto connection = array.getFirst();
-    for (auto c = 0; c < 2; c++) { // default 2 channels
-        connection.source.channelIndex = c;
-        connection.destination.channelIndex = c;
-
-        if (! audioGraph.isConnected(connection) &&
-            audioGraph.isConnectionLegal(connection)) {
-            // Make audio connection
+            newConnection->audioConnections.add(connection);
             audioGraph.addConnection(connection);
+            //array.add(connection);
         }
-    }
+        connections.add(newConnection);
+/*
+        auto connection = array.getFirst();
+        for (auto c = 0; c < 2; c++) { // force 2 channels
+            connection.source.channelIndex = c;
+            connection.destination.channelIndex = c;
 
+            if (! audioGraph.isConnected(connection) &&
+                audioGraph.isConnectionLegal(connection)) {
+                std::cout << "add audio connection channel" << newLine;
+                // Make audio connection
+                audioGraph.addConnection(connection);
+            }
+        }
+*/
+
+    }
 }
 
 void ConnectionGraph::removeConnection(const ConnectionLine& line) {
     std::cout << "Remove connection" << newLine;
 
-    Effect::NodeAndPort in;
-    Effect::NodeAndPort out;
-
     auto array = Array<AudioProcessorGraph::Connection>();
 
     auto inPort = line.getOutPort();
@@ -102,30 +101,47 @@ void ConnectionGraph::removeConnection(const ConnectionLine& line) {
         return;
     }
 
-    in = inEffect->getNode(inPort);
-    out = outEffect->getNode(outPort);
+    auto inEndPort = dynamic_cast<AudioPort*>(inEffect->getEndPort(inPort));
+    auto outEndPort = dynamic_cast<AudioPort*>(outEffect->getEndPort(outPort));
 
-// todo change to using audioConnection struct
-    if (in.isValid && out.isValid) {
-        for (int c = 0; c < jmin(audioGraph.getTotalNumInputChannels(),
+    if (inEndPort != nullptr && outEndPort != nullptr) {
+        // Look for connection match
+        for (const auto& c : connections) {
+            if (c->input == inEndPort->getParentEffect() && c->output == outEndPort->getParentEffect()) {
+                // Remove audio connections and //todo invalidate the struct.
+                for (auto audioConnection : c->audioConnections)
+                {
+                    audioGraph.removeConnection(audioConnection);
+                }
+                connections.removeObject(c, true);
+            }
+        }
+
+        /*for (int c = 0; c < jmin(audioGraph.getTotalNumInputChannels(),
                                  audioGraph.getTotalNumOutputChannels()); c++) {
-            AudioProcessorGraph::Connection connection = {{in.node->nodeID,  in.port->bus->getChannelIndexInProcessBlockBuffer(
+            AudioProcessorGraph::Connection connection = {{inNode,  inEndPort->bus->getChannelIndexInProcessBlockBuffer(
                     c)},
-                                                          {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(
+                                                          {outNode, outEndPort->bus->getChannelIndexInProcessBlockBuffer(
                                                                   c)}};
             array.add(connection);
-        }
+        }*/
     }
 
-    for (auto connection : array) {
+/*    for (auto connection : array) {
         if (audioGraph.isConnected(connection)) {
+            std::cout << "remove audio connection channel" << newLine;
             audioGraph.removeConnection(connection);
         }
-    }
+    }*/
 
 }
 
 void ConnectionGraph::updateNumChannels(int numChannels) {
     std::cout << "update num channels" << newLine;
+
+}
+
+
+AudioConnection::AudioConnection() {
 
 }

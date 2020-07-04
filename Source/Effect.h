@@ -148,7 +148,10 @@ public:
         bool isValid = false;
     };
 
-    NodeAndPort getNode(ConnectionPort::Ptr& port);
+    Array<ConnectionLine*> getConnectionsUntilEnd(ConnectionPort* port);
+    ConnectionPort* getNextPort(ConnectionPort* port);
+    ConnectionPort* getEndPort(ConnectionPort* port);
+
     void setNode(AudioProcessorGraph::Node::Ptr node);
 
     //ValueTree createParameter(AudioProcessorParameter* param);

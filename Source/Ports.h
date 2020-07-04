@@ -38,13 +38,13 @@ public:
 
     virtual bool canConnect(const ConnectionPort* other) const = 0;
     virtual Component* getDragLineParent() = 0;
-    virtual Effect* getParentEffect();
+    virtual Component* getParentEffect();
 
     bool isInput;
     bool isInternal = false;
 
     void setOtherPort(ConnectionPort* newPort);
-    ConnectionPort::Ptr getOtherPort();
+    ConnectionPort* getOtherPort();
 
     bool isConnected() { return otherPort != nullptr; }
 
@@ -58,7 +58,7 @@ public:
 protected:
     ConnectionPort();
 
-    ConnectionPort::Ptr otherPort = nullptr;
+    ConnectionPort* otherPort = nullptr;
 
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
@@ -75,7 +75,7 @@ public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
     ParameterPort(bool isInternal, SelectHoverObject* parameterParent);
 
-    Effect *getParentEffect() override;
+    Component *getParentEffect() override;
 
     bool canConnect(const ConnectionPort* other) const override;
 

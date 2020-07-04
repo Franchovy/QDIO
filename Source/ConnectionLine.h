@@ -48,12 +48,12 @@ public:
     bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
-    ConnectionPort::Ptr getOtherPort(const ConnectionPort::Ptr& port);
-    ConnectionPort::Ptr getInPort() const {
-        return inPort;
+    ConnectionPort* getOtherPort(const ConnectionPort::Ptr& port);
+    ConnectionPort* getInPort() const {
+        return inPort.get();
     }
-    ConnectionPort::Ptr getOutPort() const {
-        return outPort;
+    ConnectionPort* getOutPort() const {
+        return outPort.get();
     }
 
     void reconnect(ConnectionPort *newInPort, ConnectionPort *newOutPort);
