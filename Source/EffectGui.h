@@ -53,7 +53,7 @@ public:
     static void addSelectObject(const SelectHoverObject::Ptr& item);
     static void removeSelectObject(const SelectHoverObject::Ptr& item);
     void deselectAll();
-    ReferenceCountedArray<SelectHoverObject> getSelected();
+    static ReferenceCountedArray<SelectHoverObject> getSelected();
 
     static void close();
 
