@@ -420,11 +420,7 @@ void EffectTree::componentEnablementChanged(Component &component) {
 
 
 void EffectTree::componentBeingDeleted(Component &component) {
-    component.removeComponentListener(this);
-
-    for (auto child : component.getChildren()) {
-        child->removeComponentListener(this);
-    }
+    removeListenersRecursively(&component);
 
     ComponentListener::componentBeingDeleted(component);
 }
@@ -459,10 +455,10 @@ ValueTree EffectTree::getTree(GuiObject* component) {
 
 
 EffectTree::~EffectTree() {
-    auto effectScene = effectTree.getProperty(IDs::component).getObject();
+    auto effectScene = dynamic_cast<GuiObject*>(effectTree.getProperty(IDs::component).getObject());
     effectScene->incReferenceCount();
 
-    removeAllListeners();
+    removeListenersRecursively(effectScene);
 
     // Clear ValueTree
     effectTree = ValueTree();
@@ -1108,6 +1104,13 @@ void EffectTree::removeAllListeners(ValueTree component) {
         }
     } else {
         removeAllListeners(effectTree);
+    }
+}
+
+void EffectTree::removeListenersRecursively(Component* component) {
+    component->removeComponentListener(this);
+    for (auto c : component->getChildren()) {
+        removeListenersRecursively(c);
     }
 }
 

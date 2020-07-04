@@ -80,6 +80,7 @@ public:
     static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
 
     void removeAllListeners(ValueTree component = ValueTree());
+    void removeListenersRecursively(Component* component);
 
 private:
     StringArray processorNames;
