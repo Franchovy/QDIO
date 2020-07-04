@@ -40,8 +40,8 @@ public:
     ValueTree storeGroup(Array<SelectHoverObject*> items);
 
     ValueTree storeEffect(const ValueTree& storeData);
-    bool loadEffect(ValueTree& parentTree, const ValueTree& loadData);
-    void loadEffect(const ValueTree& loadData);
+    Effect* loadEffect(ValueTree& parentTree, const ValueTree& loadData);
+    void loadEffect(const ValueTree& loadData, bool setToMousePosition = true);
 
     bool loadPort(ValueTree port);
     bool loadParameter(Effect* effect, ValueTree parameterData);
@@ -85,6 +85,8 @@ public:
     void removeListenersRecursively(Component* component);
 
 private:
+    EffectTreeBase* effectScene;
+
     StringArray processorNames;
     Array<std::function<void()>> makeProcessorArray;
     std::unique_ptr<AudioProcessor> newProcessor = nullptr;

@@ -41,6 +41,8 @@ EffectTree::EffectTree(EffectTreeBase* effectScene)
 {
     setupProcessors();
 
+    this->effectScene = effectScene;
+
     effectTree.setProperty(IDs::component, effectScene, nullptr);
     effectTree.addListener(this);
     effectScene->addComponentListener(this);
@@ -738,7 +740,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
     return copy;
 }
 
-bool EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
+Effect* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
     bool success = true;
@@ -791,7 +793,7 @@ bool EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
 
             if (child.hasType(EFFECT_ID)) {
                 copy.appendChild(child, nullptr);
-                success &= loadEffect(copy, child);
+                success &= dynamic_cast<Effect *>(loadEffect(copy, child)) != nullptr;
             }
         }
 
@@ -814,7 +816,7 @@ bool EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     auto effect = getFromTree<EffectTreeBase>(copy);
     effect->state = Effect::neutral;
 
-    return success;
+    return dynamic_cast<Effect *>(effect);
 }
 
 //todo just use existing parameterData parent instead of effect
@@ -990,8 +992,12 @@ void EffectTree::remove(SelectHoverObject *c) {
     }
 }
 
-void EffectTree::loadEffect(const ValueTree &loadData) {
-    loadEffect(effectTree, loadData);
+void EffectTree::loadEffect(const ValueTree &loadData, bool setToMousePosition) {
+    auto effect = loadEffect(effectTree, loadData);
+
+    if (setToMousePosition) {
+        effect->setCentrePosition(effectScene->getMouseXYRelative());
+    }
 }
 
 bool EffectTree::loadPort(ValueTree portData) {
