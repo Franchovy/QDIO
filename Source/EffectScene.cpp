@@ -606,6 +606,11 @@ bool EffectScene::keyPressed(const KeyPress &key)
                 }
             }
         }
+        // load new template
+        if (key.getKeyCode() == 'n')
+        {
+            loadNewTemplate("");
+        }
 
         // reset initial use command
         if (key.getKeyCode() == 'I' && key.getModifiers().isCtrlDown())

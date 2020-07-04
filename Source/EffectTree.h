@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Effect.h"
+#include <BinaryData.h>
 #include "IDs"
 
 class EffectTree : public ValueTree::Listener, public ComponentListener

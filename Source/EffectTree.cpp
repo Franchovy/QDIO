@@ -568,15 +568,17 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
 
 
 bool EffectTree::loadTemplate(String name) {
-    if (name.isEmpty()) {
-        // Load user state
-        name = "default";
-    }
-
     bool success = false;
+    ValueTree effectLoadDataTree;
 
-    auto effectLoadDataTree = EffectLoader::loadTemplate(name);
-    currentTemplateName = name;
+    if (name.isEmpty()) {
+        // Load new template
+        effectLoadDataTree = ValueTree::readFromData(BinaryData::BasicInOut, BinaryData::BasicInOutSize);
+        currentTemplateName = "new template";
+    } else {
+        effectLoadDataTree = EffectLoader::loadTemplate(name);
+        currentTemplateName = name;
+    }
 
     if (effectLoadDataTree.isValid()) {
         success = loadEffect(effectTree, effectLoadDataTree);
