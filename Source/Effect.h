@@ -53,7 +53,7 @@ public:
     static bool connectAudio(const ConnectionLine& connectionLine);
     static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
-    Array<ConnectionLine*> getConnectionsToThis(bool isInputConnection);
+    Array<ConnectionLine*> getConnectionsToThis(bool isInputConnection, ConnectionLine::Type connectionType);
     Array<ConnectionLine*> getConnectionsToThis();
     Array<ConnectionLine*> getConnectionsInside();
 
