@@ -63,16 +63,12 @@ public:
     void componentNameChanged(Component &component) override;
     void componentChildrenChanged(Component &component) override;
     void componentEnablementChanged(Component &component) override;
-
     void componentParentHierarchyChanged(Component &component) override;
-
     void componentBeingDeleted(Component &component) override;
 
-    //void componentVisibilityChanged(Component &component) override;
 
     // Access methods
     ValueTree getTree(GuiObject* component);
-
     ValueTree findTree(ValueTree treeToSearch, GuiObject* component);
 
     template<class T>
@@ -80,7 +76,7 @@ public:
     template <class T>
     static T* getPropertyFromTree(const ValueTree &vt, Identifier property);
 
-    void removeAllListeners(ValueTree component = ValueTree());
+
     void removeListenersRecursively(Component* component);
 
 private:

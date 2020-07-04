@@ -587,17 +587,6 @@ bool EffectTree::loadTemplate(String name) {
     }
 
     return success;
-
-    /*if (getAppProperties().getUserSettings()->getValue(KEYNAME_LOADED_EFFECTS).isNotEmpty()) {
-        auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
-        if (loadedEffectsData != nullptr) {
-            ValueTree effectLoadDataTree = ValueTree::fromXml(*loadedEffectsData);
-
-            std::cout << effectLoadDataTree.toXmlString() << newLine;
-
-            loadEffect(effectTree, effectLoadDataTree);
-        }
-    }*/
 }
 
 void EffectTree::storeTemplate(String name) {
@@ -605,18 +594,11 @@ void EffectTree::storeTemplate(String name) {
 
     saveState.setProperty("name", name, nullptr);
     EffectLoader::saveTemplate(saveState);
-
-/*    auto savedState = storeEffect(effectTree).createXml();
-
-    std::cout << "Save state: " << savedState->toString() << newLine;
-    getAppProperties().getUserSettings()->setValue(KEYNAME_LOADED_EFFECTS, savedState.get());
-    getAppProperties().getUserSettings()->saveIfNeeded();*/
 }
 
 void EffectTree::clear() {
     if (effectTree.getNumChildren() > 0) {
         effectTree.removeAllChildren(undoManager);
-        //effectTree.removeAllProperties(undoManager);
     }
 }
 
@@ -625,8 +607,6 @@ void EffectTree::clear() {
 ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
     ValueTree copy(storeData.getType());
     copy.copyPropertiesFrom(storeData, nullptr);
-
-    //std::cout << "Storing: " << storeData.getType().toString() << newLine;
 
     if (storeData.hasType(EFFECT_ID)) {
         // Remove unused properties
@@ -644,10 +624,6 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
 
             // Set ID property (for port connections)
             copy.setProperty("ID", reinterpret_cast<int64>(effect), nullptr);
-
-            // Set num ports
-            /*copy.setProperty("numInputPorts", effect->getNumInputs(), nullptr);
-            copy.setProperty("numOutputPorts", effect->getNumOutputs(), nullptr);*/
 
             // Set edit mode
             copy.setProperty("editMode", effect->isInEditMode(), nullptr);
@@ -709,11 +685,6 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 childParam.setProperty("externalPortID",
                                        reinterpret_cast<int64>(childParamObject->getPort(false)), nullptr);
 
-                /*if (childParamObject->connected()) {
-                    childParam.setProperty("connectedParam",
-                                           childParamObject->getConnectedParameter()->getName(), nullptr);
-                }*/
-
                 copy.appendChild(childParam, nullptr);
             }
             // Register connection
@@ -730,26 +701,12 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
                 auto inPort = line->getInPort();
                 auto outPort = line->getOutPort();
 
-                /*auto effect1 = dynamic_cast<Effect*>(inPortObject->getParentComponent());
-                auto effect2 = dynamic_cast<Effect*>(outPortObject->getParentComponent());*/
-
-                /*auto inPortID = effect1->getPortID(inPortObject);
-                auto outPortID = effect2->getPortID(outPortObject);*/
-
                 // Set data
 
                 ValueTree connectionToSet(CONNECTION_ID);
 
-                /*connectionToSet.setProperty("inPortEffect", reinterpret_cast<int64>(effect1), nullptr);
-                connectionToSet.setProperty("outPortEffect", reinterpret_cast<int64>(effect2), nullptr);*/
-
                 connectionToSet.setProperty("inPortID", reinterpret_cast<int64>(inPort.get()), nullptr);
                 connectionToSet.setProperty("outPortID", reinterpret_cast<int64>(outPort.get()), nullptr);
-
-                /*connectionToSet.setProperty("inPortIsInternal",
-                                            (dynamic_cast<InternalConnectionPort*>(inPortObject) != nullptr), nullptr);
-                connectionToSet.setProperty("outPortIsInternal",
-                                            (dynamic_cast<InternalConnectionPort*>(outPortObject) != nullptr), nullptr);*/
 
                 // Set data to ValueTree
                 copy.appendChild(connectionToSet, nullptr);
@@ -786,8 +743,6 @@ bool EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
     bool success = true;
-
-    //auto undoManagerToUse = appState == loading ? nullptr : &undoManager;
 
     // Effectscene added first
     if (loadData.hasType(EFFECTSCENE_ID)) {
@@ -876,8 +831,8 @@ bool EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
             }
         }
 
-        jassert(param != nullptr);
         if (param == nullptr) {
+            jassertfalse;
             return false;
         }
     }
@@ -892,8 +847,9 @@ bool EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
             type = 2;
         }
     }
-    jassert (type != -1);
+
     if (type == -1) {
+        jassertfalse;
         return false;
     }
 
@@ -1089,24 +1045,6 @@ bool EffectTree::isNotEmpty() {
 
 String EffectTree::getCurrentTemplateName() {
     return currentTemplateName;
-}
-
-void EffectTree::removeAllListeners(ValueTree component) {
-    if (component.isValid()) {
-        for (int i = 0; i < component.getNumChildren(); i++) {
-            auto child = component.getChild(i);
-
-            if (child.hasProperty(IDs::component)) {
-                getFromTree<Component>(child)->removeComponentListener(this);
-            }
-
-            if (child.getNumChildren() > 0) {
-                removeAllListeners(child);
-            }
-        }
-    } else {
-        removeAllListeners(effectTree);
-    }
 }
 
 void EffectTree::removeListenersRecursively(Component* component) {

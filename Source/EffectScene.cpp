@@ -612,6 +612,15 @@ bool EffectScene::keyPressed(const KeyPress &key)
             loadNewTemplate("");
         }
 
+        // copy
+        if (key.getKeyCode() == 'c')
+        {
+
+            //SystemClipboard::copyTextToClipboard()
+        }
+
+        // paste
+
         // reset initial use command
         if (key.getKeyCode() == 'I' && key.getModifiers().isCtrlDown())
         {

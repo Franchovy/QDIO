@@ -168,6 +168,7 @@ public:
     bool hasPort(const ConnectionPort* port);
     bool hasConnection(const ConnectionLine* line);
 
+    //todo move to effectManager class
     static void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
     static void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
     static void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
