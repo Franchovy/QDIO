@@ -793,7 +793,7 @@ Effect* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData)
 
             if (child.hasType(EFFECT_ID)) {
                 copy.appendChild(child, nullptr);
-                success &= dynamic_cast<Effect *>(loadEffect(copy, child)) != nullptr;
+                success &= (dynamic_cast<Effect *>(loadEffect(copy, child)) != nullptr);
             }
         }
 

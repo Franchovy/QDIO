@@ -612,6 +612,18 @@ bool EffectScene::keyPressed(const KeyPress &key)
             loadNewTemplate("");
         }
 
+        if (key.getKeyCode() == 'a')
+        {
+            for (auto c : getChildren())
+            {
+                if (auto obj = dynamic_cast<SelectHoverObject*>(c))
+                {
+                    selected.addToSelection(obj);
+                }
+            }
+            repaint();
+        }
+
         // copy
         if (key.getKeyCode() == 'c')
         {
@@ -773,7 +785,7 @@ void EffectScene::loadNewTemplate(String newTemplate) {
     if (! success) {
         std::cout << "Failure loading template! Reloading fresh" << newLine;
         jassertfalse;
-        tree.clear();
+        //tree.clear();
     }
 }
 
