@@ -114,7 +114,7 @@ public:
     void mouseDoubleClick(const MouseEvent &event) override;
 
     virtual void setEditMode(bool isEditable);
-    void setParentEditMode(bool parentIsInEditMode);
+    virtual void setParentEditMode(bool parentIsInEditMode);
     bool isInEditMode() const;
 
     void moved() override;
@@ -180,6 +180,7 @@ public:
     void disconnect(Parameter* otherParameter) override;
 
     void setEditMode(bool isEditable) override;
+    void setParentEditMode(bool parentIsInEditMode) override;
 
     void setParameterValueAsync(float value) override;
 
@@ -197,7 +198,8 @@ public:
     void disconnect(Parameter* otherParameter) override;
 
     void setEditMode(bool isEditable) override;
-
+    void setParentEditMode(bool parentIsInEditMode) override;
+    
     void setParameterValueAsync(float value) override;
 
 
@@ -216,6 +218,7 @@ public:
     void disconnect(Parameter* otherParameter) override;
 
     void setEditMode(bool isEditable) override;
+    void setParentEditMode(bool parentIsInEditMode) override;
 
     void setParameterValueAsync(float value) override;
 

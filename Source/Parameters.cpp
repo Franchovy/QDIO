@@ -46,6 +46,9 @@ Parameter::Parameter(AudioProcessorParameter *param)
     parameterLabel.setColour(Label::textColourId, Colours::black);
     parameterLabel.setText(getName(), dontSendNotification);
     //parameterComponent->setTopLeftPosition(0,60);
+    
+    setHoverable(true);
+    setInterceptsMouseClicks(true, true);
 
     externalPort->setCentrePosition(75, 30);
 
@@ -80,16 +83,6 @@ void Parameter::handleAsyncUpdate() {
 
 void Parameter::setEditMode(bool isEditable) {
     openMode = isEditable;
-
-    // change between editable and non-editable version
-    externalPort->setVisible(parentIsInEditMode);
-    parameterLabel.setEditable(parentIsInEditMode, parentIsInEditMode);
-    parameterLabel.setColour(Label::textColourId,
-                             (parentIsInEditMode ? Colours::whitesmoke : Colours::black));
-
-    setHoverable(true);
-    setInterceptsMouseClicks(true, true);
-    setDraggable(parentIsInEditMode);
 }
 
 void Parameter::mouseDown(const MouseEvent &event) {
@@ -397,7 +390,11 @@ bool Parameter::isOutput() const {
 
 void Parameter::setParentEditMode(bool parentIsInEditMode) {
     this->parentIsInEditMode = parentIsInEditMode;
-    setEditMode(parentIsInEditMode);
+    
+    externalPort->setVisible(parentIsInEditMode);
+    parameterLabel.setEditable(parentIsInEditMode, parentIsInEditMode);
+    parameterLabel.setColour(Label::textColourId,
+                             (parentIsInEditMode ? Colours::whitesmoke : Colours::black));
 }
 
 NormalisableRange<double> Parameter::getFullRange() {
@@ -531,7 +528,8 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
 void SliderParameter::setEditMode(bool isEditable) {
     auto value = slider.getValue();
 
-    if (openMode) {
+    openMode = isEditable;
+    if (isEditable) {
         slider.setSliderStyle(Slider::SliderStyle::ThreeValueHorizontal);
         slider.setNormalisableRange(fullRange);
         slider.setMinAndMaxValues(limitedRange.start, limitedRange.end);
@@ -549,6 +547,22 @@ void SliderParameter::setEditMode(bool isEditable) {
 
     Parameter::setEditMode(isEditable);
 }
+
+void SliderParameter::setParentEditMode(bool parentIsInEditMode) {
+    if (parentIsInEditMode) {
+        setSize(getWidth(), 80);
+        parameterLabel.setTopLeftPosition(5,30);
+        slider.setTopLeftPosition(5, 30);
+    } else {
+        setSize(getWidth(), 50);
+        parameterLabel.setTopLeftPosition(5,5);
+        slider.setTopLeftPosition(5, 0);
+    }
+    outline = getBounds();
+    
+    Parameter::setParentEditMode(parentIsInEditMode);
+}
+
 
 void SliderParameter::connect(Parameter *otherParameter) {
     Parameter::connect(otherParameter);
@@ -609,6 +623,10 @@ void ComboParameter::setEditMode(bool isEditable) {
     Parameter::setEditMode(isEditable);
 }
 
+void ComboParameter::setParentEditMode(bool parentIsInEditMode) {
+    Parameter::setParentEditMode(parentIsInEditMode);
+}
+
 void ComboParameter::connect(Parameter *otherParameter) {
     Parameter::connect(otherParameter);
 }
@@ -660,6 +678,10 @@ ButtonParameter::ButtonParameter(AudioProcessorParameter* param) : Parameter(par
 
 void ButtonParameter::setEditMode(bool isEditable) {
     Parameter::setEditMode(isEditable);
+}
+
+void ButtonParameter::setParentEditMode(bool parentIsInEditMode) {
+    Parameter::setParentEditMode(parentIsInEditMode);
 }
 
 void ButtonParameter::connect(Parameter *otherParameter) {

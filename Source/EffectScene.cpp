@@ -215,8 +215,12 @@ void EffectScene::timerCallback() {
             // Load previously loaded template
             String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
             std::cout << "Load template: " << name << newLine;
-            tree.loadTemplate(name);
+            auto loadSuccessful = tree.loadTemplate(name);
 
+            if (! loadSuccessful) {
+                tree.clear();
+            }
+            
             undoManager.clearUndoHistory();
 
         }

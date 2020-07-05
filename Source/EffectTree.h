@@ -41,7 +41,7 @@ public:
 
     ValueTree storeEffect(const ValueTree& storeData);
     Effect* loadEffect(ValueTree& parentTree, const ValueTree& loadData);
-    void loadEffect(const ValueTree& loadData, bool setToMousePosition = true);
+    bool loadEffect(const ValueTree& loadData, bool setToMousePosition = true);
 
     bool loadPort(ValueTree port);
     bool loadParameter(Effect* effect, ValueTree parameterData);

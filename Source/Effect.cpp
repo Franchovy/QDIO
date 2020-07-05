@@ -574,7 +574,7 @@ void Effect::setEditMode(bool isEditMode) {
         for (auto c : getChildren()) {
             if (auto p = dynamic_cast<Parameter*>(c)) {
                 p->setParentEditMode(false);
-                p->setInterceptsMouseClicks(false, true);
+                //p->setInterceptsMouseClicks(false, true);
             }
         }
 
@@ -767,7 +767,7 @@ void Effect::resized() {
             for (auto parameter : getParameterChildren()) {
 
                 FlexItem parameterFlexItem(*parameter);
-
+                
                 parameterFlexItem.width = parameter->getWidth();
                 parameterFlexItem.height = parameter->getHeight();
                 parameterFlexBox.items.add(parameterFlexItem);
@@ -787,7 +787,7 @@ void Effect::resized() {
                 setSize(getWidth(), parametersY + 100);
             }
 
-            parameterFlexBox.performLayout(Rectangle<int>(20, parametersY, getWidth() - 40, 100));
+            parameterFlexBox.performLayout(Rectangle<int>(20, jmin(parametersY, getHeight() - 100), getWidth() - 40, 100));
         }
     }
 }

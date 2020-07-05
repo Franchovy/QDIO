@@ -175,6 +175,13 @@ bool EffectTree::createEffect(ValueTree tree) {
     }
 
     //==============================================================
+    // If loading has messed up, get out now
+    if (! success) {
+        return false;
+    }
+    
+    
+    //==============================================================
     // Set parent component
 
     auto parentTree = tree.getParent();
@@ -583,7 +590,8 @@ bool EffectTree::loadTemplate(String name) {
     }
 
     if (effectLoadDataTree.isValid()) {
-        success = loadEffect(effectTree, effectLoadDataTree);
+        auto effect = loadEffect(effectTree, effectLoadDataTree);
+        success = effect != nullptr;
     } else {
         std::cout << "empty template." << newLine;
     }
@@ -758,7 +766,11 @@ Effect* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData)
         for (int i = 0; i < loadData.getNumChildren(); i++) {
             auto child = loadData.getChild(i);
             if (child.hasType(EFFECT_ID)) {
-                loadEffect(parentTree, child);
+                auto effect = loadEffect(parentTree, child);
+                success &= effect != nullptr;
+            }
+            if (! success) {
+                return nullptr;
             }
         }
     }
@@ -786,6 +798,9 @@ Effect* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData)
         // Create effect
         parentTree.appendChild(copy, nullptr);
         success &= createEffect(copy);
+        if (! success) {
+            return nullptr;
+        }
 
         // Load child effects
         for (int i = 0; i < loadData.getNumChildren(); i++) {
@@ -794,6 +809,9 @@ Effect* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData)
             if (child.hasType(EFFECT_ID)) {
                 copy.appendChild(child, nullptr);
                 success &= (dynamic_cast<Effect *>(loadEffect(copy, child)) != nullptr);
+            }
+            if (! success) {
+                return nullptr;
             }
         }
 
@@ -829,6 +847,7 @@ bool EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
         for(auto p : effect->getParameters(false)) {
             if (p->getName(30).compare(name) == 0) {
                 param = p;
+                break;
             }
         }
 
@@ -992,12 +1011,17 @@ void EffectTree::remove(SelectHoverObject *c) {
     }
 }
 
-void EffectTree::loadEffect(const ValueTree &loadData, bool setToMousePosition) {
+bool EffectTree::loadEffect(const ValueTree &loadData, bool setToMousePosition) {
     auto effect = loadEffect(effectTree, loadData);
 
+    if (effect == nullptr) {
+        return false;
+    }
+    
     if (setToMousePosition) {
         effect->setCentrePosition(effectScene->getMouseXYRelative());
     }
+    return true;
 }
 
 bool EffectTree::loadPort(ValueTree portData) {

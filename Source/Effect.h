@@ -226,7 +226,9 @@ private:
     Image image;
 
     // Layout stuff
-    //FlexBox flexBox;
+    FlexBox parameterFlexBox;
+    FlexBox parameterFlexBoxEditMode;
+    
     FlexBox inputPortFlexBox;
     FlexBox outputPortFlexBox;
     FlexBox internalInputPortFlexBox;
