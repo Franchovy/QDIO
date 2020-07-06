@@ -13,6 +13,7 @@
 #include "Effect.h"
 #include <BinaryData.h>
 #include "IDs"
+#include "EffectPositioner.h"
 
 class EffectTree : public ValueTree::Listener, public ComponentListener
 {

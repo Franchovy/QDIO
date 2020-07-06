@@ -97,6 +97,7 @@ private:
 
     // EffectTreeBase static stuff
     EffectTree tree;
+    EffectPositioner positioner;
 
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;

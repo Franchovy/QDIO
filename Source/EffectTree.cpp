@@ -233,6 +233,8 @@ bool EffectTree::createEffect(ValueTree tree) {
 
     effect->resized();
 
+    effect->addComponentListener(EffectPositioner::getInstance());
+
     return success;
 }
 
