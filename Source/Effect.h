@@ -148,8 +148,9 @@ public:
         bool isValid = false;
     };
 
+    Array<SelectHoverObject*> getFullConnectionEffects(ConnectionPort* port);
     Array<ConnectionLine*> getConnectionsUntilEnd(ConnectionPort* port);
-    ConnectionPort* getNextPort(ConnectionPort* port);
+    ConnectionPort* getNextPort(ConnectionPort* port, bool stopAtProcessor = true);
     ConnectionPort* getEndPort(ConnectionPort* port);
 
     void setNode(AudioProcessorGraph::Node::Ptr node);

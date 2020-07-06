@@ -16,11 +16,9 @@
 class EffectPositioner : public ComponentListener
 {
 public:
-    EffectPositioner() {
-        instance = this;
-    }
+    EffectPositioner();
 
-    static EffectPositioner* getInstance() { return instance; }
+    static EffectPositioner* getInstance();
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
@@ -29,4 +27,9 @@ public:
 
 private:
     static EffectPositioner* instance;
+
+    bool movingOp = false;
+
+    // Magic numbers
+    int minDistanceBetweenEffects = 40;
 };

@@ -47,7 +47,7 @@ void ConnectionGraph::addConnection(const ConnectionLine& line) {
         auto inNode = inEndEffect->getNodeID();
         auto outNode = outEndEffect->getNodeID();
 
-        auto newConnection = new AudioConnection();
+        auto newConnection = std::make_unique<AudioConnection>();
         newConnection->input = inEndEffect;
         newConnection->output = outEndEffect;
         newConnection->connections.addArray(inEffect->getConnectionsUntilEnd(inPort));
@@ -63,7 +63,7 @@ void ConnectionGraph::addConnection(const ConnectionLine& line) {
             audioGraph.addConnection(connection);
             //array.add(connection);
         }
-        connections.add(newConnection);
+        connections.add(std::move(newConnection));
 /*
         auto connection = array.getFirst();
         for (auto c = 0; c < 2; c++) { // force 2 channels
@@ -106,7 +106,7 @@ void ConnectionGraph::removeConnection(const ConnectionLine& line) {
 
     if (inEndPort != nullptr && outEndPort != nullptr) {
         // Look for connection match
-        for (const auto& c : connections) {
+        for (auto c : connections) {
             if (c->input == inEndPort->getParentEffect() && c->output == outEndPort->getParentEffect()) {
                 // Remove audio connections and //todo invalidate the struct.
                 for (auto audioConnection : c->audioConnections)
@@ -114,6 +114,7 @@ void ConnectionGraph::removeConnection(const ConnectionLine& line) {
                     audioGraph.removeConnection(audioConnection);
                 }
                 connections.removeObject(c, true);
+                break;
             }
         }
 

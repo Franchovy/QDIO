@@ -611,23 +611,43 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
 }
 
 ConnectionPort* Effect::getEndPort(ConnectionPort* port) {
-    NodeAndPort nodeAndPort;
-
     if (! port->isConnected()) {
         return nullptr;
     } else if (isIndividual()) {
         return port;
     } else {
-        return getNextPort(port);
+        return getNextPort(port->getLinkedPort());
     }
 }
 
-ConnectionPort *Effect::getNextPort(ConnectionPort *port) {
-    auto linkedPort = port->getLinkedPort();
-    if (linkedPort->isConnected()) {
-        auto otherPort = linkedPort->getOtherPort();
-        return dynamic_cast<Effect*>(otherPort->getParentEffect())->getEndPort(otherPort);
-    } else return nullptr;
+ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) {
+
+    if (port->isConnected()) {
+        auto otherPort = port->getOtherPort();
+        auto nextEffect = dynamic_cast<Effect *>(otherPort->getParentEffect());
+
+        if (nextEffect->isIndividual()) {
+            if (stopAtProcessor) {
+                return otherPort;
+            } else {
+                auto ports = nextEffect->getPorts(port->isInput);
+                auto doesConnectionContinue = false;
+                for (auto p : ports) {
+                    doesConnectionContinue |= p->isConnected();
+                }
+                return doesConnectionContinue ? ports.getFirst() : port->getOtherPort();
+            }
+        } else {
+            if (otherPort->getLinkedPort()->isConnected()) {
+                return otherPort->getLinkedPort();
+            } else {
+                return nullptr;
+            }
+        }
+    } else {
+        return nullptr;
+    }
+
 }
 
 Array<ConnectionLine *> Effect::getConnectionsUntilEnd(ConnectionPort* port) {
@@ -936,7 +956,7 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 
     for (auto c : getChildren()) {
         if (auto p = dynamic_cast<AudioPort*>(c)) {
-            if (p->isInput == isInput) {
+            if (isInput == -1 || p->isInput == isInput) {
                 list.add(p);
             }
         }
@@ -1392,6 +1412,19 @@ Point<int> Effect::getPosWithinParent() {
     return Point<int>(newX, newY);
 }
 
+Array<SelectHoverObject *> Effect::getFullConnectionEffects(ConnectionPort *port) {
+    Array<SelectHoverObject *> array;
+
+    auto nextPort = getNextPort(port, false); //todo array
+    if (nextPort != nullptr) {
+        auto nextEffect = dynamic_cast<Effect *>(nextPort->getParentEffect());
+        array.add(nextEffect);
+        array.addArray(nextEffect->getFullConnectionEffects(nextPort));
+    }
+
+
+    return array;
+}
 
 
 bool ConnectionLine::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
