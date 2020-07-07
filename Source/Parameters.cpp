@@ -23,7 +23,9 @@ Parameter::Parameter(AudioProcessorParameter *param)
     referencedParam = param;
     outline = Rectangle<int>(10, 20, 130, 90);
 
-    if (param != nullptr) {
+    metaParameter = param == nullptr;
+
+    if (! metaParameter) {
         param->addListener(this);
     }
 
@@ -34,7 +36,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
         setName(parameterLabel.getText(true));
     };
 
-    if (param != nullptr) {
+    if (! metaParameter) {
         setName(param->getName(30));
     } else {
         setName("Parameter");
@@ -405,6 +407,18 @@ NormalisableRange<double> Parameter::getLimitedRange() {
     return limitedRange;
 }
 
+bool Parameter::isMetaParameter() {
+    return metaParameter;
+}
+
+Parameter *Parameter::getConnectedParameter() {
+    return connectedParameter;
+}
+
+bool Parameter::isConnected() {
+    return connectedParameter != nullptr;
+}
+
 
 void ButtonListener::buttonClicked(Button *button) {
     if (linkedParameter != nullptr) {
@@ -445,6 +459,8 @@ void SliderListener::sliderValueChanged(Slider *slider) {
     if (manualControl) {
         if (linkedParameter != nullptr && *linkedParameter != slider->getValue()) {
             linkedParameter->setValueNotifyingHost(parent->getFullRange().convertTo0to1(slider->getValue()));
+        } else if (parent->isMetaParameter() && parent->isConnected()) {
+            parent->getConnectedParameter()->getParameter()->setValueNotifyingHost(slider->getValue());
         }
     }
 }
@@ -491,9 +507,7 @@ SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(par
 
     slider.setNormalisableRange(fullRange);
 
-    if (referencedParam != nullptr) {
-        slider.addListener(&listener);
-    }
+    slider.addListener(&listener);
 
     slider.setName("Slider");
 

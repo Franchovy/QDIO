@@ -122,6 +122,8 @@ public:
     virtual void setParameterValueAsync(float value) = 0;
     void parentHierarchyChanged() override;
 
+    bool isMetaParameter();
+
     void setIsOutput(bool isOutput);
     bool isOutput() const;
 
@@ -132,6 +134,9 @@ public:
 
     virtual void connect(Parameter* otherParameter);
     virtual void disconnect(Parameter* otherParameter);
+
+    bool isConnected();
+    Parameter* getConnectedParameter();
 
     //void setActionOnComboSelect(std::function<void()> funct);
 
@@ -144,6 +149,8 @@ public:
 protected:
     bool isOutputParameter = false;
     bool isAuto = false;
+
+    bool metaParameter = false;
 
     NormalisableRange<double> fullRange;
     NormalisableRange<double> limitedRange;
