@@ -759,7 +759,7 @@ void ParameterUpdater::timerCallback() {
     for (auto parameter : parametersToUpdate) {
 
         auto param = parameter->getParameter();
-        if (param != nullptr) {
+        if (param != nullptr && parameter->hasValueToUpdate()) {
             parameter->setValueSync(param->getValue());
         } else {
             if (parameter->hasValueToUpdate()) {
