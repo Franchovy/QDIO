@@ -754,7 +754,7 @@ void ParameterUpdater::timerCallback() {
 }
 
 ParameterUpdater::ParameterUpdater() {
-    startTimerHz(60);
+
 }
 
 void ParameterUpdater::addParameter(Parameter *parameter) {

@@ -788,10 +788,15 @@ bool EffectScene::loadNewTemplate(String newTemplate) {
 
     std::cout << "Load template: " << newTemplate << newLine;
     bool success = tree.loadTemplate(newTemplate);
+
+    if (success) {
+        parameterUpdater.startTimerHz(60);
+    }
+
     if (! success) {
         std::cout << "Failure loading template! Reloading fresh" << newLine;
         jassertfalse;
-        //tree.clear();
+        tree.clear();
     }
     return success;
 }
