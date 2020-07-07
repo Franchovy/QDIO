@@ -68,10 +68,11 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
         referencedParam->setValue(newValue);
     }
     if (connectedParam != nullptr && connectedParam->getValue() != newValue) {
+        connectedParameter->setValueToUpdate(connectedParameter->fullRange.convertTo0to1(connectedParameter->limitedRange.convertFrom0to1(newValue)));
         connectedParam->setValue(connectedParameter->fullRange.convertTo0to1(connectedParameter->limitedRange.convertFrom0to1(newValue)));
     } else if (connectedParameter != nullptr && connectedParameter->initialised) {
         // Set Meta Parameter value
-        connectedParameter->setParameterValueAsync(connectedParameter->fullRange.convertTo0to1(connectedParameter->limitedRange.convertFrom0to1(newValue)));
+        connectedParameter->setValueToUpdate(connectedParameter->fullRange.convertTo0to1(connectedParameter->limitedRange.convertFrom0to1(newValue)));
     }
 
     if (isAuto) {
@@ -435,6 +436,20 @@ void Parameter::addToUpdater() {
     updater->addParameter(this);
 }
 
+void Parameter::setValueToUpdate(float value) {
+    valueStored = true;
+    this->value = value;
+}
+
+bool Parameter::hasValueToUpdate() {
+    return valueStored;
+}
+
+float Parameter::getValueToUpdate() {
+    valueStored = false;
+    return value;
+}
+
 
 void ButtonListener::buttonClicked(Button *button) {
     if (linkedParameter != nullptr) {
@@ -744,10 +759,9 @@ void ParameterUpdater::timerCallback() {
         auto param = parameter->getParameter();
         if (param != nullptr) {
             parameter->setValueSync(param->getValue());
-        } else if (parameter->isConnected()) {
-            auto connectedParam = parameter->getConnectedParameter()->getParameter();
-            if (connectedParam != nullptr) {
-                parameter->setValueSync(connectedParam->getValue());
+        } else {
+            if (parameter->hasValueToUpdate()) {
+                parameter->setValueSync(parameter->getValueToUpdate());
             }
         }
     }

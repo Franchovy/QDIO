@@ -162,6 +162,10 @@ public:
     NormalisableRange<double> getFullRange();
     NormalisableRange<double> getLimitedRange();
 
+    void setValueToUpdate(float value);
+    bool hasValueToUpdate();
+    float getValueToUpdate();
+
     static ParameterUpdater* updater;
 
 protected:
@@ -186,7 +190,7 @@ protected:
     AudioProcessorParameter* referencedParam = nullptr;
     // Parameter to update on slider value changes -- in the meantime of every Parameter containing its own
     AudioProcessorParameter* connectedParam = nullptr;
-    Parameter* connectedParameter;
+    Parameter* connectedParameter = nullptr;
 
     ParameterPort::Ptr internalPort;
     ParameterPort::Ptr externalPort;
