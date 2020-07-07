@@ -750,7 +750,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
     return copy;
 }
 
-Effect* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
+EffectTreeBase* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
     bool success = true;
@@ -836,7 +836,7 @@ Effect* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData)
     auto effect = getFromTree<EffectTreeBase>(copy);
     effect->state = Effect::neutral;
 
-    return dynamic_cast<Effect *>(effect);
+    return dynamic_cast<EffectTreeBase*>(effect);
 }
 
 //todo just use existing parameterData parent instead of effect

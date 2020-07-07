@@ -41,7 +41,7 @@ public:
     ValueTree storeGroup(Array<SelectHoverObject*> items);
 
     ValueTree storeEffect(const ValueTree& storeData);
-    Effect* loadEffect(ValueTree& parentTree, const ValueTree& loadData);
+    EffectTreeBase* loadEffect(ValueTree& parentTree, const ValueTree& loadData);
     bool loadEffect(const ValueTree& loadData, bool setToMousePosition = true);
 
     bool loadPort(ValueTree port);
