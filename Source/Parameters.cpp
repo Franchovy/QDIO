@@ -490,8 +490,10 @@ void SliderListener::sliderValueChanged(Slider *slider) {
     if (manualControl) {
         if (linkedParameter != nullptr && *linkedParameter != slider->getValue()) {
             linkedParameter->setValueNotifyingHost(parent->getFullRange().convertTo0to1(slider->getValue()));
+            parent->setValueToUpdate(parent->getFullRange().convertTo0to1(slider->getValue()));
         } else if (parent->isMetaParameter() && parent->isConnected()) {
-            parent->getConnectedParameter()->getParameter()->setValueNotifyingHost(slider->getValue());
+            parent->getConnectedParameter()->getParameter()->setValue(slider->getValue());
+            parent->getConnectedParameter()->setValueToUpdate(slider->getValue());
         }
     }
 }
@@ -630,7 +632,7 @@ void SliderParameter::setParameterValueAsync(float value) {
 }
 
 void SliderParameter::setValueSync(float value) {
-    slider.setValue(value, sendNotificationSync);
+    slider.setValue(limitedRange.convertFrom0to1(value), sendNotificationSync);
 }
 
 ComboParameter::ComboParameter(AudioProcessorParameter* param) : Parameter(param)
