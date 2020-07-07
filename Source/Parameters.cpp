@@ -10,6 +10,7 @@
 
 #include "Parameters.h"
 
+ParameterUpdater* Parameter::updater = nullptr;
 
 Parameter::Parameter(AudioProcessorParameter *param)
     : internalPort(new ParameterPort(true, this))
@@ -55,6 +56,7 @@ Parameter::Parameter(AudioProcessorParameter *param)
     externalPort->setCentrePosition(75, 30);
 
     setEditMode(false);
+    initialised = true;
 }
 
 void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
@@ -67,6 +69,9 @@ void Parameter::parameterValueChanged(int parameterIndex, float newValue) {
     }
     if (connectedParam != nullptr && connectedParam->getValue() != newValue) {
         connectedParam->setValue(connectedParameter->fullRange.convertTo0to1(connectedParameter->limitedRange.convertFrom0to1(newValue)));
+    } else if (connectedParameter != nullptr && connectedParameter->initialised) {
+        // Set Meta Parameter value
+        connectedParameter->setParameterValueAsync(connectedParameter->fullRange.convertTo0to1(connectedParameter->limitedRange.convertFrom0to1(newValue)));
     }
 
     if (isAuto) {
@@ -162,7 +167,9 @@ void Parameter::paint(Graphics &g) {
 void Parameter::connect(Parameter *otherParameter) {
     auto otherParam = otherParameter->getParameter();
 
-    if (! isOutputParameter) {
+    if (metaParameter) {
+        otherParameter->connectedParameter = this;
+    } else if (! isOutputParameter) {
         if (otherParam != nullptr) {
             otherParam->addListener(this);
         }
@@ -170,7 +177,10 @@ void Parameter::connect(Parameter *otherParameter) {
         otherParameter->connectedParameter = this;
     }
 
-    if (! otherParameter->isOutputParameter) {
+    if (otherParameter->isMetaParameter()) {
+        connectedParam = otherParam;
+        connectedParameter = otherParameter;
+    } else if (! otherParameter->isOutputParameter) {
         if (referencedParam != nullptr) {
             referencedParam->addListener(otherParameter);
         }
@@ -355,6 +365,8 @@ bool Parameter::canDragHover(const SelectHoverObject *other, bool isRightClickDr
 void Parameter::parentHierarchyChanged() {
     if (getParentComponent() != nullptr) {
         getParentComponent()->addAndMakeVisible(internalPort.get());
+        addToUpdater();
+
     }
     Component::parentHierarchyChanged();
 }
@@ -417,6 +429,10 @@ Parameter *Parameter::getConnectedParameter() {
 
 bool Parameter::isConnected() {
     return connectedParameter != nullptr;
+}
+
+void Parameter::addToUpdater() {
+    updater->addParameter(this);
 }
 
 
@@ -598,6 +614,10 @@ void SliderParameter::setParameterValueAsync(float value) {
 
 }
 
+void SliderParameter::setValueSync(float value) {
+    slider.setValue(value, sendNotificationSync);
+}
+
 ComboParameter::ComboParameter(AudioProcessorParameter* param) : Parameter(param)
         , listener(referencedParam)
 {
@@ -651,6 +671,10 @@ void ComboParameter::disconnect(Parameter *otherParameter) {
 
 void ComboParameter::setParameterValueAsync(float value) {
     combo.setSelectedItemIndex((int) value, sendNotificationAsync);
+}
+
+void ComboParameter::setValueSync(float value) {
+    combo.setSelectedItemIndex((int) value, sendNotificationSync);
 }
 
 ButtonParameter::ButtonParameter(AudioProcessorParameter* param) : Parameter(param)
@@ -708,4 +732,31 @@ void ButtonParameter::disconnect(Parameter *otherParameter) {
 
 void ButtonParameter::setParameterValueAsync(float value) {
     button.setToggleState((bool) value, sendNotification);
+}
+
+void ButtonParameter::setValueSync(float value) {
+    button.setToggleState((bool) value, sendNotificationSync);
+}
+
+void ParameterUpdater::timerCallback() {
+    for (auto parameter : parametersToUpdate) {
+
+        auto param = parameter->getParameter();
+        if (param != nullptr) {
+            parameter->setValueSync(param->getValue());
+        } else if (parameter->isConnected()) {
+            auto connectedParam = parameter->getConnectedParameter()->getParameter();
+            if (connectedParam != nullptr) {
+                parameter->setValueSync(connectedParam->getValue());
+            }
+        }
+    }
+}
+
+ParameterUpdater::ParameterUpdater() {
+    startTimerHz(60);
+}
+
+void ParameterUpdater::addParameter(Parameter *parameter) {
+    parametersToUpdate.add(parameter);
 }

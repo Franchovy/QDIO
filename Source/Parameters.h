@@ -90,6 +90,19 @@ class ButtonComponent : public ParameterComponent, public TextButton
 
 };
 
+class ParameterUpdater : public Timer
+{
+public:
+    ParameterUpdater();
+
+    void timerCallback() override;
+
+    void addParameter(Parameter* parameter);
+
+private:
+    Array<Parameter*> parametersToUpdate;
+};
+
 class Parameter : public SelectHoverObject, public AudioProcessorParameter::Listener, public AsyncUpdater
 {
 public:
@@ -101,6 +114,8 @@ public:
 
     void parameterValueChanged(int parameterIndex, float newValue) override;
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
+
+    void addToUpdater();
 
     void handleAsyncUpdate() override;
 
@@ -120,6 +135,7 @@ public:
     void moved() override;
 
     virtual void setParameterValueAsync(float value) = 0;
+    virtual void setValueSync(float value) = 0;
     void parentHierarchyChanged() override;
 
     bool isMetaParameter();
@@ -146,7 +162,11 @@ public:
     NormalisableRange<double> getFullRange();
     NormalisableRange<double> getLimitedRange();
 
+    static ParameterUpdater* updater;
+
 protected:
+    bool initialised = false;
+
     bool isOutputParameter = false;
     bool isAuto = false;
 
@@ -191,6 +211,8 @@ public:
 
     void setParameterValueAsync(float value) override;
 
+    void setValueSync(float value) override;
+
 private:
     SliderComponent slider;
     SliderListener listener;
@@ -208,6 +230,7 @@ public:
     void setParentEditMode(bool parentIsInEditMode) override;
     
     void setParameterValueAsync(float value) override;
+    void setValueSync(float value) override;
 
 
 private:
@@ -228,6 +251,7 @@ public:
     void setParentEditMode(bool parentIsInEditMode) override;
 
     void setParameterValueAsync(float value) override;
+    void setValueSync(float value) override;
 
 private:
     ButtonComponent button;

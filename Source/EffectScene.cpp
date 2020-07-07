@@ -57,6 +57,8 @@ EffectScene::EffectScene()
 
     // Set up static members
     instance = this;
+
+    Parameter::updater = &parameterUpdater;
     EffectTreeBase::effectScene = this;
 
     EffectTreeBase::audioGraph = &audioGraph;

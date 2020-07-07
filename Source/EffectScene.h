@@ -99,6 +99,8 @@ private:
     EffectTree tree;
     EffectPositioner positioner;
 
+    ParameterUpdater parameterUpdater;
+
     AudioDeviceManager deviceManager;
     AudioProcessorPlayer processorPlayer;
     AudioProcessorGraph audioGraph;
