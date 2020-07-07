@@ -202,7 +202,6 @@ void EffectScene::timerCallback() {
     if (appState == loading) {
         stopTimer();
 
-
         // Load
         if (loadInitialCase) {
             /*auto defaultInOut = ValueTree::readFromData(BinaryData::Basic_InOut, BinaryData::Basic_InOutSize);
@@ -213,18 +212,18 @@ void EffectScene::timerCallback() {
             postCommandMessage(0);
         } else if (!dontLoad) {
             // Load template
-
-            // Load previously loaded template
             String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
-            std::cout << "Load template: " << name << newLine;
-            auto loadSuccessful = tree.loadTemplate(name);
+            auto loadSuccessful = loadNewTemplate(name);
+            // Load previously loaded template
+
+            //std::cout << "Load template: " << name << newLine;
+            //auto loadSuccessful = tree.loadTemplate(name);
 
             if (! loadSuccessful) {
                 tree.clear();
             }
             
             undoManager.clearUndoHistory();
-
         }
 
         changeListenerCallback(&deviceManager);
@@ -770,13 +769,13 @@ void EffectScene::menuCreateEffect(ValueTree effectData) {
     tree.loadEffect(effectData);
 }
 
-void EffectScene::loadNewTemplate(String newTemplate) {
+bool EffectScene::loadNewTemplate(String newTemplate) {
     if (tree.isNotEmpty()) {
         String templateToSaveName;
         int result = callSaveTemplateDialog(templateToSaveName, true);
 
         if (result == -1) {
-            return;
+            return false;
         } else if (result == 0) {
             tree.clear();
         } if (result == 1) {
@@ -794,6 +793,7 @@ void EffectScene::loadNewTemplate(String newTemplate) {
         jassertfalse;
         //tree.clear();
     }
+    return success;
 }
 
 int EffectScene::callSaveTemplateDialog(String &name, bool dontSaveButton) {
