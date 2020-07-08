@@ -611,12 +611,20 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
 }
 
 ConnectionPort* Effect::getEndPort(ConnectionPort* port) {
+    if (port == nullptr) return nullptr;
+    
     if (! port->isConnected()) {
         return nullptr;
-    } else if (isIndividual()) {
+    } else if (dynamic_cast<Effect*>(port->getParentEffect())->isIndividual()) {
         return port;
     } else {
-        return getNextPort(port->getLinkedPort());
+        // Recurse through effects/ports until we reach a processor
+        auto nextPort = port->getLinkedPort();
+        if (nextPort != nullptr && nextPort->isConnected()) {
+            return getEndPort(nextPort->getOtherPort());
+        } else {
+            return nullptr;
+        }
     }
 }
 
@@ -638,11 +646,7 @@ ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) 
                 return doesConnectionContinue ? ports.getFirst() : nullptr;
             }
         } else {
-            if (otherPort->getLinkedPort()->isConnected()) {
-                return otherPort->getLinkedPort();
-            } else {
-                return nullptr;
-            }
+            return otherPort->getLinkedPort();
         }
     } else {
         return nullptr;
