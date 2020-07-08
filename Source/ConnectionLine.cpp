@@ -289,7 +289,7 @@ void ConnectionLine::disconnect(ConnectionPort* port) {
     setEnabled(false);
 }
 
-void ConnectionLine::setPort(ConnectionPort *port) {
+bool ConnectionLine::setPort(ConnectionPort *port) {
     if (port->isInput) {
         inPort = port;
     } else {
@@ -297,7 +297,9 @@ void ConnectionLine::setPort(ConnectionPort *port) {
     }
 
     if (!connected && (inPort != nullptr && outPort != nullptr)) {
-        connect();
+        return connect();
+    } else {
+        return true;
     }
 }
 

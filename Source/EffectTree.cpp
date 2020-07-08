@@ -964,8 +964,10 @@ bool EffectTree::loadConnection(ValueTree connectionData) {
 
         auto line = new ConnectionLine();
 
-        line->setPort(inPort);
-        line->setPort(outPort);
+        success &= line->setPort(inPort);
+        if (!success) return false;
+        success &= line->setPort(outPort);
+        if (!success) return false;
 
         parent->addAndMakeVisible(line);
 

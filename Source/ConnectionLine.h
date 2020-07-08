@@ -31,7 +31,7 @@ public:
     ConnectionLine();
     ~ConnectionLine() override;
 
-    void setPort(ConnectionPort* port);
+    bool setPort(ConnectionPort* port);
     void unsetPort(ConnectionPort* port);
 
     void resized() override;

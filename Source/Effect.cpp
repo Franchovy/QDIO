@@ -94,7 +94,7 @@ void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) 
 
 
 bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
-    connectionGraph->addConnection(connectionLine);
+    return connectionGraph->addConnection(connectionLine);
 
 }
 
@@ -635,7 +635,7 @@ ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) 
                 for (auto p : ports) {
                     doesConnectionContinue |= p->isConnected();
                 }
-                return doesConnectionContinue ? ports.getFirst() : port->getOtherPort();
+                return doesConnectionContinue ? ports.getFirst() : nullptr;
             }
         } else {
             if (otherPort->getLinkedPort()->isConnected()) {

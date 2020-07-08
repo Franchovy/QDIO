@@ -31,7 +31,7 @@ class ConnectionGraph
 public:
     ConnectionGraph(AudioProcessorGraph& audioGraph);
 
-    void addConnection(const ConnectionLine& line);
+    bool addConnection(const ConnectionLine& line);
     void removeConnection(const ConnectionLine& line);
 
     void updateNumChannels(int numChannels);

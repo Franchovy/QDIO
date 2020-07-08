@@ -18,7 +18,7 @@ ConnectionGraph::ConnectionGraph(AudioProcessorGraph& audioGraph)
 
 }
 
-void ConnectionGraph::addConnection(const ConnectionLine& line) {
+bool ConnectionGraph::addConnection(const ConnectionLine& line) {
     std::cout << "Add connection" << newLine;
 
     auto array = Array<AudioProcessorGraph::Connection>();
@@ -27,14 +27,14 @@ void ConnectionGraph::addConnection(const ConnectionLine& line) {
     auto outPort = line.getInPort();
 
     if (inPort == nullptr || outPort == nullptr) {
-        return;
+        return false;
     }
 
     auto inEffect = dynamic_cast<Effect *>(inPort->getParentComponent());
     auto outEffect = dynamic_cast<Effect *>(outPort->getParentComponent());
 
     if (inEffect == nullptr || outEffect == nullptr) {
-        return;
+        return false;
     }
 
     auto inEndPort = dynamic_cast<AudioPort*>(inEffect->getEndPort(inPort));
@@ -43,7 +43,11 @@ void ConnectionGraph::addConnection(const ConnectionLine& line) {
     if (inEndPort != nullptr && outEndPort != nullptr) {
         auto inEndEffect = dynamic_cast<Effect*>(inEndPort->getParentEffect());
         auto outEndEffect = dynamic_cast<Effect*>(outEndPort->getParentEffect());
-
+        
+        if (! (inEndEffect->isIndividual() && outEndEffect->isIndividual())) {
+            return false;
+        }
+        
         auto inNode = inEndEffect->getNodeID();
         auto outNode = outEndEffect->getNodeID();
 
@@ -64,6 +68,8 @@ void ConnectionGraph::addConnection(const ConnectionLine& line) {
             //array.add(connection);
         }
         connections.add(std::move(newConnection));
+        
+        return true;
 /*
         auto connection = array.getFirst();
         for (auto c = 0; c < 2; c++) { // force 2 channels
@@ -78,8 +84,9 @@ void ConnectionGraph::addConnection(const ConnectionLine& line) {
             }
         }
 */
-
+        
     }
+    return false;
 }
 
 void ConnectionGraph::removeConnection(const ConnectionLine& line) {
