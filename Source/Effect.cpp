@@ -556,7 +556,7 @@ void Effect::setEditMode(bool isEditMode) {
             }
 
             //c->toBack();
-            c->setInterceptsMouseClicks(false, false);
+            //c->setInterceptsMouseClicks(false, false);
             if (dynamic_cast<Effect*>(c)) {
                 c->setVisible(false);
             } else if (dynamic_cast<ConnectionLine*>(c)) {

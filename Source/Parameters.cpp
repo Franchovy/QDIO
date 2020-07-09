@@ -526,6 +526,11 @@ SliderListener::SliderListener(Parameter *parent)
     return (Rectangle<int>(10, 30, getWidth()-10, getHeight() - 30).contains(x, y));
 }*/
 
+bool SliderComponent::hitTest(int x, int y) {
+    return (Range<int>(0, 160).contains(x)
+            && Range<int>(35, 70).contains(y));
+}
+
 SliderParameter::SliderParameter(AudioProcessorParameter* param) : Parameter(param)
         , listener(this)
 {
@@ -612,6 +617,13 @@ void SliderParameter::setParentEditMode(bool parentIsInEditMode) {
 
 
 void SliderParameter::connect(Parameter *otherParameter) {
+    if (metaParameter) {
+        auto param = otherParameter->getParameter();
+        if (param != nullptr) {
+            setValueToUpdate(param->getValue());
+        }
+    }
+    
     Parameter::connect(otherParameter);
 }
 
@@ -679,6 +691,13 @@ void ComboParameter::setParentEditMode(bool parentIsInEditMode) {
 }
 
 void ComboParameter::connect(Parameter *otherParameter) {
+    if (metaParameter) {
+        auto param = otherParameter->getParameter();
+        if (param != nullptr) {
+            setValueToUpdate(param->getValue());
+        }
+    }
+    
     Parameter::connect(otherParameter);
 }
 
@@ -740,6 +759,13 @@ void ButtonParameter::setParentEditMode(bool parentIsInEditMode) {
 }
 
 void ButtonParameter::connect(Parameter *otherParameter) {
+    if (metaParameter) {
+        auto param = otherParameter->getParameter();
+        if (param != nullptr) {
+            setValueToUpdate(param->getValue());
+        }
+    }
+    
     Parameter::connect(otherParameter);
 }
 

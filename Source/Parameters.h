@@ -77,7 +77,7 @@ class ParameterComponent
 
 class SliderComponent : public ParameterComponent, public Slider
 {
-
+    bool hitTest(int x, int y) override;
 };
 
 class ComboComponent : public ParameterComponent, public ComboBox
