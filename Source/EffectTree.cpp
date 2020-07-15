@@ -535,6 +535,11 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
     Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
 }
 
+
+void EffectTree::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {
+    Listener::valueTreeParentChanged(treeWhoseParentHasChanged);
+}
+
 void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
     auto component = getFromTree<Component>(treeWhosePropertyHasChanged);
 
@@ -1199,6 +1204,7 @@ ValueTree EffectTree::storeGroup(Array<SelectHoverObject *> items) {
 
     return data;
 }
+
 
 
 

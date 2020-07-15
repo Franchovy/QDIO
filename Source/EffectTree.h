@@ -61,6 +61,7 @@ public:
     void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                int indexFromWhichChildWasRemoved) override;
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
+    void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
     void componentNameChanged(Component &component) override;

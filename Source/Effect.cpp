@@ -152,8 +152,8 @@ void EffectTreeBase::close() {
 }
 
 void EffectTreeBase::mouseDown(const MouseEvent &event) {
-    //dynamic_cast<SelectHoverObject*>(event.originalComponent)->mouseDown(event);
-    //SelectHoverObject::mouseDown(event);
+    //todo move this to port class
+
     // Handle Connection
     if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
         dragLine = new ConnectionLine();
@@ -164,36 +164,9 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
 
         parent->addAndMakeVisible(dragLine);
         parent->addMouseListener(dragLine, true);
-        //dragLine->mouseDown(event);
     }
 }
 
-void EffectTreeBase::mouseDrag(const MouseEvent &event) {
-    //dynamic_cast<SelectHoverObject*>(event.originalComponent)->mouseDrag(event);
-    //SelectHoverObject::mouseDrag(event);
-    // Handle Connection
-    /*if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
-        //dragLine->mouseDrag(event);
-
-    }*/
-}
-
-void EffectTreeBase::mouseUp(const MouseEvent &event) {
-    //dynamic_cast<SelectHoverObject*>(event.originalComponent)->mouseUp(event);
-    //SelectHoverObject::mouseUp(event);
-    // Handle Connection
-    //dragLine->mouseUp(event);
-    if (dragLine != nullptr) {
-        // Connection made?
-        auto obj = getDragIntoObject();
-        if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
-            //dragLine->setPort(port);
-        } else {
-            //connections.removeObject(dragLine);
-        }
-
-    }
-}
 
 Array<ConnectionLine *> EffectTreeBase::getConnectionsToThis(bool isInputConnection, ConnectionLine::Type connectionType) {
     Array<ConnectionLine*> array;
@@ -275,6 +248,31 @@ Array<ConnectionLine *> EffectTreeBase::getConnectionsInside() {
         }
     }
     return array;
+}
+
+bool EffectTreeBase::createEffect(Effect *newEffect) {
+
+    return false;
+}
+
+bool EffectTreeBase::deleteEffect(Effect *newEffect) {
+
+    return false;
+}
+
+bool EffectTreeBase::loadParameters(AudioProcessorParameterGroup parametersToLoad) {
+
+    return false;
+}
+
+bool EffectTreeBase::loadParameters(Array<Parameter *> parametersToLoad) {
+
+    return false;
+}
+
+bool EffectTreeBase::loadConnections(Array<ConnectionLine *> connectionsToLoad) {
+
+    return false;
 }
 
 

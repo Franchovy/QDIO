@@ -39,10 +39,16 @@ public:
     void resized() override = 0;
 
     void mouseDown(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
 
     void handleCommandMessage(int commandId) override;
+
+    //===================================================================
+
+    bool createEffect(Effect* newEffect);
+    bool deleteEffect(Effect* newEffect);
+    bool loadParameters(AudioProcessorParameterGroup parametersToLoad);
+    bool loadParameters(Array<Parameter*> parametersToLoad);
+    bool loadConnections(Array<ConnectionLine*> connectionsToLoad);
 
     //===================================================================
 
