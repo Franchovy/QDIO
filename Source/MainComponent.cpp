@@ -130,8 +130,6 @@ MainComponent::~MainComponent() {
 
     getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
     getAppProperties().getUserSettings()->saveIfNeeded();
-
-    EffectTreeBase::close();
 }
 
 bool MainComponent::keyPressed(const KeyPress &key) {

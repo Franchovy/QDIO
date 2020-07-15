@@ -24,7 +24,7 @@ class Effect;
 
 
 /**
- * Base class for Effects and EffectScene
+ * Base class between Effects and EffectScene
  * Contains all functionality common to both:
  * Convenience functions for tree navigation,
  * Data for saving and loading state,

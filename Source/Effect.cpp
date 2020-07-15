@@ -53,7 +53,7 @@ SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
 
 
 EffectTreeBase::EffectTreeBase() {
-    //dragLine.setAlwaysOnTop(true);
+
 }
 
 bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
@@ -143,6 +143,9 @@ Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const 
 */
 
 
+/**
+ *
+ */
 void EffectTreeBase::close() {
     SelectHoverObject::close();
 

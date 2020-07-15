@@ -66,6 +66,8 @@ public:
 
     void storeState();
 
+    void closeScene();
+
     void handleCommandMessage(int commandId) override;
 
     AudioDeviceManager& getDeviceManager() { return deviceManager; }

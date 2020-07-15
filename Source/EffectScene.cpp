@@ -994,4 +994,9 @@ void EffectScene::saveEffect() {
     }
 }
 
+void EffectScene::closeScene() {
+    tree.clear();
+    SelectHoverObject::close();
+}
+
 

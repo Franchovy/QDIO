@@ -612,6 +612,7 @@ void EffectTree::clear() {
     if (effectTree.getNumChildren() > 0) {
         effectTree.removeAllChildren(undoManager);
     }
+    undoManager->clearUndoHistory();
 }
 
 
