@@ -5,7 +5,7 @@ EffectScene* EffectScene::instance = nullptr;
 
 //==============================================================================
 EffectScene::EffectScene()
-        : EffectTreeBase()
+        : EffectBase()
         , MenuItem(1)
         , tree(this)
         , connectionGraph(audioGraph)
@@ -59,12 +59,12 @@ EffectScene::EffectScene()
     instance = this;
 
     Parameter::updater = &parameterUpdater;
-    EffectTreeBase::effectScene = this;
+    EffectBase::effectScene = this;
 
-    EffectTreeBase::audioGraph = &audioGraph;
-    EffectTreeBase::processorPlayer = &processorPlayer;
-    EffectTreeBase::deviceManager = &deviceManager;
-    EffectTreeBase::connectionGraph = &connectionGraph;
+    EffectBase::audioGraph = &audioGraph;
+    EffectBase::processorPlayer = &processorPlayer;
+    EffectBase::deviceManager = &deviceManager;
+    EffectBase::connectionGraph = &connectionGraph;
 
     audioGraph.enableAllBuses();
    
@@ -481,7 +481,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         refreshBuffer();
     }
     /*if (key.getKeyCode() == 'e') {
-        if (auto e = dynamic_cast<EffectTreeBase*>(getComponentAt(getMouseXYRelative()))) {
+        if (auto e = dynamic_cast<EffectBase*>(getComponentAt(getMouseXYRelative()))) {
             auto tree = e->getTree();
             std::cout << "Properties: " << newLine;
             for (int i = 0; i < tree.getNumProperties(); i++) {
@@ -752,7 +752,7 @@ void EffectScene::handleCommandMessage(int commandId) {
         // Export effect
         exportEffect();
     }
-    EffectTreeBase::handleCommandMessage(commandId);
+    EffectBase::handleCommandMessage(commandId);
 }
 
 bool EffectScene::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {

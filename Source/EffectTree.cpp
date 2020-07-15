@@ -35,7 +35,7 @@ Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
 
 
-EffectTree::EffectTree(EffectTreeBase* effectScene)
+EffectTree::EffectTree(EffectBase* effectScene)
     : effectTree(EFFECTSCENE_ID)
     , undoManager(&effectScene->getUndoManager())
 {
@@ -73,7 +73,7 @@ bool EffectTree::createEffect(ValueTree tree) {
 
         newProcessor = createProcessor(id);
 
-        auto node = EffectTreeBase::getAudioGraph()->addNode(move(newProcessor));
+        auto node = EffectBase::getAudioGraph()->addNode(move(newProcessor));
         effect->setNode(node);
         // Create from node:
         effect->setProcessor(node->getProcessor());
@@ -186,7 +186,7 @@ bool EffectTree::createEffect(ValueTree tree) {
 
     auto parentTree = tree.getParent();
     if (parentTree.isValid()) {
-        auto parent = getFromTree<EffectTreeBase>(parentTree);
+        auto parent = getFromTree<EffectBase>(parentTree);
         parent->addAndMakeVisible(effect);
     }
 
@@ -304,7 +304,7 @@ void EffectTree::componentNameChanged(Component &component) {
 
 void EffectTree::componentChildrenChanged(Component &component) {
     // Effect or EffectScene
-    if (auto effectTreeBase = dynamic_cast<EffectTreeBase*>(&component)) {
+    if (auto effectTreeBase = dynamic_cast<EffectBase*>(&component)) {
 
         auto effectTree = getTree(effectTreeBase);
         if (effectTree.isValid()) {
@@ -482,7 +482,7 @@ EffectTree::~EffectTree() {
 void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) {
     if (childWhichHasBeenAdded.hasProperty(IDs::component)) {
         auto component = getFromTree<Component>(childWhichHasBeenAdded);
-        auto parent = getFromTree<EffectTreeBase>(parentTree);
+        auto parent = getFromTree<EffectBase>(parentTree);
 
         component->addComponentListener(this);
 
@@ -756,7 +756,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
     return copy;
 }
 
-EffectTreeBase* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
+EffectBase* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadData) {
     ValueTree copy(loadData.getType());
 
     bool success = true;
@@ -839,10 +839,10 @@ EffectTreeBase* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &l
     }
 
     // Set Effect state to neutral
-    auto effect = getFromTree<EffectTreeBase>(copy);
+    auto effect = getFromTree<EffectBase>(copy);
     effect->state = Effect::neutral;
 
-    return dynamic_cast<EffectTreeBase*>(effect);
+    return dynamic_cast<EffectBase*>(effect);
 }
 
 //todo just use existing parameterData parent instead of effect
@@ -959,7 +959,7 @@ bool EffectTree::loadConnection(ValueTree connectionData) {
         String inPortID = connectionData.getProperty("inPortID");
         String outPortID = connectionData.getProperty("outPortID");
 
-        auto parent = getFromTree<EffectTreeBase>(parentTree);
+        auto parent = getFromTree<EffectBase>(parentTree);
         auto inPort = parent->getPortFromID(inPortID);
         auto outPort = parent->getPortFromID(outPortID);
 
@@ -1008,7 +1008,7 @@ void EffectTree::remove(SelectHoverObject *c) {
     }
 
     if (auto l = dynamic_cast<ConnectionLine*>(c)) {
-        auto parentTree = getTree(dynamic_cast<EffectTreeBase*>(l->getParentComponent()));
+        auto parentTree = getTree(dynamic_cast<EffectBase*>(l->getParentComponent()));
         auto lineTree = parentTree.getChildWithProperty(IDs::component, l);
         parentTree.removeChild(lineTree, undoManager);
     } else if (auto e = dynamic_cast<Effect*>(c)) {
@@ -1192,7 +1192,7 @@ ValueTree EffectTree::storeGroup(Array<SelectHoverObject *> items) {
     // Assume this is from the effectscene level
     ValueTree data(EFFECTSCENE_ID);
 
-    auto effectScene = dynamic_cast<EffectTreeBase*>(effectTree.getProperty(IDs::component).getObject());
+    auto effectScene = dynamic_cast<EffectBase*>(effectTree.getProperty(IDs::component).getObject());
 
     for (auto c : items) {
         if (dynamic_cast<Effect*>(c)) {

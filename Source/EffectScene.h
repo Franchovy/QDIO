@@ -23,7 +23,7 @@
 /**
  *
  */
-class EffectScene : public EffectTreeBase, public MenuItem, public Timer, public ChangeListener
+class EffectScene : public EffectBase, public MenuItem, public Timer, public ChangeListener
 {
 public:
 
@@ -91,13 +91,13 @@ public:
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
 private:
-    //todo replace usage of this instance with EffectTreeBase::effectScene
+    //todo replace usage of this instance with EffectBase::effectScene
     static EffectScene* instance;
 
     bool loadInitialCase = false;
     bool dontLoad = false;
 
-    // EffectTreeBase static stuff
+    // EffectBase static stuff
     EffectTree tree;
     EffectPositioner positioner;
 

@@ -16,12 +16,12 @@
 
 
 // Static members
-EffectTreeBase::AppState EffectTreeBase::appState = neutral;
-AudioProcessorGraph* EffectTreeBase::audioGraph = nullptr;
-AudioProcessorPlayer* EffectTreeBase::processorPlayer = nullptr;
-AudioDeviceManager* EffectTreeBase::deviceManager = nullptr;
-ConnectionGraph* EffectTreeBase::connectionGraph = nullptr;
-UndoManager EffectTreeBase::undoManager;
+EffectBase::AppState EffectBase::appState = neutral;
+AudioProcessorGraph* EffectBase::audioGraph = nullptr;
+AudioProcessorPlayer* EffectBase::processorPlayer = nullptr;
+AudioDeviceManager* EffectBase::deviceManager = nullptr;
+ConnectionGraph* EffectBase::connectionGraph = nullptr;
+UndoManager EffectBase::undoManager;
 
 const Identifier Effect::IDs::x = "x";
 const Identifier Effect::IDs::y = "y";
@@ -33,10 +33,10 @@ const Identifier Effect::IDs::name = "name";
 const Identifier Effect::IDs::connections = "connections";
 const Identifier Effect::IDs::EFFECT_ID = "effect";
 
-EffectTreeBase* EffectTreeBase::effectScene = nullptr;
+EffectBase* EffectBase::effectScene = nullptr;
 
 
-void EffectTreeBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results, const Rectangle<int> &area) {
+void EffectBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results, const Rectangle<int> &area) {
     for (auto c : effectScene->getChildren()) {
         if (auto obj = dynamic_cast<SelectHoverObject*>(c)) {
             if (area.intersects(c->getBoundsInParent())) {
@@ -46,17 +46,17 @@ void EffectTreeBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results
     }
 }
 
-SelectedItemSet<SelectHoverObject::Ptr>& EffectTreeBase::getLassoSelection() {
+SelectedItemSet<SelectHoverObject::Ptr>& EffectBase::getLassoSelection() {
     deselectAll();
     return selected;
 }
 
 
-EffectTreeBase::EffectTreeBase() {
+EffectBase::EffectBase() {
 
 }
 
-bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
+bool EffectBase::connectParameters(const ConnectionLine &connectionLine) {
     auto inPort = dynamic_cast<ParameterPort*>(connectionLine.getInPort());
     auto outPort = dynamic_cast<ParameterPort*>(connectionLine.getOutPort());
 
@@ -76,7 +76,7 @@ bool EffectTreeBase::connectParameters(const ConnectionLine &connectionLine) {
     return true; //outParam->isConnected();
 }
 
-void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) {
+void EffectBase::disconnectParameters(const ConnectionLine &connectionLine) {
     auto port1 = dynamic_cast<ParameterPort*>(connectionLine.getOutPort());
     auto port2 = dynamic_cast<ParameterPort*>(connectionLine.getInPort());
 
@@ -93,65 +93,17 @@ void EffectTreeBase::disconnectParameters(const ConnectionLine &connectionLine) 
 }
 
 
-bool EffectTreeBase::connectAudio(const ConnectionLine& connectionLine) {
+bool EffectBase::connectAudio(const ConnectionLine& connectionLine) {
     return connectionGraph->addConnection(connectionLine);
 
 }
 
-void EffectTreeBase::disconnectAudio(const ConnectionLine &connectionLine) {
+void EffectBase::disconnectAudio(const ConnectionLine &connectionLine) {
     connectionGraph->removeConnection(connectionLine);
 
 }
 
-/*
-Array<AudioProcessorGraph::Connection> EffectTreeBase::getAudioConnection(const ConnectionLine& connectionLine) {
-    Effect::NodeAndPort in;
-    Effect::NodeAndPort out;
-
-    auto returnArray = Array<AudioProcessorGraph::Connection>();
-
-    auto inPort = connectionLine.getOutPort();
-    auto outPort = connectionLine.getInPort();
-
-    if (inPort == nullptr || outPort == nullptr) {
-        return returnArray;
-    }
-
-    auto inEVT = dynamic_cast<Effect *>(inPort->getParentComponent());
-    auto outEVT = dynamic_cast<Effect *>(outPort->getParentComponent());
-
-    if (inEVT == nullptr || outEVT == nullptr) {
-        return returnArray;
-    }
-
-    in = inEVT->getNode(inPort);
-    out = outEVT->getEndPort(outPort);
-
-
-    if (in.isValid && out.isValid) {
-        for (int c = 0; c < jmin(EffectTreeBase::audioGraph->getTotalNumInputChannels(),
-                                 EffectTreeBase::audioGraph->getTotalNumOutputChannels()); c++) {
-            AudioProcessorGraph::Connection connection = {{in.node->nodeID,  in.port->bus->getChannelIndexInProcessBlockBuffer(
-                    c)},
-                                                          {out.node->nodeID, out.port->bus->getChannelIndexInProcessBlockBuffer(
-                                                                  c)}};
-            returnArray.add(connection);
-        }
-    }
-    return returnArray;
-}
-*/
-
-
-/**
- *
- */
-void EffectTreeBase::close() {
-    SelectHoverObject::close();
-
-}
-
-void EffectTreeBase::mouseDown(const MouseEvent &event) {
+void EffectBase::mouseDown(const MouseEvent &event) {
     //todo move this to port class
 
     // Handle Connection
@@ -168,7 +120,7 @@ void EffectTreeBase::mouseDown(const MouseEvent &event) {
 }
 
 
-Array<ConnectionLine *> EffectTreeBase::getConnectionsToThis(bool isInputConnection, ConnectionLine::Type connectionType) {
+Array<ConnectionLine *> EffectBase::getConnectionsToThis(bool isInputConnection, ConnectionLine::Type connectionType) {
     Array<ConnectionLine*> array;
     for (auto c : getParentComponent()->getChildren()) {
         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
@@ -185,7 +137,7 @@ Array<ConnectionLine *> EffectTreeBase::getConnectionsToThis(bool isInputConnect
     return array;
 }
 
-Array<ConnectionLine *> EffectTreeBase::getConnectionsToThis() {
+Array<ConnectionLine *> EffectBase::getConnectionsToThis() {
     Array<ConnectionLine*> array;
     for (auto c : getParentComponent()->getChildren()) {
         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
@@ -199,7 +151,7 @@ Array<ConnectionLine *> EffectTreeBase::getConnectionsToThis() {
 }
 
 
-ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
+ConnectionPort* EffectBase::getPortFromID(String portID) {
     auto ref = Identifier(portID);
 
     if (auto p = findChildWithID(ref)) {
@@ -231,7 +183,7 @@ ConnectionPort* EffectTreeBase::getPortFromID(String portID) {
     }
 }
 
-void EffectTreeBase::handleCommandMessage(int commandId) {
+void EffectBase::handleCommandMessage(int commandId) {
     if (commandId == 9) {
         undoManager.beginNewTransaction();
     } else {
@@ -240,7 +192,7 @@ void EffectTreeBase::handleCommandMessage(int commandId) {
     Component::handleCommandMessage(commandId);
 }
 
-Array<ConnectionLine *> EffectTreeBase::getConnectionsInside() {
+Array<ConnectionLine *> EffectBase::getConnectionsInside() {
     Array<ConnectionLine *> array;
     for (auto c : getChildren()) {
         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
@@ -250,34 +202,34 @@ Array<ConnectionLine *> EffectTreeBase::getConnectionsInside() {
     return array;
 }
 
-bool EffectTreeBase::createEffect(Effect *newEffect) {
+bool EffectBase::createEffect(Effect *newEffect) {
 
     return false;
 }
 
-bool EffectTreeBase::deleteEffect(Effect *newEffect) {
+bool EffectBase::deleteEffect(Effect *newEffect) {
 
     return false;
 }
 
-bool EffectTreeBase::loadParameters(AudioProcessorParameterGroup parametersToLoad) {
+bool EffectBase::loadParameters(AudioProcessorParameterGroup parametersToLoad) {
 
     return false;
 }
 
-bool EffectTreeBase::loadParameters(Array<Parameter *> parametersToLoad) {
+bool EffectBase::loadParameters(Array<Parameter *> parametersToLoad) {
 
     return false;
 }
 
-bool EffectTreeBase::loadConnections(Array<ConnectionLine *> connectionsToLoad) {
+bool EffectBase::loadConnections(Array<ConnectionLine *> connectionsToLoad) {
 
     return false;
 }
 
 
 /*
-void EffectTreeBase::createGroupEffect() {
+void EffectBase::createGroupEffect() {
     undoManager.beginNewTransaction("Create Group Effect");
     // Create new effect
     auto newEffectTree = newEffect("Effect", -1);
@@ -675,7 +627,7 @@ Array<ConnectionLine *> Effect::getConnectionsUntilEnd(ConnectionPort* port) {
     while (! dynamic_cast<Effect*>(port->getParentEffect())->isIndividual()) {
         port = getNextPort(port);
         if (port->isConnected()) {
-            for (auto c : dynamic_cast<EffectTreeBase *>(port->getDragLineParent())->getConnectionsInside()) {
+            for (auto c : dynamic_cast<EffectBase *>(port->getDragLineParent())->getConnectionsInside()) {
                 if ((c->getInPort() == port && c->getOutPort() == port->getOtherPort())
                 || (c->getOutPort() == port && c->getInPort() == port->getOtherPort())) //todo checkports function
                 {
@@ -1001,7 +953,7 @@ void Effect::mouseDown(const MouseEvent &event) {
         dragger.startDraggingComponent(this, event);
         startDragHoverDetect();
 
-        EffectTreeBase::mouseDown(event);
+        EffectBase::mouseDown(event);
     }
 }
 
@@ -1020,8 +972,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
         if (event.mods.isLeftButtonDown()) {
             if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
                 std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
-                if (auto newParent = dynamic_cast<EffectTreeBase *>(dragIntoObject)) {
-                    auto oldParent = dynamic_cast<EffectTreeBase *>(getParentComponent());
+                if (auto newParent = dynamic_cast<EffectBase *>(dragIntoObject)) {
+                    auto oldParent = dynamic_cast<EffectBase *>(getParentComponent());
                     auto connections = getConnectionsToThis();
                     ConnectionLine *outgoingConnection = nullptr;
 
@@ -1155,7 +1107,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
         getParentComponent()->mouseDrag(event);
     } else {
-        EffectTreeBase::mouseDrag(event);
+        EffectBase::mouseDrag(event);
     }
 }
 
@@ -1173,7 +1125,7 @@ void Effect::mouseUp(const MouseEvent &event) {
         }
         //getParentComponent()->mouseUp(event);
     } else {
-        EffectTreeBase::mouseUp(event);
+        EffectBase::mouseUp(event);
     }
 }
 
@@ -1295,7 +1247,7 @@ void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExte
 }
 
 void Effect::shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine) {
-    auto parent = dynamic_cast<EffectTreeBase*>(exteriorLine->getParentComponent());
+    auto parent = dynamic_cast<EffectBase*>(exteriorLine->getParentComponent());
     auto targetEffect = dynamic_cast<Effect*>(interiorLine->getParentComponent());
 
     jassert(targetEffect->getParentComponent() == parent);

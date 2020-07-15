@@ -29,12 +29,10 @@ class Effect;
  * Convenience functions for tree navigation,
  * Data for saving and loading state,
  */
-class EffectTreeBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<SelectHoverObject::Ptr>
+class EffectBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<SelectHoverObject::Ptr>
 {
 public:
-    EffectTreeBase();
-
-    static void close();
+    EffectBase();
 
     void resized() override = 0;
 
@@ -82,7 +80,7 @@ public:
     AppState state = neutral;
 
 protected:
-    static EffectTreeBase* effectScene;
+    static EffectBase* effectScene;
 
     //====================================================================================
     // Lasso stuff
@@ -106,7 +104,7 @@ protected:
     static UndoManager undoManager;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectTreeBase)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EffectBase)
 };
 
 /**
@@ -117,7 +115,7 @@ private:
  * The valuetree data structure is itself owned by this object, and has a property reference to the owner object.
  */
 
-class Effect : public EffectTreeBase, public MenuItem
+class Effect : public EffectBase, public MenuItem
 {
 public:
     Effect();
@@ -246,17 +244,18 @@ private:
     Point<int> rightClickDragPos;
     bool rightClickDragActivated = false;
 
+    ReferenceCountedArray<Parameter> parameterArray; //todo organise this into ParameterManager?
+
+    //============================================================
+    // Audio
+
     const AudioProcessorParameterGroup* parameters = nullptr;
-    ReferenceCountedArray<Parameter> parameterArray;
+    //AudioProcessorGraph graph; //todo graph contains processor, effects etc
 
     AudioProcessor* processor = nullptr;
     AudioProcessorGraph::Node::Ptr node = nullptr;
 
-    int portIncrement = 50;
-    int inputPortStartPos = 100;
-    int inputPortPos = inputPortStartPos;
-    int outputPortStartPos = 100;
-    int outputPortPos = outputPortStartPos;
+    //============================================================
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Effect)
 

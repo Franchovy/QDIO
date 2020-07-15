@@ -18,7 +18,7 @@
 class EffectTree : public ValueTree::Listener, public ComponentListener
 {
 public:
-    EffectTree(EffectTreeBase* effectScene);
+    EffectTree(EffectBase* effectScene);
     ~EffectTree();
 
     struct IDs {
@@ -41,7 +41,7 @@ public:
     ValueTree storeGroup(Array<SelectHoverObject*> items);
 
     ValueTree storeEffect(const ValueTree& storeData);
-    EffectTreeBase* loadEffect(ValueTree& parentTree, const ValueTree& loadData);
+    EffectBase* loadEffect(ValueTree& parentTree, const ValueTree& loadData);
     bool loadEffect(const ValueTree& loadData, bool setToMousePosition = true);
 
     bool loadPort(ValueTree port);
@@ -87,7 +87,7 @@ public:
     void removeListenersRecursively(Component* component);
 
 private:
-    EffectTreeBase* effectScene;
+    EffectBase* effectScene;
 
     StringArray processorNames;
     Array<std::function<void()>> makeProcessorArray;
