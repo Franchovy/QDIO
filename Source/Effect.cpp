@@ -608,8 +608,8 @@ ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) 
 }
 
 
-Array<SelectHoverObject *> Effect::getFullConnectionEffects(ConnectionPort *port) {
-    Array<SelectHoverObject *> array;
+Array<Effect *> Effect::getFullConnectionEffects(ConnectionPort *port) {
+    Array<Effect *> array;
 
     auto nextPort = getNextPort(port, false); //todo array
 

@@ -21,6 +21,8 @@ public:
     static EffectPositioner* getInstance();
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
+    int getFittedDistance(Effect* leftEffect, Effect* rightEffect);
+    void moveEffect(Effect* effect, int distance, bool rightWard);
 
     void detachFromConnection(Effect* effect);
     void attachToConnection(Effect* effect, ConnectionLine* connection);

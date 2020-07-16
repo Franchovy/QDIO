@@ -28,23 +28,27 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
                 for (auto port : effect->getPorts()) {
                     if (port->isConnected()) {
 
-                        // Get Connections and Effects from port onwards
-                        auto connectedEffects = effect->getFullConnectionEffects(port); //fixme returns first effect twice.
-                        if (connectedEffects.size() == 0)
-                            continue;
+                        Array<Effect*> connectedEffects;
+                        bool rightWard = ! port->isInput;
 
-                        // Set the left and right effects to check position for
-                        auto leftEffect = port->isInput ? connectedEffects.getFirst() : effect;
-                        auto rightEffect = port->isInput ? effect : connectedEffects.getFirst();
+                        connectedEffects.add(effect);
+                        connectedEffects.addArray(effect->getFullConnectionEffects(port)); //todo replace port with direction bool
 
-                        int distanceMin = rightEffect->getX() - minDistanceBetweenEffects - leftEffect->getRight();
+                        Effect* leftEffect = nullptr;
+                        Effect* rightEffect = nullptr;
 
-                        if (distanceMin < 0) {
-                            for (auto e : connectedEffects) {
+                        for (auto i = 1; i < connectedEffects.size(); i++) {
+                            // Set the left and right effects to check position for
+                            leftEffect = rightWard ? connectedEffects[i - 1] : connectedEffects[i];
+                            rightEffect = rightWard ? connectedEffects[i] : connectedEffects[i - 1]; //fixme these set backwards?
+
+                            int fitDistance = getFittedDistance(leftEffect, rightEffect);
+
+                            if (fitDistance < 0) {
                                 movingOp = true;
                                 // Scooch the effects
-                                if (port->isInput) e->setTopLeftPosition(e->getX() + distanceMin, e->getY());
-                                if (! port->isInput) e->setTopLeftPosition(e->getX() - distanceMin, e->getY());
+                                moveEffect(connectedEffects[i], -fitDistance, rightWard); //fixme flip distance
+
                                 movingOp = false;
                             }
                         }
@@ -63,4 +67,16 @@ EffectPositioner::EffectPositioner() {
 
 EffectPositioner *EffectPositioner::getInstance() {
     return instance;
+}
+
+int EffectPositioner::getFittedDistance(Effect *leftEffect, Effect *rightEffect) {
+    return rightEffect->getX() - minDistanceBetweenEffects - leftEffect->getRight();
+}
+
+void EffectPositioner::moveEffect(Effect* effect, int distance, bool rightWard) {
+    if (rightWard) {
+        effect->setTopLeftPosition(effect->getX() + distance, effect->getY());
+    } else {
+        effect->setTopLeftPosition(effect->getX() - distance, effect->getY());
+    }
 }
