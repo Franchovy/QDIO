@@ -21,6 +21,21 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
     auto effect = dynamic_cast<Effect*>(&component);
     jassert(effect != nullptr);
 
+    if (wasMoved) {
+        // if connected
+            // effect center -> get connection on each side
+                // check distance
+                    // disconnect
+        // if not connected
+            // check connections -> hittest effect center
+                // connect
+        // if connected
+            // if effect center is further than next effect center
+                // switch over effects:
+                // reassign connections
+                // move effect2 into correct place
+    }
+
     if (wasResized) {
         for (auto c : effect->getConnectionsToThis()) {
             if (c->type == ConnectionLine::audio) {
