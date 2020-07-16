@@ -21,7 +21,10 @@ public:
     static EffectPositioner* getInstance();
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
-    int getFittedDistance(Effect* leftEffect, Effect* rightEffect);
+
+    void componentParentHierarchyChanged(Component &component) override;
+
+    int getFittedDistance(const Effect* leftEffect, const Effect* rightEffect) const;
     void moveEffect(Effect* effect, int distance, bool rightWard);
 
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);

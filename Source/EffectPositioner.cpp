@@ -22,6 +22,18 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
     jassert(effect != nullptr);
 
     if (wasMoved) {
+        auto inputConnections = effect->getConnectionsToThis(true, ConnectionLine::audio);
+        auto outputConnections = effect->getConnectionsToThis(false, ConnectionLine::audio);
+        if (inputConnections.size() > 0 && outputConnections.size() > 0) {
+            // Connections on both sides
+
+        } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
+            // Connections on one side only
+
+        } else {
+            // Not connected
+
+        }
         // if connected
             // effect center -> get connection on each side
                 // check distance
@@ -76,6 +88,15 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
     ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
 }
 
+void EffectPositioner::componentParentHierarchyChanged(Component &component) {
+
+    // check existing connections
+        // any connection parents to be reassigned?
+            // merge or split connection
+
+    ComponentListener::componentParentHierarchyChanged(component);
+}
+
 EffectPositioner::EffectPositioner() {
     instance = this;
 }
@@ -84,7 +105,7 @@ EffectPositioner *EffectPositioner::getInstance() {
     return instance;
 }
 
-int EffectPositioner::getFittedDistance(Effect *leftEffect, Effect *rightEffect) {
+int EffectPositioner::getFittedDistance(const Effect *leftEffect, const Effect *rightEffect) const {
     return rightEffect->getX() - minDistanceBetweenEffects - leftEffect->getRight();
 }
 
@@ -185,3 +206,4 @@ void EffectPositioner::shortenConnection(ConnectionLine *interiorLine, Connectio
         targetEffect->removePort(portToRemove);
     }
 }
+
