@@ -28,27 +28,28 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
                 for (auto port : effect->getPorts()) {
                     if (port->isConnected()) {
 
+                        // Get Connections and Effects from port onwards
                         auto connectedEffects = effect->getFullConnectionEffects(port); //fixme returns first effect twice.
                         if (connectedEffects.size() == 0)
                             continue;
 
+                        // Set the left and right effects to check position for
                         auto leftEffect = port->isInput ? connectedEffects.getFirst() : effect;
                         auto rightEffect = port->isInput ? effect : connectedEffects.getFirst();
 
-                        if (leftEffect->getRight() > rightEffect->getX() - minDistanceBetweenEffects) {
-                            int distanceToMove = (port->isInput ? -1 : 1)
-                                    * (leftEffect->getRight() - (rightEffect->getX() - minDistanceBetweenEffects)); //fixme this returns rather large distance
+                        int distanceMin = rightEffect->getX() - minDistanceBetweenEffects - leftEffect->getRight();
+
+                        if (distanceMin < 0) {
                             for (auto e : connectedEffects) {
                                 movingOp = true;
                                 // Scooch the effects
-                                e->setTopLeftPosition(e->getX() + distanceToMove, e->getY());
+                                if (port->isInput) e->setTopLeftPosition(e->getX() + distanceMin, e->getY());
+                                if (! port->isInput) e->setTopLeftPosition(e->getX() - distanceMin, e->getY());
                                 movingOp = false;
                             }
                         }
                     }
                 }
-
-                // move full end by size change.
             }
         }
     }
