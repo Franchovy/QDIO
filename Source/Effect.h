@@ -181,6 +181,8 @@ public:
     static void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
     static void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
 
+
+
     //int getPortID(const ConnectionPort* port);
     //ConnectionPort* getPortFromID(const int id, bool internal = false);
 

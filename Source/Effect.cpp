@@ -596,7 +596,7 @@ ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) 
                 for (auto p : ports) {
                     doesConnectionContinue |= p->isConnected();
                 }
-                return doesConnectionContinue ? ports.getFirst() : nullptr;
+                return doesConnectionContinue ? ports.getFirst() : otherPort;
             }
         } else {
             return otherPort->getLinkedPort();
@@ -612,12 +612,17 @@ Array<SelectHoverObject *> Effect::getFullConnectionEffects(ConnectionPort *port
     Array<SelectHoverObject *> array;
 
     auto nextPort = getNextPort(port, false); //todo array
+
     if (nextPort != nullptr) {
         auto nextEffect = dynamic_cast<Effect *>(nextPort->getParentEffect());
         array.add(nextEffect);
-        array.addArray(nextEffect->getFullConnectionEffects(nextPort));
-    }
 
+        // If the nextPort is facing this port, then it's the end of the line.
+        if (nextPort->isInput == port->isInput) {
+            // Else, we recurse.
+            array.addArray(nextEffect->getFullConnectionEffects(nextPort));
+        }
+    }
 
     return array;
 }
