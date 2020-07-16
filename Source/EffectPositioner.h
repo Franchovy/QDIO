@@ -24,8 +24,9 @@ public:
     int getFittedDistance(Effect* leftEffect, Effect* rightEffect);
     void moveEffect(Effect* effect, int distance, bool rightWard);
 
-    void detachFromConnection(Effect* effect);
-    void attachToConnection(Effect* effect, ConnectionLine* connection);
+    void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
+    void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
+    void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
 
 private:
     static EffectPositioner* instance;

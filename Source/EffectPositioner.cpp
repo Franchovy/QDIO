@@ -95,3 +95,93 @@ void EffectPositioner::moveEffect(Effect* effect, int distance, bool rightWard) 
         effect->setTopLeftPosition(effect->getX() - distance, effect->getY());
     }
 }
+
+
+void EffectPositioner::mergeConnection(ConnectionLine *inLine, ConnectionLine *outLine) {
+    //jassert(getPorts(true).contains(inLine->getInPort().get()));
+    //jassert(getPorts(false).contains(outLine->getOutPort().get()));
+
+    auto newInPort = outLine->getInPort();
+    outLine->getParentComponent()->removeChildComponent(outLine);
+
+    inLine->unsetPort(inLine->getInPort());
+    inLine->setPort(newInPort);
+}
+
+void EffectPositioner::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExtendThrough) {
+    if (lineToExtend->getInPort()->getDragLineParent() == parentToExtendThrough
+        || lineToExtend->getOutPort()->getDragLineParent() == parentToExtendThrough)
+    {
+        // Exit parent
+        bool isInput = parentToExtendThrough->isParentOf(lineToExtend->getInPort());
+
+        auto newPort = parentToExtendThrough->addPort(Effect::getDefaultBus(), isInput);
+        auto oldPort = isInput ? lineToExtend->getInPort() : lineToExtend->getOutPort();
+
+        // Set line ports
+        lineToExtend->unsetPort(oldPort);
+        parentToExtendThrough->getParentComponent()->addAndMakeVisible(lineToExtend);
+        lineToExtend->setPort(newPort.get());
+
+        // Create new internal line
+        auto newConnection = new ConnectionLine();
+        parentToExtendThrough->addAndMakeVisible(newConnection);
+        parentToExtendThrough->resized();
+        newConnection->setPort(oldPort);
+        newConnection->setPort(newPort->internalPort.get());
+    } else {
+        // Enter parent
+        auto isInput = lineToExtend->getInPort()->getDragLineParent() == parentToExtendThrough;
+        auto oldPort = isInput ? lineToExtend->getInPort() : lineToExtend->getOutPort();
+
+        auto newPort = parentToExtendThrough->addPort(Effect::getDefaultBus(), isInput);
+        lineToExtend->unsetPort(oldPort);
+        lineToExtend->setPort(newPort.get());
+
+        auto newConnection = new ConnectionLine();
+        parentToExtendThrough->addAndMakeVisible(newConnection);
+        newConnection->setPort(oldPort);
+        newConnection->setPort(newPort->internalPort.get());
+    }
+}
+
+void EffectPositioner::shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine) {
+    auto parent = dynamic_cast<EffectBase*>(exteriorLine->getParentComponent());
+    auto targetEffect = dynamic_cast<Effect*>(interiorLine->getParentComponent());
+
+    jassert(targetEffect->getParentComponent() == parent);
+
+    // Check which port has moved
+    if (interiorLine->getInPort()->getDragLineParent() != targetEffect
+        || interiorLine->getOutPort()->getDragLineParent() != targetEffect)
+    {
+        // interior line to remove
+        auto portToRemove = interiorLine->getInPort()->getParentComponent() == targetEffect
+                            ? interiorLine->getInPort() : interiorLine->getOutPort();
+        auto newPort = interiorLine->getInPort()->getParentComponent() == targetEffect
+                       ? interiorLine->getOutPort() : interiorLine->getInPort();
+        targetEffect->removeChildComponent(interiorLine);
+
+        exteriorLine->unsetPort(portToRemove->getLinkedPort());
+        exteriorLine->setPort(newPort);
+
+        // Remove unused port
+        targetEffect->removePort(portToRemove);
+    } else {
+        // exterior line to remove
+        auto portToRemove = exteriorLine->getInPort()->getParentComponent() == targetEffect
+                            ? exteriorLine->getInPort() : exteriorLine->getOutPort();
+        auto portToReconnect = exteriorLine->getInPort()->getParentComponent() == targetEffect
+                               ? exteriorLine->getOutPort() : exteriorLine->getInPort();
+        targetEffect->removeChildComponent(exteriorLine);
+
+        interiorLine->unsetPort(portToRemove->getLinkedPort());
+        interiorLine->setPort(portToReconnect);
+
+        // Remove line
+        parent->removeChildComponent(exteriorLine);
+
+        // Remove unused port
+        targetEffect->removePort(portToRemove);
+    }
+}

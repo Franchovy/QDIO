@@ -1032,16 +1032,16 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
                                 if (outgoingConnection != nullptr) {
                                     if (newParent->isParentOf(oldParent)) {
-                                        shortenConnection(c, outgoingConnection);
+                                        //shortenConnection(c, outgoingConnection);
                                     } else {
-                                        shortenConnection(outgoingConnection, c);
+                                        //shortenConnection(outgoingConnection, c);
                                     }
                                 } else {
                                     parent->removeChildComponent(c);
                                 }
                             } else {
                                 // Connection to extend
-                                extendConnection(c, dynamic_cast<Effect *>(parent));
+                                //extendConnection(c, dynamic_cast<Effect *>(parent));
                             }
                         }
                     }
@@ -1058,7 +1058,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
                 if (ingoingConnections.size() != 0 || outgoingConnections.size() != 0) {
                     // Disconnect from any connections
                     if (ingoingConnections.size() == outgoingConnections.size()) {
-                        mergeConnection(ingoingConnections.getFirst(), outgoingConnections.getFirst());
+                        //mergeConnection(ingoingConnections.getFirst(), outgoingConnections.getFirst());
                     } else if (ingoingConnections.size() == 0 && outgoingConnections.size() > 1) {
                         getParentComponent()->removeChildComponent(outgoingConnections.getFirst());
                     } else if (outgoingConnections.size() == 0 && ingoingConnections.size() > 1) {
@@ -1203,94 +1203,6 @@ void Effect::setName(const String &newName) {
     Component::setName(newName);
 }
 
-void Effect::mergeConnection(ConnectionLine *inLine, ConnectionLine *outLine) {
-    //jassert(getPorts(true).contains(inLine->getInPort().get()));
-    //jassert(getPorts(false).contains(outLine->getOutPort().get()));
-
-    auto newInPort = outLine->getInPort();
-    outLine->getParentComponent()->removeChildComponent(outLine);
-
-    inLine->unsetPort(inLine->getInPort());
-    inLine->setPort(newInPort);
-}
-
-void Effect::extendConnection(ConnectionLine *lineToExtend, Effect *parentToExtendThrough) {
-    if (lineToExtend->getInPort()->getDragLineParent() == parentToExtendThrough
-            || lineToExtend->getOutPort()->getDragLineParent() == parentToExtendThrough)
-    {
-        // Exit parent
-        bool isInput = parentToExtendThrough->isParentOf(lineToExtend->getInPort());
-
-        auto newPort = parentToExtendThrough->addPort(getDefaultBus(), isInput);
-        auto oldPort = isInput ? lineToExtend->getInPort() : lineToExtend->getOutPort();
-
-        // Set line ports
-        lineToExtend->unsetPort(oldPort);
-    parentToExtendThrough->getParentComponent()->addAndMakeVisible(lineToExtend);
-        lineToExtend->setPort(newPort.get());
-
-        // Create new internal line
-        auto newConnection = new ConnectionLine();
-        parentToExtendThrough->addAndMakeVisible(newConnection);
-        parentToExtendThrough->resized();
-        newConnection->setPort(oldPort);
-        newConnection->setPort(newPort->internalPort.get());
-    } else {
-        // Enter parent
-        auto isInput = lineToExtend->getInPort()->getDragLineParent() == parentToExtendThrough;
-        auto oldPort = isInput ? lineToExtend->getInPort() : lineToExtend->getOutPort();
-
-        auto newPort = parentToExtendThrough->addPort(getDefaultBus(), isInput);
-        lineToExtend->unsetPort(oldPort);
-        lineToExtend->setPort(newPort.get());
-
-        auto newConnection = new ConnectionLine();
-        parentToExtendThrough->addAndMakeVisible(newConnection);
-        newConnection->setPort(oldPort);
-        newConnection->setPort(newPort->internalPort.get());
-    }
-}
-
-void Effect::shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine) {
-    auto parent = dynamic_cast<EffectBase*>(exteriorLine->getParentComponent());
-    auto targetEffect = dynamic_cast<Effect*>(interiorLine->getParentComponent());
-
-    jassert(targetEffect->getParentComponent() == parent);
-
-    // Check which port has moved
-    if (interiorLine->getInPort()->getDragLineParent() != targetEffect
-        || interiorLine->getOutPort()->getDragLineParent() != targetEffect)
-    {
-        // interior line to remove
-        auto portToRemove = interiorLine->getInPort()->getParentComponent() == targetEffect
-                ? interiorLine->getInPort() : interiorLine->getOutPort();
-        auto newPort = interiorLine->getInPort()->getParentComponent() == targetEffect
-                           ? interiorLine->getOutPort() : interiorLine->getInPort();
-        targetEffect->removeChildComponent(interiorLine);
-
-        exteriorLine->unsetPort(portToRemove->getLinkedPort());
-        exteriorLine->setPort(newPort);
-
-        // Remove unused port
-        targetEffect->removePort(portToRemove);
-    } else {
-        // exterior line to remove
-        auto portToRemove = exteriorLine->getInPort()->getParentComponent() == targetEffect
-                            ? exteriorLine->getInPort() : exteriorLine->getOutPort();
-        auto portToReconnect = exteriorLine->getInPort()->getParentComponent() == targetEffect
-                       ? exteriorLine->getOutPort() : exteriorLine->getInPort();
-        targetEffect->removeChildComponent(exteriorLine);
-
-        interiorLine->unsetPort(portToRemove->getLinkedPort());
-        interiorLine->setPort(portToReconnect);
-
-        // Remove line
-        parent->removeChildComponent(exteriorLine);
-
-        // Remove unused port
-        targetEffect->removePort(portToRemove);
-    }
-}
 
 void Effect::removePort(ConnectionPort *port) { //todo test
     auto audioPort = dynamic_cast<AudioPort*> (port);
