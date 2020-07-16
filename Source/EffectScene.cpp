@@ -220,7 +220,7 @@ void EffectScene::timerCallback() {
             //auto loadSuccessful = tree.loadTemplate(name);
 
             if (! loadSuccessful) {
-                tree.clear();
+                closeScene();
             }
             
             undoManager.clearUndoHistory();
@@ -654,7 +654,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         // reset initial use command
         if (key.getKeyCode() == 'I' && key.getModifiers().isCtrlDown())
         {
-            tree.clear();
+            closeScene();
 
             // If shift is down also erase all saved content
             if (key.getModifiers().isShiftDown()) {
@@ -777,12 +777,12 @@ bool EffectScene::loadNewTemplate(String newTemplate) {
         if (result == -1) {
             return false;
         } else if (result == 0) {
-            tree.clear();
+            closeScene();
         } if (result == 1) {
             std::cout << "Save template: " << templateToSaveName << newLine;
 
             tree.storeTemplate(templateToSaveName);
-            tree.clear();
+            closeScene();
         }
     }
 
@@ -796,7 +796,7 @@ bool EffectScene::loadNewTemplate(String newTemplate) {
     if (! success) {
         std::cout << "Failure loading template! Reloading fresh" << newLine;
         jassertfalse;
-        tree.clear();
+        closeScene();
     }
     return success;
 }
@@ -995,6 +995,8 @@ void EffectScene::saveEffect() {
 }
 
 void EffectScene::closeScene() {
+    // todo close devices etc?
+    parameterUpdater.clear();
     tree.clear();
     SelectHoverObject::close();
 }

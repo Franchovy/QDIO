@@ -99,6 +99,8 @@ public:
 
     void addParameter(Parameter* parameter);
 
+    void clear();
+
 private:
     Array<Parameter*> parametersToUpdate;
 };
@@ -153,6 +155,8 @@ public:
 
     bool isConnected();
     Parameter* getConnectedParameter();
+
+    bool isInitialised();
 
     //void setActionOnComboSelect(std::function<void()> funct);
 

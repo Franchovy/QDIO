@@ -364,9 +364,9 @@ bool Parameter::canDragHover(const SelectHoverObject *other, bool isRightClickDr
 }
 
 void Parameter::parentHierarchyChanged() {
-    if (getParentComponent() != nullptr) {
+    if (getParentComponent() != nullptr && getParentComponent()->isShowing()) {
         getParentComponent()->addAndMakeVisible(internalPort.get());
-        addToUpdater();
+        addToUpdater(); // todo terrible idea - move this to "activate audio" type function
 
     }
     Component::parentHierarchyChanged();
@@ -448,6 +448,10 @@ bool Parameter::hasValueToUpdate() {
 float Parameter::getValueToUpdate() {
     valueStored = false;
     return value;
+}
+
+bool Parameter::isInitialised() {
+    return initialised;
 }
 
 
@@ -784,6 +788,8 @@ void ButtonParameter::setValueSync(float value) {
 void ParameterUpdater::timerCallback() {
     for (auto parameter : parametersToUpdate) {
 
+        jassert(parameter->isInitialised());
+
         auto param = parameter->getParameter();
         if (param != nullptr && parameter->hasValueToUpdate()) {
             parameter->setValueSync(param->getValue());
@@ -801,4 +807,8 @@ ParameterUpdater::ParameterUpdater() {
 
 void ParameterUpdater::addParameter(Parameter *parameter) {
     parametersToUpdate.add(parameter);
+}
+
+void ParameterUpdater::clear() {
+    parametersToUpdate.clear();
 }
