@@ -33,6 +33,8 @@ public:
     void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
     void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
 
+    int getDistanceFromLine(Line<int>line, Point<int> point);
+
 private:
     static EffectPositioner* instance;
 

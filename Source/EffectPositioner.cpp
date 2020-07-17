@@ -33,15 +33,11 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
                     , inputConnections.getFirst()->getOutPort()->centrePoint);
             auto outputPortPosition = parent->getLocalPoint(outputConnections.getFirst()->getInPort()
                     , outputConnections.getFirst()->getInPort()->centrePoint);
-            auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
 
+            auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
             auto connectionCenterLine = Line<int>(inputPortPosition, outputPortPosition);
 
-            auto d1 = connectionCenterLine.getStart().getDistanceFrom(effectCenterPosition);
-            auto d2 = connectionCenterLine.getEnd().getDistanceFrom(effectCenterPosition);
-            auto distanceFromLine = d1 + d2 - connectionCenterLine.getLength();
-
-            if (distanceFromLine > 50) {
+            if (getDistanceFromLine(connectionCenterLine, effectCenterPosition) > 50) {
                 removeEffectConnections(effect);
             }
         } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
@@ -241,5 +237,11 @@ void EffectPositioner::removeEffectConnections(Effect *effect) {
         }
     }
 
+}
+
+int EffectPositioner::getDistanceFromLine(Line<int> line, Point<int> point) {
+    auto d1 = line.getStart().getDistanceFrom(point);
+    auto d2 = line.getEnd().getDistanceFrom(point);
+    return d1 + d2 - line.getLength();
 }
 
