@@ -33,10 +33,23 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
             auto outputPortPosition = parent->getLocalPoint(outputConnections.getFirst()->getInPort()
                     , outputConnections.getFirst()->getInPort()->centrePoint);
 
-            auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
+            auto effectCenterPosition = getEffectCenter(effect);
             auto connectionCenterLine = Line<int>(inputPortPosition, outputPortPosition);
 
-            if (getDistanceFromLine(connectionCenterLine, effectCenterPosition) > 50) {
+            auto connectionsLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
+            auto connectionsRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
+
+            if (getEffectCenter(connectionsLeft.getFirst()).getX() > getEffectCenter(effect).getX()) {
+                // Effect overlaps next towards the left
+                movingOp = true;
+                swapEffects(effect, connectionsLeft.getFirst());
+                movingOp = false;
+            } else if (getEffectCenter(connectionsRight.getFirst()).getX() < getEffectCenter(effect).getX()) {
+                // Effect overlaps next towards the right
+                movingOp = true;
+                swapEffects(effect, connectionsRight.getFirst());
+                movingOp = false;
+            } else if (getDistanceFromLineExtended(connectionCenterLine, effectCenterPosition) > 50) {
                 removeEffectConnections(effect);
             }
         } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
@@ -48,23 +61,12 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
                 auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
                 auto line = connectionLine->getLine();
 
-                if (getDistanceFromLine(line, effectCenterPosition) < 10) {
+                if (getDistanceFromLineExtended(line, effectCenterPosition) < 10) {
                     insertEffect(effect, connectionLine);
                 }
             }
         }
-        // if connected
-            // effect center -> get connection on each side
-                // check distance
-                    // disconnect
-        // if not connected
-            // check connections -> hittest effect center
-                // connect
-        // if connected
-            // if effect center is further than next effect center
-                // switch over effects:
-                // reassign connections
-                // move effect2 into correct place
+
     }
 
     if (wasResized) {
@@ -105,6 +107,69 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
     }
 
     ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
+}
+
+ConnectionLine *EffectPositioner::getConnectionToPort(ConnectionPort *port) {
+    auto effect = dynamic_cast<Effect*>(port->getParentComponent());
+    for (auto connection : effect->getConnectionsToThis()) {
+        if (connection->getInPort() == port) {
+            return connection;
+        } else if (connection->getOutPort() == port) {
+            return connection;
+        }
+    }
+    return nullptr;
+}
+
+void EffectPositioner::swapEffects(Effect *effectDragged, Effect *effectToMove) {
+    //fixme only for single ports!
+    auto inPortsToMove = effectToMove->getPorts(true);
+    auto outPortsToMove = effectToMove->getPorts(false);
+    jassert(inPortsToMove.size() == 1);
+    jassert(inPortsToMove.size() == 1);
+
+    auto inPortsDragged = effectDragged->getPorts(true);
+    auto outPortsDragged = effectDragged->getPorts(false);
+    jassert(inPortsDragged.size() == 1);
+    jassert(inPortsDragged.size() == 1);
+
+    if (inPortsToMove.getFirst()->getOtherPort() == outPortsDragged.getFirst()) {
+        // Switch over towards the right
+        auto middleConnection = getConnectionToPort(inPortsToMove.getFirst());
+        auto startConnection = getConnectionToPort(inPortsDragged.getFirst());
+        mergeConnection(startConnection, middleConnection);
+
+        jassert(effectDragged->getConnectionsToThis(true, ConnectionLine::audio).size() == 0);
+
+        auto endConnection = getConnectionToPort(outPortsToMove.getFirst());
+        insertEffect(effectDragged, endConnection);
+
+        jassert(effectDragged->getConnectionsToThis(true, ConnectionLine::audio).size() == 1);
+        jassert(effectDragged->getConnectionsToThis(false, ConnectionLine::audio).size() == 1);
+
+        //fixme use auto-spacing function
+        moveEffect(effectToMove, 150, false);
+
+    } else if (outPortsToMove.getFirst()->getOtherPort() == inPortsDragged.getFirst()) {
+        // Switch over towards the left
+        auto middleConnection = getConnectionToPort(outPortsToMove.getFirst());
+        auto endConnection = getConnectionToPort(outPortsDragged.getFirst());
+        mergeConnection(middleConnection, endConnection);
+
+        jassert(effectDragged->getConnectionsToThis(false, ConnectionLine::audio).size() == 0);
+
+        auto startConnection = getConnectionToPort(inPortsToMove.getFirst());
+        insertEffect(effectDragged, startConnection);
+
+        jassert(effectDragged->getConnectionsToThis(true, ConnectionLine::audio).size() == 1);
+        jassert(effectDragged->getConnectionsToThis(false, ConnectionLine::audio).size() == 1);
+
+        //fixme use auto-spacing function
+        moveEffect(effectToMove, 150, true);
+
+    } else {
+        jassertfalse;
+    }
 }
 
 void EffectPositioner::componentParentHierarchyChanged(Component &component) {
@@ -245,10 +310,20 @@ void EffectPositioner::removeEffectConnections(Effect *effect) {
 
 }
 
-int EffectPositioner::getDistanceFromLine(Line<int> line, Point<int> point) {
-    auto d1 = line.getStart().getDistanceFrom(point);
-    auto d2 = line.getEnd().getDistanceFrom(point);
-    return d1 + d2 - line.getLength();
+int EffectPositioner::getDistanceFromLineExtended(Line<int> line, Point<int> point) {
+    auto angle = line.getAngle();
+    auto extensionDistance = 100;
+
+    //todo check all this shit!
+    auto extensionDistX = sinf(angle) * extensionDistance;
+    auto extensionDistY = cosf(angle) * extensionDistance;
+    auto extension = Point<int>(extensionDistX, extensionDistY);
+
+    auto extendedLine = Line<int>(line.getStart() - extension, line.getEnd() + extension);
+
+    auto d1 = extendedLine.getStart().getDistanceFrom(point);
+    auto d2 = extendedLine.getEnd().getDistanceFrom(point);
+    return d1 + d2 - extendedLine.getLength();
 }
 
 void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
@@ -273,4 +348,8 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
         newline->setPort(endPort);
     }
 
+}
+
+Point<int> EffectPositioner::getEffectCenter(Effect *effect) {
+    return effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
 }
