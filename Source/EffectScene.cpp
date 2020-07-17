@@ -207,13 +207,13 @@ void EffectScene::timerCallback() {
             /*auto defaultInOut = ValueTree::readFromData(BinaryData::Basic_InOut, BinaryData::Basic_InOutSize);
             EffectLoader::saveTemplate(defaultInOut);
             String name = defaultInOut.getProperty("name");
-            loadNewTemplate(name);*/
+            loadNewScene(name);*/
             // Refresh effect and template menus
             postCommandMessage(0);
         } else if (!dontLoad) {
             // Load template
             String name = getAppProperties().getUserSettings()->getValue(KEYNAME_CURRENT_LOADOUT);
-            auto loadSuccessful = loadNewTemplate(name);
+            auto loadSuccessful = loadNewScene(name);
             // Load previously loaded template
 
             //std::cout << "Load template: " << name << newLine;
@@ -614,7 +614,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         // load new template
         if (key.getKeyCode() == 'n')
         {
-            loadNewTemplate("");
+            loadNewScene("");
         }
 
         // Select All

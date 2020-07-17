@@ -39,18 +39,25 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
             auto connectionsLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
             auto connectionsRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
 
-            if (getEffectCenter(connectionsLeft.getFirst()).getX() > getEffectCenter(effect).getX()) {
-                // Effect overlaps next towards the left
-                movingOp = true;
-                swapEffects(effect, connectionsLeft.getFirst());
-                movingOp = false;
-            } else if (getEffectCenter(connectionsRight.getFirst()).getX() < getEffectCenter(effect).getX()) {
-                // Effect overlaps next towards the right
-                movingOp = true;
-                swapEffects(effect, connectionsRight.getFirst());
-                movingOp = false;
-            } else if (getDistanceFromLineExtended(connectionCenterLine, effectCenterPosition) > 50) {
-                removeEffectConnections(effect);
+            if (connectionsLeft.getFirst()->getPorts(true).size() == 0
+                    || connectionsRight.getFirst()->getPorts(false).size() == 0)
+            {
+                // Scooch
+
+            } else {
+                if (getEffectCenter(connectionsLeft.getFirst()).getX() > getEffectCenter(effect).getX()) {
+                    // Effect overlaps next towards the left
+                    movingOp = true;
+                    swapEffects(effect, connectionsLeft.getFirst());
+                    movingOp = false;
+                } else if (getEffectCenter(connectionsRight.getFirst()).getX() < getEffectCenter(effect).getX()) {
+                    // Effect overlaps next towards the right
+                    movingOp = true;
+                    swapEffects(effect, connectionsRight.getFirst());
+                    movingOp = false;
+                } else if (getDistanceFromLineExtended(connectionCenterLine, effectCenterPosition) > 50) {
+                    removeEffectConnections(effect);
+                }
             }
         } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
             // Connections on one side only
@@ -126,12 +133,12 @@ void EffectPositioner::swapEffects(Effect *effectDragged, Effect *effectToMove) 
     auto inPortsToMove = effectToMove->getPorts(true);
     auto outPortsToMove = effectToMove->getPorts(false);
     jassert(inPortsToMove.size() == 1);
-    jassert(inPortsToMove.size() == 1);
+    jassert(outPortsToMove.size() == 1);
 
     auto inPortsDragged = effectDragged->getPorts(true);
     auto outPortsDragged = effectDragged->getPorts(false);
     jassert(inPortsDragged.size() == 1);
-    jassert(inPortsDragged.size() == 1);
+    jassert(outPortsDragged.size() == 1);
 
     if (inPortsToMove.getFirst()->getOtherPort() == outPortsDragged.getFirst()) {
         // Switch over towards the right
