@@ -276,9 +276,18 @@ void ConnectionLine::disconnect(ConnectionPort* port) {
         Effect::disconnectAudio(*this);
     }
 
+
     if (port != nullptr) {
         unsetPort(port);
+    } else {
+        if (inPort != nullptr) {
+            inPort->setOtherPort(nullptr);
+        }
+        if (outPort != nullptr) {
+            outPort->setOtherPort(nullptr);
+        }
     }
+
 
     setEnabled(false);
 }
@@ -286,8 +295,10 @@ void ConnectionLine::disconnect(ConnectionPort* port) {
 bool ConnectionLine::setPort(ConnectionPort *port) {
     if (port->isInput) {
         inPort = port;
+        inPort->getParentComponent()->addComponentListener(this);
     } else {
         outPort = port;
+        outPort->getParentComponent()->addComponentListener(this);
     }
 
     if (!connected && (inPort != nullptr && outPort != nullptr)) {
@@ -303,7 +314,7 @@ void ConnectionLine::unsetPort(ConnectionPort *port) {
     if (connected) {
         disconnect(port);
     } else if (port == inPort) {
-        inPort->getParentComponent()->addComponentListener(this);
+        inPort->getParentComponent()->removeComponentListener(this);
         inPort->setOtherPort(nullptr);
         if (outPort != nullptr) {
             outPort->setOtherPort(nullptr);
@@ -311,7 +322,7 @@ void ConnectionLine::unsetPort(ConnectionPort *port) {
 
         inPort = nullptr;
     } else if (port == outPort) {
-        outPort->getParentComponent()->addComponentListener(this);
+        outPort->getParentComponent()->removeComponentListener(this);
         outPort->setOtherPort(nullptr);
         if (inPort != nullptr) {
             inPort->setOtherPort(nullptr);
