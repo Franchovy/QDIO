@@ -787,18 +787,7 @@ bool EffectScene::loadNewTemplate(String newTemplate) {
     }
 
     std::cout << "Load template: " << newTemplate << newLine;
-    bool success = tree.loadTemplate(newTemplate);
-
-    if (success) {
-        parameterUpdater.startTimerHz(60);
-    }
-
-    if (! success) {
-        std::cout << "Failure loading template! Reloading fresh" << newLine;
-        jassertfalse;
-        closeScene();
-    }
-    return success;
+    return loadNewScene(newTemplate);
 }
 
 int EffectScene::callSaveTemplateDialog(String &name, bool dontSaveButton) {
@@ -996,9 +985,28 @@ void EffectScene::saveEffect() {
 
 void EffectScene::closeScene() {
     // todo close devices etc?
+    deviceManager.getCurrentAudioDevice()->stop();
+    audioGraph.clear();
+
     parameterUpdater.clear();
     tree.clear();
     SelectHoverObject::close();
+}
+
+bool EffectScene::loadNewScene(String templateName) {
+    bool success = tree.loadTemplate(templateName);
+
+    if (success) {
+        deviceManager.getCurrentAudioDevice()->start(&processorPlayer);
+        parameterUpdater.startTimerHz(60);
+
+    } else {
+        std::cout << "Failure loading template! Reloading fresh" << newLine;
+        jassertfalse;
+        closeScene();
+        return false;
+    }
+
 }
 
 

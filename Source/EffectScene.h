@@ -66,6 +66,7 @@ public:
 
     void storeState();
 
+    bool loadNewScene(String templateName);
     void closeScene();
 
     void handleCommandMessage(int commandId) override;
