@@ -943,6 +943,15 @@ Array<ConnectionPort *> Effect::getPorts(int isInput) {
 }
 
 void Effect::mouseDown(const MouseEvent &event) {
+    //fixme debug purposes
+    for (auto port : getPorts(-1)) {
+        if (port->isConnected()) {
+            std::cout << "connected port" << newLine;
+        } else {
+            std::cout << "unconnected port" << newLine;
+        }
+    }
+
     //setAlwaysOnTop(true);
     if (dynamic_cast<Resizer*>(event.originalComponent)) {
         undoManager.beginNewTransaction("Resize");

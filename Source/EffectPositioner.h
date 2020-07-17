@@ -21,7 +21,6 @@ public:
     static EffectPositioner* getInstance();
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
-
     void componentParentHierarchyChanged(Component &component) override;
 
     int getFittedDistance(const Effect* leftEffect, const Effect* rightEffect) const;

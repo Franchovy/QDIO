@@ -48,7 +48,7 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
                 auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
                 auto line = connectionLine->getLine();
 
-                if (getDistanceFromLine(line, effectCenterPosition) > 10) {
+                if (getDistanceFromLine(line, effectCenterPosition) < 10) {
                     insertEffect(effect, connectionLine);
                 }
             }
@@ -274,4 +274,3 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
     }
 
 }
-

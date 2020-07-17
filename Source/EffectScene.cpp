@@ -986,7 +986,6 @@ void EffectScene::saveEffect() {
 void EffectScene::closeScene() {
     // todo close devices etc?
     deviceManager.getCurrentAudioDevice()->stop();
-    audioGraph.clear();
 
     parameterUpdater.clear();
     tree.clear();
