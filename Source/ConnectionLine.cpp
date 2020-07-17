@@ -345,3 +345,11 @@ void ConnectionLine::reconnect(ConnectionPort *newInPort, ConnectionPort *newOut
     newLine->setPort(oldOutPort);
     newLine->setPort(newInPort);
 }
+
+/**
+ * Get Line relative to parent
+ * @return Juce line object with points relative to parent
+ */
+Line<int> ConnectionLine::getLine() {
+    return Line<int>(line.getStart() + getPosition(), line.getEnd() + getPosition());
+}

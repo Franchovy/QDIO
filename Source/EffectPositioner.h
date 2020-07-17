@@ -28,6 +28,7 @@ public:
     void moveEffect(Effect* effect, int distance, bool rightWard);
 
     void removeEffectConnections(Effect* effect);
+    void insertEffect(Effect* effect, ConnectionLine* line);
 
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
     void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);

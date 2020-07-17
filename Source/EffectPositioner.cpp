@@ -28,7 +28,6 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
         auto outputConnections = effect->getConnectionsToThis(false, ConnectionLine::audio);
         if (inputConnections.size() > 0 && outputConnections.size() > 0) {
             // Connections on both sides
-
             auto inputPortPosition = parent->getLocalPoint(inputConnections.getFirst()->getOutPort()
                     , inputConnections.getFirst()->getOutPort()->centrePoint);
             auto outputPortPosition = parent->getLocalPoint(outputConnections.getFirst()->getInPort()
@@ -42,10 +41,17 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
             }
         } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
             // Connections on one side only
-
+            // todo drag whole connection
         } else {
             // Not connected
+            for (auto connectionLine : parent->getConnectionsInside()) {
+                auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
+                auto line = connectionLine->getLine();
 
+                if (getDistanceFromLine(line, effectCenterPosition) > 10) {
+                    insertEffect(effect, connectionLine);
+                }
+            }
         }
         // if connected
             // effect center -> get connection on each side
@@ -243,5 +249,29 @@ int EffectPositioner::getDistanceFromLine(Line<int> line, Point<int> point) {
     auto d1 = line.getStart().getDistanceFrom(point);
     auto d2 = line.getEnd().getDistanceFrom(point);
     return d1 + d2 - line.getLength();
+}
+
+void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
+    //todo deal with this later
+    jassert(effect->getConnectionsToThis(true, ConnectionLine::audio).isEmpty());
+    jassert(effect->getConnectionsToThis(false, ConnectionLine::audio).isEmpty());
+
+    auto inPorts = effect->getPorts(true);
+    auto outPorts = effect->getPorts(false);
+
+    if (inPorts.size() > 0 && outPorts.size() > 0) {
+        //todo deal with this as well
+        jassert(! inPorts.getFirst()->isConnected() && ! outPorts.getFirst()->isConnected());
+
+        auto outPort = line->getOutPort();
+        line->unsetPort(line->getOutPort());
+        line->setPort(inPorts.getFirst());
+
+        auto newline = new ConnectionLine();
+        effect->getParentComponent()->addAndMakeVisible(newline);
+        newline->setPort(outPorts.getFirst());
+        newline->setPort(outPort);
+    }
+
 }
 

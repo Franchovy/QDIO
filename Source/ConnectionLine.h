@@ -69,6 +69,8 @@ public:
         return audioConnection;
     }
 
+    Line<int> getLine();
+
     struct IDs {
         static const Identifier CONNECTION_ID;
         static const Identifier InPort;
