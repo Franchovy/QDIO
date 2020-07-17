@@ -182,12 +182,6 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
     }
 }
 
-/*void ConnectionLine::parentHierarchyChanged() {
-    auto parent = getParentComponent();
-
-    Component::parentHierarchyChanged();
-}*/
-
 void ConnectionLine::resized() {
     if (getHeight() < 15) {
         setBounds(getBounds().withHeight(15));

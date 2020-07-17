@@ -23,11 +23,6 @@ public:
 
     void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
-/*
-    void parentHierarchyChanged() override;
-    void visibilityChanged() override;
-*/
-
     ConnectionLine();
     ~ConnectionLine() override;
 
