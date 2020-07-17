@@ -21,12 +21,29 @@ void EffectPositioner::componentMovedOrResized(Component &component, bool wasMov
     auto effect = dynamic_cast<Effect*>(&component);
     jassert(effect != nullptr);
 
+    auto parent = dynamic_cast<EffectBase*>(effect->getParentComponent());
+
     if (wasMoved) {
         auto inputConnections = effect->getConnectionsToThis(true, ConnectionLine::audio);
         auto outputConnections = effect->getConnectionsToThis(false, ConnectionLine::audio);
         if (inputConnections.size() > 0 && outputConnections.size() > 0) {
             // Connections on both sides
 
+            auto inputPortPosition = parent->getLocalPoint(inputConnections.getFirst()->getOutPort()
+                    , inputConnections.getFirst()->getOutPort()->centrePoint);
+            auto outputPortPosition = parent->getLocalPoint(outputConnections.getFirst()->getInPort()
+                    , outputConnections.getFirst()->getInPort()->centrePoint);
+            auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
+
+            auto connectionCenterLine = Line<int>(inputPortPosition, outputPortPosition);
+
+            auto d1 = connectionCenterLine.getStart().getDistanceFrom(effectCenterPosition);
+            auto d2 = connectionCenterLine.getEnd().getDistanceFrom(effectCenterPosition);
+            auto distanceFromLine = d1 + d2 - connectionCenterLine.getLength();
+
+            if (distanceFromLine > 50) {
+                removeEffectConnections(effect);
+            }
         } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
             // Connections on one side only
 
@@ -205,5 +222,24 @@ void EffectPositioner::shortenConnection(ConnectionLine *interiorLine, Connectio
         // Remove unused port
         targetEffect->removePort(portToRemove);
     }
+}
+
+void EffectPositioner::removeEffectConnections(Effect *effect) {
+    auto inputConnections = effect->getConnectionsToThis(true, ConnectionLine::audio);
+    auto outputConnections = effect->getConnectionsToThis(false, ConnectionLine::audio);
+
+    for (auto i = 0; i < jmax(inputConnections.size(), outputConnections.size()); i++) {
+        if (i < inputConnections.size() && i < outputConnections.size()) {
+            // Merge connection
+            mergeConnection(inputConnections[i], outputConnections[i]);
+        } else if (i < inputConnections.size()) {
+            // Remove from input connections
+            inputConnections[i]->getParentComponent()->removeChildComponent(inputConnections[i]);
+        } else if (i < outputConnections.size()) {
+            // Remove from output connections
+            outputConnections[i]->getParentComponent()->removeChildComponent(outputConnections[i]);
+        }
+    }
+
 }
 

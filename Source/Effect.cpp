@@ -1006,7 +1006,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
                     //auto outParent = (newParent->isParentOf(oldParent)) ? newParent : oldParent;
                     auto parent = (newParent->isParentOf(oldParent)) ? oldParent : newParent;
 
-                    // Adjust connections accordingly
+        /*            // Adjust connections accordingly
                     for (auto c : connections) {
                         if (c->type == ConnectionLine::parameter) {
                             // Remove parameter connection
@@ -1044,10 +1044,10 @@ void Effect::mouseDrag(const MouseEvent &event) {
                                 //extendConnection(c, dynamic_cast<Effect *>(parent));
                             }
                         }
-                    }
+                    }*/
                 }
             }
-            if (! rightClickDragActivated
+            /*if (! rightClickDragActivated
                 && (getPosition().getDistanceFrom(rightClickDragPos) > 50)) {
 
                 rightClickDragActivated = true;
@@ -1105,7 +1105,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
                         rightClickDragActivated = false;
                     }
                 }
-            }
+            }*/
         } else if (event.mods.isRightButtonDown()) {
 
         }

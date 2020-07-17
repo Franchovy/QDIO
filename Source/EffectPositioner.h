@@ -27,6 +27,8 @@ public:
     int getFittedDistance(const Effect* leftEffect, const Effect* rightEffect) const;
     void moveEffect(Effect* effect, int distance, bool rightWard);
 
+    void removeEffectConnections(Effect* effect);
+
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
     void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
     void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
