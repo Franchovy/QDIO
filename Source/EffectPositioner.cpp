@@ -263,14 +263,14 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
         //todo deal with this as well
         jassert(! inPorts.getFirst()->isConnected() && ! outPorts.getFirst()->isConnected());
 
-        auto outPort = line->getOutPort();
-        line->unsetPort(line->getOutPort());
+        auto endPort = line->getInPort();
+        line->unsetPort(line->getInPort());
         line->setPort(inPorts.getFirst());
 
         auto newline = new ConnectionLine();
         effect->getParentComponent()->addAndMakeVisible(newline);
         newline->setPort(outPorts.getFirst());
-        newline->setPort(outPort);
+        newline->setPort(endPort);
     }
 
 }

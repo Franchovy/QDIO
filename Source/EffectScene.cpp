@@ -1006,6 +1006,8 @@ bool EffectScene::loadNewScene(String templateName) {
         return false;
     }
 
+    undoManager.clearUndoHistory();
+
 }
 
 
