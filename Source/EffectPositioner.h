@@ -11,17 +11,61 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Effect.h"
 
-class EffectPositioner : public ComponentListener
+class Effect;
+class EffectBase;
+class ConnectionLine;
+class ConnectionPort;
+
+
+/**
+ * EffectListener class is used to pass messages from UI to the effect system.
+ * It passes messages along to the EffectPositioner, which is UI-specific, and to the
+ * EffectManager and ConnectionGraph, which are not UI-specific.
+ */
+class EffectListener
+{
+public:
+    EffectListener();
+
+    static EffectListener* getInstance();
+
+    void effectDragged(Effect* effect);
+    void effectResized(Effect* effect);
+
+    void effectCreated(Effect* effect);
+    void effectDeleted(Effect* effect);
+
+    void effectMovedIntoParent(Effect* effect, EffectBase* newParent);
+
+private:
+    static EffectListener* instance;
+
+    bool movingOp = false;
+
+};
+
+class EffectManager
+{
+public:
+    EffectManager();
+    static EffectManager* getInstance();
+
+
+private:
+    static EffectManager* instance;
+};
+
+class EffectPositioner
 {
 public:
     EffectPositioner();
 
     static EffectPositioner* getInstance();
 
-    void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
-    void componentParentHierarchyChanged(Component &component) override;
+    void repositionOnResize(Effect* effect);
+    void repositionOnMove(Effect* effect);
+    void repositionOnEnter(Effect* effect, EffectBase* parent);
 
     //todo void repositionEffect();
 

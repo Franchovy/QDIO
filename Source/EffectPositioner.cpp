@@ -10,110 +10,116 @@
 
 #include "EffectPositioner.h"
 
+#include "Effect.h"
+
+EffectListener* EffectListener::instance = nullptr;
+EffectManager* EffectManager::instance = nullptr;
 EffectPositioner* EffectPositioner::instance = nullptr;
 
 
-void EffectPositioner::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
+void EffectPositioner::repositionOnResize(Effect *effect) {
     // Avoid a recursive mess!
     if (movingOp)
         return;
 
-    auto effect = dynamic_cast<Effect*>(&component);
-    jassert(effect != nullptr);
-
     auto parent = dynamic_cast<EffectBase*>(effect->getParentComponent());
 
-    if (wasMoved) {
-        auto inputConnections = effect->getConnectionsToThis(true, ConnectionLine::audio);
-        auto outputConnections = effect->getConnectionsToThis(false, ConnectionLine::audio);
-        if (inputConnections.size() > 0 && outputConnections.size() > 0) {
-            // Connections on both sides
-            auto inputPortPosition = parent->getLocalPoint(inputConnections.getFirst()->getOutPort()
-                    , inputConnections.getFirst()->getOutPort()->centrePoint);
-            auto outputPortPosition = parent->getLocalPoint(outputConnections.getFirst()->getInPort()
-                    , outputConnections.getFirst()->getInPort()->centrePoint);
+    for (auto c : effect->getConnectionsToThis()) {
+        if (c->type == ConnectionLine::audio) {
+            // get full end connection
+            for (auto port : effect->getPorts()) {
+                if (port->isConnected()) {
 
-            auto effectCenterPosition = getEffectCenter(effect);
-            auto connectionCenterLine = Line<int>(inputPortPosition, outputPortPosition);
+                    Array<Effect*> connectedEffects;
+                    bool rightWard = ! port->isInput;
 
-            auto connectionsLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
-            auto connectionsRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
+                    connectedEffects.add(effect);
+                    connectedEffects.addArray(effect->getFullConnectionEffects(port)); //todo replace port with direction bool
 
-            if (connectionsLeft.getFirst()->getPorts(true).size() == 0
-                    || connectionsRight.getFirst()->getPorts(false).size() == 0)
-            {
-                // Scooch
+                    Effect* leftEffect = nullptr;
+                    Effect* rightEffect = nullptr;
 
-            } else {
-                if (getEffectCenter(connectionsLeft.getFirst()).getX() > getEffectCenter(effect).getX()) {
-                    // Effect overlaps next towards the left
-                    movingOp = true;
-                    swapEffects(effect, connectionsLeft.getFirst());
-                    movingOp = false;
-                } else if (getEffectCenter(connectionsRight.getFirst()).getX() < getEffectCenter(effect).getX()) {
-                    // Effect overlaps next towards the right
-                    movingOp = true;
-                    swapEffects(effect, connectionsRight.getFirst());
-                    movingOp = false;
-                } else if (getDistanceFromLineExtended(connectionCenterLine, effectCenterPosition) > 50) {
-                    removeEffectConnections(effect);
-                }
-            }
-        } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
-            // Connections on one side only
-            // todo drag whole connection
-        } else {
-            // Not connected
-            for (auto connectionLine : parent->getConnectionsInside()) {
-                auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
-                auto line = connectionLine->getLine();
+                    for (auto i = 1; i < connectedEffects.size(); i++) {
+                        // Set the left and right effects to check position for
+                        leftEffect = rightWard ? connectedEffects[i - 1] : connectedEffects[i];
+                        rightEffect = rightWard ? connectedEffects[i] : connectedEffects[i - 1]; //fixme these set backwards?
 
-                if (getDistanceFromLineExtended(line, effectCenterPosition) < 10) {
-                    insertEffect(effect, connectionLine);
-                }
-            }
-        }
+                        int fitDistance = getFittedDistance(leftEffect, rightEffect);
 
-    }
+                        if (fitDistance < 0) {
+                            movingOp = true;
+                            // Scooch the effects
+                            moveEffect(connectedEffects[i], -fitDistance, rightWard); //fixme flip distance
 
-    if (wasResized) {
-        for (auto c : effect->getConnectionsToThis()) {
-            if (c->type == ConnectionLine::audio) {
-                // get full end connection
-                for (auto port : effect->getPorts()) {
-                    if (port->isConnected()) {
-
-                        Array<Effect*> connectedEffects;
-                        bool rightWard = ! port->isInput;
-
-                        connectedEffects.add(effect);
-                        connectedEffects.addArray(effect->getFullConnectionEffects(port)); //todo replace port with direction bool
-
-                        Effect* leftEffect = nullptr;
-                        Effect* rightEffect = nullptr;
-
-                        for (auto i = 1; i < connectedEffects.size(); i++) {
-                            // Set the left and right effects to check position for
-                            leftEffect = rightWard ? connectedEffects[i - 1] : connectedEffects[i];
-                            rightEffect = rightWard ? connectedEffects[i] : connectedEffects[i - 1]; //fixme these set backwards?
-
-                            int fitDistance = getFittedDistance(leftEffect, rightEffect);
-
-                            if (fitDistance < 0) {
-                                movingOp = true;
-                                // Scooch the effects
-                                moveEffect(connectedEffects[i], -fitDistance, rightWard); //fixme flip distance
-
-                                movingOp = false;
-                            }
+                            movingOp = false;
                         }
                     }
                 }
             }
         }
     }
+}
 
-    ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
+void EffectPositioner::repositionOnMove(Effect *effect) {
+// Avoid a recursive mess!
+    if (movingOp)
+        return;
+
+    auto parent = dynamic_cast<EffectBase*>(effect->getParentComponent());
+
+    auto inputConnections = effect->getConnectionsToThis(true, ConnectionLine::audio);
+    auto outputConnections = effect->getConnectionsToThis(false, ConnectionLine::audio);
+    if (inputConnections.size() > 0 && outputConnections.size() > 0) {
+        // Connections on both sides
+        auto inputPortPosition = parent->getLocalPoint(inputConnections.getFirst()->getOutPort()
+                , inputConnections.getFirst()->getOutPort()->centrePoint);
+        auto outputPortPosition = parent->getLocalPoint(outputConnections.getFirst()->getInPort()
+                , outputConnections.getFirst()->getInPort()->centrePoint);
+
+        auto effectCenterPosition = getEffectCenter(effect);
+        auto connectionCenterLine = Line<int>(inputPortPosition, outputPortPosition);
+
+        auto connectionsLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
+        auto connectionsRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
+
+        if (connectionsLeft.getFirst()->getPorts(true).size() == 0
+            || connectionsRight.getFirst()->getPorts(false).size() == 0)
+        {
+            // Scooch
+
+        } else {
+            if (getEffectCenter(connectionsLeft.getFirst()).getX() > getEffectCenter(effect).getX()) {
+                // Effect overlaps next towards the left
+                movingOp = true;
+                swapEffects(effect, connectionsLeft.getFirst());
+                movingOp = false;
+            } else if (getEffectCenter(connectionsRight.getFirst()).getX() < getEffectCenter(effect).getX()) {
+                // Effect overlaps next towards the right
+                movingOp = true;
+                swapEffects(effect, connectionsRight.getFirst());
+                movingOp = false;
+            } else if (getDistanceFromLineExtended(connectionCenterLine, effectCenterPosition) > 50) {
+                removeEffectConnections(effect);
+            }
+        }
+    } else if (inputConnections.size() > 0 || outputConnections.size() > 0) {
+        // Connections on one side only
+        // todo drag whole connection
+    } else {
+        // Not connected
+        for (auto connectionLine : parent->getConnectionsInside()) {
+            auto effectCenterPosition = effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
+            auto line = connectionLine->getLine();
+
+            if (getDistanceFromLineExtended(line, effectCenterPosition) < 10) {
+                insertEffect(effect, connectionLine);
+            }
+        }
+    }
+}
+
+void EffectPositioner::repositionOnEnter(Effect *effect, EffectBase *parent) {
+
 }
 
 ConnectionLine *EffectPositioner::getConnectionToPort(ConnectionPort *port) {
@@ -177,15 +183,6 @@ void EffectPositioner::swapEffects(Effect *effectDragged, Effect *effectToMove) 
     } else {
         jassertfalse;
     }
-}
-
-void EffectPositioner::componentParentHierarchyChanged(Component &component) {
-
-    // check existing connections
-        // any connection parents to be reassigned?
-            // merge or split connection
-
-    ComponentListener::componentParentHierarchyChanged(component);
 }
 
 EffectPositioner::EffectPositioner() {
@@ -359,4 +356,44 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
 
 Point<int> EffectPositioner::getEffectCenter(Effect *effect) {
     return effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
+}
+
+
+EffectListener::EffectListener() {
+    instance = this;
+}
+
+EffectListener *EffectListener::getInstance() {
+    return instance;
+}
+
+void EffectListener::effectDragged(Effect *effect) {
+
+}
+
+void EffectListener::effectResized(Effect *effect) {
+
+
+}
+
+void EffectListener::effectDeleted(Effect *effect) {
+
+}
+
+void EffectListener::effectCreated(Effect *effect) {
+
+}
+
+void EffectListener::effectMovedIntoParent(Effect *effect, EffectBase *newParent) {
+    // check existing connections
+        // any connection parents to be reassigned?
+        // merge or split connection
+}
+
+EffectManager::EffectManager() {
+    instance = this;
+}
+
+EffectManager *EffectManager::getInstance() {
+    return instance;
 }
