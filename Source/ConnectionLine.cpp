@@ -10,6 +10,7 @@
 
 #include "ConnectionLine.h"
 #include "Effect.h"
+#include "ConnectionGraph.h"
 
 
 const Identifier ConnectionLine::IDs::CONNECTION_ID = "connection";
@@ -25,6 +26,8 @@ ConnectionLine::ConnectionLine() {
     setEnabled(false);
     inPort = nullptr;
     outPort = nullptr;
+
+    addComponentListener(ConnectionGraph::getInstance());
 }
 
 ConnectionLine::~ConnectionLine() {

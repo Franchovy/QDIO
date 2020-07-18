@@ -94,12 +94,12 @@ void EffectBase::disconnectParameters(const ConnectionLine &connectionLine) {
 
 
 bool EffectBase::connectAudio(const ConnectionLine& connectionLine) {
-    return connectionGraph->addConnection(connectionLine);
+    return connectionGraph->addConnection(&connectionLine);
 
 }
 
 void EffectBase::disconnectAudio(const ConnectionLine &connectionLine) {
-    connectionGraph->removeConnection(connectionLine);
+    connectionGraph->removeConnection(&connectionLine);
 
 }
 

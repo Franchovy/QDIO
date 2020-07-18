@@ -1003,11 +1003,10 @@ bool EffectScene::loadNewScene(String templateName) {
         std::cout << "Failure loading template! Reloading fresh" << newLine;
         jassertfalse;
         closeScene();
-        return false;
     }
 
     undoManager.clearUndoHistory();
-
+    return success;
 }
 
 

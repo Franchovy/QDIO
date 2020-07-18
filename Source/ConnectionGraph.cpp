@@ -12,19 +12,21 @@
 
 #include "Effect.h"
 
+ConnectionGraph* ConnectionGraph::instance = nullptr;
+
 ConnectionGraph::ConnectionGraph(AudioProcessorGraph& audioGraph)
     : audioGraph(audioGraph)
 {
-
+    instance = this;
 }
 
-bool ConnectionGraph::addConnection(const ConnectionLine& line) {
+bool ConnectionGraph::addConnection(const ConnectionLine* line) {
     std::cout << "Add connection" << newLine;
 
     auto array = Array<AudioProcessorGraph::Connection>();
 
-    auto inPort = line.getOutPort();
-    auto outPort = line.getInPort();
+    auto inPort = line->getOutPort();
+    auto outPort = line->getInPort();
 
     if (inPort == nullptr || outPort == nullptr) {
         return false;
@@ -89,13 +91,13 @@ bool ConnectionGraph::addConnection(const ConnectionLine& line) {
     return false;
 }
 
-void ConnectionGraph::removeConnection(const ConnectionLine& line) {
+void ConnectionGraph::removeConnection(const ConnectionLine* line) {
     std::cout << "Remove connection" << newLine;
 
     auto array = Array<AudioProcessorGraph::Connection>();
 
-    auto inPort = line.getOutPort();
-    auto outPort = line.getInPort();
+    auto inPort = line->getOutPort();
+    auto outPort = line->getInPort();
 
     if (inPort == nullptr || outPort == nullptr) {
         return;
@@ -147,6 +149,20 @@ void ConnectionGraph::removeConnection(const ConnectionLine& line) {
 void ConnectionGraph::updateNumChannels(int numChannels) {
     std::cout << "update num channels" << newLine;
 
+}
+
+void ConnectionGraph::componentParentHierarchyChanged(Component &component) {
+    auto connectionLine = dynamic_cast<ConnectionLine*>(&component);
+
+    if (connectionLine->getParentComponent() == nullptr) {
+        // Disconnect
+        removeConnection(connectionLine);
+    } else {
+        // Connect
+        addConnection(connectionLine);
+    }
+
+    ComponentListener::componentParentHierarchyChanged(component);
 }
 
 

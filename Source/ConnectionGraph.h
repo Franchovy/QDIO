@@ -26,17 +26,23 @@ struct AudioConnection
     bool validConnection = false;
 };
 
-class ConnectionGraph
+class ConnectionGraph : public ComponentListener
 {
 public:
     ConnectionGraph(AudioProcessorGraph& audioGraph);
 
-    bool addConnection(const ConnectionLine& line);
-    void removeConnection(const ConnectionLine& line);
+    static ConnectionGraph* getInstance() { return instance; }
+
+    void componentParentHierarchyChanged(Component &component) override;
+
+    bool addConnection(const ConnectionLine* line);
+    void removeConnection(const ConnectionLine* line);
 
     void updateNumChannels(int numChannels);
 
 private:
+    static ConnectionGraph* instance;
+
     AudioProcessorGraph& audioGraph;
     OwnedArray<AudioConnection> connections;
     HashMap<const ConnectionLine*, const AudioConnection*> lineToAudioConnectionsMap;

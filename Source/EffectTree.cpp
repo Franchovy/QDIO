@@ -515,10 +515,10 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
 
         auto parentFromTree = getFromTree<Component>(parentTree);
         // Type-specific operations
-        if (auto line = dynamic_cast<ConnectionLine*>(component)) {
+        /*if (auto line = dynamic_cast<ConnectionLine*>(component)) {
             line->disconnect();
         }
-        else if (auto effect = dynamic_cast<Effect*>(component)) {
+        else */if (auto effect = dynamic_cast<Effect*>(component)) { //todo let effectPositioner do this
             if (! undoManager->isPerformingUndoRedo()) {
                 for (auto c : effect->getConnectionsToThis()) {
                     auto connectionTree = getTree(c);
