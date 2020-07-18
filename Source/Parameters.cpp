@@ -368,6 +368,10 @@ void Parameter::parentHierarchyChanged() {
         getParentComponent()->addAndMakeVisible(internalPort.get());
         addToUpdater(); // todo terrible idea - move this to "activate audio" type function
 
+    } else {
+        if (referencedParam != nullptr) {
+            referencedParam->removeListener(this);
+        }
     }
     Component::parentHierarchyChanged();
 }

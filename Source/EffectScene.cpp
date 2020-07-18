@@ -61,10 +61,10 @@ EffectScene::EffectScene()
     Parameter::updater = &parameterUpdater;
     EffectBase::effectScene = this;
 
-    EffectBase::audioGraph = &audioGraph;
-    EffectBase::processorPlayer = &processorPlayer;
+    //EffectBase::audioGraph = &audioGraph;
+    //EffectBase::processorPlayer = &processorPlayer;
     EffectBase::deviceManager = &deviceManager;
-    EffectBase::connectionGraph = &connectionGraph;
+    //EffectBase::connectionGraph = &connectionGraph;
 
     audioGraph.enableAllBuses();
    

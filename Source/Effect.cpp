@@ -17,10 +17,10 @@
 
 // Static members
 EffectBase::AppState EffectBase::appState = neutral;
-AudioProcessorGraph* EffectBase::audioGraph = nullptr;
-AudioProcessorPlayer* EffectBase::processorPlayer = nullptr;
+//AudioProcessorGraph* EffectBase::audioGraph = nullptr;
+//AudioProcessorPlayer* EffectBase::processorPlayer = nullptr;
 AudioDeviceManager* EffectBase::deviceManager = nullptr;
-ConnectionGraph* EffectBase::connectionGraph = nullptr;
+//ConnectionGraph* EffectBase::connectionGraph = nullptr;
 UndoManager EffectBase::undoManager;
 
 const Identifier Effect::IDs::x = "x";
@@ -94,12 +94,12 @@ void EffectBase::disconnectParameters(const ConnectionLine &connectionLine) {
 
 
 bool EffectBase::connectAudio(const ConnectionLine& connectionLine) {
-    return connectionGraph->addConnection(&connectionLine);
+    return ConnectionGraph::getInstance()->addConnection(&connectionLine);
 
 }
 
 void EffectBase::disconnectAudio(const ConnectionLine &connectionLine) {
-    connectionGraph->removeConnection(&connectionLine);
+    ConnectionGraph::getInstance()->removeConnection(&connectionLine);
 
 }
 
@@ -384,11 +384,11 @@ void Effect::setupMenu() {
     });
 
     portSubMenu->addItem("Input Port", [=]() {
-        addPort(getDefaultBus(), true);
+        addPort(ConnectionGraph::getInstance()->getDefaultBus(), true);
         resized();
     });
     portSubMenu->addItem("Output Port", [=](){
-        addPort(getDefaultBus(), false);
+        addPort(ConnectionGraph::getInstance()->getDefaultBus(), false);
         resized();
     });
     portSubMenuItem.subMenu = std::move(portSubMenu);
@@ -443,11 +443,11 @@ void Effect::setProcessor(AudioProcessor *processor) {
     this->processor = processor;
 
     // Processor settings (how best to do this?)
-    node->getProcessor()->setPlayConfigDetails(
+    /*node->getProcessor()->setPlayConfigDetails(
             processor->getTotalNumInputChannels(),
             processor->getTotalNumOutputChannels(),
             audioGraph->getSampleRate(),
-            audioGraph->getBlockSize());
+            audioGraph->getBlockSize());*/
 
     // Save AudioProcessorParameterGroup
     parameters = &processor->getParameterTree();

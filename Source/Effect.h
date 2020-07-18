@@ -65,7 +65,7 @@ public:
 
     static UndoManager& getUndoManager() { return undoManager; }
     static AudioDeviceManager* getDeviceManager() {return deviceManager;}
-    static AudioProcessorGraph* getAudioGraph() {return audioGraph;}
+    //static AudioProcessorGraph* getAudioGraph() {return audioGraph;}
 
     ConnectionPort* getPortFromID(String portID);
 
@@ -96,10 +96,10 @@ protected:
     //====================================================================================
 
     static AudioDeviceManager* deviceManager;
-    static AudioProcessorPlayer* processorPlayer;
-    static AudioProcessorGraph* audioGraph;
+    //static AudioProcessorPlayer* processorPlayer;
+    //static AudioProcessorGraph* audioGraph;
 
-    static ConnectionGraph* connectionGraph;
+    //static ConnectionGraph* connectionGraph;
 
     static UndoManager undoManager;
 
@@ -190,7 +190,6 @@ public:
 
     //CustomMenuItems& getMenu() { return editMode ? editMenu : menu; }
     AudioProcessorGraph::NodeID getNodeID() const;
-    static AudioProcessor::Bus* getDefaultBus() { return audioGraph->getBus(true, 0); }
 
     int getNumInputs() const { return inputPortFlexBox.items.size(); }
     int getNumOutputs() const { return outputPortFlexBox.items.size(); }

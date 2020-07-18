@@ -73,7 +73,7 @@ bool EffectTree::createEffect(ValueTree tree) {
 
         newProcessor = createProcessor(id);
 
-        auto node = EffectBase::getAudioGraph()->addNode(move(newProcessor));
+        auto node = ConnectionGraph::getInstance()->addNode(move(newProcessor));
         effect->setNode(node);
         // Create from node:
         effect->setProcessor(node->getProcessor());
@@ -234,6 +234,7 @@ bool EffectTree::createEffect(ValueTree tree) {
     effect->resized();
 
     effect->addComponentListener(EffectPositioner::getInstance());
+    effect->addComponentListener(ConnectionGraph::getInstance());
 
     return success;
 }
@@ -484,15 +485,16 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         auto component = getFromTree<Component>(childWhichHasBeenAdded);
         auto parent = getFromTree<EffectBase>(parentTree);
 
+        //fixme remove this
         component->addComponentListener(this);
 
         // Type-specific operations
-        if (auto line = dynamic_cast<ConnectionLine *>(component)) {
+        /*if (auto line = dynamic_cast<ConnectionLine *>(component)) {
             line->connect();
         }
         if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
             std::cout << "add parameter" << newLine;
-        }
+        }*/
 
 
         if (parent != nullptr && parent != component->getParentComponent()) {
@@ -514,18 +516,6 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         //component->removeComponentListener(this);
 
         auto parentFromTree = getFromTree<Component>(parentTree);
-        // Type-specific operations
-        /*if (auto line = dynamic_cast<ConnectionLine*>(component)) {
-            line->disconnect();
-        }
-        else */if (auto effect = dynamic_cast<Effect*>(component)) { //todo let effectPositioner do this
-            if (! undoManager->isPerformingUndoRedo()) {
-                for (auto c : effect->getConnectionsToThis()) {
-                    auto connectionTree = getTree(c);
-                    connectionTree.getParent().removeChild(connectionTree, undoManager);
-                }
-            }
-        }
 
         if (parent != nullptr && parent == parentFromTree) {
             parent->removeChildComponent(component);
@@ -1051,7 +1041,7 @@ bool EffectTree::loadPort(ValueTree portData) {
             newPort->setComponentID(ID);
             effect->addPort(newPort);
 
-            newPort->bus = Effect::getDefaultBus();
+            newPort->bus = ConnectionGraph::getInstance()->getDefaultBus();
 
             newPort->internalPort->setComponentID(linkedID);
 

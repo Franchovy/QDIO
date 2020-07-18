@@ -152,18 +152,46 @@ void ConnectionGraph::updateNumChannels(int numChannels) {
 }
 
 void ConnectionGraph::componentParentHierarchyChanged(Component &component) {
-    auto connectionLine = dynamic_cast<ConnectionLine*>(&component);
+    if (auto effect = dynamic_cast<Effect*>(&component)) {
+        if (effect->getParentComponent() == nullptr) {
+            // Remove from audiograph
 
-    if (connectionLine->getParentComponent() == nullptr) {
-        // Disconnect
-        removeConnection(connectionLine);
-    } else {
-        // Connect
-        addConnection(connectionLine);
+        } else {
+            // Add to audiograph
+            //audioGraph.addNode(effect->getProcessor());
+            auto processor = audioGraph.getNodeForId(effect->getNodeID())->getProcessor();
+
+            processor->setPlayConfigDetails(
+                    processor->getTotalNumInputChannels(),
+                    processor->getTotalNumOutputChannels(),
+                    audioGraph.getSampleRate(),
+                    audioGraph.getBlockSize());
+        }
+    } else if (auto connectionLine = dynamic_cast<ConnectionLine*>(&component)) {
+        if (connectionLine->getParentComponent() == nullptr) {
+            // Disconnect
+            removeConnection(connectionLine);
+        } else {
+            // Connect
+            addConnection(connectionLine);
+        }
     }
 
     ComponentListener::componentParentHierarchyChanged(component);
 }
+
+void ConnectionGraph::componentBeingDeleted(Component &component) {
+    if (auto effect = dynamic_cast<Effect*>(&component)) {
+        audioGraph.removeNode(effect->getNodeID());
+    }
+
+    ComponentListener::componentBeingDeleted(component);
+}
+
+AudioProcessorGraph::Node *ConnectionGraph::addNode(std::unique_ptr<AudioProcessor> newProcessor) {
+    return audioGraph.addNode(move(newProcessor)).get();
+}
+
 
 
 AudioConnection::AudioConnection() {

@@ -32,8 +32,13 @@ public:
     ConnectionGraph(AudioProcessorGraph& audioGraph);
 
     static ConnectionGraph* getInstance() { return instance; }
+    AudioProcessor::Bus* getDefaultBus() { return audioGraph.getBus(true, 0); }
+
+    AudioProcessorGraph::Node* addNode(std::unique_ptr<AudioProcessor> newProcessor);
 
     void componentParentHierarchyChanged(Component &component) override;
+
+    void componentBeingDeleted(Component &component) override;
 
     bool addConnection(const ConnectionLine* line);
     void removeConnection(const ConnectionLine* line);

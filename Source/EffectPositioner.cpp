@@ -227,7 +227,7 @@ void EffectPositioner::extendConnection(ConnectionLine *lineToExtend, Effect *pa
         // Exit parent
         bool isInput = parentToExtendThrough->isParentOf(lineToExtend->getInPort());
 
-        auto newPort = parentToExtendThrough->addPort(Effect::getDefaultBus(), isInput);
+        auto newPort = parentToExtendThrough->addPort(ConnectionGraph::getInstance()->getDefaultBus(), isInput);
         auto oldPort = isInput ? lineToExtend->getInPort() : lineToExtend->getOutPort();
 
         // Set line ports
@@ -246,7 +246,7 @@ void EffectPositioner::extendConnection(ConnectionLine *lineToExtend, Effect *pa
         auto isInput = lineToExtend->getInPort()->getDragLineParent() == parentToExtendThrough;
         auto oldPort = isInput ? lineToExtend->getInPort() : lineToExtend->getOutPort();
 
-        auto newPort = parentToExtendThrough->addPort(Effect::getDefaultBus(), isInput);
+        auto newPort = parentToExtendThrough->addPort(ConnectionGraph::getInstance()->getDefaultBus(), isInput);
         lineToExtend->unsetPort(oldPort);
         lineToExtend->setPort(newPort.get());
 
