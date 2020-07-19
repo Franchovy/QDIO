@@ -13,6 +13,7 @@
 #include "Effect.h"
 #include "IDs"
 #include "Ports.h"
+#include "EffectPositioner.h"
 
 
 // Static members
@@ -787,6 +788,8 @@ void Effect::resized() {
             parameterFlexBox.performLayout(Rectangle<int>(20, jmin(parametersY, getHeight() - 100), getWidth() - 40, 100));
         }
     }
+
+    EffectPositioner::getInstance()->effectResized(this);
 }
 
 void Effect::paint(Graphics& g) {
@@ -1123,6 +1126,8 @@ void Effect::mouseDrag(const MouseEvent &event) {
     } else {
         EffectBase::mouseDrag(event);
     }
+
+    EffectPositioner::getInstance()->effectMoved(this);
 }
 
 void Effect::mouseUp(const MouseEvent &event) {
@@ -1264,7 +1269,7 @@ void Effect::childrenChanged() {
         }
     }*/
     
-    if (appState != stopping) {
+    if (appState != stopping && appState != loading) {
         resized();
         
         if (! isInEditMode()) {

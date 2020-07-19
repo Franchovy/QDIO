@@ -29,6 +29,7 @@ public:
     EffectPositioner();
 
     static EffectPositioner* getInstance();
+    static void setPositionerRunning(bool runState);
 
     //=================================================================================
     // Listener methods to be called by UI System
@@ -67,6 +68,8 @@ private:
     //=================================================================================
 
     static EffectPositioner* instance;
+
+    bool positionerRunning = false;
     bool movingOp = false;
 
     // Magic numbers

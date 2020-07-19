@@ -17,7 +17,7 @@ EffectPositioner* EffectPositioner::instance = nullptr;
 
 void EffectPositioner::effectResized(Effect *effect) {
     // Avoid a recursive mess!
-    if (movingOp)
+    if (movingOp || ! positionerRunning)
         return;
 
     auto parent = dynamic_cast<EffectBase*>(effect->getParentComponent());
@@ -60,7 +60,7 @@ void EffectPositioner::effectResized(Effect *effect) {
 
 void EffectPositioner::effectMoved(Effect *effect) {
 // Avoid a recursive mess!
-    if (movingOp)
+    if (movingOp || ! positionerRunning)
         return;
 
     auto parent = dynamic_cast<EffectBase*>(effect->getParentComponent());
@@ -80,8 +80,8 @@ void EffectPositioner::effectMoved(Effect *effect) {
         auto connectionsLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
         auto connectionsRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
 
-        if (connectionsLeft.getFirst()->getPorts(true).size() == 0
-            || connectionsRight.getFirst()->getPorts(false).size() == 0)
+        if (connectionsLeft.getFirst()->getPorts(false).size() == 0
+            || connectionsRight.getFirst()->getPorts(true).size() == 0)
         {
             // Scooch
 
@@ -197,6 +197,7 @@ EffectPositioner::EffectPositioner() {
 }
 
 EffectPositioner *EffectPositioner::getInstance() {
+    jassert(instance != nullptr);
     return instance;
 }
 
@@ -348,7 +349,7 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
 
     if (inPorts.size() > 0 && outPorts.size() > 0) {
         //todo deal with this as well
-        jassert(! inPorts.getFirst()->isConnected() && ! outPorts.getFirst()->isConnected());
+        //jassert(! inPorts.getFirst()->isConnected() && ! outPorts.getFirst()->isConnected());
 
         auto endPort = line->getInPort();
         line->unsetPort(line->getInPort());
@@ -365,6 +366,11 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
 Point<int> EffectPositioner::getEffectCenter(Effect *effect) const
 {
     return effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
+}
+
+void EffectPositioner::setPositionerRunning(bool runState) {
+    jassert(instance != nullptr);
+    instance->positionerRunning = runState;
 }
 
 

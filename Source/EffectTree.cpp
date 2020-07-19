@@ -233,7 +233,6 @@ bool EffectTree::createEffect(ValueTree tree) {
 
     effect->resized();
 
-    effect->addComponentListener(EffectPositioner::getInstance());
     effect->addComponentListener(ConnectionGraph::getInstance());
 
     return success;

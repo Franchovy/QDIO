@@ -23,7 +23,7 @@ public:
     void createEffect(int processorID); // Processor-based Effect
     void createEffect(); // Empty Meta-Effect
     void createEffect(ValueTree data); // Meta-Effect
-    
+
 
 private:
     static UItoLogicMessager* instance;

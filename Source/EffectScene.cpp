@@ -984,9 +984,9 @@ void EffectScene::saveEffect() {
 }
 
 void EffectScene::closeScene() {
-    // todo close devices etc?
-    deviceManager.getCurrentAudioDevice()->stop();
+    EffectPositioner::setPositionerRunning(false);
 
+    deviceManager.getCurrentAudioDevice()->stop();
     audioGraph.clear();
 
     parameterUpdater.clear();
@@ -995,9 +995,12 @@ void EffectScene::closeScene() {
 }
 
 bool EffectScene::loadNewScene(String templateName) {
+    EffectPositioner::setPositionerRunning(false);
     bool success = tree.loadTemplate(templateName);
 
     if (success) {
+        EffectPositioner::setPositionerRunning(true);
+
         deviceManager.getCurrentAudioDevice()->start(&processorPlayer);
         parameterUpdater.startTimerHz(60);
 
