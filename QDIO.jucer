@@ -113,6 +113,10 @@
             file="Source/EffectPositioner.cpp"/>
       <FILE id="mpkNK0" name="EffectPositioner.h" compile="0" resource="0"
             file="Source/EffectPositioner.h"/>
+      <FILE id="gXMmBf" name="UItoLogicMessager.cpp" compile="1" resource="0"
+            file="Source/UItoLogicMessager.cpp"/>
+      <FILE id="QmyB0G" name="UItoLogicMessager.h" compile="0" resource="0"
+            file="Source/UItoLogicMessager.h"/>
       <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1" file="Source/EffectScene.cpp"
             xcodeResource="1"/>
       <FILE id="kR0kwB" name="EffectScene.h" compile="1" resource="1" file="Source/EffectScene.h"

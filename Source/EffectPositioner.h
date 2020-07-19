@@ -19,43 +19,10 @@ class ConnectionPort;
 
 
 /**
- * EffectListener class is used to pass messages from UI to the effect system.
- * It passes messages along to the EffectPositioner, which is UI-specific, and to the
- * EffectManager and ConnectionGraph, which are not UI-specific.
+ * EffectPositioner is a "UI companion" taking care of UI shortcuts and
+ * smoothing out the experience for the user. It also takes care of structural changes
+ * by listening to UI and sends messages to the UItoLogicMessager when needed.
  */
-class EffectListener
-{
-public:
-    EffectListener();
-
-    static EffectListener* getInstance();
-
-    void effectDragged(Effect* effect);
-    void effectResized(Effect* effect);
-
-    void effectCreated(Effect* effect);
-    void effectDeleted(Effect* effect);
-
-    void effectMovedIntoParent(Effect* effect, EffectBase* newParent);
-
-private:
-    static EffectListener* instance;
-
-    bool movingOp = false;
-
-};
-
-class EffectManager
-{
-public:
-    EffectManager();
-    static EffectManager* getInstance();
-
-
-private:
-    static EffectManager* instance;
-};
-
 class EffectPositioner
 {
 public:
@@ -63,34 +30,43 @@ public:
 
     static EffectPositioner* getInstance();
 
-    void repositionOnResize(Effect* effect);
-    void repositionOnMove(Effect* effect);
-    void repositionOnEnter(Effect* effect, EffectBase* parent);
+    //=================================================================================
+    // Listener methods to be called by UI System
 
-    //todo void repositionEffect();
+    void effectResized(Effect* effect);
+    void effectMoved(Effect* effect);
+    void effectCreated(Effect* effect);
+    void effectDeleted(Effect* effect);
+    void effectParentReassigned(Effect* effect, EffectBase* parent);
 
-    int getFittedDistance(const Effect* leftEffect, const Effect* rightEffect) const;
+private:
+
+    //=================================================================================
+    // Shortcut actions
+
     void moveEffect(Effect* effect, int distance, bool rightWard);
-
     void removeEffectConnections(Effect* effect);
     void insertEffect(Effect* effect, ConnectionLine* line);
-
     void swapEffects(Effect* effectDragged, Effect* effectToMove);
-
     void mergeConnection(ConnectionLine* line1, ConnectionLine* line2);
     void extendConnection(ConnectionLine* lineToExtend, Effect* parentToExtendThrough);
     void shortenConnection(ConnectionLine *interiorLine, ConnectionLine *exteriorLine);
 
-    ConnectionLine* getConnectionToPort(ConnectionPort* port);
 
-    // Convenience functions
-    Point<int> getEffectCenter(Effect* effect);
-    int getDistanceFromLineExtended(Line<int>line, Point<int> point);
+    //=================================================================================
+    // Positioning functions
+    int getFittedDistance(const Effect* leftEffect, const Effect* rightEffect) const;
 
+    // Connectivity Convenience functions
+    ConnectionLine* getConnectionToPort(ConnectionPort* port) const;
 
-private:
+    // Geometric Convenience functions
+    Point<int> getEffectCenter(Effect* effect) const;
+    int getDistanceFromLineExtended(Line<int>line, Point<int> point) const;
+
+    //=================================================================================
+
     static EffectPositioner* instance;
-
     bool movingOp = false;
 
     // Magic numbers

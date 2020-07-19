@@ -12,12 +12,10 @@
 
 #include "Effect.h"
 
-EffectListener* EffectListener::instance = nullptr;
-EffectManager* EffectManager::instance = nullptr;
 EffectPositioner* EffectPositioner::instance = nullptr;
 
 
-void EffectPositioner::repositionOnResize(Effect *effect) {
+void EffectPositioner::effectResized(Effect *effect) {
     // Avoid a recursive mess!
     if (movingOp)
         return;
@@ -60,7 +58,7 @@ void EffectPositioner::repositionOnResize(Effect *effect) {
     }
 }
 
-void EffectPositioner::repositionOnMove(Effect *effect) {
+void EffectPositioner::effectMoved(Effect *effect) {
 // Avoid a recursive mess!
     if (movingOp)
         return;
@@ -118,11 +116,20 @@ void EffectPositioner::repositionOnMove(Effect *effect) {
     }
 }
 
-void EffectPositioner::repositionOnEnter(Effect *effect, EffectBase *parent) {
+void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent) {
 
 }
 
-ConnectionLine *EffectPositioner::getConnectionToPort(ConnectionPort *port) {
+void EffectPositioner::effectCreated(Effect *effect) {
+
+}
+
+void EffectPositioner::effectDeleted(Effect *effect) {
+
+}
+
+
+ConnectionLine *EffectPositioner::getConnectionToPort(ConnectionPort *port) const {
     auto effect = dynamic_cast<Effect*>(port->getParentComponent());
     for (auto connection : effect->getConnectionsToThis()) {
         if (connection->getInPort() == port) {
@@ -314,7 +321,8 @@ void EffectPositioner::removeEffectConnections(Effect *effect) {
 
 }
 
-int EffectPositioner::getDistanceFromLineExtended(Line<int> line, Point<int> point) {
+int EffectPositioner::getDistanceFromLineExtended(Line<int> line, Point<int> point) const
+{
     auto angle = line.getAngle();
     auto extensionDistance = 100;
 
@@ -354,46 +362,9 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
 
 }
 
-Point<int> EffectPositioner::getEffectCenter(Effect *effect) {
+Point<int> EffectPositioner::getEffectCenter(Effect *effect) const
+{
     return effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
 }
 
 
-EffectListener::EffectListener() {
-    instance = this;
-}
-
-EffectListener *EffectListener::getInstance() {
-    return instance;
-}
-
-void EffectListener::effectDragged(Effect *effect) {
-
-}
-
-void EffectListener::effectResized(Effect *effect) {
-
-
-}
-
-void EffectListener::effectDeleted(Effect *effect) {
-
-}
-
-void EffectListener::effectCreated(Effect *effect) {
-
-}
-
-void EffectListener::effectMovedIntoParent(Effect *effect, EffectBase *newParent) {
-    // check existing connections
-        // any connection parents to be reassigned?
-        // merge or split connection
-}
-
-EffectManager::EffectManager() {
-    instance = this;
-}
-
-EffectManager *EffectManager::getInstance() {
-    return instance;
-}
