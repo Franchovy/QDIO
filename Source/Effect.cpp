@@ -140,6 +140,11 @@ Array<ConnectionLine *> EffectBase::getConnectionsToThis(bool isInputConnection,
 
 Array<ConnectionLine *> EffectBase::getConnectionsToThis() {
     Array<ConnectionLine*> array;
+
+    if (getParentComponent() == nullptr) {
+        return array;
+    }
+
     for (auto c : getParentComponent()->getChildren()) {
         if (auto line = dynamic_cast<ConnectionLine*>(c)) {
             if (isParentOf(line->getInPort()) || isParentOf(line->getOutPort())) {
