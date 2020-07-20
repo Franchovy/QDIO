@@ -614,6 +614,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         // load new template
         if (key.getKeyCode() == 'n')
         {
+            closeScene();
             loadNewScene("");
         }
 

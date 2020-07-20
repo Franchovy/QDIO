@@ -1128,11 +1128,14 @@ void Effect::mouseDrag(const MouseEvent &event) {
         }
 
         getParentComponent()->mouseDrag(event);
+
+        EffectPositioner::getInstance()->effectMoved(this);
     } else {
+        // Something else than the effect initiated the drag. Probably ConnectionPort.
         EffectBase::mouseDrag(event);
     }
 
-    EffectPositioner::getInstance()->effectMoved(this);
+
 }
 
 void Effect::mouseUp(const MouseEvent &event) {
