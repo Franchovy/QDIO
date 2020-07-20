@@ -80,6 +80,10 @@ void EffectPositioner::effectMoved(Effect *effect) {
         auto connectionsLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
         auto connectionsRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
 
+        if (connectionsLeft.size() == 0 || connectionsRight.size() == 0) {
+            return;
+        }
+
         if (connectionsLeft.getFirst()->getPorts(false).size() == 0
             || connectionsRight.getFirst()->getPorts(true).size() == 0)
         {

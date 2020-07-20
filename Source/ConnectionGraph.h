@@ -26,7 +26,7 @@ struct AudioConnection
     bool validConnection = false;
 };
 
-class ConnectionGraph : public ComponentListener
+class ConnectionGraph
 {
 public:
     ConnectionGraph(AudioProcessorGraph& audioGraph);
@@ -36,9 +36,9 @@ public:
 
     AudioProcessorGraph::Node* addNode(std::unique_ptr<AudioProcessor> newProcessor);
 
-    void componentParentHierarchyChanged(Component &component) override;
+    //void componentParentHierarchyChanged(Component &component) override;
 
-    void componentBeingDeleted(Component &component) override;
+    //void componentBeingDeleted(Component &component) override;
 
     bool addConnection(const ConnectionLine* line);
     void removeConnection(const ConnectionLine* line);

@@ -151,7 +151,7 @@ void ConnectionGraph::updateNumChannels(int numChannels) {
 
 }
 
-void ConnectionGraph::componentParentHierarchyChanged(Component &component) {
+/*void ConnectionGraph::componentParentHierarchyChanged(Component &component) {
     if (auto effect = dynamic_cast<Effect*>(&component)) {
         if (effect->getParentComponent() == nullptr) {
             // Remove from audiograph
@@ -178,15 +178,15 @@ void ConnectionGraph::componentParentHierarchyChanged(Component &component) {
     }
 
     ComponentListener::componentParentHierarchyChanged(component);
-}
+}*/
 
-void ConnectionGraph::componentBeingDeleted(Component &component) {
+/*void ConnectionGraph::componentBeingDeleted(Component &component) {
     if (auto effect = dynamic_cast<Effect*>(&component)) {
         audioGraph.removeNode(effect->getNodeID());
     }
 
     ComponentListener::componentBeingDeleted(component);
-}
+}*/
 
 AudioProcessorGraph::Node *ConnectionGraph::addNode(std::unique_ptr<AudioProcessor> newProcessor) {
     return audioGraph.addNode(move(newProcessor)).get();

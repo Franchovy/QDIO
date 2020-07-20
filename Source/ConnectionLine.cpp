@@ -26,8 +26,6 @@ ConnectionLine::ConnectionLine() {
     setEnabled(false);
     inPort = nullptr;
     outPort = nullptr;
-
-    addComponentListener(ConnectionGraph::getInstance());
 }
 
 ConnectionLine::~ConnectionLine() {
