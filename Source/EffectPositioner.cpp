@@ -126,6 +126,10 @@ void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent
     movingOp = true;
     effect->setCentrePosition(parent->getLocalPoint(scene, getEffectCenter(effect)));
     parent->addAndMakeVisible(effect);
+    if (auto parentEffect = dynamic_cast<Effect*>(parent)) {
+        refitChildren(parentEffect);
+    }
+
     movingOp = false;
 }
 
@@ -220,6 +224,12 @@ void EffectPositioner::moveEffect(Effect* effect, int distance, bool rightWard) 
     } else {
         effect->setTopLeftPosition(effect->getX() - distance, effect->getY());
     }
+}
+
+
+void EffectPositioner::refitChildren(Effect *parentEffect) {
+    // Set size based on children
+
 }
 
 
@@ -385,5 +395,6 @@ void EffectPositioner::setPositionerRunning(bool runState) {
 void EffectPositioner::setScene(EffectBase *scene) {
     this->scene = scene;
 }
+
 
 
