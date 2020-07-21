@@ -47,6 +47,10 @@ private:
     // Shortcut actions
 
     void autoPlace(Effect* effect);
+    void makeRoomForEffect(Effect* effect);
+
+    void fitEffects(Effect* leftEffect, Effect* rightEffect, bool expandRightwards);
+
     void refitChildren(Effect* parentEffect);
     void moveEffect(Effect* effect, int distance, bool rightWard);
     void removeEffectConnections(Effect* effect);

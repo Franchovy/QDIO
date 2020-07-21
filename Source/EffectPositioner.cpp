@@ -42,15 +42,7 @@ void EffectPositioner::effectResized(Effect *effect) {
                         leftEffect = rightWard ? connectedEffects[i - 1] : connectedEffects[i];
                         rightEffect = rightWard ? connectedEffects[i] : connectedEffects[i - 1]; //fixme these set backwards?
 
-                        int fitDistance = getFittedDistance(leftEffect, rightEffect);
-
-                        if (fitDistance < 0) {
-                            movingOp = true;
-                            // Scooch the effects
-                            moveEffect(connectedEffects[i], -fitDistance, rightWard); //fixme flip distance
-
-                            movingOp = false;
-                        }
+                        fitEffects(leftEffect, rightEffect, rightWard);
                     }
                 }
             }
@@ -96,13 +88,11 @@ void EffectPositioner::effectMoved(Effect *effect) {
                 // Effect overlaps next towards the left
                 movingOp = true;
                 swapEffects(effect, connectionsLeft.getFirst());
-                //autoPlace(effect);
                 movingOp = false;
             } else if (getEffectCenter(connectionsRight.getFirst()).getX() < getEffectCenter(effect).getX()) {
                 // Effect overlaps next towards the right
                 movingOp = true;
                 swapEffects(effect, connectionsRight.getFirst());
-                //autoPlace(effect);
                 movingOp = false;
             } else if (getDistanceFromLineExtended(connectionCenterLine, effectCenterPosition) > 50) {
                 removeEffectConnections(effect);
@@ -119,7 +109,10 @@ void EffectPositioner::effectMoved(Effect *effect) {
 
             if (getDistanceFromLineExtended(line, effectCenterPosition) < 10) {
                 insertEffect(effect, connectionLine);
-                //autoPlace(effect);
+                // todo make room on left, and right
+                movingOp = true;
+                makeRoomForEffect(effect);
+                movingOp = false;
             }
         }
     }
@@ -218,8 +211,7 @@ void EffectPositioner::swapEffects(Effect *effectDragged, Effect *effectToMove) 
         jassert(effectDragged->getConnectionsToThis(true, ConnectionLine::audio).size() == 1);
         jassert(effectDragged->getConnectionsToThis(false, ConnectionLine::audio).size() == 1);
 
-        //fixme use auto-spacing function
-        moveEffect(effectToMove, 150, false);
+        makeRoomForEffect(effectDragged);
 
     } else if (outPortsToMove.getFirst()->getOtherPort() == inPortsDragged.getFirst()) {
         // Switch over towards the left
@@ -235,8 +227,7 @@ void EffectPositioner::swapEffects(Effect *effectDragged, Effect *effectToMove) 
         jassert(effectDragged->getConnectionsToThis(true, ConnectionLine::audio).size() == 1);
         jassert(effectDragged->getConnectionsToThis(false, ConnectionLine::audio).size() == 1);
 
-        //fixme use auto-spacing function
-        moveEffect(effectToMove, 150, true);
+        makeRoomForEffect(effectDragged);
 
     } else {
         //jassertfalse;
@@ -487,6 +478,49 @@ void EffectPositioner::autoPlace(Effect *effect) {
     if (auto parentEffect = dynamic_cast<Effect*>(effect->getParentComponent())) {
         autoPlace(parentEffect);
     }
+}
+
+/**
+ * Different type of auto-place function, this one is incremental, making room for each
+ * effect if needed going down the connected effects one by one.
+ * @param effect
+ */
+void EffectPositioner::makeRoomForEffect(Effect *effect) {
+    if (effect->getPorts(true).size() == 1 && effect->getPorts(false).size() == 1) {
+        auto connectedLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
+        auto connectedRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
+
+        // Make room towards the left
+        auto previousEffect = effect;
+        for (auto e : connectedLeft) {
+            fitEffects(e, previousEffect, false);
+            previousEffect = e;
+        }
+
+        // Make room towards the right
+        previousEffect = effect;
+        for (auto e : connectedRight) {
+            fitEffects(previousEffect, e, true);
+            previousEffect = e;
+        }
+
+    }
+}
+
+/**
+ * Basically just moves one of the two effects so that there's room in between.
+ * @param leftEffect effect on the left
+ * @param rightEffect effect on the right
+ * @param expandRightwards: if true, then rightEffect is moved. else leftEffect is moved.
+ */
+void EffectPositioner::fitEffects(Effect *leftEffect, Effect *rightEffect, bool expandRightwards) {
+    if (rightEffect->getX() - minDistanceBetweenEffects < leftEffect->getRight()) {
+        int distanceToExpand = -(rightEffect->getX() - minDistanceBetweenEffects - leftEffect->getRight());
+
+        moveEffect(expandRightwards ? rightEffect : leftEffect
+                , distanceToExpand, expandRightwards);
+    }
+
 }
 
 
