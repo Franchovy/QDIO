@@ -127,6 +127,30 @@ void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent
     effect->setCentrePosition(parent->getLocalPoint(scene, getEffectCenter(effect)));
     parent->addAndMakeVisible(effect);
     if (auto parentEffect = dynamic_cast<Effect*>(parent)) {
+
+        // Add ports to parent if it doesn't have any
+        auto parentPorts = parentEffect->getPorts(-1);
+        if (parentPorts.size() == 0) {
+            // Check what ports new child has
+            auto numInputPorts = effect->getPorts(true).size();
+            auto numOutputPorts = effect->getPorts(false).size();
+
+            if (numOutputPorts != 0) {
+                // Add an output port to parent
+                parentEffect->addPort(ConnectionGraph::getInstance()->getDefaultBus(), false);
+            } else if (numInputPorts != 0) {
+                // Add an input port to parent
+                parentEffect->addPort(ConnectionGraph::getInstance()->getDefaultBus(), true);
+            }
+        }
+
+        // Auto-connect children
+        auto childrenEffects = parentEffect->getFullConnectionEffectsInside();
+        if (childrenEffects.size() == 0) {
+
+        }
+
+        // Adjust size to fit all children
         refitChildren(parentEffect);
     }
 

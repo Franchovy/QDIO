@@ -153,6 +153,7 @@ public:
     };
 
     Array<Effect*> getFullConnectionEffects(ConnectionPort* port, bool includeParent = false);
+    Array<Effect*> getFullConnectionEffectsInside();
     Array<ConnectionLine*> getConnectionsUntilEnd(ConnectionPort* port);
     ConnectionPort* getNextPort(ConnectionPort* port, bool stopAtProcessor = true);
     ConnectionPort* getEndPort(ConnectionPort* port);

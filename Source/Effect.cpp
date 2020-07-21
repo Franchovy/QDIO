@@ -637,6 +637,24 @@ Array<Effect *> Effect::getFullConnectionEffects(ConnectionPort *port, bool incl
     return array;
 }
 
+
+Array<Effect *> Effect::getFullConnectionEffectsInside() {
+    Array<Effect *> array;
+
+    for (auto port : getPorts(true)) {
+        auto insidePort = port->getLinkedPort();
+        ConnectionPort* nextPort = getNextPort(insidePort);
+
+        while (nextPort != nullptr && nextPort->getParentEffect() != this) {
+            array.add(dynamic_cast<Effect*>(nextPort->getParentEffect()));
+
+            nextPort = getNextPort(insidePort);
+        }
+    }
+
+    return Array<Effect *>();
+}
+
 Array<ConnectionLine *> Effect::getConnectionsUntilEnd(ConnectionPort* port) {
     Array<ConnectionLine*> array;
     while (! dynamic_cast<Effect*>(port->getParentEffect())->isIndividual()) {
@@ -1193,6 +1211,7 @@ Point<int> Effect::getPosWithinParent() {
 
     return Point<int>(newX, newY);
 }
+
 
 bool ConnectionLine::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return dynamic_cast<const Effect*>(other) != nullptr
