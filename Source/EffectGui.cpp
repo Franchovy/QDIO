@@ -113,11 +113,13 @@ void SelectHoverObject::mouseDrag(const MouseEvent &event) {
             jassert(parent != nullptr);
             if (parent != nullptr) {
                 auto newDragIntoComponent = findDragHovered(parent, event.mods.isRightButtonDown());
-                if (dragIntoComponent == newDragIntoComponent) {
+                dragIntoComponent = newDragIntoComponent;
+
+                /*if (dragIntoComponent == newDragIntoComponent) {
                     dragIntoComponent = nullptr;
                 } else {
                     dragIntoComponent = newDragIntoComponent;
-                }
+                }*/
             }
         }
     }

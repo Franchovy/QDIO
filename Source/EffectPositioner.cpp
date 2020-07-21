@@ -123,7 +123,10 @@ void EffectPositioner::effectMoved(Effect *effect) {
 }
 
 void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent) {
-
+    movingOp = true;
+    effect->setCentrePosition(parent->getLocalPoint(scene, getEffectCenter(effect)));
+    parent->addAndMakeVisible(effect);
+    movingOp = false;
 }
 
 void EffectPositioner::effectCreated(Effect *effect) {

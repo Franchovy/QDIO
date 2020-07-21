@@ -991,148 +991,16 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
         dragger.dragComponent(this, event, nullptr);
 
-        setTopLeftPosition(getPosWithinParent());
-
         auto dragIntoObject = getDragIntoObject();
 
-        if (event.mods.isLeftButtonDown()) {
-            if (dragIntoObject != nullptr && dragIntoObject != getParentComponent()) {
-                std::cout << "Drag into: " << dragIntoObject->getName() << newLine;
-                if (auto newParent = dynamic_cast<EffectBase *>(dragIntoObject)) {
-                    auto oldParent = dynamic_cast<EffectBase *>(getParentComponent());
-                    auto connections = getConnectionsToThis();
-                    ConnectionLine *outgoingConnection = nullptr;
-
-                    // Reassign effect parent
-                    // Make invisible while moving.
-                    setVisible(false);
-                    newParent->addChildComponent(this);
-
-                    // Set position inside parent
-                    if (getParentHeight() - getHeight() < 0 || getParentWidth() - getWidth() < 0) {
-                        // Expand child to fit
-                        auto newPos = newParent->getBoundsInParent().getConstrainedPoint(getPosition());
-                        newPos = newParent->getLocalPoint(newParent->getParentComponent(), newPos);
-                        setTopLeftPosition(newPos);
-                        auto parentEffect = dynamic_cast<Effect*>(newParent);
-                        jassert(parentEffect != nullptr);
-                        parentEffect->expandToFitChildren();
-                        setTopLeftPosition(getPosWithinParent());
-                    } else {
-                        // Position effect inside parent
-                        setTopLeftPosition(getPosWithinParent());
-                    }
-                    setVisible(true);
-
-                    //auto outParent = (newParent->isParentOf(oldParent)) ? newParent : oldParent;
-                    auto parent = (newParent->isParentOf(oldParent)) ? oldParent : newParent;
-        /*            // Adjust connections accordingly
-                    for (auto c : connections) {
-                        if (c->type == ConnectionLine::parameter) {
-                            // Remove parameter connection
-                            c->getParentComponent()->removeChildComponent(c);
-                        } else {
-                            // Check if line is connected to an internal port
-                            if (c->getInPort()->getParentComponent() == parent
-                                || c->getOutPort()->getParentComponent() == parent)
-                            {
-                                auto connectionsToShorten = (newParent->isParentOf(oldParent))
-                                                            ? parent->getConnectionsToThis()
-                                                            : parent->getConnectionsInside();
-
-                                for (auto c_out : connectionsToShorten)
-                                {
-                                    if ((c_out->getOutPort() == c->getInPort()->getLinkedPort()
-                                        || c_out->getInPort() == c->getOutPort()->getLinkedPort())
-                                        && c_out->type == ConnectionLine::audio)
-                                    {
-                                        outgoingConnection = c_out;
-                                    }
-                                }
-
-                                if (outgoingConnection != nullptr) {
-                                    if (newParent->isParentOf(oldParent)) {
-                                        //shortenConnection(c, outgoingConnection);
-                                    } else {
-                                        //shortenConnection(outgoingConnection, c);
-                                    }
-                                } else {
-                                    parent->removeChildComponent(c);
-                                }
-                            } else {
-                                // Connection to extend
-                                //extendConnection(c, dynamic_cast<Effect *>(parent));
-                            }
-                        }
-                    }*/
-                }
+        if (auto newParent = dynamic_cast<EffectBase*>(dragIntoObject)) {
+            if (newParent != getParentComponent()) {
+                // Reassign parent
+                EffectPositioner::getInstance()->effectParentReassigned(this, newParent);
             }
-            /*if (! rightClickDragActivated
-                && (getPosition().getDistanceFrom(rightClickDragPos) > 50)) {
-
-                rightClickDragActivated = true;
-                std::cout << "right click activated" << newLine;
-
-                auto ingoingConnections = getConnectionsToThis(true, ConnectionLine::audio);
-                auto outgoingConnections = getConnectionsToThis(false, ConnectionLine::audio);
-                if (ingoingConnections.size() != 0 || outgoingConnections.size() != 0) {
-                    // Disconnect from any connections
-                    if (ingoingConnections.size() == outgoingConnections.size()) {
-                        //mergeConnection(ingoingConnections.getFirst(), outgoingConnections.getFirst());
-                    } else if (ingoingConnections.size() == 0 && outgoingConnections.size() > 1) {
-                        getParentComponent()->removeChildComponent(outgoingConnections.getFirst());
-                    } else if (outgoingConnections.size() == 0 && ingoingConnections.size() > 1) {
-                        getParentComponent()->removeChildComponent(ingoingConnections.getFirst());
-                    }
-                }
-            }
-
-            if (dragIntoObject != nullptr) {
-                std::cout << "right click drag" << newLine;
-                if (auto lineToJoin = dynamic_cast<ConnectionLine*>(dragIntoObject)) {
-                    // Join this connection
-                    auto inPorts = getPorts(true);
-                    auto outPorts = getPorts(false);
-                    // Add port if we want to connect this up
-                    if (!isIndividual()
-                        && (inPorts.size() == 0 || outPorts.size() == 0)) {
-                        if (inPorts.size() == 0) {
-                            auto newPort = addPort(getDefaultBus(), true);
-                            inPorts.add(newPort.get());
-                        }
-                        if (outPorts.size() == 0) {
-                            auto newPort = addPort(getDefaultBus(), false);
-                            outPorts.add(newPort.get());
-                        }
-                        resized();
-                    }
-                    // Replace single port with this one
-                    if (inPorts.size() == 0) {
-                        lineToJoin->unsetPort(lineToJoin->getOutPort());
-                        lineToJoin->setPort(outPorts.getFirst());
-                        rightClickDragPos = getPosition();
-                        rightClickDragActivated = false;
-                    }
-                    if (outPorts.size() == 0) {
-                        lineToJoin->unsetPort(lineToJoin->getInPort());
-                        lineToJoin->setPort(inPorts.getFirst());
-                        rightClickDragPos = getPosition();
-                        rightClickDragActivated = false;
-                    }
-                    if (inPorts.size() > 0 && outPorts.size() > 0) {
-                        lineToJoin->reconnect(inPorts.getFirst(), outPorts.getFirst());
-                        rightClickDragPos = getPosition();
-                        rightClickDragActivated = false;
-                    }
-                }
-            }*/
-        } else if (event.mods.isRightButtonDown()) {
-
+        } else {
+            EffectPositioner::getInstance()->effectMoved(this);
         }
-
-        getParentComponent()->mouseDrag(event);
-
-        EffectPositioner::getInstance()->effectMoved(this);
     } else {
         // Something else than the effect initiated the drag. Probably ConnectionPort.
         EffectBase::mouseDrag(event);
