@@ -148,7 +148,7 @@ void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent
         // Auto-connect children
         auto childrenEffects = parentEffect->getFullConnectionEffectsInside();
         if (childrenEffects.size() == 0) {
-
+            auto newLine =
         }
 
         // Adjust size to fit all children

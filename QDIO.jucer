@@ -117,6 +117,9 @@
             file="Source/UItoLogicMessager.cpp"/>
       <FILE id="QmyB0G" name="UItoLogicMessager.h" compile="0" resource="0"
             file="Source/UItoLogicMessager.h"/>
+      <FILE id="ZcDPPK" name="EffectManager.cpp" compile="1" resource="0"
+            file="Source/EffectManager.cpp"/>
+      <FILE id="Bs7Rgm" name="EffectManager.h" compile="0" resource="0" file="Source/EffectManager.h"/>
       <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1" file="Source/EffectScene.cpp"
             xcodeResource="1"/>
       <FILE id="kR0kwB" name="EffectScene.h" compile="1" resource="1" file="Source/EffectScene.h"
