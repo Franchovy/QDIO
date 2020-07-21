@@ -96,11 +96,13 @@ void EffectPositioner::effectMoved(Effect *effect) {
                 // Effect overlaps next towards the left
                 movingOp = true;
                 swapEffects(effect, connectionsLeft.getFirst());
+                //autoPlace(effect);
                 movingOp = false;
             } else if (getEffectCenter(connectionsRight.getFirst()).getX() < getEffectCenter(effect).getX()) {
                 // Effect overlaps next towards the right
                 movingOp = true;
                 swapEffects(effect, connectionsRight.getFirst());
+                //autoPlace(effect);
                 movingOp = false;
             } else if (getDistanceFromLineExtended(connectionCenterLine, effectCenterPosition) > 50) {
                 removeEffectConnections(effect);
@@ -117,6 +119,7 @@ void EffectPositioner::effectMoved(Effect *effect) {
 
             if (getDistanceFromLineExtended(line, effectCenterPosition) < 10) {
                 insertEffect(effect, connectionLine);
+                //autoPlace(effect);
             }
         }
     }
@@ -187,6 +190,9 @@ ConnectionLine *EffectPositioner::getConnectionToPort(ConnectionPort *port) cons
 }
 
 void EffectPositioner::swapEffects(Effect *effectDragged, Effect *effectToMove) {
+    std::cout << "Dragged effect pos: " << effectDragged->getX() + effectDragged->getWidth() / 2 << newLine;
+    std::cout << "Swapped effect pos: " << effectToMove->getX() + effectToMove->getHeight() / 2 << newLine;
+
     //fixme only for single ports!
     auto inPortsToMove = effectToMove->getPorts(true);
     auto outPortsToMove = effectToMove->getPorts(false);
@@ -433,7 +439,7 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
 
 Point<int> EffectPositioner::getEffectCenter(Effect *effect) const
 {
-    return scene->getLocalPoint(effect, effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2);
+    return scene->getLocalPoint(effect, Point<int>(effect->getWidth(), effect->getHeight()) / 2);
 }
 
 void EffectPositioner::setPositionerRunning(bool runState) {
@@ -465,8 +471,8 @@ void EffectPositioner::autoPlace(Effect *effect) {
             posX = effect->getParentComponent()->getX() + minDistanceBetweenEffects;
             posY = effect->getParentComponent()->getHeight() / 2;
         } else {
-            posX = connectedLeft.getLast()->getX() + minDistanceBetweenEffects;
-            posY = connectedLeft.getLast()->getY(); //todo linear height between start and end
+            posX = connectedLeft.getLast()->getRight() + minDistanceBetweenEffects;
+            posY = connectedLeft.getLast()->getY() + connectedLeft.getLast()->getHeight() / 2; //todo linear height between start and end
         }
 
         for (auto i = 1; i < fullConnection.size(); i++) {
