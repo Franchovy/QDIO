@@ -148,7 +148,11 @@ void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent
         // Auto-connect children
         auto childrenEffects = parentEffect->getFullConnectionEffectsInside();
         if (childrenEffects.size() == 0) {
-            auto newLine =
+            // Create inside connection
+            //todo
+        } else {
+            // Add to inside connection
+            //todo
         }
 
         // Adjust size to fit all children
@@ -255,6 +259,17 @@ void EffectPositioner::moveEffect(Effect* effect, int distance, bool rightWard) 
 void EffectPositioner::refitChildren(Effect *parentEffect) {
     // Set size based on children
 
+    auto totalWidth = 200;
+    auto totalHeight = 200;
+
+    for (auto c : parentEffect->getChildren()) {
+        if (auto effect = dynamic_cast<Effect*>(c)) {
+            totalWidth += effect->getWidth() + minDistanceBetweenEffects;
+            totalHeight = jmax(totalHeight, effect->getBottom()); //todo adjust for parameters, parameter mods
+        }
+    }
+
+    parentEffect->setSize(totalWidth, totalHeight);
 }
 
 

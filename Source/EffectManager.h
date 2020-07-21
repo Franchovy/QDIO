@@ -18,6 +18,7 @@ public:
     EffectManager();
     static EffectManager* getInstance();
 
+
 private:
     static EffectManager* instance;
 };
