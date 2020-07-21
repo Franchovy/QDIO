@@ -80,6 +80,8 @@ void EffectPositioner::effectMoved(Effect *effect) {
         auto connectionsLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
         auto connectionsRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
 
+        //fixme: Parent-Meta-Effects count as a connection! oops!
+
         if (connectionsLeft.size() == 0 || connectionsRight.size() == 0) {
             return;
         }
@@ -192,7 +194,7 @@ void EffectPositioner::swapEffects(Effect *effectDragged, Effect *effectToMove) 
         moveEffect(effectToMove, 150, true);
 
     } else {
-        jassertfalse;
+        //jassertfalse;
     }
 }
 
@@ -369,12 +371,16 @@ void EffectPositioner::insertEffect(Effect *effect, ConnectionLine *line) {
 
 Point<int> EffectPositioner::getEffectCenter(Effect *effect) const
 {
-    return effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2;
+    return scene->getLocalPoint(effect, effect->getPosition() + Point<int>(effect->getWidth(), effect->getHeight()) / 2);
 }
 
 void EffectPositioner::setPositionerRunning(bool runState) {
     jassert(instance != nullptr);
     instance->positionerRunning = runState;
+}
+
+void EffectPositioner::setScene(EffectBase *scene) {
+    this->scene = scene;
 }
 
 

@@ -40,6 +40,7 @@ public:
     void effectDeleted(Effect* effect);
     void effectParentReassigned(Effect* effect, EffectBase* parent);
 
+    void setScene(EffectBase* scene);
 private:
 
     //=================================================================================
@@ -68,6 +69,8 @@ private:
     //=================================================================================
 
     static EffectPositioner* instance;
+
+    EffectBase* scene = nullptr;
 
     bool positionerRunning = false;
     bool movingOp = false;

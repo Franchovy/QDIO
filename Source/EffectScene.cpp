@@ -60,6 +60,7 @@ EffectScene::EffectScene()
 
     Parameter::updater = &parameterUpdater;
     EffectBase::effectScene = this;
+    positioner.setScene(this);
 
     //EffectBase::audioGraph = &audioGraph;
     //EffectBase::processorPlayer = &processorPlayer;

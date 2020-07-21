@@ -152,7 +152,7 @@ public:
         bool isValid = false;
     };
 
-    Array<Effect*> getFullConnectionEffects(ConnectionPort* port);
+    Array<Effect*> getFullConnectionEffects(ConnectionPort* port, bool includeParent = false);
     Array<ConnectionLine*> getConnectionsUntilEnd(ConnectionPort* port);
     ConnectionPort* getNextPort(ConnectionPort* port, bool stopAtProcessor = true);
     ConnectionPort* getEndPort(ConnectionPort* port);

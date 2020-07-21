@@ -614,14 +614,18 @@ ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) 
 }
 
 
-Array<Effect *> Effect::getFullConnectionEffects(ConnectionPort *port) {
+Array<Effect *> Effect::getFullConnectionEffects(ConnectionPort *port, bool includeParent) {
     Array<Effect *> array;
 
     auto nextPort = getNextPort(port, false); //todo array
 
     if (nextPort != nullptr) {
         auto nextEffect = dynamic_cast<Effect *>(nextPort->getParentEffect());
-        array.add(nextEffect);
+
+        // Add next except if includeParent == false && nextEffect is parent of current
+        if (! nextEffect->isParentOf(port->getParentEffect()) || includeParent) {
+            array.add(nextEffect);
+        }
 
         // If the nextPort is facing this port, then it's the end of the line.
         if (nextPort->isInput == port->isInput) {
@@ -1022,7 +1026,6 @@ void Effect::mouseDrag(const MouseEvent &event) {
 
                     //auto outParent = (newParent->isParentOf(oldParent)) ? newParent : oldParent;
                     auto parent = (newParent->isParentOf(oldParent)) ? oldParent : newParent;
-
         /*            // Adjust connections accordingly
                     for (auto c : connections) {
                         if (c->type == ConnectionLine::parameter) {
