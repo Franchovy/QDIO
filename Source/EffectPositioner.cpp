@@ -157,6 +157,9 @@ void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent
 
         // Adjust size to fit all children
         refitChildren(parentEffect);
+
+        // Auto-place based on connections
+        autoPlace(effect);
     }
 
     movingOp = false;
@@ -243,6 +246,12 @@ EffectPositioner *EffectPositioner::getInstance() {
     return instance;
 }
 
+/**
+ *
+ * @param leftEffect
+ * @param rightEffect
+ * @return distance needing to be added in order to make the effects fit next to each other
+ */
 int EffectPositioner::getFittedDistance(const Effect *leftEffect, const Effect *rightEffect) const {
     return rightEffect->getX() - minDistanceBetweenEffects - leftEffect->getRight();
 }
@@ -434,6 +443,44 @@ void EffectPositioner::setPositionerRunning(bool runState) {
 
 void EffectPositioner::setScene(EffectBase *scene) {
     this->scene = scene;
+}
+
+/**
+ * Auto-positions the whole line of connections connected up to and after the given effect.
+ * @param effect: target effect, should only have maximum one input port and one output port for now..
+ */
+void EffectPositioner::autoPlace(Effect *effect) {
+    if (effect->getPorts(true).size() == 1 && effect->getPorts(false).size() == 1) {
+        auto connectedLeft = effect->getFullConnectionEffects(effect->getPorts(true).getFirst());
+        auto connectedRight = effect->getFullConnectionEffects(effect->getPorts(false).getFirst());
+
+        auto fullConnection = connectedLeft;
+        fullConnection.add(effect);
+        fullConnection.addArray(connectedRight);
+
+        int posX;
+        int posY;
+
+        if (dynamic_cast<Effect*>(effect->getParentComponent())) {
+            posX = effect->getParentComponent()->getX() + minDistanceBetweenEffects;
+            posY = effect->getParentComponent()->getHeight() / 2;
+        } else {
+            posX = connectedLeft.getLast()->getX() + minDistanceBetweenEffects;
+            posY = connectedLeft.getLast()->getY(); //todo linear height between start and end
+        }
+
+        for (auto i = 1; i < fullConnection.size(); i++) {
+            auto effectToPosition = fullConnection[i];
+            effectToPosition->setCentrePosition(posX + effectToPosition->getWidth()
+                    , posY); //todo ratio-height
+            posX += effectToPosition->getWidth() + minDistanceBetweenEffects;
+        }
+        //int totalConnectionLength = jmax(rightPos - leftPos, necessaryConnectionLength);
+    }
+
+    if (auto parentEffect = dynamic_cast<Effect*>(effect->getParentComponent())) {
+        autoPlace(parentEffect);
+    }
 }
 
 

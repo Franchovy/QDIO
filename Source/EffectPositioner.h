@@ -46,6 +46,7 @@ private:
     //=================================================================================
     // Shortcut actions
 
+    void autoPlace(Effect* effect);
     void refitChildren(Effect* parentEffect);
     void moveEffect(Effect* effect, int distance, bool rightWard);
     void removeEffectConnections(Effect* effect);
