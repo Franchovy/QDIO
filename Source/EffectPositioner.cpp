@@ -138,7 +138,8 @@ void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent
             if (numOutputPorts != 0) {
                 // Add an output port to parent
                 parentEffect->addPort(ConnectionGraph::getInstance()->getDefaultBus(), false);
-            } else if (numInputPorts != 0) {
+            }
+            if (numInputPorts != 0) {
                 // Add an input port to parent
                 parentEffect->addPort(ConnectionGraph::getInstance()->getDefaultBus(), true);
             }
