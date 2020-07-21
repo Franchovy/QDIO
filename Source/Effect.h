@@ -16,6 +16,7 @@
 #include "Ports.h"
 #include "MenuItem.h"
 #include "ConnectionGraph.h"
+#include "EffectManager.h"
 
 
 #pragma once
