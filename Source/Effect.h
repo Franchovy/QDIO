@@ -228,6 +228,7 @@ private:
 
     // Layout stuff
     FlexBox parameterFlexBox;
+    FlexBox paramPortsFlexBox;
     FlexBox parameterFlexBoxEditMode;
     
     FlexBox inputPortFlexBox;

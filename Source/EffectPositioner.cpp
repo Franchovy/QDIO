@@ -155,7 +155,7 @@ void EffectPositioner::effectParentReassigned(Effect *effect, EffectBase *parent
         refitChildren(parentEffect);
 
         // Auto-place based on connections
-        autoPlace(effect);
+        //autoPlace(effect);
     }
 
     movingOp = false;
