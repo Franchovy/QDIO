@@ -416,6 +416,7 @@ void Effect::setupMenu() {
         auto parameter = new SliderParameter(nullptr);
         parameter->setParentEditMode(true);
         addAndMakeVisible(parameter);
+        repositionInternals();
         //parameter->setCentrePosition(getMouseXYRelative());
     });
     parameterSubMenu->addItem("Selection Box", [=] () {
@@ -424,6 +425,7 @@ void Effect::setupMenu() {
         auto parameter = new ComboParameter(nullptr);
         parameter->setParentEditMode(true);
         addAndMakeVisible(parameter);
+        repositionInternals();
         //parameter->setCentrePosition(getMouseXYRelative());
     });
     parameterSubMenu->addItem("Toggle Button", [=] () {
@@ -432,6 +434,7 @@ void Effect::setupMenu() {
         auto parameter = new ButtonParameter(nullptr);
         parameter->setParentEditMode(true);
         addAndMakeVisible(parameter);
+        repositionInternals();
         //parameter->setCentrePosition(getMouseXYRelative());
     });
     addParamSubMenuItem.subMenu = std::move(parameterSubMenu);
@@ -553,73 +556,7 @@ void Effect::setEditMode(bool isEditMode) {
         title.setColour(title.textColourId, Colours::black);
     }
 
-    //===============================================================
-    // Resize and position members
-
-    auto newWidth = 250;
-    auto newHeight = 250;
-    auto parametersY = 0;
-
-    paramPortsFlexBox.items.clear();
-    parameterFlexBox.items.clear();
-
-    for (auto parameter : getParameterChildren()) {
-        FlexItem paramFlexItem;
-        paramFlexItem.associatedComponent = parameter;
-        paramFlexItem.width = parameter->getWidth();
-        paramFlexItem.height = parameter->getHeight() + 15;
-
-        paramFlexItem.alignSelf = FlexItem::AlignSelf::center;
-
-        parameterFlexBox.items.add(paramFlexItem);
-
-        parametersY = 0;
-        for (auto c : getChildren()) {
-            if (auto e = dynamic_cast<Effect *>(c)) {
-                parametersY = jmax(parametersY, e->getBottom());
-            }
-        }
-        parametersY += 20;
-
-        FlexItem paramPortFlexItem(*parameter->getPort(true));
-        paramPortFlexItem.width = 40;
-        paramPortFlexItem.height = 40;
-        paramPortFlexItem.margin = 0;
-        paramPortFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
-
-        paramPortsFlexBox.items.add(paramPortFlexItem);
-    }
-
-    if (editMode) {
-        if (newHeight < parametersY + 100) {
-            newHeight =  parametersY + 100;
-        }
-
-    } else {
-        if (parameterFlexBox.items.size() > 0) {
-            for (auto c : parameterFlexBox.items) {
-                if (auto parameter = dynamic_cast<Parameter*>(c.associatedComponent)) {
-                    if (dynamic_cast<ComboParameter*>(parameter) != nullptr) {
-                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 30);
-                    } else {
-                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 10);
-                    }
-                }
-            }
-
-            newWidth += 40;
-        }
-
-        newHeight = parameterFlexBox.items.size() * 50 + 90;
-
-        int numPortsHorizontally = (newWidth - 10) / 40;
-        int numWraps = ceil(paramPortsFlexBox.items.size() / numPortsHorizontally);
-        auto portsHeight = (60 + numWraps * 40);
-
-        newHeight += numWraps * 40;
-    }
-
-    setSize(newWidth, newHeight);
+    repositionInternals();
     //repaint();
 }
 
@@ -772,131 +709,15 @@ void Effect::resized() {
 
     if (editMode) {
         parameterFlexBox.performLayout(Rectangle<int>(20, getHeight() - 100, getWidth() - 40, 100));
+        paramPortsFlexBox.performLayout(Rectangle<int>(5, getHeight() - 30
+                , getWidth() - 5, 30));
     } else {
         parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 70 : 15
                 , 50, (outputPortFlexBox.items.size() > 0) ? getWidth() - 60 : getWidth() - 15
                 , getHeight() - 30));
+        paramPortsFlexBox.performLayout(Rectangle<int>(5, getHeight() - 40
+                , getWidth() - 5, 40));
     }
-
-    paramPortsFlexBox.performLayout(Rectangle<int>(5, getHeight() - 30
-            , getWidth() - 5, 30));
-
-    /*if (! editMode) {
-        // Parameters
-        FlexBox parameterFlexBox;
-        FlexBox paramPortsFlexBox;
-
-        for (auto parameter : getParameterChildren()) {
-            FlexItem paramFlexItem;
-            paramFlexItem.associatedComponent = parameter;
-            paramFlexItem.width = parameter->getWidth();
-            paramFlexItem.height = parameter->getHeight() + 15;
-
-            paramFlexItem.alignSelf = FlexItem::AlignSelf::center;
-
-            parameterFlexBox.items.add(paramFlexItem);
-
-            FlexItem paramPortFlexItem(*parameter->getPort(true));
-            paramPortFlexItem.width = 40;
-            paramPortFlexItem.height = 40;
-            paramPortFlexItem.margin = 0;
-            paramPortFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
-
-            paramPortsFlexBox.items.add(paramPortFlexItem);
-        }
-
-        parameterFlexBox.flexDirection = FlexBox::Direction::column;
-        parameterFlexBox.alignContent = FlexBox::AlignContent::flexStart;
-        parameterFlexBox.alignItems = FlexBox::AlignItems::center;
-        parameterFlexBox.justifyContent = FlexBox::JustifyContent::center;
-
-        paramPortsFlexBox.flexDirection = FlexBox::Direction::row;
-        paramPortsFlexBox.alignItems = FlexBox::AlignItems::center;
-        paramPortsFlexBox.alignContent = FlexBox::AlignContent::center;
-        paramPortsFlexBox.justifyContent = FlexBox::JustifyContent::center;
-        paramPortsFlexBox.flexWrap = FlexBox::Wrap::wrap;
-
-
-        // Resize
-
-        auto newWidth = 250;
-        auto newHeight = 200;
-
-        if (parameterFlexBox.items.size() > 0) {
-            for (auto c : parameterFlexBox.items) {
-                if (auto parameter = dynamic_cast<Parameter*>(c.associatedComponent)) {
-                    if (dynamic_cast<ComboParameter*>(parameter) != nullptr) {
-                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 30);
-                    } else {
-                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 10);
-                    }
-
-                }
-            }
-
-            newWidth += 40;
-            newHeight = parameterFlexBox.items.size() * 50 + 90;
-        }
-        if (outputPortFlexBox.items.size() > 0) {
-            //newWidth += 20;
-        }
-        newHeight = parameterFlexBox.items.size() * 50 + 90;
-
-        // Perform layout
-
-        int numPortsHorizontally = (newWidth - 10) / 40;
-        int numWraps = ceil(paramPortsFlexBox.items.size() / numPortsHorizontally);
-        auto portsHeight = (60 + numWraps * 40);
-
-        newHeight += numWraps * 40;
-        setSize(newWidth, newHeight);
-
-        parameterFlexBox.performLayout(Rectangle<int>((inputPortFlexBox.items.size() > 0) ? 70 : 15
-                , 50, (outputPortFlexBox.items.size() > 0) ? getWidth() - 60 : getWidth() - 15
-                , getHeight() - (30 + portsHeight)));
-
-        paramPortsFlexBox.performLayout(Rectangle<int>(5, getHeight() - portsHeight
-                , getWidth() - 5, portsHeight));
-
-    } else {
-        if (getParameterChildren().size() > 0) {
-
-            auto parametersY = 0;
-            for (auto c : getChildren()) {
-                if (auto e = dynamic_cast<Effect *>(c)) {
-                    parametersY = jmax(parametersY, e->getBottom());
-                }
-            }
-            parametersY += 20;
-
-            for (auto parameter : getParameterChildren()) {
-
-                FlexItem parameterFlexItem(*parameter);
-                
-                parameterFlexItem.width = parameter->getWidth();
-                parameterFlexItem.height = parameter->getHeight();
-                parameterFlexBox.items.add(parameterFlexItem);
-
-                // Set internal port position
-                auto port = parameter->getPort(true);
-                port->setTopLeftPosition(parameter->getX() + getWidth() / 2, getHeight() - 40);*//*
-            }
-
-            parameterFlexBox.flexDirection = FlexBox::Direction::row;
-            parameterFlexBox.flexWrap = FlexBox::Wrap::noWrap;
-            parameterFlexBox.justifyContent = FlexBox::JustifyContent::center;
-            parameterFlexBox.alignContent = FlexBox::AlignContent::center;
-            parameterFlexBox.alignItems = FlexBox::AlignItems::center;
-
-            if (getHeight() < parametersY + 100) {
-                setSize(getWidth(), parametersY + 100);
-            }
-
-            parameterFlexBox.performLayout(Rectangle<int>(20, jmin(parametersY, getHeight() - 100), getWidth() - 40, 100));
-            paramPortsFlexBox.performLayout(Rectangle<int>(5, getHeight() - 30
-                    , getWidth() - 5, 30));
-        }
-    }*/
 
     EffectPositioner::getInstance()->effectResized(this);
 }
@@ -1292,6 +1113,95 @@ Point<int> Effect::getPosWithinParent() {
     auto newY = jlimit<int>(0, getParentHeight() - getHeight(), getY());
 
     return Point<int>(newX, newY);
+}
+
+void Effect::repositionInternals() {
+    // Resize and position members
+
+    //todo editmode: only set size if smaller than necessary
+
+    auto newWidth = 250;
+    auto newHeight = 250;
+    auto parametersY = 0;
+
+    paramPortsFlexBox.items.clear();
+    parameterFlexBox.items.clear();
+
+    parameterFlexBox.flexDirection = editMode ? FlexBox::Direction::row : FlexBox::Direction::column;
+
+    for (auto parameter : getParameterChildren()) {
+        FlexItem paramFlexItem;
+        paramFlexItem.associatedComponent = parameter;
+        paramFlexItem.width = parameter->getWidth();
+        paramFlexItem.height = parameter->getHeight() + 15;
+
+        paramFlexItem.alignSelf = FlexItem::AlignSelf::center;
+
+        parameterFlexBox.items.add(paramFlexItem);
+
+        parametersY = 0;
+        for (auto c : getChildren()) {
+            if (auto e = dynamic_cast<Effect *>(c)) {
+                parametersY = jmax(parametersY, e->getBottom());
+            }
+        }
+        parametersY += 20;
+
+        FlexItem paramPortFlexItem(*parameter->getPort(true));
+        paramPortFlexItem.width = 40;
+        paramPortFlexItem.height = 40;
+        paramPortFlexItem.margin = 0;
+        paramPortFlexItem.alignSelf = FlexItem::AlignSelf::flexStart;
+
+        paramPortsFlexBox.items.add(paramPortFlexItem);
+    }
+
+    if (editMode) {
+        for (auto parameter : getParameterChildren()) {
+            // Set internal port position
+            auto port = parameter->getPort(true);
+            port->setTopLeftPosition(parameter->getX() + getWidth() / 2, getHeight() - 40);
+        }
+
+        if (newHeight < parametersY + 100) {
+            newHeight =  parametersY + 100;
+        }
+
+    } else {
+        if (parameterFlexBox.items.size() > 0) {
+            for (auto c : parameterFlexBox.items) {
+                if (auto parameter = dynamic_cast<Parameter*>(c.associatedComponent)) {
+                    if (dynamic_cast<ComboParameter*>(parameter) != nullptr) {
+                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 30);
+                    } else {
+                        newWidth = jmax(newWidth, c.associatedComponent->getRight() + 10);
+                    }
+                }
+            }
+
+            newWidth += 40;
+        }
+
+        newWidth += 55;
+
+        newHeight = parameterFlexBox.items.size() * 50 + 90;
+
+        int numPortsHorizontally = (newWidth - 10) / 40;
+        int numWraps = ceil(paramPortsFlexBox.items.size() / numPortsHorizontally);
+        auto portsHeight = (60 + numWraps * 40);
+
+        newHeight += numWraps * 40;
+    }
+
+    // Set size to necessary.
+    if (newWidth > getWidth() || newHeight > getHeight()) {
+        setSize(newWidth, newHeight);
+    }
+    resizer.setMinWidthAndHeight(newWidth, newHeight);
+}
+
+void Effect::updateConstrainerSize() {
+
 }
 
 

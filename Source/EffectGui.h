@@ -126,7 +126,7 @@ public:
     }
 
     void paint(Graphics& g) override {
-        //g.drawRect(box);
+        g.drawRect(box);
     }
 
     void mouseDown(const MouseEvent &event) override{
@@ -137,13 +137,14 @@ public:
         //Component::mouseDown(event);
     }
     void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override{
+    void mouseUp(const MouseEvent &event) override {
         setMouseCursor(MouseCursor::ParentCursor);
         Component::mouseUp(event);
     }
 
     void setMinWidthAndHeight(int minWidth, int minHeight) {
-        constrainer.setMinimumSize(minWidth, minHeight);
+        this->minWidth = minWidth;
+        this->minHeight = minHeight;
     }
 
     void parentHierarchyChanged() override {
@@ -178,7 +179,8 @@ private:
     Point<float> startPos;
     Rectangle<float> box;
     ComponentDragger dragger;
-    ComponentBoundsConstrainer constrainer;
+    int minWidth;
+    int minHeight;
 
     MouseCursor prevMouseCursor;
 

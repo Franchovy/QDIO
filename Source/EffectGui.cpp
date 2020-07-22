@@ -22,10 +22,12 @@ SelectHoverObject* SelectHoverObject::dragIntoComponent = nullptr;
 // Resizer methods
 
 void Resizer::mouseDrag(const MouseEvent &event) {
-    dragger.dragComponent(this, event, &constrainer);
+    dragger.dragComponent(this, event, nullptr);
 
-    getParentComponent()->setSize(startPos.x + event.getDistanceFromDragStartX(),
-                                  startPos.y + event.getDistanceFromDragStartY());
+    getParentComponent()->setSize(jmax(minWidth, (int) startPos.x + event.getDistanceFromDragStartX()),
+                                  jmax(minHeight, (int) startPos.y + event.getDistanceFromDragStartY()));
+
+    setPosition();
     Component::mouseDrag(event);
 }
 

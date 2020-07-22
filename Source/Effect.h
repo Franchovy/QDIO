@@ -184,6 +184,9 @@ public:
     void setEditMode(bool isEditMode);
     bool isInEditMode() const { return editMode; }
 
+    void repositionInternals();
+    void updateConstrainerSize();
+
     // =================================================================================
     // Setters and getter functions
     void setProcessor(AudioProcessor* processor);
