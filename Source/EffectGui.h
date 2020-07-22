@@ -142,6 +142,10 @@ public:
         Component::mouseUp(event);
     }
 
+    void setMinWidthAndHeight(int minWidth, int minHeight) {
+        constrainer.setMinimumSize(minWidth, minHeight);
+    }
+
     void parentHierarchyChanged() override {
         setPosition();
         Component::parentHierarchyChanged();
@@ -174,6 +178,7 @@ private:
     Point<float> startPos;
     Rectangle<float> box;
     ComponentDragger dragger;
+    ComponentBoundsConstrainer constrainer;
 
     MouseCursor prevMouseCursor;
 
