@@ -73,10 +73,7 @@ public:
         neutral = 1,
         stopping = 2
     }
-    //todo change usage of appState to effectScene->state
     static appState;
-
-    AppState state = neutral;
 
 protected:
     static EffectBase* effectScene;

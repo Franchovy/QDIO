@@ -57,10 +57,19 @@ bool EffectTree::createEffect(ValueTree tree) {
     }
 
     auto effect = new Effect();
-    effect->state = Effect::loading;
+    // FIELDS:
+    // componentListener (?)
+    // processorID
+    // [ports]
+    // editMode
+    // name
+    // [parameters]
+    // parent
+    // bounds (pos, size)
+    //todo POST OPS
+
     tree.setProperty(IDs::component, effect, nullptr);
     effect->addComponentListener(this);
-
 
     int id = tree.getProperty(Effect::IDs::processorID);
     if (! tree.hasProperty(Effect::IDs::processorID)) {
@@ -217,6 +226,8 @@ bool EffectTree::createEffect(ValueTree tree) {
 
 
     //==============================================================
+    //todo POST OPS
+
     // Set up Menu
     effect->setupMenu();
 
@@ -815,7 +826,6 @@ EffectBase* EffectTree::loadEffect(ValueTree &parentTree, const ValueTree &loadD
 
     // Set Effect state to neutral
     auto effect = getFromTree<EffectBase>(copy);
-    effect->state = Effect::neutral;
 
     return dynamic_cast<EffectBase*>(effect);
 }
