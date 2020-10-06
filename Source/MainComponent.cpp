@@ -12,12 +12,12 @@
 #include "MainComponent.h"
 
 MainComponent::MainComponent()
-    : main()
+    : effectScene()
     , effectTree(EFFECT_ID)
-    , deviceManager(main.getDeviceManager())
+    , deviceManager(effectScene.getDeviceManager())
     , settingsMenu(deviceManager)
-    , audioGraph(main.getAudioGraph())
-    , audioPlayer(main.getAudioPlayer())
+    , audioGraph(effectScene.getAudioGraph())
+    , audioPlayer(effectScene.getAudioPlayer())
 {
     auto& desktop = Desktop::getInstance();
     // Set size to full screen
@@ -35,9 +35,9 @@ MainComponent::MainComponent()
     setBounds(appArea);
 
     // EffectScene component
-    setViewedComponent(&main, false);
-    addAndMakeVisible(&main);
-    main.setBounds(getLocalBounds());
+    setViewedComponent(&effectScene, false);
+    addAndMakeVisible(&effectScene);
+    effectScene.setBounds(getLocalBounds());
 
 
 #ifdef DEBUG_APPEARANCE
@@ -46,7 +46,7 @@ MainComponent::MainComponent()
 #endif
 
 
-    main.view = getViewArea();
+    effectScene.view = getViewArea();
 
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
     settingsButton.setImages(false, true, false,
@@ -75,7 +75,7 @@ MainComponent::MainComponent()
         if (selectedIndex >= 0) {
             auto effectName = effectSelectMenu.getItemText(selectedIndex);
             auto loadData = EffectLoader::loadEffect(effectName);
-            main.menuCreateEffect(loadData);
+            effectScene.menuCreateEffect(loadData);
 
             effectSelectMenu.setText("Effects");
         }
@@ -89,7 +89,7 @@ MainComponent::MainComponent()
         auto selectedIndex = templateMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
             auto templateName = templateMenu.getItemText(selectedIndex);
-            main.loadNewTemplate(templateName);
+            effectScene.loadNewTemplate(templateName);
 
             templateMenu.setText("Template");
         }
@@ -104,7 +104,7 @@ MainComponent::MainComponent()
     toolBoxMenu.onChange = [=] {
         auto selectedIndex = toolBoxMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
-            main.createProcessor(selectedIndex);
+            effectScene.createProcessor(selectedIndex);
 
             toolBoxMenu.setText("ToolBox");
         }
@@ -124,9 +124,9 @@ MainComponent::MainComponent()
 }
 
 MainComponent::~MainComponent() {
-    main.storeState();
+    effectScene.storeState();
 
-    auto audioState = main.getDeviceManager().createStateXml();
+    auto audioState = effectScene.getDeviceManager().createStateXml();
 
     getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
     getAppProperties().getUserSettings()->saveIfNeeded();
@@ -135,7 +135,7 @@ MainComponent::~MainComponent() {
 bool MainComponent::keyPressed(const KeyPress &key) {
     std::cout << "key pressed" << newLine;
         
-    return main.keyPressed(key);
+    return effectScene.keyPressed(key);
 }
 
 void MainComponent::move(int deltaX, int deltaY) {
@@ -169,16 +169,16 @@ void MainComponent::timerCallback() {
 
 void MainComponent::changeListenerCallback(ChangeBroadcaster *source) {
     /*deviceManager.getCurrentAudioDevice()->stop();
-    main.updateChannels();
+    effectScene.updateChannels();
     deviceManager.getCurrentAudioDevice()->start(&audioPlayer);*/
 }
 /*
 void MainComponent::mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel) { 
-    //main.setBounds(main.getBoundsInParent().expanded(wheel.deltaY));
+    //effectScene.setBounds(effectScene.getBoundsInParent().expanded(wheel.deltaY));
 }*/
 
 void MainComponent::resized() {
-    main.setBounds(getLocalBounds());
+    effectScene.setBounds(getLocalBounds());
     settingsButton.setBounds(getWidth() - 180, 80, 80, 80);
 
     auto menu1 = FlexItem(settingsButton);
@@ -245,7 +245,7 @@ void MainComponent::handleCommandMessage(int commandId) {
 
 void MainComponent::populateToolBoxMenu() {
     int i = 0;
-    for (auto item : main.getProcessorNames()) {
+    for (auto item : effectScene.getProcessorNames()) {
         toolBoxMenu.addItem(item, ++i);
     }
 }

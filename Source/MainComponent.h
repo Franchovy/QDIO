@@ -50,7 +50,7 @@ private:
 
     void populateEffectMenu(PopupMenu& menu);
 
-    EffectScene main;
+    EffectScene effectScene;
     AudioProcessorGraph& audioGraph;
     AudioDeviceManager& deviceManager;
     AudioProcessorPlayer& audioPlayer;
