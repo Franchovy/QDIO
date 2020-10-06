@@ -73,7 +73,6 @@ public:
     // todo methods to move to EffectManager class
     ValueTree getUsefulSelection();
 
-
     // Access methods
     ValueTree getTree(GuiObject* component);
     ValueTree findTree(ValueTree treeToSearch, GuiObject* component);

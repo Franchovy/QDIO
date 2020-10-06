@@ -20,7 +20,6 @@ const Identifier ConnectionLine::IDs::OutPort = "outport";
 const Identifier ConnectionLine::IDs::AudioConnection = "audioConnection";
 
 
-
 ConnectionLine::ConnectionLine() {
     setRepaintsOnMouseActivity(true);
     setEnabled(false);
@@ -82,11 +81,7 @@ bool ConnectionLine::hitTest(int x, int y) {
     auto d2 = line.getEnd().getDistanceFrom(Point<int>(x,y));
     auto d = d1 + d2 - line.getLength();
 
-    if (d < 3) {
-        return true;
-    } else {
-        return false;
-    }
+    return d < 3;
 }
 
 
@@ -174,8 +169,8 @@ void ConnectionLine::mouseUp(const MouseEvent &event) {
     getParentComponent()->removeMouseListener(this);
 
     if (event.getDistanceFromDragStart() > 15) {
-        if (inPort != nullptr && outPort != nullptr) {
-            //connect();
+        if (inPort == nullptr || outPort == nullptr) {
+
         } else {
             // Cancel drag
             getParentComponent()->removeChildComponent(this);
