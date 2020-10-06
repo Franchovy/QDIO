@@ -56,7 +56,6 @@ public:
 
     static void disconnectAudio(const ConnectionLine& connectionLine);
     static bool connectAudio(const ConnectionLine& connectionLine);
-    static Array<AudioProcessorGraph::Connection> getAudioConnection(const ConnectionLine& connectionLine);
 
     Array<ConnectionLine*> getConnectionsToThis(bool isInputConnection, ConnectionLine::Type connectionType);
     Array<ConnectionLine*> getConnectionsToThis();

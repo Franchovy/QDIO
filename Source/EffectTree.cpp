@@ -485,15 +485,6 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
         //fixme remove this
         component->addComponentListener(this);
 
-        // Type-specific operations
-        /*if (auto line = dynamic_cast<ConnectionLine *>(component)) {
-            line->connect();
-        }
-        if (childWhichHasBeenAdded.hasType(PARAMETER_ID)) {
-            std::cout << "add parameter" << newLine;
-        }*/
-
-
         if (parent != nullptr && parent != component->getParentComponent()) {
             parent->addAndMakeVisible(component);
         }
@@ -505,12 +496,9 @@ void EffectTree::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhic
 void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved,
                                            int indexFromWhichChildWasRemoved) {
 
-
     if (childWhichHasBeenRemoved.hasProperty(IDs::component)) {
         auto component = getFromTree<Component>(childWhichHasBeenRemoved);
         auto parent = component->getParentComponent();
-
-        //component->removeComponentListener(this);
 
         auto parentFromTree = getFromTree<Component>(parentTree);
 
@@ -894,8 +882,6 @@ bool EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
         parameter->getPort(false)->setComponentID(portID);
     }
 
-    //effect->parameterArray.add(parameter);
-
     if (effect->isIndividual()) {
         parameter->setEditMode(false);
     } else {
@@ -911,22 +897,18 @@ bool EffectTree::loadParameter(Effect* effect, ValueTree parameterData) {
     }
 
     // Set value
-
     if (param != nullptr && name != "Device") {
         parameter->setParameterValueAsync(value);
     }
 
     // Add ValueTree and Component to system
-
     parameterData.setProperty(IDs::component, parameter.get(), nullptr);
 
     effect->addAndMakeVisible(parameter.get());
 
     // Set position
-
     int x = parameterData.getProperty("x");
     int y = parameterData.getProperty("y");
-
     parameter->setTopLeftPosition(x, y);
 
     return true;

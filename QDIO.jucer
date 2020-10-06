@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="XyrfN6" name="QDIO" projectType="guiapp" compilerFlagSchemes="NewScheme"
-              defines="JUCE_COREGRAPHICS_DRAW_ASYNC=1" displaySplashScreen="1"
-              jucerFormatVersion="1">
+              defines="JUCE_COREGRAPHICS_DRAW_ASYNC=1 " displaySplashScreen="1"
+              jucerFormatVersion="1" headerPath="-I/usr/include/freetype2">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{12B49D5D-5299-4AF7-0AA8-7A4F218B6BAB}" name="Audio-Effects">
       <FILE id="k5Nj8s" name="Flanger.h" compile="0" resource="0" file="Source/Audio-Effects/Flanger.h"/>
