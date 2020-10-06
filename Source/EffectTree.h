@@ -85,12 +85,14 @@ public:
 
     void removeListenersRecursively(Component* component);
 
+    //todo move to audio
+    static Array<std::function<void()>> makeProcessorArray;
+    static std::unique_ptr<AudioProcessor> newProcessor;
+
 private:
     EffectBase* effectScene;
 
     StringArray processorNames;
-    Array<std::function<void()>> makeProcessorArray;
-    std::unique_ptr<AudioProcessor> newProcessor = nullptr;
 
     String currentTemplateName;
 

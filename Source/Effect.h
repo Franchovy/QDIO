@@ -114,7 +114,8 @@ private:
 class Effect : public EffectBase, public MenuItem
 {
 public:
-    Effect();
+    Effect(String name, int processorID, bool editMode,
+            int x, int y, int w, int h); //todo ports and parameters
 
     void setupTitle();
     void setupMenu();
@@ -198,6 +199,7 @@ public:
 
     struct IDs {
         static const Identifier EFFECT_ID;
+        static const Identifier editMode;
         //static const Identifier pos;
         static const Identifier x;
         static const Identifier y;

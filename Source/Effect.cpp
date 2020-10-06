@@ -14,6 +14,7 @@
 #include "IDs"
 #include "Ports.h"
 #include "EffectPositioner.h"
+#include "EffectTree.h"
 
 
 // Static members
@@ -33,6 +34,7 @@ const Identifier Effect::IDs::initialised = "initialised";
 const Identifier Effect::IDs::name = "name";
 const Identifier Effect::IDs::connections = "connections";
 const Identifier Effect::IDs::EFFECT_ID = "effect";
+const Identifier Effect::IDs::editMode = "editMode";
 
 EffectBase* EffectBase::effectScene = nullptr;
 
@@ -310,8 +312,36 @@ void EffectBase::createGroupEffect() {
 
 //======================================================================================
 
-Effect::Effect() : MenuItem(2)
+Effect::Effect(String name, int processorID, bool editMode,
+               int x, int y, int w, int h) : MenuItem(2)
 {
+    //=======================================================================
+    // Name
+    setName(name);
+
+    //=======================================================================
+    // Processor ID
+    if (processorID > 0) {
+        // Individual Effect
+        std::unique_ptr<AudioProcessor> newProcessor;
+
+        EffectTree::makeProcessorArray[processorID-1]();
+        newProcessor = move(EffectTree::newProcessor);
+
+        auto node = ConnectionGraph::getInstance()->addNode(move(newProcessor));
+        setNode(node);
+        // Create from node:
+        setProcessor(node->getProcessor());
+    }
+
+    //=======================================================================
+    // EditMode
+    setEditMode(editMode);
+
+    //=======================================================================
+    // Bounds
+    setBounds(x, y, h, w);
+
     addAndMakeVisible(resizer);
     resizer.setAlwaysOnTop(true);
 

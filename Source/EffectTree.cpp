@@ -33,6 +33,8 @@
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
+Array<std::function<void()>> EffectTree::makeProcessorArray;
+std::unique_ptr<AudioProcessor> EffectTree::newProcessor;
 
 
 EffectTree::EffectTree(EffectBase* effectScene)
@@ -52,41 +54,34 @@ EffectTree::EffectTree(EffectBase* effectScene)
 bool EffectTree::createEffect(ValueTree tree) {
     bool success = true;
 
-    if (! tree.getParent().isValid()) {
-        effectTree.appendChild(tree, undoManager);
-    }
+    auto effect = new Effect(
+            tree.getProperty(Effect::IDs::name, "").toString(),
+            tree.getProperty(Effect::IDs::processorID, 0),
+            tree.getProperty(Effect::IDs::editMode, false),
+            tree.getProperty(Effect::IDs::x, 0),
+            tree.getProperty(Effect::IDs::y, 0),
+            tree.getProperty(Effect::IDs::w, 200),
+            tree.getProperty(Effect::IDs::h, 200)
+        );
 
-    auto effect = new Effect();
     // FIELDS:
-    // componentListener (?)
-    // processorID
-    // [ports]
-    // editMode
-    // name
-    // [parameters]
-    // parent
-    // bounds (pos, size)
+    //todo [ports]
+    //todo [parameters]
     //todo POST OPS
 
+    //=======================================================================
+    // Set ParentComponent
+    auto& parent = tree.getParent().isValid() ? *getFromTree<EffectBase>(tree.getParent()) : *effectScene;
+    parent.addAndMakeVisible(effect);
+
+    if (! tree.getParent().isValid()) {
+        jassert(tree.getParent() == effectTree);
+        //effectTree.appendChild(tree, undoManager);
+    }
+
     tree.setProperty(IDs::component, effect, nullptr);
+
     effect->addComponentListener(this);
-
-    int id = tree.getProperty(Effect::IDs::processorID);
-    if (! tree.hasProperty(Effect::IDs::processorID)) {
-        id = 0;
-    }
-
-    if (id > 0) {
-        // Individual Effect
-        std::unique_ptr<AudioProcessor> newProcessor;
-
-        newProcessor = createProcessor(id);
-
-        auto node = ConnectionGraph::getInstance()->addNode(move(newProcessor));
-        effect->setNode(node);
-        // Create from node:
-        effect->setProcessor(node->getProcessor());
-    }
 
     //======================================================================
     // Set up Ports
@@ -114,27 +109,6 @@ bool EffectTree::createEffect(ValueTree tree) {
                 success &= loadPort(child);
             }
         }
-    }
-
-    //==============================================================
-    // Set edit mode
-    if (tree.hasProperty("editMode")) {
-        bool editMode = tree.getProperty("editMode");
-        effect->setEditMode(editMode);
-    } else {
-        effect->setEditMode(! effect->isIndividual());
-    }
-
-    //==============================================================
-    // Set name
-    if (! tree.hasProperty(Effect::IDs::name)) {
-        if (effect->isIndividual()) {
-            effect->setName(effect->getProcessor()->getName());
-        } else {
-            effect->setName("Effect");
-        }
-    } else {
-        effect->setName(tree.getProperty(Effect::IDs::name).toString());
     }
 
     //==============================================================
@@ -184,32 +158,8 @@ bool EffectTree::createEffect(ValueTree tree) {
     }
 
     //==============================================================
-    // If loading has messed up, get out now
-    if (! success) {
-        return false;
-    }
-    
-    
-    //==============================================================
-    // Set parent component
-
-    auto parentTree = tree.getParent();
-    if (parentTree.isValid()) {
-        auto parent = getFromTree<EffectBase>(parentTree);
-        parent->addAndMakeVisible(effect);
-    }
-
-    //==============================================================
-    // Set up bounds
-
-    int x = tree.getProperty(Effect::IDs::x, 0);
-    int y = tree.getProperty(Effect::IDs::y, 0);
-    int w = tree.getProperty(Effect::IDs::w, 200);
-    int h = tree.getProperty(Effect::IDs::h, 200);
-
-    // Increase to fit ports and parameters
-
-    for (auto p : parameterChildren) {
+    // Increase to fit ports and parameters //todo automatically do this in effect
+    /*for (auto p : parameterChildren) {
         auto parameter = getFromTree<Parameter>(p);
         auto parameterBounds = parameter->getBounds();
 
@@ -222,7 +172,7 @@ bool EffectTree::createEffect(ValueTree tree) {
 
         w = jmax(portBounds.getX() + portBounds.getWidth(), w);
         h = jmax(portBounds.getY() + portBounds.getHeight(), h);
-    }
+    }*/
 
 
     //==============================================================
@@ -235,7 +185,7 @@ bool EffectTree::createEffect(ValueTree tree) {
     effect->setupTitle();
 
     // Set new bounds
-    effect->setBounds(x, y, w, h);
+    //effect->setBounds(x, y, w, h);
     //effect->setTopLeftPosition(x,y);
 
     if (effect->isInEditMode()) {
@@ -451,7 +401,7 @@ void EffectTree::componentBeingDeleted(Component &component) {
  * @return
  */
 ValueTree EffectTree::getTree(GuiObject* component) {
-    if (effectTree.getProperty(IDs::component) == component) {
+    if (effectTree.getProperty(IDs::component) == component) { //fixme RefCount needs to be positive
         return effectTree;
     }
 
