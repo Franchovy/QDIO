@@ -89,14 +89,13 @@
       <FILE id="mbjf0W" name="IDs" compile="0" resource="1" file="Source/IDs"/>
       <FILE id="e9lYZq" name="Main.cpp" compile="1" resource="1" file="Source/Main.cpp"
             xcodeResource="1"/>
+      <FILE id="joL7fy" name="ParameterMod.cpp" compile="1" resource="0"
+            file="Source/Audio-Effects/ParameterMod.cpp"/>
+      <FILE id="sNEbm2" name="ParameterMod.h" compile="0" resource="0" file="Source/Audio-Effects/ParameterMod.h"/>
       <FILE id="NBQqHO" name="Parameters.cpp" compile="1" resource="0" file="Source/Parameters.cpp"/>
       <FILE id="xjFm5q" name="Parameters.h" compile="0" resource="0" file="Source/Parameters.h"/>
       <FILE id="TbLJLc" name="Ports.cpp" compile="1" resource="0" file="Source/Ports.cpp"/>
       <FILE id="EK768G" name="Ports.h" compile="0" resource="0" file="Source/Ports.h"/>
-      <FILE id="bwlno4" name="EffectSelectMenu.cpp" compile="1" resource="0"
-            file="Source/EffectSelectMenu.cpp"/>
-      <FILE id="tcNVmT" name="EffectSelectMenu.h" compile="0" resource="0"
-            file="Source/EffectSelectMenu.h"/>
       <FILE id="VQHX24" name="EffectLoader.cpp" compile="1" resource="0"
             file="Source/EffectLoader.cpp"/>
       <FILE id="j7tcSe" name="EffectLoader.h" compile="0" resource="0" file="Source/EffectLoader.h"/>
@@ -108,20 +107,10 @@
             file="Source/ConnectionGraph.cpp"/>
       <FILE id="mAQbaJ" name="ConnectionGraph.h" compile="0" resource="0"
             file="Source/ConnectionGraph.h"/>
-      <FILE id="joL7fy" name="ParameterMod.cpp" compile="1" resource="0"
-            file="Source/Audio-Effects/ParameterMod.cpp"/>
-      <FILE id="sNEbm2" name="ParameterMod.h" compile="0" resource="0" file="Source/Audio-Effects/ParameterMod.h"/>
       <FILE id="CAyaqK" name="EffectPositioner.cpp" compile="1" resource="0"
             file="Source/EffectPositioner.cpp"/>
       <FILE id="mpkNK0" name="EffectPositioner.h" compile="0" resource="0"
             file="Source/EffectPositioner.h"/>
-      <FILE id="gXMmBf" name="UItoLogicMessager.cpp" compile="1" resource="0"
-            file="Source/UItoLogicMessager.cpp"/>
-      <FILE id="QmyB0G" name="UItoLogicMessager.h" compile="0" resource="0"
-            file="Source/UItoLogicMessager.h"/>
-      <FILE id="ZcDPPK" name="EffectManager.cpp" compile="1" resource="0"
-            file="Source/EffectManager.cpp"/>
-      <FILE id="Bs7Rgm" name="EffectManager.h" compile="0" resource="0" file="Source/EffectManager.h"/>
       <FILE id="FcM0xP" name="EffectScene.cpp" compile="1" resource="1" file="Source/EffectScene.cpp"
             xcodeResource="1"/>
       <FILE id="kR0kwB" name="EffectScene.h" compile="1" resource="1" file="Source/EffectScene.h"

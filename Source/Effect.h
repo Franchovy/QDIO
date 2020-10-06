@@ -9,14 +9,13 @@
 */
 
 #include <JuceHeader.h>
-#include "EffectLoader.h"
+#include "EffectLoader.h" //todo remove
 #include "EffectGui.h"
 #include "ConnectionLine.h"
 #include "Parameters.h"
 #include "Ports.h"
 #include "MenuItem.h"
-#include "ConnectionGraph.h"
-#include "EffectManager.h"
+#include "ConnectionGraph.h" //todo remove
 
 
 #pragma once

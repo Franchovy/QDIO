@@ -15,7 +15,6 @@
 #include "EffectScene.h"
 #include "IDs"
 #include "Settings.h"
-#include "EffectSelectMenu.h"
 
 /**
  * This is the class that contains the main / static stuff. The EffectScene is part of the effect tree,

@@ -101,7 +101,6 @@ private:
     // EffectBase static stuff
     EffectTree tree;
     EffectPositioner effectPositioner;
-    EffectManager effectManager;
 
     ParameterUpdater parameterUpdater;
 
