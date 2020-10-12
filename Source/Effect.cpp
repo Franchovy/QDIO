@@ -362,6 +362,9 @@ Effect::Effect(String name, int processorID, bool editMode,
         outputPortFlexBox.justifyContent = inputPortFlexBox.justifyContent = FlexBox::JustifyContent::center;
 
     title.setBounds(30,30,200, title.getFont().getHeight());
+
+    //===================================================
+    //
 }
 
 void Effect::setupTitle() {
@@ -479,13 +482,7 @@ void Effect::setupMenu() {
 
 Effect::~Effect()
 {
-    //audioGraph->removeAllChangeListeners();
-
-    /*for (auto p : parameterArray) {
-        // Remove listeners
-        removeChildComponent(p);
-        removeChildComponent(p->getPort(true));
-    }*/
+    reference.masterReference.clear();
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin

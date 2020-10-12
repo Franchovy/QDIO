@@ -114,6 +114,12 @@ private:
 class Effect : public EffectBase, public MenuItem
 {
 public:
+    struct EffectPointer : public ReferenceCountedObject
+    {
+        WeakReference<Effect>::Master masterReference;
+        friend class WeakReference<Effect>;
+    } reference;
+
     Effect(String name, int processorID, bool editMode,
             int x, int y, int w, int h); //todo ports and parameters
 
@@ -121,6 +127,8 @@ public:
     void setupMenu();
 
     ~Effect() override;
+
+
 
     void resized() override;
     void paint(Graphics& g) override;
@@ -131,8 +139,6 @@ public:
     void childrenChanged() override;
 
     Point<int> getPosWithinParent();
-
-    using Ptr = ReferenceCountedObjectPtr<Effect>;
 
     void mouseDrag(const MouseEvent &event) override;
     void mouseDown(const MouseEvent &event) override;
@@ -253,6 +259,8 @@ private:
     AudioProcessorGraph::Node::Ptr node = nullptr;
 
     //============================================================
+
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Effect)
 
