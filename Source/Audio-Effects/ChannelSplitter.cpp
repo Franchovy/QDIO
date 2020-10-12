@@ -10,7 +10,7 @@
 
 #include "ChannelSplitter.h"
 
-ChannelSplitterProcessor::ChannelSplitterProcessor()
+ChannelSplitterAudioProcessor::ChannelSplitterAudioProcessor()
         : BaseEffect("Channel Splitter")
         , paramNumInputs(new AudioParameterChoice("Num Input Channels", "numInChans", {"1", "2"}, 1))
         , paramNumOutputs(new AudioParameterChoice("Num Output Channels", "numOutChans", {"1","2"}, 1))
@@ -22,19 +22,19 @@ ChannelSplitterProcessor::ChannelSplitterProcessor()
 
 }
 
-ChannelSplitterProcessor::~ChannelSplitterProcessor() {
+ChannelSplitterAudioProcessor::~ChannelSplitterAudioProcessor() {
 
 }
 
-void ChannelSplitterProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+void ChannelSplitterAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
 
 }
 
-void ChannelSplitterProcessor::releaseResources() {
+void ChannelSplitterAudioProcessor::releaseResources() {
 
 }
 
-void ChannelSplitterProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &) {
+void ChannelSplitterAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &) {
     if (! *bypass) {
         int numInputChannels = paramNumOutputs->getIndex() + 1;
         int numOutputChannels = paramNumInputs->getIndex() + 1;

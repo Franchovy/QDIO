@@ -9,27 +9,8 @@
 */
 
 #include "EffectTree.h"
-#include "Audio-Effects/Chorus.h"
-#include "Audio-Effects/Delay.h"
-#include "Audio-Effects/CompressorExpander.h"
-#include "Audio-Effects/ChannelSplitter.h"
-#include "Audio-Effects/Distortion.h"
-#include "Audio-Effects/Flanger.h"
-#include "Audio-Effects/Gain.h"
-#include "Audio-Effects/Panning.h"
-#include "Audio-Effects/ParametricEQ.h"
-#include "Audio-Effects/Phaser.h"
-#include "Audio-Effects/PitchShift.h"
-#include "Audio-Effects/Reverb.h"
-#include "Audio-Effects/RingModulation.h"
-#include "Audio-Effects/RobotizationWhisperization.h"
-#include "Audio-Effects/Level.h"
-#include "Audio-Effects/Tremolo.h"
-#include "Audio-Effects/WahWah.h"
-#include "Audio-Effects/IOEffects.h"
-#include "Audio-Effects/Vibrato.h"
-#include "Audio-Effects/Oscillator.h"
-#include "Audio-Effects/ParameterMod.h"
+#include "BaseEffects.h"
+
 
 Identifier EffectTree::IDs::component = "component";
 Identifier PORT_ID = "port";
@@ -1038,8 +1019,8 @@ std::unique_ptr<AudioProcessor> EffectTree::createProcessor(int processorID) {
 void EffectTree::setupProcessors() {
     processorNames = {
         "Empty Effect"
-         , "Input Device"
-         , "Output Device"
+         , "Input"
+         , "Output"
          , "Distortion"
          , "Delay"
          , "Reverb"
@@ -1062,28 +1043,6 @@ void EffectTree::setupProcessors() {
          , "Parameter Mod"
     };
 
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(true); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<IOEffect>(false); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<DistortionAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<DelayAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<ReverbEffect>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<ChorusAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<CompressorExpanderAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<ChannelSplitterProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<FlangerAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<GainAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<PanningAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<ParametricEQAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<PhaserAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<RingModulationAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<PitchShiftAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<RobotizationWhisperizationAudioProcessor>(); });
-    makeProcessorArray.add( [=] { newProcessor = std::make_unique<LevelAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<TremoloAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<WahWahAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<VibratoAudioProcessor>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<Oscillator>(); });
-    makeProcessorArray.add([=] { newProcessor = std::make_unique<ParameterMod>(); });
 }
 
 /**

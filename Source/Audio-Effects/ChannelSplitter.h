@@ -15,13 +15,13 @@
 
 //==============================================================================
 
-class ChannelSplitterProcessor : public BaseEffect
+class ChannelSplitterAudioProcessor : public BaseEffect
 {
 public:
     //==============================================================================
 
-    ChannelSplitterProcessor();
-    ~ChannelSplitterProcessor();
+    ChannelSplitterAudioProcessor();
+    ~ChannelSplitterAudioProcessor() override;
 
     //==============================================================================
 
@@ -38,5 +38,5 @@ private:
     int numOutputChannels;
     //==============================================================================
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChannelSplitterProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChannelSplitterAudioProcessor)
 };

@@ -5,6 +5,9 @@
               jucerFormatVersion="1" headerPath="-I/usr/include/freetype2">
   <MAINGROUP id="T8wAiB" name="QDIO">
     <GROUP id="{12B49D5D-5299-4AF7-0AA8-7A4F218B6BAB}" name="Audio-Effects">
+      <FILE id="mAxyW2" name="ProcessorLib.cpp" compile="1" resource="0"
+            file="Source/Audio-Effects/ProcessorLib.cpp"/>
+      <FILE id="QGlqBY" name="ProcessorLib.h" compile="0" resource="0" file="Source/Audio-Effects/ProcessorLib.h"/>
       <FILE id="k5Nj8s" name="Flanger.h" compile="0" resource="0" file="Source/Audio-Effects/Flanger.h"/>
       <FILE id="tejZxt" name="Flanger.cpp" compile="1" resource="0" file="Source/Audio-Effects/Flanger.cpp"/>
       <FILE id="s7T9Hb" name="ChannelSplitter.cpp" compile="1" resource="0"

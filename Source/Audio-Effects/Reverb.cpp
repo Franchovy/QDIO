@@ -11,7 +11,7 @@
 #include "Reverb.h"
 
 
-ReverbEffect::ReverbEffect()
+ReverbAudioProcessor::ReverbAudioProcessor()
     : BaseEffect("Reverb")
     , roomSize(new AudioParameterFloat("Room Size", "roomsize",
             NormalisableRange<float>(0.0f, 1.0f, 0.01f), 0.3f))
@@ -47,7 +47,7 @@ ReverbEffect::ReverbEffect()
 
 }
 
-void ReverbEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
+void ReverbAudioProcessor::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) {
     reverbProcessor.reset();
 
     reverbParameters.width = *width;
@@ -60,11 +60,11 @@ void ReverbEffect::prepareToPlay(double sampleRate, int maximumExpectedSamplesPe
     reverbProcessor.setParameters(reverbParameters);
 }
 
-void ReverbEffect::releaseResources() {
+void ReverbAudioProcessor::releaseResources() {
     reverbProcessor.reset();
 }
 
-void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
+void ReverbAudioProcessor::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMessages) {
     if (! bypass->get()) {
         if (! *stereo) {
             reverbProcessor.processMono(buffer.getWritePointer(0), buffer.getNumSamples());
@@ -80,7 +80,7 @@ void ReverbEffect::processBlock(AudioBuffer<float> &buffer, MidiBuffer &midiMess
     }*/
 }
 
-void ReverbEffect::handleAsyncUpdate() {
+void ReverbAudioProcessor::handleAsyncUpdate() {
     bool parametersChanged = false;
     if (reverbParameters.width != *width) {
         reverbParameters.width = *width;
@@ -112,7 +112,7 @@ void ReverbEffect::handleAsyncUpdate() {
     }
 }
 
-void ReverbEffect::parameterValueChanged(int parameterIndex, float newValue) {
+void ReverbAudioProcessor::parameterValueChanged(int parameterIndex, float newValue) {
     triggerAsyncUpdate();
 }
 

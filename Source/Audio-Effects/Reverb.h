@@ -13,10 +13,10 @@
 #include <JuceHeader.h>
 #include "../Source/BaseEffects.h"
 
-class ReverbEffect : public BaseEffect
+class ReverbAudioProcessor : public BaseEffect
 {
 public:
-    ReverbEffect();
+    ReverbAudioProcessor();
 
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
     void releaseResources() override;
@@ -38,5 +38,5 @@ private:
     Reverb::Parameters reverbParameters;
     Reverb reverbProcessor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReverbEffect)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReverbAudioProcessor)
 };

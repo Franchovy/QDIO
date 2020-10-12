@@ -28,6 +28,8 @@ public:
         addParameter(bypass);
     }
 
+    virtual ~BaseEffect() override {};
+
     //=========================================================================
     void addOutputParameter(AudioProcessorParameter* parameter);
     Array<AudioProcessorParameter*> outputParameters;

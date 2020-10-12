@@ -15,6 +15,7 @@
 #include "Ports.h"
 #include "EffectPositioner.h"
 #include "EffectTree.h"
+#include "Audio-Effects/ProcessorLib.h"
 
 
 // Static members
@@ -325,8 +326,7 @@ Effect::Effect(String name, int processorID, bool editMode,
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
 
-        EffectTree::makeProcessorArray[processorID-1]();
-        newProcessor = move(EffectTree::newProcessor);
+        newProcessor = ProcessorLib::createProcessor(processorID-1);
 
         auto node = ConnectionGraph::getInstance()->addNode(move(newProcessor));
         setNode(node);
