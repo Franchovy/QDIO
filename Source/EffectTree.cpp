@@ -204,7 +204,6 @@ void EffectTree::componentMovedOrResized(Component &component, bool wasMoved, bo
             }
 
             if (wasMoved) {
-                
                 getTree(effect).setProperty(Effect::IDs::x, effect->getX(), undoManager);
                 getTree(effect).setProperty(Effect::IDs::y, effect->getY(), undoManager);
             }
@@ -447,7 +446,6 @@ void EffectTree::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWh
         if (parent != nullptr && parent == parentFromTree) {
             parent->removeChildComponent(component);
         }
-
     }
     Listener::valueTreeChildRemoved(parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
 }

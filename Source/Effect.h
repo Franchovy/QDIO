@@ -16,6 +16,7 @@
 #include "Ports.h"
 #include "MenuItem.h"
 #include "ConnectionGraph.h" //todo remove
+#include "WeakReferenceContainer.h"
 
 
 #pragma once
@@ -114,21 +115,15 @@ private:
 class Effect : public EffectBase, public MenuItem
 {
 public:
-    struct EffectPointer : public ReferenceCountedObject
-    {
-        WeakReference<Effect>::Master masterReference;
-        friend class WeakReference<Effect>;
-    } reference;
-
     Effect(String name, int processorID, bool editMode,
             int x, int y, int w, int h); //todo ports and parameters
+
+    ReferenceCountedObjectPtr<Effect> masterReference;
 
     void setupTitle();
     void setupMenu();
 
     ~Effect() override;
-
-
 
     void resized() override;
     void paint(Graphics& g) override;

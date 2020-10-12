@@ -195,8 +195,8 @@ EffectScene::EffectScene()
 
     Thread::sleep(1000);
 
-    appState = loading;
-    startTimer(500);
+    //appState = loading;
+    //startTimer(500);
 }
 
 void EffectScene::timerCallback() {

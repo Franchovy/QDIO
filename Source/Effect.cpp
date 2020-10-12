@@ -314,7 +314,9 @@ void EffectBase::createGroupEffect() {
 //======================================================================================
 
 Effect::Effect(String name, int processorID, bool editMode,
-               int x, int y, int w, int h) : MenuItem(2)
+               int x, int y, int w, int h) :
+               MenuItem(2),
+               masterReference(this)
 {
     //=======================================================================
     // Name
@@ -326,7 +328,7 @@ Effect::Effect(String name, int processorID, bool editMode,
         // Individual Effect
         std::unique_ptr<AudioProcessor> newProcessor;
 
-        newProcessor = ProcessorLib::createProcessor(processorID-1);
+        newProcessor = ProcessorLib::createProcessor(processorID);
 
         auto node = ConnectionGraph::getInstance()->addNode(move(newProcessor));
         setNode(node);
@@ -365,6 +367,11 @@ Effect::Effect(String name, int processorID, bool editMode,
 
     //===================================================
     //
+}
+
+Effect::~Effect()
+{
+    masterReference = nullptr;
 }
 
 void Effect::setupTitle() {
@@ -478,11 +485,6 @@ void Effect::setupMenu() {
     addMenuItem(editMenu, portSubMenuItem);
     addMenuItem(editMenu, addParamSubMenuItem);
 
-}
-
-Effect::~Effect()
-{
-    reference.masterReference.clear();
 }
 
 // Processor hasEditor? What to do if processor is a predefined plugin
