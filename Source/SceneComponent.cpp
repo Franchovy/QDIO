@@ -17,13 +17,29 @@ SceneComponent::SceneComponent() : Component() {
 
 }
 
+void SceneComponent::setHoverable(bool isHoverable) {
+    setRepaintsOnMouseActivity(isHoverable);
+    hoverable = isHoverable;
+}
+
+void SceneComponent::setSelectable(bool isSelectable) {
+    selectable = isSelectable;
+    if (! isSelectable) {
+        selectedComponents.removeObject(this);
+    }
+}
+
+void SceneComponent::setDraggable(bool isDraggable) {
+    this->isDraggable = isDraggable;
+}
+
 void SceneComponent::paint(Graphics &g) {
-    Rectangle<int> outline = getBounds();
-    if (selected) {
+    Rectangle<int> outline = getLocalBounds();
+    if (selected && selectable) {
         g.setColour(Colours::darkblue);
         g.drawRect(outline);
     }
-    if (hovered) {
+    if (hovered && hoverable) {
         g.setColour(Colours::mediumpurple);
         g.drawRect(outline);
     }
@@ -44,19 +60,28 @@ void SceneComponent::mouseExit(const MouseEvent &event) {
 }
 
 void SceneComponent::mouseDown(const MouseEvent &event) {
+    if (isDraggable) dragger.startDraggingComponent(this, event);
     Component::mouseDown(event);
 }
 
 void SceneComponent::mouseDrag(const MouseEvent &event) {
+    if (isDraggable) dragger.dragComponent(this, event, nullptr);
     Component::mouseDrag(event);
 }
 
 void SceneComponent::mouseUp(const MouseEvent &event) {
-    if (event.getDistanceFromDragStart() < SELECT_MAX_DISTANCE) {
+    if (event.getDistanceFromDragStart() < SELECT_MAX_DISTANCE && selectable) {
         // Select this object
-        selectedComponents.add(this);
         selected = ! selected;
+        if(selected) {
+            selectedComponents.add(this);
+        } else {
+            selectedComponents.removeObject(this);
+        }
     }
     Component::mouseUp(event);
 }
+
+
+
 

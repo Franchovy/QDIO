@@ -18,7 +18,9 @@ public:
     SceneComponent();
     void paint(Graphics &g) override;
 
-
+    void setHoverable(bool isHoverable);
+    void setSelectable(bool isSelectable);
+    void setDraggable(bool isDraggable);
 
     void mouseEnter(const MouseEvent &event) override;
     void mouseExit(const MouseEvent &event) override;
@@ -32,6 +34,11 @@ private:
 
     static ReferenceCountedArray<SceneComponent> selectedComponents;
 
+    bool isDraggable = false;
+    ComponentDragger dragger;
+
     bool selected = false;
+    bool selectable = false;
     bool hovered = false;
+    bool hoverable = false;
 };

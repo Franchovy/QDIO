@@ -205,6 +205,9 @@ EffectScene::EffectScene()
     //=======================================================================
     // Test area:
 
+    testComponent.setHoverable(true);
+    testComponent.setSelectable(true);
+    testComponent.setDraggable(true);
     addAndMakeVisible(testComponent);
     testComponent.setBounds(getHeight() / 2, getWidth() / 2, 200, 200);
 
