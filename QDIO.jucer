@@ -70,6 +70,8 @@
       <FILE id="k87fdV" name="settings.png" compile="0" resource="1" file="Resources/settings.png"/>
     </GROUP>
     <GROUP id="{7BA62652-E431-98B6-D8CC-8F9CF98F34BB}" name="Source">
+      <FILE id="N4k3tv" name="Tests.cpp" compile="1" resource="0" file="Source/Tests.cpp"/>
+      <FILE id="KaiYw2" name="Tests.h" compile="0" resource="0" file="Source/Tests.h"/>
       <GROUP id="{3584041A-9A16-3F14-E200-86E478366369}" name="UI"/>
       <FILE id="QGrQYS" name="SceneComponent.cpp" compile="1" resource="0"
             file="Source/SceneComponent.cpp"/>

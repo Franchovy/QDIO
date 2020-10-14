@@ -13,7 +13,7 @@
 ReferenceCountedArray<SceneComponent> SceneComponent::selectedComponents;
 
 
-SceneComponent::SceneComponent() {
+SceneComponent::SceneComponent() : Component() {
 
 }
 
@@ -24,9 +24,12 @@ void SceneComponent::paint(Graphics &g) {
         g.drawRect(outline);
     }
     if (hovered) {
-        g.setColour(Colours::pink);
+        g.setColour(Colours::mediumpurple);
         g.drawRect(outline);
     }
+    g.setColour(Colours::hotpink);
+    g.fillRect(outline.expanded(-20));
+
     Component::paint(g);
 }
 

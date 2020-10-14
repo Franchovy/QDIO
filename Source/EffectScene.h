@@ -18,6 +18,7 @@
 #include "IDs"
 #include "EffectLoader.h"
 #include "MenuItem.h"
+#include "SceneComponent.h"
 
 
 /**
@@ -110,8 +111,12 @@ private:
 
     ConnectionGraph connectionGraph;
 
+    //=============================================================================
+    // Test stuff
+    SceneComponent testComponent;
+
     //==============================================================================
-    // Audio shit
+    // Audio stuff
     using AudioGraphIOProcessor = AudioProcessorGraph::AudioGraphIOProcessor;
     using Node = AudioProcessorGraph::Node;
 

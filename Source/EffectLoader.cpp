@@ -11,9 +11,6 @@
 #include "EffectLoader.h"
 
 void EffectLoader::saveEffect(ValueTree &storeEffect) {
-    //std::cout << "Saving effect: " << storeEffect.getType().toString() << newLine;
-    //std::cout << storeEffect.toXmlString() << newLine;
-
     ValueTree effectLib("EffectLib");
 
     auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
@@ -25,7 +22,6 @@ void EffectLoader::saveEffect(ValueTree &storeEffect) {
                                                             storeEffect.getProperty("name").toString());
 
     if (effectToOverWrite.isValid()) {
-        //std::cout << "Overwriting effect" << newLine;
         effectLib.removeChild(effectToOverWrite, nullptr);
     }
 
@@ -42,7 +38,6 @@ ValueTree EffectLoader::loadEffect(String effectName) {
     auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
     if (loadedEffectsData != nullptr) {
         effectLib = ValueTree::fromXml(*loadedEffectsData);
-        //std::cout << "Stored effects:" << newLine << effectLib.toXmlString() << newLine;
     }
 
     auto effectToLoad = effectLib.getChildWithProperty("name", effectName);
@@ -55,8 +50,6 @@ ValueTree EffectLoader::loadEffect(String effectName) {
 
 StringArray EffectLoader::getEffectsAvailable() {
     StringArray effectList;
-
-    std::cout << "Effects available: " << newLine;
 
     ValueTree effectLib("EffectLib");
     auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADED_EFFECTS);
@@ -83,7 +76,6 @@ void EffectLoader::clearEffect(String effectName) {
     auto effectToRemove = effectLib.getChildWithProperty("name", effectName);
 
     if (effectToRemove.isValid()) {
-        std::cout << "Removing effect" << newLine;
         effectLib.removeChild(effectToRemove, nullptr);
     }
 
@@ -94,10 +86,6 @@ void EffectLoader::clearEffect(String effectName) {
 }
 
 void EffectLoader::saveTemplate(ValueTree &newTemplate) {
-
-    //std::cout << "Saving template: " << newTemplate.getType().toString() << newLine;
-    //std::cout << newTemplate.toXmlString() << newLine;
-
     ValueTree effectLib("Templates");
 
     auto loadedEffectsData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
@@ -109,7 +97,6 @@ void EffectLoader::saveTemplate(ValueTree &newTemplate) {
                                                               newTemplate.getProperty("name").toString());
 
     if (templateToOverWrite.isValid()) {
-        //std::cout << "Overwriting template" << newLine;
         effectLib.removeChild(templateToOverWrite, nullptr);
     }
 
@@ -140,8 +127,6 @@ ValueTree EffectLoader::loadTemplate(String templateName) {
 StringArray EffectLoader::getTemplatesAvailable() {
     StringArray templatesList;
 
-    std::cout << "Effects available: " << newLine;
-
     ValueTree templates("Templates");
     auto loadedTemplatesData = getAppProperties().getUserSettings()->getXmlValue(KEYNAME_LOADOUTS);
     if (loadedTemplatesData != nullptr) {
@@ -167,7 +152,6 @@ void EffectLoader::clearTemplate(String templateName) {
     auto templateToRemove = templates.getChildWithProperty("name", templateName);
 
     if (templateToRemove.isValid()) {
-        std::cout << "Removing effect" << newLine;
         templates.removeChild(templateToRemove, nullptr);
     }
 

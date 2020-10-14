@@ -1,7 +1,5 @@
 #include "EffectScene.h"
 
-#include "SceneComponent.h"
-
 const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 EffectScene* EffectScene::instance = nullptr;
 
@@ -10,8 +8,7 @@ EffectScene::EffectScene()
         : EffectBase()
         , MenuItem(1)
         , tree(this)
-        , connectionGraph(audioGraph)
-{
+        , connectionGraph(audioGraph) {
     setComponentID("EffectScene");
     setName("EffectScene");
 
@@ -70,7 +67,7 @@ EffectScene::EffectScene()
     //EffectBase::connectionGraph = &connectionGraph;
 
     audioGraph.enableAllBuses();
-   
+
     //======================
     // Set up devices
     if (loadInitialCase) {
@@ -110,10 +107,13 @@ EffectScene::EffectScene()
         };*/
 
         deviceManager.initialiseWithDefaultDevices(2, 2);
-        
-        AlertWindow deviceSelectWindow("Select your devices", "Select input and output", AlertWindow::AlertIconType::InfoIcon);
-        deviceSelectWindow.addComboBox("Input Device", deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true));
-        deviceSelectWindow.addComboBox("Output Device", deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(false));
+
+        AlertWindow deviceSelectWindow("Select your devices", "Select input and output",
+                                       AlertWindow::AlertIconType::InfoIcon);
+        deviceSelectWindow.addComboBox("Input Device",
+                                       deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true));
+        deviceSelectWindow.addComboBox("Output Device",
+                                       deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(false));
 
         deviceSelectWindow.addButton("Let's Go!", 1);
 
@@ -125,14 +125,16 @@ EffectScene::EffectScene()
 
         deviceManager.setAudioDeviceSetup(newSetup, true);
     }
-    
-    
-    
 
-        //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
 
-    if (! dontLoadDevices && getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS)) != nullptr) {
-        std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
+
+
+    //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
+
+    if (!dontLoadDevices && getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS)) != nullptr) {
+        std::cout << "Device state: "
+                  << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString()
+                  << newLine;
 
         deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
@@ -147,7 +149,6 @@ EffectScene::EffectScene()
 
     // Drag Line GUI
     addChildComponent(lasso);
-
 
 
 #define BACKGROUND_IMAGE
@@ -204,8 +205,9 @@ EffectScene::EffectScene()
     //=======================================================================
     // Test area:
 
-    SceneComponent testComponent;
     addAndMakeVisible(testComponent);
+    testComponent.setBounds(getHeight() / 2, getWidth() / 2, 200, 200);
+
 }
 
 void EffectScene::timerCallback() {
@@ -380,7 +382,7 @@ void EffectScene::paint (Graphics& g)
     //g.setTiledImageFill(bgTile, 0, 0, 1.0f);
     //g.fillRect(getBoundsInParent());
 
-    g.drawImage(bg,getBounds().toFloat());
+    //g.drawImage(bg,getBounds().toFloat());
 
 #else
     g.fillAll (Colour(30, 35, 40));
