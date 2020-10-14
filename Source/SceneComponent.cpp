@@ -33,6 +33,24 @@ void SceneComponent::setDraggable(bool isDraggable) {
     this->isDraggable = isDraggable;
 }
 
+/**
+ * isDragExitable implies child SceneComponent child objects can be dragged into and
+ * out of it.
+ * @param isDragExitable
+ */
+void SceneComponent::setDragExitable(bool isDragExitable) {
+    this->isDragExitable = isDragExitable;
+}
+
+/**
+ * isExitDraggable implies this component can be dragged in and out of SceneComponent parents
+ * that have isDragExitable = true.
+ * @param isExitDraggable
+ */
+void SceneComponent::setExitDraggable(bool isExitDraggable) {
+    this->isExitDraggable = isExitDraggable;
+}
+
 void SceneComponent::paint(Graphics &g) {
     Rectangle<int> outline = getLocalBounds();
     if (selected && selectable) {
@@ -81,6 +99,12 @@ void SceneComponent::mouseUp(const MouseEvent &event) {
     }
     Component::mouseUp(event);
 }
+
+void SceneComponent::addChildComponent(SceneComponent child) {
+    children.add(child);
+    Component::addChildComponent(child);
+}
+
 
 
 

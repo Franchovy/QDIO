@@ -205,11 +205,16 @@ EffectScene::EffectScene()
     //=======================================================================
     // Test area:
 
-    testComponent.setHoverable(true);
-    testComponent.setSelectable(true);
-    testComponent.setDraggable(true);
-    addAndMakeVisible(testComponent);
-    testComponent.setBounds(getHeight() / 2, getWidth() / 2, 200, 200);
+    childComponent.setHoverable(true);
+    childComponent.setSelectable(true);
+    childComponent.setDraggable(true);
+    childComponent.setExitDraggable(true);
+    addAndMakeVisible(childComponent);
+    childComponent.setBounds(getHeight() / 2, getWidth() / 2, 200, 200);
+
+    parentComponent.setDragExitable(true);
+    addAndMakeVisible(parentComponent);
+    parentComponent.setBounds(1000, 500, 500, 500);
 
 }
 

@@ -21,6 +21,8 @@ public:
     void setHoverable(bool isHoverable);
     void setSelectable(bool isSelectable);
     void setDraggable(bool isDraggable);
+    void setDragExitable(bool isDragExitable);
+    void setExitDraggable(bool isExitDraggable);
 
     void mouseEnter(const MouseEvent &event) override;
     void mouseExit(const MouseEvent &event) override;
@@ -29,12 +31,19 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
+    void addChildComponent(SceneComponent child);
+
 private:
     const int SELECT_MAX_DISTANCE = 5;
 
     static ReferenceCountedArray<SceneComponent> selectedComponents;
 
+    /// Array to maintain a referenceCount for children
+    ReferenceCountedArray<SceneComponent> children;
+
     bool isDraggable = false;
+    bool isDragExitable = false;
+    bool isExitDraggable = false;
     ComponentDragger dragger;
 
     bool selected = false;

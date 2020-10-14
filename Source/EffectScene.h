@@ -113,7 +113,8 @@ private:
 
     //=============================================================================
     // Test stuff
-    SceneComponent testComponent;
+    SceneComponent childComponent;
+    SceneComponent parentComponent;
 
     //==============================================================================
     // Audio stuff
