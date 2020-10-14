@@ -1,5 +1,7 @@
 #include "EffectScene.h"
 
+#include "SceneComponent.h"
+
 const Identifier EffectScene::IDs::DeviceManager = "deviceManager";
 EffectScene* EffectScene::instance = nullptr;
 
@@ -197,6 +199,13 @@ EffectScene::EffectScene()
 
     //appState = loading;
     //startTimer(500);
+
+
+    //=======================================================================
+    // Test area:
+
+    SceneComponent testComponent;
+    addAndMakeVisible(testComponent);
 }
 
 void EffectScene::timerCallback() {

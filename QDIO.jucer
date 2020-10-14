@@ -70,6 +70,11 @@
       <FILE id="k87fdV" name="settings.png" compile="0" resource="1" file="Resources/settings.png"/>
     </GROUP>
     <GROUP id="{7BA62652-E431-98B6-D8CC-8F9CF98F34BB}" name="Source">
+      <GROUP id="{3584041A-9A16-3F14-E200-86E478366369}" name="UI"/>
+      <FILE id="QGrQYS" name="SceneComponent.cpp" compile="1" resource="0"
+            file="Source/SceneComponent.cpp"/>
+      <FILE id="cH2LkM" name="SceneComponent.h" compile="0" resource="0"
+            file="Source/SceneComponent.h"/>
       <FILE id="umZiB0" name="WeakReferenceContainer.cpp" compile="1" resource="0"
             file="Source/WeakReferenceContainer.cpp"/>
       <FILE id="baliz3" name="WeakReferenceContainer.h" compile="0" resource="0"
