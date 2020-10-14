@@ -83,7 +83,26 @@ void SceneComponent::mouseDown(const MouseEvent &event) {
 }
 
 void SceneComponent::mouseDrag(const MouseEvent &event) {
-    if (isDraggable) dragger.dragComponent(this, event, nullptr);
+    if (isDraggable) {
+        // Drag this component
+        dragger.dragComponent(this, event, nullptr);
+
+        // Detect object being hovered
+        for (auto c : this->getParentComponent()->getChildren()) {
+            if (c == this) continue;
+            if (c->contains(c->getLocalPoint(event.eventComponent, event.getPosition()))) {
+                if (auto targetHoverComponent = dynamic_cast<SceneComponent*>(c)) {
+                    targetHoverComponent->hovered = true;
+                    targetHoverComponent->repaint();
+                }
+            } else if (auto targetHoverComponent = dynamic_cast<SceneComponent*>(c)) {
+                if (targetHoverComponent->hovered) {
+                    targetHoverComponent->hovered = false;
+                    targetHoverComponent->repaint();
+                }
+            }
+        }
+    }
     Component::mouseDrag(event);
 }
 
