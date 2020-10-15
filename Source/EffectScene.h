@@ -18,7 +18,7 @@
 #include "IDs"
 #include "EffectLoader.h"
 #include "MenuItem.h"
-#include "SceneComponent.h"
+#include "UI/SceneComponent.h"
 
 
 /**

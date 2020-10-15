@@ -9,3 +9,15 @@
 */
 
 #pragma once
+
+#include "SceneComponent.h"
+#include "ConnectionContainer.h"
+
+class EffectSceneComponent : public SceneComponent, public ConnectionContainer
+{
+public:
+    EffectSceneComponent();
+
+private:
+
+};

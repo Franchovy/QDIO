@@ -17,7 +17,7 @@
 #include "MenuItem.h"
 #include "ConnectionGraph.h" //todo remove
 #include "WeakReferenceContainer.h"
-#include "SceneComponent.h"
+#include "UI/SceneComponent.h"
 
 
 #pragma once

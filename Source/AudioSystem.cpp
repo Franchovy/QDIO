@@ -9,3 +9,10 @@
 */
 
 #include "AudioSystem.h"
+
+AudioSystem::AudioSystem() {
+
+    deviceManager.addAudioCallback(&processorPlayer);
+    processorPlayer.setProcessor(&audioGraph);
+
+}

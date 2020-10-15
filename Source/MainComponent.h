@@ -15,6 +15,8 @@
 #include "EffectScene.h"
 #include "IDs"
 #include "Settings.h"
+#include "UI/EffectSceneComponent.h"
+#include "AudioSystem.h"
 
 /**
  * This is the class that contains the main / static stuff. The EffectScene is part of the effect tree,
@@ -49,10 +51,8 @@ private:
 
     void populateEffectMenu(PopupMenu& menu);
 
-    EffectScene effectScene;
-    AudioProcessorGraph& audioGraph;
-    AudioDeviceManager& deviceManager;
-    AudioProcessorPlayer& audioPlayer;
+    EffectSceneComponent effectScene;
+    AudioSystem audioSystem;
 
     ImageButton settingsButton;
     SettingsComponent settingsMenu;

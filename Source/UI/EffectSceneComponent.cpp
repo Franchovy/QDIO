@@ -9,3 +9,7 @@
 */
 
 #include "EffectSceneComponent.h"
+
+EffectSceneComponent::EffectSceneComponent() {
+    
+}

@@ -14,10 +14,8 @@
 MainComponent::MainComponent()
     : effectScene()
     , effectTree(EFFECT_ID)
-    , deviceManager(effectScene.getDeviceManager())
-    , settingsMenu(deviceManager)
-    , audioGraph(effectScene.getAudioGraph())
-    , audioPlayer(effectScene.getAudioPlayer())
+    , audioSystem()
+    , settingsMenu(*audioSystem.getDeviceManager())
 {
     auto& desktop = Desktop::getInstance();
     // Set size to full screen
@@ -46,8 +44,6 @@ MainComponent::MainComponent()
 #endif
 
 
-    effectScene.view = getViewArea();
-
     auto image = ImageCache::getFromMemory (BinaryData::settings_png, BinaryData::settings_pngSize);
     settingsButton.setImages(false, true, false,
                              image, 1.0f, Colours::grey, image, 1.0f, Colours::lightgrey,
@@ -75,7 +71,7 @@ MainComponent::MainComponent()
         if (selectedIndex >= 0) {
             auto effectName = effectSelectMenu.getItemText(selectedIndex);
             auto loadData = EffectLoader::loadEffect(effectName);
-            effectScene.menuCreateEffect(loadData);
+            //effectScene.menuCreateEffect(loadData);
 
             effectSelectMenu.setText("Effects");
         }
@@ -89,7 +85,7 @@ MainComponent::MainComponent()
         auto selectedIndex = templateMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
             auto templateName = templateMenu.getItemText(selectedIndex);
-            effectScene.loadNewTemplate(templateName);
+            //effectScene.loadNewTemplate(templateName);
 
             templateMenu.setText("Template");
         }
@@ -104,7 +100,7 @@ MainComponent::MainComponent()
     toolBoxMenu.onChange = [=] {
         auto selectedIndex = toolBoxMenu.getSelectedItemIndex();
         if (selectedIndex >= 0) {
-            effectScene.createProcessor(selectedIndex);
+            //effectScene.createProcessor(selectedIndex);
 
             toolBoxMenu.setText("ToolBox");
         }
@@ -118,15 +114,15 @@ MainComponent::MainComponent()
     /*auto menu = effectSelectMenu.getRootMenu();
     populateEffectMenu(*menu);*/
 
-    deviceManager.addChangeListener(this);
+    //deviceManager.addChangeListener(this);
 
     startTimer(3);
 }
 
 MainComponent::~MainComponent() {
-    effectScene.storeState();
+    //effectScene.storeState();
 
-    auto audioState = effectScene.getDeviceManager().createStateXml();
+    auto audioState = audioSystem.getDeviceManager()->createStateXml();
 
     getAppProperties().getUserSettings()->setValue (KEYNAME_DEVICE_SETTINGS, audioState.get());
     getAppProperties().getUserSettings()->saveIfNeeded();
@@ -245,8 +241,8 @@ void MainComponent::handleCommandMessage(int commandId) {
 
 void MainComponent::populateToolBoxMenu() {
     int i = 0;
-    for (auto item : effectScene.getProcessorNames()) {
+    /*for (auto item : effectScene.getProcessorNames()) {
         toolBoxMenu.addItem(item, ++i);
-    }
+    }*/
 }
 

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <JuceHeader.h>
 
 /**
  * This is the main class running all audio bits for the app.
@@ -17,9 +18,19 @@
  */
 class AudioSystem
 {
+public:
+    AudioSystem();
+
     //===========================================================
     // ConnectionGraph
 
     //===========================================================
     // Devices, channels
+
+    AudioDeviceManager* getDeviceManager() {return &deviceManager;}
+
+private:
+    AudioProcessorGraph audioGraph;
+    AudioDeviceManager deviceManager;
+    AudioProcessorPlayer processorPlayer;
 };
