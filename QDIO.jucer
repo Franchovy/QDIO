@@ -72,11 +72,44 @@
     <GROUP id="{7BA62652-E431-98B6-D8CC-8F9CF98F34BB}" name="Source">
       <FILE id="N4k3tv" name="Tests.cpp" compile="1" resource="0" file="Source/Tests.cpp"/>
       <FILE id="KaiYw2" name="Tests.h" compile="0" resource="0" file="Source/Tests.h"/>
-      <GROUP id="{3584041A-9A16-3F14-E200-86E478366369}" name="UI"/>
-      <FILE id="QGrQYS" name="SceneComponent.cpp" compile="1" resource="0"
-            file="Source/SceneComponent.cpp"/>
-      <FILE id="cH2LkM" name="SceneComponent.h" compile="0" resource="0"
-            file="Source/SceneComponent.h"/>
+      <GROUP id="{3584041A-9A16-3F14-E200-86E478366369}" name="UI">
+        <FILE id="woGmAc" name="ConnectionContainer.cpp" compile="1" resource="0"
+              file="Source/ConnectionContainer.cpp"/>
+        <FILE id="kGZcnA" name="ConnectionContainer.h" compile="0" resource="0"
+              file="Source/ConnectionContainer.h"/>
+        <FILE id="TQILHU" name="ConnectionPort.cpp" compile="1" resource="0"
+              file="Source/ConnectionPort.cpp"/>
+        <FILE id="CZmmVA" name="ConnectionPort.h" compile="0" resource="0"
+              file="Source/ConnectionPort.h"/>
+        <FILE id="Em9SXE" name="EffectComponent.cpp" compile="1" resource="0"
+              file="Source/EffectComponent.cpp"/>
+        <FILE id="j1lvd9" name="EffectComponent.h" compile="0" resource="0"
+              file="Source/EffectComponent.h"/>
+        <FILE id="gxxxbW" name="EffectConnectable.cpp" compile="1" resource="0"
+              file="Source/EffectConnectable.cpp"/>
+        <FILE id="ztQ1zI" name="EffectConnectable.h" compile="0" resource="0"
+              file="Source/EffectConnectable.h"/>
+        <FILE id="Qelx6H" name="EffectSceneComponent.cpp" compile="1" resource="0"
+              file="Source/EffectSceneComponent.cpp"/>
+        <FILE id="QktUGY" name="EffectSceneComponent.h" compile="0" resource="0"
+              file="Source/EffectSceneComponent.h"/>
+        <FILE id="Au1qGX" name="ParameterComponent.cpp" compile="1" resource="0"
+              file="Source/ParameterComponent.cpp"/>
+        <FILE id="ODlh1Z" name="ParameterComponent.h" compile="0" resource="0"
+              file="Source/ParameterComponent.h"/>
+        <FILE id="PHgV86" name="ParameterConnectable.cpp" compile="1" resource="0"
+              file="Source/ParameterConnectable.cpp"/>
+        <FILE id="IjkU0D" name="ParameterConnectable.h" compile="0" resource="0"
+              file="Source/ParameterConnectable.h"/>
+        <FILE id="LwhZHY" name="ProcessorComponent.cpp" compile="1" resource="0"
+              file="Source/ProcessorComponent.cpp"/>
+        <FILE id="vR4g8F" name="ProcessorComponent.h" compile="0" resource="0"
+              file="Source/ProcessorComponent.h"/>
+        <FILE id="QGrQYS" name="SceneComponent.cpp" compile="1" resource="0"
+              file="Source/SceneComponent.cpp"/>
+        <FILE id="cH2LkM" name="SceneComponent.h" compile="0" resource="0"
+              file="Source/SceneComponent.h"/>
+      </GROUP>
       <FILE id="umZiB0" name="WeakReferenceContainer.cpp" compile="1" resource="0"
             file="Source/WeakReferenceContainer.cpp"/>
       <FILE id="baliz3" name="WeakReferenceContainer.h" compile="0" resource="0"
