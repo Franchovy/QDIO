@@ -19,5 +19,8 @@ public:
     EffectSceneComponent();
 
 private:
-
+    //=============================================================================
+    // Test stuff
+    SceneComponent childComponent;
+    SceneComponent parentComponent;
 };

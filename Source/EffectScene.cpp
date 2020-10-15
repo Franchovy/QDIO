@@ -161,24 +161,8 @@ EffectScene::EffectScene()
 
     Thread::sleep(1000);
 
-    //appState = loading;
-    //startTimer(500);
-
-
-    //=======================================================================
-    // Test area:
-
-    childComponent.setHoverable(true);
-    childComponent.setSelectable(true);
-    childComponent.setDraggable(true);
-    childComponent.setExitDraggable(true);
-    addAndMakeVisible(childComponent);
-    childComponent.setBounds(getHeight() / 2, getWidth() / 2, 200, 200);
-
-    parentComponent.setDragExitable(true);
-    parentComponent.setHoverable(true);
-    addAndMakeVisible(parentComponent);
-    parentComponent.setBounds(1000, 500, 500, 500);
+    appState = loading;
+    startTimer(500);
 
 }
 

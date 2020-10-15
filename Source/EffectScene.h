@@ -111,10 +111,6 @@ private:
 
     ConnectionGraph connectionGraph;
 
-    //=============================================================================
-    // Test stuff
-    SceneComponent childComponent;
-    SceneComponent parentComponent;
 
     //==============================================================================
     // Audio stuff

@@ -14,7 +14,10 @@ ReferenceCountedArray<SceneComponent> SceneComponent::selectedComponents;
 
 
 SceneComponent::SceneComponent() : Component() {
-
+    setColour(backgroundID, Colours::lightgrey);
+    setColour(hoverID, Colours::blue);
+    setColour(selectID, Colours::ghostwhite);
+    setColour(outlineID, Colours::darkslategrey);
 }
 
 void SceneComponent::setHoverable(bool isHoverable) {
@@ -53,16 +56,26 @@ void SceneComponent::setExitDraggable(bool isExitDraggable) {
 
 void SceneComponent::paint(Graphics &g) {
     Rectangle<int> outline = getLocalBounds();
+    Rectangle<int> frame = outline.expanded(-15);
+
+    DropShadow shadow(Colours::black.withAlpha(0.5f), 15, Point<int>());
+    shadow.drawForRectangle(g, frame);
+
     if (selected && selectable) {
-        g.setColour(Colours::darkblue);
+        g.setColour(findColour(selectID));
         g.drawRect(outline);
     }
     if (hovered && hoverable) {
-        g.setColour(Colours::mediumpurple);
+        g.setColour(findColour(hoverID));
         g.drawRect(outline);
     }
-    g.setColour(Colours::hotpink);
-    g.fillRect(outline.expanded(-20));
+    // Fill inside frame
+    g.setColour(findColour(backgroundID));
+    g.fillRoundedRectangle(frame.toFloat(), 5);
+    // Draw Outline
+    g.setColour(findColour(outlineID));
+    g.drawRoundedRectangle(frame.toFloat(), 5, 3);
+
 
     Component::paint(g);
 }
@@ -78,7 +91,10 @@ void SceneComponent::mouseExit(const MouseEvent &event) {
 }
 
 void SceneComponent::mouseDown(const MouseEvent &event) {
-    if (isDraggable) dragger.startDraggingComponent(this, event);
+    if (isDraggable) {
+        toFront(false);
+        dragger.startDraggingComponent(this, event);
+    }
     Component::mouseDown(event);
 }
 

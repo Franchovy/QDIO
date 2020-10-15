@@ -41,6 +41,13 @@ public:
     virtual bool canDragInto(const SceneComponent& other, bool isRightClickDrag) const {return false;}
     virtual void targetHoverMouseUp(const MouseEvent &event, SceneComponent* targetComponent);
 
+    enum ColourIDs {
+        backgroundID = 0,
+        hoverID,
+        selectID,
+        outlineID
+    };
+
 protected:
     bool hovered = false;
     bool selected = false;
