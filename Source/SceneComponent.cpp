@@ -91,24 +91,36 @@ void SceneComponent::mouseDrag(const MouseEvent &event) {
         for (auto c : this->getParentComponent()->getChildren()) {
             if (c == this) continue;
             if (c->contains(c->getLocalPoint(event.eventComponent, event.getPosition()))) {
-                if (auto targetHoverComponent = dynamic_cast<SceneComponent*>(c)) {
+                if (auto target = dynamic_cast<SceneComponent*>(c)) {
+                    targetHoverComponent = target;
                     targetHoverComponent->hovered = true;
                     targetHoverComponent->repaint();
                 }
-            } else if (auto targetHoverComponent = dynamic_cast<SceneComponent*>(c)) {
-                if (targetHoverComponent->hovered) {
-                    targetHoverComponent->hovered = false;
-                    targetHoverComponent->repaint();
-                }
             }
+        }
+        // Deselect any target component if not hovered
+        if (targetHoverComponent != nullptr && ! targetHoverComponent->contains(
+                targetHoverComponent->getLocalPoint(event.eventComponent, event.getPosition()))) {
+            targetHoverComponent->hovered = false;
+            targetHoverComponent->repaint();
+            targetHoverComponent = nullptr;
         }
     }
     Component::mouseDrag(event);
 }
 
 void SceneComponent::mouseUp(const MouseEvent &event) {
+    //  Operation on target hover component
+    if (targetHoverComponent != nullptr) {
+        targetHoverMouseUp(event, targetHoverComponent);
+
+        targetHoverComponent->hovered = false;
+        targetHoverComponent->repaint();
+        targetHoverComponent = nullptr;
+    }
+
+    // Select this object
     if (event.getDistanceFromDragStart() < SELECT_MAX_DISTANCE && selectable) {
-        // Select this object
         selected = ! selected;
         if(selected) {
             selectedComponents.add(this);
@@ -122,6 +134,10 @@ void SceneComponent::mouseUp(const MouseEvent &event) {
 void SceneComponent::addChildComponent(SceneComponent child) {
     children.add(child);
     Component::addChildComponent(child);
+}
+
+void SceneComponent::targetHoverMouseUp(const MouseEvent &event, SceneComponent *targetComponent) {
+    std::cout << event.eventComponent << " drags into " << targetComponent << newLine;
 }
 
 

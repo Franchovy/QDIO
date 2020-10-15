@@ -33,6 +33,8 @@ public:
 
     void addChildComponent(SceneComponent child);
 
+    virtual void targetHoverMouseUp(const MouseEvent &event, SceneComponent* targetComponent);
+
 private:
     const int SELECT_MAX_DISTANCE = 5;
 
@@ -50,4 +52,6 @@ private:
     bool selectable = false;
     bool hovered = false;
     bool hoverable = false;
+
+    SceneComponent* targetHoverComponent = nullptr;
 };
