@@ -70,12 +70,9 @@ public:
     void componentParentHierarchyChanged(Component &component) override;
     void componentBeingDeleted(Component &component) override;
 
-    // todo methods to move to EffectManager class
-    ValueTree getUsefulSelection();
-
     // Access methods
-    ValueTree getTree(GuiObject* component);
-    ValueTree findTree(ValueTree treeToSearch, GuiObject* component);
+    ValueTree getTree(Component* component);
+    ValueTree findTree(ValueTree treeToSearch, Component* component);
 
     template<class T>
     static T* getFromTree(const ValueTree& vt);

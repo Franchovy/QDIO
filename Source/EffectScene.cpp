@@ -49,10 +49,9 @@ EffectScene::EffectScene()
     //
 
     setBufferedToImage(true);
-    //setPaintingIsUnclipped(false);
     setRepaintsOnMouseActivity(false);
 
-    hoverable = false;
+    setHoverable(false);
 
     // Set up static members
     instance = this;
@@ -71,40 +70,9 @@ EffectScene::EffectScene()
     //======================
     // Set up devices
     if (loadInitialCase) {
-        /*auto inNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
-        auto outNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
-        */
+
         ComboBox inputDevices;
         ComboBox outputDevices;
-
-        //inputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true), 0);
-        //outputDevices.addItemList(deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(false), 0);
-
-        /*TextButton testButton("TestButton", "Test Setup");
-        testButton.onClick = [=] {
-            audioGraph.addConnection({{inNode->nodeID, 0}, {outNode->nodeID, 0}});
-            audioGraph.addConnection({{inNode->nodeID, 1}, {outNode->nodeID, 1}});
-        };*/
-
-        /*inputDevices.onChange = [=] {
-            std::cout << inputDevices.getText();
-        };
-        *//*    auto newDevice = deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true)[inputDevices.getSelectedItemIndex()];
-             auto setup = deviceManager.getAudioDeviceSetup();
-        
-             setup.inputDeviceName = newDevice;
-            
-             deviceManager.setAudioDeviceSetup(setup, true);
-        };*//*
-        
-        outputDevices.onChange = [=] {
-            auto newDevice = deviceManager.getCurrentDeviceTypeObject()->getDeviceNames(true)[inputDevices.getSelectedItemIndex()];
-            auto setup = deviceManager.getAudioDeviceSetup();
-
-            setup.outputDeviceName = newDevice;
-
-            deviceManager.setAudioDeviceSetup(setup, true);
-        };*/
 
         deviceManager.initialiseWithDefaultDevices(2, 2);
 
@@ -144,12 +112,7 @@ EffectScene::EffectScene()
     deviceManager.addChangeListener(this);
     processorPlayer.setProcessor(&audioGraph);
 
-
     setMouseClickGrabsKeyboardFocus(true);
-
-    // Drag Line GUI
-    addChildComponent(lasso);
-
 
 #define BACKGROUND_IMAGE
     bg = ImageCache::getFromMemory(BinaryData::bg_png, BinaryData::bg_pngSize);
@@ -290,91 +253,14 @@ EffectScene::~EffectScene()
     appState = stopping;
     
     instance = nullptr;
-    //todo remove this ptr from EffectTree before destructor.
-
-    /*audioGraph.clear();
-    jassert(! audioGraph.getParameters().isEmpty());*/
 
     processorPlayer.setProcessor(nullptr);
-
-    //std::cout << "Closing with device settings: " << getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS)->toString() << newLine;
 
     deviceManager.closeAudioDevice();
 
     undoManager.clearUndoHistory();
 }
 
-/*Array<PopupMenu::Item> EffectScene::setupCreateEffectMenu() {
-
-    Array<PopupMenu::Item> returnArray;
-    std::unique_ptr<PopupMenu> createEffectMenu = std::make_unique<PopupMenu>();
-
-    PopupMenu::Item empty("Empty Effect");
-    empty.setAction( std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Effect");
-                auto effectVT = tree.newEffect("Effect", getMouseXYRelative());
-                tree.createEffect(effectVT);
-            }
-    ));
-    returnArray.add(empty);
-
-    PopupMenu::Item input("Input Device");
-    input.setAction(std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Input Effect");
-                auto effectVT = tree.newEffect("Input Device", getMouseXYRelative(), 0);
-                tree.createEffect(effectVT);
-            }
-    ));
-    returnArray.add(input);
-
-    PopupMenu::Item output("Output Device");
-    output.setAction(std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Output Effect");
-                auto effectVT = tree.newEffect("Output Device", getMouseXYRelative(), 1);
-                tree.createEffect(effectVT);
-            }
-    ));
-    returnArray.add(output);
-
-    PopupMenu::Item distortion("Distortion Effect");
-    distortion.setAction(std::function<void()>(
-            [=]{
-                undoManager.beginNewTransaction("Create Distortion Effect");
-                auto effectVT = tree.newEffect("Distortion Effect", getMouseXYRelative(), 2);
-                tree.createEffect(effectVT);
-            }
-    ));
-    returnArray.add(distortion);
-
-    PopupMenu::Item delay("Delay Effect");
-    delay.setAction(std::function<void()>(
-            [=](){
-                undoManager.beginNewTransaction("Create Delay Effect");
-                auto effectVT = tree.newEffect("Delay Effect", getMouseXYRelative(), 3);
-                tree.createEffect(effectVT);
-            }
-    ));
-    returnArray.add(delay);
-
-    PopupMenu::Item reverb("Reverb Effect");
-    reverb.setAction(std::function<void()>(
-            [=](){
-                undoManager.beginNewTransaction("Create Reverb Effect");
-                auto effectVT = tree.newEffect("Reverb Effect", getMouseXYRelative(), 4);
-                tree.createEffect(effectVT);
-            }
-    ));
-    returnArray.add(reverb);
-
-    *//*PopupMenu::Item createEffectMenuItem("Create effect..");
-    createEffectMenuItem.subMenu = std::move(createEffectMenu);
-    addMenuItem(0, createEffectMenuItem);*//*
-
-    return returnArray;
-}*/
 
 void EffectScene::createProcessor(int processorID) {
     auto newEffect = tree.newEffect(tree.getProcessorName(processorID), getMouseXYRelative(), processorID);
@@ -417,30 +303,19 @@ void EffectScene::resized()
 }
 
 void EffectScene::mouseDown(const MouseEvent &event) {
-    // EffectScene
-    if (event.originalComponent == this && event.mods.isLeftButtonDown()) {
-        lasso.setVisible(true);
-        lasso.beginLasso(event, this);
-    }
     // Resizer
-    else if (dynamic_cast<Resizer*>(event.originalComponent)) {
+    if (dynamic_cast<Resizer*>(event.originalComponent)) {
         undoManager.beginNewTransaction("resize");
         return;
     }
+    EffectBase::mouseDown(event);
 }
 
 void EffectScene::mouseDrag(const MouseEvent &event) {
-    if (lasso.isVisible()) {
-        lasso.dragLasso(event);
-    }
+    EffectBase::mouseDrag(event);
 }
 
 void EffectScene::mouseUp(const MouseEvent &event) {
-    if (lasso.isVisible()) {
-        lasso.endLasso();
-    }
-
-
     if (event.originalComponent == this) {
         // Click on effectscene
         if (event.getDistanceFromDragStart() < 10)
@@ -474,6 +349,7 @@ void EffectScene::mouseUp(const MouseEvent &event) {
             }
         }
     }
+    EffectBase::mouseUp(event);
 }
 
 bool EffectScene::keyPressed(const KeyPress &key)
@@ -549,26 +425,22 @@ bool EffectScene::keyPressed(const KeyPress &key)
     if (key.getKeyCode() == KeyPress::deleteKey || key.getKeyCode() == KeyPress::backspaceKey) {
         undoManager.beginNewTransaction("Delete");
 
-        for (const auto& selectedItem : getSelected()) {
-            if (dynamic_cast<Effect*>(selectedItem)) {
-                tree.remove(selectedItem);
-            }
+        /*for (const auto& selectedItem : getSelectedComponentsOfType<Effect>()) {
+            tree.remove(selectedItem);
         }
 
-        for (const auto& selectedItem : getSelected()) {
-            if (dynamic_cast<ConnectionLine*>(selectedItem)) {
-                tree.remove(selectedItem);
-            }
+        for (const auto& selectedItem : getSelectedComponentsOfType<ConnectionLine>()) {
+            tree.remove(selectedItem);
         }
 
-        for (const auto& selectedItem : getSelected()) {
+        for (const auto& selectedItem : getSelectedComponents()) {
             if (! dynamic_cast<ConnectionLine*>(selectedItem) &&
                     ! dynamic_cast<Effect*>(selectedItem))
             {
                 tree.remove(selectedItem);
             }
         }
-
+*/
         deselectAll();
     }
 
@@ -588,7 +460,7 @@ bool EffectScene::keyPressed(const KeyPress &key)
         }
 
         if (key.getKeyCode() == 's' || key.getKeyCode() == 'S') {
-            if (selected.getItemArray().size() == 1) {
+            if (getSelectedComponents().size() == 1) {
                 saveEffect();
             } else {
                 saveTemplate();
@@ -597,9 +469,10 @@ bool EffectScene::keyPressed(const KeyPress &key)
 
         // super secret write to file op
         if (key.getKeyCode() == 'x' || key.getKeyCode() == 'X') {
-            if (selected.getItemArray().size() == 1) {
-                auto item = selected.getSelectedItem(0);
-                if (auto effect = dynamic_cast<Effect*>(item.get())) {
+            auto selectedComponents = getSelectedComponents();
+            if (selectedComponents.size() == 1) {
+                auto item = selectedComponents[0];
+                if (auto effect = dynamic_cast<Effect*>(item)) {
                     // Export effect
                     exportEffect();
                 }
@@ -644,19 +517,19 @@ bool EffectScene::keyPressed(const KeyPress &key)
         {
             for (auto c : getChildren())
             {
-                if (auto obj = dynamic_cast<SelectHoverObject*>(c))
+                if (auto obj = dynamic_cast<SceneComponent*>(c))
                 {
-                    selected.addToSelection(obj);
+                    obj->select();
                 }
             }
-            repaint();
         }
 
         // Copy
         if (key.getKeyCode() == 'c')
         {
-            if (selected.getItemArray().size() == 1) {
-                auto data = tree.storeEffect(tree.getTree(selected.getItemArray().getFirst().get()));
+            auto selectedComponents = getSelectedComponents();
+            if (selectedComponents.size() == 1) {
+                auto data = tree.storeEffect(tree.getTree(selectedComponents.getFirst()));
                 SystemClipboard::copyTextToClipboard(data.toXmlString());
             }
         }
@@ -727,43 +600,6 @@ void EffectScene::storeState() {
     getAppProperties().getUserSettings()->setValue(KEYNAME_CURRENT_LOADOUT, name);
 }
 
-/*void EffectScene::updateChannels() {
-    auto defaultInChannel = AudioChannelSet();
-    defaultInChannel.addChannel(AudioChannelSet::ChannelType::left);
-    defaultInChannel.addChannel(AudioChannelSet::ChannelType::right);
-    auto defaultOutChannel = AudioChannelSet();
-    defaultOutChannel.addChannel(AudioChannelSet::ChannelType::left);
-    defaultOutChannel.addChannel(AudioChannelSet::ChannelType::right);
-
-    // Update num ins and outs
-    for (auto node : audioGraph.getNodes()) {
-        //todo dgaf about buses template. Only channels within buses.
-        // How about a follow-through method that changes channels if possible given port?
-
-        // Set buses template or whatever
-        auto template = node->getProcessor()->getBusesTemplate();
-
-        auto inputs = deviceManager.getAudioDeviceSetup().inputChannels;
-        auto outputs = deviceManager.getAudioDeviceSetup().outputChannels;
-
-        for (int i = 0; i < inputs.getHighestBit(); i++) {
-            if (inputs[i] == 1) {
-                template.inputBuses.add(defaultInChannel);
-            }
-        }
-
-        for (int i = 0; i < outputs.getHighestBit(); i++) {
-            if (inputs[i] == 1) {
-                template.outputBuses.add(defaultOutChannel);
-            }
-        }
-        node->getProcessor()->setBusesTemplate(template);
-
-        // Tell gui to update
-        Effect::updateEffectProcessor(node->getProcessor(), tree);
-    }
-}*/
-
 void EffectScene::handleCommandMessage(int commandId) {
     if (commandId == 0) {
         getParentComponent()->postCommandMessage(0);
@@ -777,11 +613,11 @@ void EffectScene::handleCommandMessage(int commandId) {
     EffectBase::handleCommandMessage(commandId);
 }
 
-bool EffectScene::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
-    return (dynamic_cast<const Effect*>(other) != nullptr);
+bool EffectScene::canDragInto(const SceneComponent& other, bool isRightClickDrag) const {
+    return (dynamic_cast<const Effect*>(&other) != nullptr);
 }
 
-bool EffectScene::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
+bool EffectScene::canDragHover(const SceneComponent& other, bool isRightClickDrag) const {
     return false;
 }
 
@@ -955,9 +791,10 @@ void EffectScene::importEffect() {
 }
 
 void EffectScene::exportEffect() {
-    if (selected.getItemArray().size() == 1) {
-        auto item = selected.getSelectedItem(0);
-        if (auto effect = dynamic_cast<Effect*>(item.get())) {
+    auto selectedComponents = getSelectedComponents();
+    if (selectedComponents.size() == 1) {
+        auto item = selectedComponents[0];
+        if (auto effect = dynamic_cast<Effect*>(item)) {
             // Export effect
             effect->setEditMode(false);
             auto effectData = tree.storeEffect(tree.getTree(effect));
@@ -979,10 +816,11 @@ void EffectScene::saveTemplate() {
 }
 
 void EffectScene::saveEffect() {
-    if (selected.getItemArray().size() == 1) {
-        auto item = selected.getSelectedItem(0);
+    auto selectedComponents = getSelectedComponents();
+    if (selectedComponents.size() == 1) {
+        auto item = selectedComponents[0];
 
-        if (auto effect = dynamic_cast<Effect*>(item.get())) {
+        if (auto effect = dynamic_cast<Effect*>(item)) {
             String name = item->getName();
 
             int result = callSaveEffectDialog(name);

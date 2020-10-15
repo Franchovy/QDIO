@@ -380,21 +380,22 @@ void EffectTree::componentBeingDeleted(Component &component) {
  * @param component
  * @return
  */
-ValueTree EffectTree::getTree(GuiObject* component) {
-    if (effectTree.getProperty(IDs::component) == component) { //fixme RefCount needs to be positive
+ValueTree EffectTree::getTree(Component* component) {
+    auto c = dynamic_cast<ReferenceCountedObject*>(component);
+    if (effectTree.getProperty(IDs::component) == c) { //fixme RefCount needs to be positive
         return effectTree;
     }
 
-    auto childFound = effectTree.getChildWithProperty(IDs::component, component);
+    auto childFound = effectTree.getChildWithProperty(IDs::component, c);
 
     if (childFound.isValid()) {
         return childFound;
     } else {
         if (auto p = component->getParentComponent()) {
-            if (auto parentComponent = dynamic_cast<GuiObject *>(p)) {
-                auto parentTree = getTree(parentComponent);
+            if (auto parentComponent = dynamic_cast<ReferenceCountedObject *>(p)) {
+                auto parentTree = getTree(p);
                 if (parentTree.isValid()) {
-                    return parentTree.getChildWithProperty(IDs::component, component);
+                    return parentTree.getChildWithProperty(IDs::component, c);
                 }
             }
         }
@@ -405,7 +406,7 @@ ValueTree EffectTree::getTree(GuiObject* component) {
 
 
 EffectTree::~EffectTree() {
-    auto effectScene = dynamic_cast<GuiObject*>(effectTree.getProperty(IDs::component).getObject());
+    auto effectScene = dynamic_cast<SceneComponent*>(effectTree.getProperty(IDs::component).getObject());
     effectScene->incReferenceCount();
 
     removeListenersRecursively(effectScene);
@@ -970,8 +971,9 @@ bool EffectTree::loadPort(ValueTree portData) {
     return true; // Only audio ports need loading?
 }
 
-ValueTree EffectTree::findTree(ValueTree treeToSearch, GuiObject *component) {
-    auto childFound = treeToSearch.getChildWithProperty(IDs::component, component);
+ValueTree EffectTree::findTree(ValueTree treeToSearch, Component *component) {
+    auto c = dynamic_cast<ReferenceCountedObject*>(component);
+    auto childFound = treeToSearch.getChildWithProperty(IDs::component, c);
     if (childFound.isValid()) {
         return childFound;
     } else {
@@ -1041,37 +1043,6 @@ void EffectTree::setupProcessors() {
          , "Parameter Mod"
     };
 
-}
-
-/**
- * Looks at all the selected items, and only keeps what would make the
- * selection "complete" if placed elsewhere. Mainly getting rid of stray lines.
- * @return *typeless* data representing the useful selection - watch out, the valuetree is invalid.
- */
-ValueTree EffectTree::getUsefulSelection() {
-    ValueTree data;
-
-    auto selected = SelectHoverObject::getSelected();
-    auto selectOutput = Array<SelectHoverObject*>();
-
-    // Iterate through selection
-    for (auto c : selected)
-    {
-        // If line
-        if (auto line = dynamic_cast<ConnectionLine*>(c))
-        {
-            // Check that both ends of the line are part of the selection
-            if (selected.contains(dynamic_cast<Effect*>(line->getInPort()->getParentEffect()))
-                && selected.contains(dynamic_cast<Effect*>(line->getOutPort()->getParentEffect())))
-            {
-                selectOutput.add(c);
-            }
-        } else {
-            selectOutput.add(c);
-        }
-    }
-
-    return storeGroup(selectOutput);
 }
 
 ValueTree EffectTree::storeGroup(Array<SelectHoverObject *> items) {

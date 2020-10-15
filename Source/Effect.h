@@ -17,6 +17,7 @@
 #include "MenuItem.h"
 #include "ConnectionGraph.h" //todo remove
 #include "WeakReferenceContainer.h"
+#include "SceneComponent.h"
 
 
 #pragma once
@@ -30,7 +31,7 @@ class Effect;
  * Convenience functions for tree navigation,
  * Data for saving and loading state,
  */
-class EffectBase : public SelectHoverObject, public ValueTree::Listener, public LassoSource<SelectHoverObject::Ptr>
+class EffectBase : public SceneComponent
 {
 public:
     EffectBase();
@@ -40,14 +41,6 @@ public:
     void mouseDown(const MouseEvent &event) override;
 
     void handleCommandMessage(int commandId) override;
-
-    //===================================================================
-
-    bool createEffect(Effect* newEffect);
-    bool deleteEffect(Effect* newEffect);
-    bool loadParameters(AudioProcessorParameterGroup parametersToLoad);
-    bool loadParameters(Array<Parameter*> parametersToLoad);
-    bool loadConnections(Array<ConnectionLine*> connectionsToLoad);
 
     //===================================================================
 
@@ -65,7 +58,6 @@ public:
 
     static UndoManager& getUndoManager() { return undoManager; }
     static AudioDeviceManager* getDeviceManager() {return deviceManager;}
-    //static AudioProcessorGraph* getAudioGraph() {return audioGraph;}
 
     ConnectionPort* getPortFromID(String portID);
 
@@ -80,24 +72,12 @@ protected:
     static EffectBase* effectScene;
 
     //====================================================================================
-    // Lasso stuff
-    LassoComponent<SelectHoverObject::Ptr> lasso;
-
-    void findLassoItemsInArea (Array <SelectHoverObject::Ptr>& results, const Rectangle<int>& area) override;
-    SelectedItemSet<SelectHoverObject::Ptr>& getLassoSelection() override;
-
-    //====================================================================================
     // Connections management
     ConnectionLine* dragLine = nullptr;
 
     //====================================================================================
 
     static AudioDeviceManager* deviceManager;
-    //static AudioProcessorPlayer* processorPlayer;
-    //static AudioProcessorGraph* audioGraph;
-
-    //static ConnectionGraph* connectionGraph;
-
     static UndoManager undoManager;
 
 private:
@@ -141,8 +121,8 @@ public:
 
     void mouseDoubleClick(const MouseEvent &event) override;
 
-    bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const override;
-    bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const override;
+    bool canDragInto(const SceneComponent &other, bool isRightClickDrag) const override;
+    bool canDragHover(const SceneComponent &other, bool isRightClickDrag) const override;
 
     struct NodeAndPort {
         AudioProcessorGraph::Node::Ptr node = nullptr;
@@ -258,5 +238,4 @@ private:
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Effect)
-
 };

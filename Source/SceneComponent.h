@@ -31,9 +31,19 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
-    void addChildComponent(SceneComponent child);
+    Array<SceneComponent*> getSelectedComponents();
+    template<class Type> Array<Type*> getSelectedComponentsOfType();
+    void deselectAll();
+    void select();
+    void toggleSelect();
 
+    virtual bool canDragHover(const SceneComponent& other, bool isRightClickDrag) const {return false;}
+    virtual bool canDragInto(const SceneComponent& other, bool isRightClickDrag) const {return false;}
     virtual void targetHoverMouseUp(const MouseEvent &event, SceneComponent* targetComponent);
+
+protected:
+    bool hovered = false;
+    bool selected = false;
 
 private:
     const int SELECT_MAX_DISTANCE = 5;
@@ -48,9 +58,7 @@ private:
     bool isExitDraggable = false;
     ComponentDragger dragger;
 
-    bool selected = false;
     bool selectable = false;
-    bool hovered = false;
     bool hoverable = false;
 
     SceneComponent* targetHoverComponent = nullptr;

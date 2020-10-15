@@ -40,22 +40,6 @@ const Identifier Effect::IDs::editMode = "editMode";
 EffectBase* EffectBase::effectScene = nullptr;
 
 
-void EffectBase::findLassoItemsInArea(Array<SelectHoverObject::Ptr> &results, const Rectangle<int> &area) {
-    for (auto c : effectScene->getChildren()) {
-        if (auto obj = dynamic_cast<SelectHoverObject*>(c)) {
-            if (area.intersects(c->getBoundsInParent())) {
-                results.addIfNotAlreadyThere(obj);
-            }
-        }
-    }
-}
-
-SelectedItemSet<SelectHoverObject::Ptr>& EffectBase::getLassoSelection() {
-    deselectAll();
-    return selected;
-}
-
-
 EffectBase::EffectBase() {
 
 }
@@ -210,32 +194,6 @@ Array<ConnectionLine *> EffectBase::getConnectionsInside() {
     }
     return array;
 }
-
-bool EffectBase::createEffect(Effect *newEffect) {
-
-    return false;
-}
-
-bool EffectBase::deleteEffect(Effect *newEffect) {
-
-    return false;
-}
-
-bool EffectBase::loadParameters(AudioProcessorParameterGroup parametersToLoad) {
-
-    return false;
-}
-
-bool EffectBase::loadParameters(Array<Parameter *> parametersToLoad) {
-
-    return false;
-}
-
-bool EffectBase::loadConnections(Array<ConnectionLine *> connectionsToLoad) {
-
-    return false;
-}
-
 
 /*
 void EffectBase::createGroupEffect() {
@@ -765,15 +723,15 @@ void Effect::paint(Graphics& g) {
     hoverRectangle.addRoundedRectangle(0, 0, getWidth(), getHeight(), 10, 10);
     PathStrokeType strokeType(3);
 
-    if (selectMode) {
+    if (selected) {
         strokeType.createStrokedPath(hoverRectangle, hoverRectangle);
-    } else if (hoverMode) {
+    } else if (hovered) {
         float thiccness[] = {5, 7};
         strokeType.createDashedStroke(hoverRectangle, hoverRectangle, thiccness, 2);
     }
 
 
-    if (selectMode || hoverMode) {
+    if (selected || hovered) {
         g.strokePath(hoverRectangle, strokeType);
     }
 
@@ -927,7 +885,6 @@ void Effect::mouseDown(const MouseEvent &event) {
 
         undoManager.beginNewTransaction("Move");
         dragger.startDraggingComponent(this, event);
-        startDragHoverDetect();
 
         EffectBase::mouseDown(event);
     }
@@ -935,22 +892,22 @@ void Effect::mouseDown(const MouseEvent &event) {
 
 void Effect::mouseDrag(const MouseEvent &event) {
     if (event.originalComponent == this) {
-        resetHoverObject();
+        //resetHoverObject();
 
-        SelectHoverObject::mouseDrag(event);
+        SceneComponent::mouseDrag(event);
 
         dragger.dragComponent(this, event, nullptr);
 
-        auto dragIntoObject = getDragIntoObject();
+        auto dragIntoObject = nullptr;//getDragIntoObject();
 
-        if (auto newParent = dynamic_cast<EffectBase*>(dragIntoObject)) {
+        /*if (auto newParent = dynamic_cast<EffectBase*>(dragIntoObject)) {
             if (newParent != getParentComponent()) {
                 // Reassign parent
                 EffectPositioner::getInstance()->effectParentReassigned(this, newParent);
             }
         } else {
             EffectPositioner::getInstance()->effectMoved(this);
-        }
+        }*/
     } else {
         // Something else than the effect initiated the drag. Probably ConnectionPort.
         EffectBase::mouseDrag(event);
@@ -960,9 +917,9 @@ void Effect::mouseDrag(const MouseEvent &event) {
 }
 
 void Effect::mouseUp(const MouseEvent &event) {
-    endDragHoverDetect();
+    //endDragHoverDetect();
     if (event.originalComponent == this) {
-        SelectHoverObject::mouseUp(event);
+        SceneComponent::mouseUp(event);
 
         if (event.mods.isRightButtonDown() && event.getDistanceFromDragStart() < 10) {
             if (editMode) {
@@ -977,8 +934,8 @@ void Effect::mouseUp(const MouseEvent &event) {
     }
 }
 
-bool Effect::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
-    auto effect = dynamic_cast<const Effect*>(other);
+bool Effect::canDragInto(const SceneComponent& other, bool isRightClickDrag) const {
+    auto effect = dynamic_cast<const Effect*>(&other);
     if (effect == nullptr) {
         return false;
     }
@@ -986,16 +943,15 @@ bool Effect::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) 
     return (effect->isInEditMode() && ! effect->isIndividual());
 }
 
-
-bool Effect::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
+bool Effect::canDragHover(const SceneComponent &other, bool isRightClickDrag) const {
     if (! isRightClickDrag) {
-        if (auto effect = dynamic_cast<const Effect*>(other)) {
+        if (auto effect = dynamic_cast<const Effect*>(&other)) {
             return (effect->isInEditMode() && ! effect->isIndividual());
         }
-        if (other == this) {
+        if (&other == this) {
             return false;
         }
-        if (auto line = dynamic_cast<const ConnectionLine*>(other)) {
+        if (auto line = dynamic_cast<const ConnectionLine*>(&other)) {
             return ! (isParentOf(line->getInPort()) || isParentOf(line->getOutPort()));
         }
     }
