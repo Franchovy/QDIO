@@ -10,6 +10,15 @@
 
 #include "EffectComponent.h"
 
+EffectComponent::EffectComponent() {
+    setHoverable(true);
+    setSelectable(true);
+    setDraggable(true);
+    setDragExitable(true);
+    setExitDraggable(true);
+}
+
+
 void EffectComponent::setNumPorts(int numIn, int numOut) {
     EffectConnectable::setNumPorts(numIn, numOut);
 
@@ -32,3 +41,19 @@ void EffectComponent::setNumPorts(int numIn, int numOut) {
         outY += 50;
     }
 }
+
+void EffectComponent::mouseDown(const MouseEvent &event) {
+    if (auto dragStartPort = dynamic_cast<ConnectionPort*>(getComponentAt(event.getPosition()))) {
+        startConnectionDrag(dragStartPort, event.getPosition().toFloat());
+    }
+    SceneComponent::mouseDown(event);
+}
+
+void EffectComponent::mouseDrag(const MouseEvent &event) {
+    SceneComponent::mouseDrag(event);
+}
+
+void EffectComponent::mouseUp(const MouseEvent &event) {
+    SceneComponent::mouseUp(event);
+}
+

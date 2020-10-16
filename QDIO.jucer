@@ -73,6 +73,8 @@
       <FILE id="N4k3tv" name="Tests.cpp" compile="1" resource="0" file="Source/Tests.cpp"/>
       <FILE id="KaiYw2" name="Tests.h" compile="0" resource="0" file="Source/Tests.h"/>
       <GROUP id="{3584041A-9A16-3F14-E200-86E478366369}" name="UI">
+        <FILE id="KnXiDI" name="Connection.cpp" compile="1" resource="0" file="Source/UI/Connection.cpp"/>
+        <FILE id="xAllew" name="Connection.h" compile="0" resource="0" file="Source/UI/Connection.h"/>
         <FILE id="KH8E19" name="ConnectionContainer.cpp" compile="1" resource="0"
               file="Source/UI/ConnectionContainer.cpp"/>
         <FILE id="Wh8FjS" name="ConnectionContainer.h" compile="0" resource="0"

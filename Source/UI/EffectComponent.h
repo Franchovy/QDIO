@@ -13,12 +13,21 @@
 #include <JuceHeader.h>
 #include "SceneComponent.h"
 #include "EffectConnectable.h"
+#include "ConnectionContainer.h"
 
-class EffectComponent : public SceneComponent, public EffectConnectable
+class EffectComponent : public SceneComponent, public EffectConnectable, public ConnectionContainer
 {
 public:
+    EffectComponent();
 
     void setNumPorts(int numIn, int numOut) override;
+
+    void mouseDown(const MouseEvent &event) override;
+
+    void mouseDrag(const MouseEvent &event) override;
+
+    void mouseUp(const MouseEvent &event) override;
+
 private:
 
 

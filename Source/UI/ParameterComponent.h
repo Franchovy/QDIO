@@ -9,3 +9,16 @@
 */
 
 #pragma once
+
+#include <JuceHeader.h>
+#include "SceneComponent.h"
+#include "ParameterConnectable.h"
+
+class ParameterComponent : public SceneComponent, public ParameterConnectable
+{
+public:
+
+private:
+
+
+};

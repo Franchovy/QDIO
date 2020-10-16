@@ -9,3 +9,13 @@
 */
 
 #pragma once
+#include <JuceHeader.h>
+#include "ConnectionPort.h"
+
+
+class ParameterConnectable
+{
+public:
+
+
+};

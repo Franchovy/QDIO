@@ -192,6 +192,22 @@ void SceneComponent::removeSceneComponent(SceneComponent *child) {
     Component::removeChildComponent(child);
 }
 
+void SceneComponent::onMouseDown(const MouseEvent &event) {
+    if (auto component = dynamic_cast<SceneComponent*>(getComponentAt(event.getPosition()))) {
+        component->onMouseDown(event.getEventRelativeTo(component));
+    }
+}
+
+void SceneComponent::onMouseDrag(const MouseEvent &event) {
+    if (auto component = dynamic_cast<SceneComponent*>(getComponentAt(event.getPosition()))) {
+        component->onMouseDown(event.getEventRelativeTo(component));
+    }
+}
+
+void SceneComponent::onMouseUp(const MouseEvent &event) {
+
+}
+
 
 
 
