@@ -56,7 +56,7 @@ void SceneComponent::setExitDraggable(bool isExitDraggable) {
 
 void SceneComponent::paint(Graphics &g) {
     Rectangle<int> outline = getLocalBounds();
-    Rectangle<int> frame = outline.expanded(-15);
+    Rectangle<int> frame = outline.expanded(-geometry.boundarySize);
 
     DropShadow shadow(Colours::black.withAlpha(0.5f), 15, Point<int>());
     shadow.drawForRectangle(g, frame);
@@ -71,10 +71,10 @@ void SceneComponent::paint(Graphics &g) {
     }
     // Fill inside frame
     g.setColour(findColour(backgroundID));
-    g.fillRoundedRectangle(frame.toFloat(), 5);
+    g.fillRoundedRectangle(frame.toFloat(), geometry.cornerSize);
     // Draw Outline
     g.setColour(findColour(outlineID));
-    g.drawRoundedRectangle(frame.toFloat(), 5, 3);
+    g.drawRoundedRectangle(frame.toFloat(), geometry.cornerSize, geometry.lineThicness);
 
 
     Component::paint(g);

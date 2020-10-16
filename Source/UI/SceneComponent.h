@@ -48,6 +48,15 @@ public:
         outlineID
     };
 
+    //=========================================================
+    // Frame and structure
+
+    struct Geometry {
+        int cornerSize = 5;
+        int boundarySize = 20;
+        int lineThicness = 3;
+    } geometry;
+
 protected:
     bool hovered = false;
     bool selected = false;

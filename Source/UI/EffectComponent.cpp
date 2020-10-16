@@ -15,14 +15,18 @@ void EffectComponent::setNumPorts(int numIn, int numOut) {
 
     int inY = 50;
     for (auto inPort : ports.inPorts) {
-        inPort->setBounds(20, inY, 60,60);
+        inPort->setSize(40,40);
+        inPort->geometry.boundarySize = 10;
+        inPort->setCentrePosition(geometry.boundarySize, inY);
         inPort->setHoverable(true);
         addAndMakeVisible(inPort);
         inY += 50;
     }
     int outY = 50;
     for (auto outPort : ports.outPorts) {
-        outPort->setBounds(getWidth()-20, outY, 60,60);
+        outPort->setSize(40,40);
+        outPort->geometry.boundarySize = 10;
+        outPort->setCentrePosition(getWidth() - geometry.boundarySize, outY);
         outPort->setHoverable(true);
         addAndMakeVisible(outPort);
         outY += 50;
