@@ -11,7 +11,7 @@
 #include "EffectConnectable.h"
 
 EffectConnectable::EffectConnectable() {
-    
+
 }
 
 void EffectConnectable::setNumPorts(int numIn, int numOut) {
@@ -41,18 +41,4 @@ void EffectConnectable::setNumPorts(int numIn, int numOut) {
 
 std::unique_ptr<ConnectionPort> EffectConnectable::createPort(bool isInput) {
     return std::make_unique<ConnectionPort>();
-}
-
-void EffectConnectable::autoPositionPorts() {
-
-    int inY = 50;
-    for (auto inPort : ports.inPorts) {
-        inPort->setTopLeftPosition(30, inY);
-        inY += 50;
-    }
-    int outY = 50;
-    for (auto outPort : ports.outPorts) {
-        outPort->setTopLeftPosition(30, outY);
-        outY += 50;
-    }
 }

@@ -12,11 +12,13 @@
 
 #include <JuceHeader.h>
 #include "SceneComponent.h"
+#include "EffectConnectable.h"
 
-class EffectComponent : SceneComponent
+class EffectComponent : public SceneComponent, public EffectConnectable
 {
 public:
 
+    void setNumPorts(int numIn, int numOut) override;
 private:
 
 

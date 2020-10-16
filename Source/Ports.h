@@ -18,12 +18,12 @@ class Effect;
 /**
  * Base class - port to connect to other ports
  */
-class ConnectionPort : public SelectHoverObject, public SettableTooltipClient
+class ConnectionPort_old : public SelectHoverObject, public SettableTooltipClient
 {
 public:
-    using Ptr = ReferenceCountedObjectPtr<ConnectionPort>;
+    using Ptr = ReferenceCountedObjectPtr<ConnectionPort_old>;
 
-    ~ConnectionPort() = default;
+    ~ConnectionPort_old() = default;
 
     Point<int> centrePoint;
 
@@ -36,15 +36,15 @@ public:
     bool canDragInto(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
     bool canDragHover(const SelectHoverObject *other, bool isRightClickDrag = false) const override;
 
-    virtual bool canConnect(const ConnectionPort* other) const = 0;
+    virtual bool canConnect(const ConnectionPort_old* other) const = 0;
     virtual Component* getDragLineParent() = 0;
     virtual Component* getParentEffect();
 
     bool isInput;
     bool isInternal = false;
 
-    void setOtherPort(ConnectionPort* newPort);
-    ConnectionPort* getOtherPort();
+    void setOtherPort(ConnectionPort_old* newPort);
+    ConnectionPort_old* getOtherPort();
 
     bool isConnected() { return otherPort != nullptr; }
 
@@ -52,24 +52,24 @@ public:
         portColour = 0
     };
 
-    ConnectionPort* getLinkedPort() const;
-    void setLinkedPort(ConnectionPort* port);
+    ConnectionPort_old* getLinkedPort() const;
+    void setLinkedPort(ConnectionPort_old* port);
 
 protected:
-    ConnectionPort();
+    ConnectionPort_old();
 
-    ConnectionPort* otherPort = nullptr;
+    ConnectionPort_old* otherPort = nullptr;
 
     Rectangle<int> hoverBox;
     Rectangle<int> outline;
 
-    ConnectionPort* linkedPort = nullptr;
+    ConnectionPort_old* linkedPort = nullptr;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionPort)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ConnectionPort_old)
 };
 
-class ParameterPort : public ConnectionPort
+class ParameterPort : public ConnectionPort_old
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<ParameterPort>;
@@ -77,7 +77,7 @@ public:
 
     Component *getParentEffect() override;
 
-    bool canConnect(const ConnectionPort* other) const override;
+    bool canConnect(const ConnectionPort_old* other) const override;
 
     Component *getDragLineParent() override;
 
@@ -92,7 +92,7 @@ private:
 };
 
 class AudioPort;
-class InternalConnectionPort : public ConnectionPort
+class InternalConnectionPort : public ConnectionPort_old
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<InternalConnectionPort>;
@@ -101,14 +101,14 @@ public:
 
     Component *getDragLineParent() override;
 
-    bool canConnect(const ConnectionPort* other) const override;
+    bool canConnect(const ConnectionPort_old* other) const override;
     AudioPort* audioPort;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InternalConnectionPort)
 };
 
-class AudioPort : public ConnectionPort
+class AudioPort : public ConnectionPort_old
 {
 public:
     using Ptr = ReferenceCountedObjectPtr<AudioPort>;
@@ -126,7 +126,7 @@ public:
     AudioProcessor::Bus* bus;
     InternalConnectionPort::Ptr internalPort;
 
-    bool canConnect(const ConnectionPort* other) const override;
+    bool canConnect(const ConnectionPort_old* other) const override;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPort)

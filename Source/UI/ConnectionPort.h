@@ -10,6 +10,7 @@
 
 #pragma once
 #include <JuceHeader.h>
+#include "SceneComponent.h"
 
 class ConnectionPort : public SceneComponent
 {

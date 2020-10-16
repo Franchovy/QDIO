@@ -22,8 +22,7 @@ class EffectConnectable
 public:
     EffectConnectable();
 
-    void setNumPorts(int numIn, int numOut);
-    void autoPositionPorts();
+    virtual void setNumPorts(int numIn, int numOut);
 
 protected:
     EffectPorts ports;

@@ -59,7 +59,7 @@ public:
     static UndoManager& getUndoManager() { return undoManager; }
     static AudioDeviceManager* getDeviceManager() {return deviceManager;}
 
-    ConnectionPort* getPortFromID(String portID);
+    ConnectionPort_old* getPortFromID(String portID);
 
     enum AppState {
         loading = 0,
@@ -130,11 +130,11 @@ public:
         bool isValid = false;
     };
 
-    Array<Effect*> getFullConnectionEffects(ConnectionPort* port, bool includeParent = false);
+    Array<Effect*> getFullConnectionEffects(ConnectionPort_old* port, bool includeParent = false);
     Array<Effect*> getFullConnectionEffectsInside();
-    Array<ConnectionLine*> getConnectionsUntilEnd(ConnectionPort* port);
-    ConnectionPort* getNextPort(ConnectionPort* port, bool stopAtProcessor = true);
-    ConnectionPort* getEndPort(ConnectionPort* port);
+    Array<ConnectionLine*> getConnectionsUntilEnd(ConnectionPort_old* port);
+    ConnectionPort_old* getNextPort(ConnectionPort_old* port, bool stopAtProcessor = true);
+    ConnectionPort_old* getEndPort(ConnectionPort_old* port);
 
     void setNode(AudioProcessorGraph::Node::Ptr node);
 
@@ -148,15 +148,15 @@ public:
 
     void addPort(AudioPort* port);
     AudioPort::Ptr addPort(AudioProcessor::Bus* bus, bool isInput);
-    Array<ConnectionPort*> getPorts(int isInput = -1);
-    void removePort(ConnectionPort* port);
+    Array<ConnectionPort_old*> getPorts(int isInput = -1);
+    void removePort(ConnectionPort_old* port);
 
-    //ConnectionPort* checkPort(Point<int> pos);
-    bool hasPort(const ConnectionPort* port);
+    //ConnectionPort_old* checkPort(Point<int> pos);
+    bool hasPort(const ConnectionPort_old* port);
     bool hasConnection(const ConnectionLine* line);
 
-    //int getPortID(const ConnectionPort* port);
-    //ConnectionPort* getPortFromID(const int id, bool internal = false);
+    //int getPortID(const ConnectionPort_old* port);
+    //ConnectionPort_old* getPortFromID(const int id, bool internal = false);
 
     void setEditMode(bool isEditMode);
     bool isInEditMode() const { return editMode; }

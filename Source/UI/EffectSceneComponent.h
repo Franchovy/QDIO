@@ -12,6 +12,7 @@
 
 #include "SceneComponent.h"
 #include "ConnectionContainer.h"
+#include "EffectComponent.h"
 
 class EffectSceneComponent : public SceneComponent, public ConnectionContainer
 {
@@ -23,4 +24,6 @@ private:
     // Test stuff
     SceneComponent childComponent;
     SceneComponent parentComponent;
+
+    EffectComponent effect;
 };

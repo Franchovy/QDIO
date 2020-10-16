@@ -170,7 +170,7 @@ void EffectPositioner::effectDeleted(Effect *effect) {
 }
 
 
-ConnectionLine *EffectPositioner::getConnectionToPort(ConnectionPort *port) const {
+ConnectionLine *EffectPositioner::getConnectionToPort(ConnectionPort_old *port) const {
     auto effect = dynamic_cast<Effect*>(port->getParentComponent());
     for (auto connection : effect->getConnectionsToThis()) {
         if (connection->getInPort() == port) {

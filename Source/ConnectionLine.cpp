@@ -89,7 +89,7 @@ void ConnectionLine::mouseDown(const MouseEvent &event) {
     startDragHoverDetect();
     SelectHoverObject::mouseDown(event.getEventRelativeTo(this));
 
-    ConnectionPort *originPort;
+    ConnectionPort_old *originPort;
     if (inPort == nullptr || outPort == nullptr) {
         // New Line
         jassert (inPort != nullptr || outPort != nullptr);
@@ -135,10 +135,10 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
     }
     setBounds(Rectangle<int>(inPos, outPos));
 
-    auto oldPort = dynamic_cast<ConnectionPort*>(getHoverObject());
+    auto oldPort = dynamic_cast<ConnectionPort_old*>(getHoverObject());
 
     if (auto obj = getDragIntoObject()) {
-        if (auto port = dynamic_cast<ConnectionPort*>(obj)) {
+        if (auto port = dynamic_cast<ConnectionPort_old*>(obj)) {
             if (canConnect(port)) {
                 setHoverObject(port);
                 port->repaint();
@@ -159,7 +159,7 @@ void ConnectionLine::mouseDrag(const MouseEvent &event) {
 }
 
 void ConnectionLine::mouseUp(const MouseEvent &event) {
-    if (auto port = dynamic_cast<ConnectionPort*>(getHoverObject())) {
+    if (auto port = dynamic_cast<ConnectionPort_old*>(getHoverObject())) {
         setPort(port);
     }
 
@@ -192,7 +192,7 @@ void ConnectionLine::resized() {
     Component::resized();
 }
 
-bool ConnectionLine::canConnect(const ConnectionPort *port) const {
+bool ConnectionLine::canConnect(const ConnectionPort_old *port) const {
     if (inPort != nullptr) {
         return inPort->canConnect(port);
     } else if (outPort != nullptr) {
@@ -251,7 +251,7 @@ bool ConnectionLine::connect() {
     return false;
 }
 
-void ConnectionLine::disconnect(ConnectionPort* port) {
+void ConnectionLine::disconnect(ConnectionPort_old* port) {
     connected = false;
 
     // Disconnect functionality
@@ -288,7 +288,7 @@ void ConnectionLine::disconnect(ConnectionPort* port) {
     setEnabled(false);
 }
 
-bool ConnectionLine::setPort(ConnectionPort *port) {
+bool ConnectionLine::setPort(ConnectionPort_old *port) {
     if (port->isInput) {
         inPort = port;
         inPort->getParentComponent()->addComponentListener(this);
@@ -304,7 +304,7 @@ bool ConnectionLine::setPort(ConnectionPort *port) {
     }
 }
 
-void ConnectionLine::unsetPort(ConnectionPort *port) {
+void ConnectionLine::unsetPort(ConnectionPort_old *port) {
     jassert(port == inPort || port == outPort);
 
     if (connected) {
@@ -334,7 +334,7 @@ bool ConnectionLine::isConnected() const {
     return connected;
 }
 
-void ConnectionLine::reconnect(ConnectionPort *newInPort, ConnectionPort *newOutPort) {
+void ConnectionLine::reconnect(ConnectionPort_old *newInPort, ConnectionPort_old *newOutPort) {
     jassert(newInPort->isInput && ! newOutPort->isInput);
 
     auto oldOutPort = outPort.get();

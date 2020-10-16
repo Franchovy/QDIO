@@ -95,7 +95,7 @@ void EffectBase::mouseDown(const MouseEvent &event) {
     //todo move this to port class
 
     // Handle Connection
-    if (auto port = dynamic_cast<ConnectionPort*>(event.originalComponent)) {
+    if (auto port = dynamic_cast<ConnectionPort_old*>(event.originalComponent)) {
         dragLine = new ConnectionLine();
 
         dragLine->setPort(port);
@@ -144,11 +144,11 @@ Array<ConnectionLine *> EffectBase::getConnectionsToThis() {
 }
 
 
-ConnectionPort* EffectBase::getPortFromID(String portID) {
+ConnectionPort_old* EffectBase::getPortFromID(String portID) {
     auto ref = Identifier(portID);
 
     if (auto p = findChildWithID(ref)) {
-        return dynamic_cast<ConnectionPort*>(p);
+        return dynamic_cast<ConnectionPort_old*>(p);
     }
 
     for (auto child : getChildren()) {
@@ -160,7 +160,7 @@ ConnectionPort* EffectBase::getPortFromID(String portID) {
             }
 
             if (auto p = child->findChildWithID(ref)) {
-                return dynamic_cast<ConnectionPort*>(p);
+                return dynamic_cast<ConnectionPort_old*>(p);
             }
         }
         if (auto param = dynamic_cast<Parameter*>(child)) {
@@ -570,7 +570,7 @@ AudioPort::Ptr Effect::addPort(AudioProcessor::Bus *bus, bool isInput) {
     return p;
 }
 
-ConnectionPort* Effect::getEndPort(ConnectionPort* port) {
+ConnectionPort_old* Effect::getEndPort(ConnectionPort_old* port) {
     if (port == nullptr) return nullptr;
     
     if (! port->isConnected()) {
@@ -588,7 +588,7 @@ ConnectionPort* Effect::getEndPort(ConnectionPort* port) {
     }
 }
 
-ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) {
+ConnectionPort_old *Effect::getNextPort(ConnectionPort_old *port, bool stopAtProcessor) {
 
     if (port->isConnected()) {
         auto otherPort = port->getOtherPort();
@@ -615,7 +615,7 @@ ConnectionPort *Effect::getNextPort(ConnectionPort *port, bool stopAtProcessor) 
 }
 
 
-Array<Effect *> Effect::getFullConnectionEffects(ConnectionPort *port, bool includeParent) {
+Array<Effect *> Effect::getFullConnectionEffects(ConnectionPort_old *port, bool includeParent) {
     Array<Effect *> array;
 
     auto nextPort = getNextPort(port, false); //todo array
@@ -644,7 +644,7 @@ Array<Effect *> Effect::getFullConnectionEffectsInside() {
 
     for (auto port : getPorts(true)) {
         auto insidePort = port->getLinkedPort();
-        ConnectionPort* nextPort = getNextPort(insidePort);
+        ConnectionPort_old* nextPort = getNextPort(insidePort);
 
         while (nextPort != nullptr && nextPort->getParentEffect() != this) {
             array.add(dynamic_cast<Effect*>(nextPort->getParentEffect()));
@@ -656,7 +656,7 @@ Array<Effect *> Effect::getFullConnectionEffectsInside() {
     return Array<Effect *>();
 }
 
-Array<ConnectionLine *> Effect::getConnectionsUntilEnd(ConnectionPort* port) {
+Array<ConnectionLine *> Effect::getConnectionsUntilEnd(ConnectionPort_old* port) {
     Array<ConnectionLine*> array;
     while (! dynamic_cast<Effect*>(port->getParentEffect())->isIndividual()) {
         port = getNextPort(port);
@@ -792,7 +792,7 @@ bool Effect::hasProcessor(AudioProcessor *processor) {
     }
 }*/
 
-bool Effect::hasPort(const ConnectionPort *port) {
+bool Effect::hasPort(const ConnectionPort_old *port) {
     return (port->getParentComponent() == this);
 }
 
@@ -846,8 +846,8 @@ Array<Parameter*> Effect::getParameterChildren() {
  * 1 for input ports
  * @return list of pointers to ports.
  */
-Array<ConnectionPort *> Effect::getPorts(int isInput) {
-    Array<ConnectionPort*> list;
+Array<ConnectionPort_old *> Effect::getPorts(int isInput) {
+    Array<ConnectionPort_old*> list;
 
     //todo add template type to cast
 
@@ -909,7 +909,7 @@ void Effect::mouseDrag(const MouseEvent &event) {
             EffectPositioner::getInstance()->effectMoved(this);
         }*/
     } else {
-        // Something else than the effect initiated the drag. Probably ConnectionPort.
+        // Something else than the effect initiated the drag. Probably ConnectionPort_old.
         EffectBase::mouseDrag(event);
     }
 
@@ -1003,7 +1003,7 @@ void Effect::setName(const String &newName) {
 }
 
 
-void Effect::removePort(ConnectionPort *port) { //todo test
+void Effect::removePort(ConnectionPort_old *port) { //todo test
     auto audioPort = dynamic_cast<AudioPort*> (port);
     if (audioPort == nullptr) {
         audioPort = dynamic_cast<AudioPort*>(port->getLinkedPort());
@@ -1196,14 +1196,14 @@ bool ConnectionLine::canDragInto(const SelectHoverObject *other, bool isRightCli
 }
 
 bool ConnectionLine::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
-    return dynamic_cast<const ConnectionPort*>(other);
+    return dynamic_cast<const ConnectionPort_old*>(other);
 }
 
-bool ConnectionPort::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
+bool ConnectionPort_old::canDragHover(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
 
-bool ConnectionPort::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
+bool ConnectionPort_old::canDragInto(const SelectHoverObject *other, bool isRightClickDrag) const {
     return false;
 }
 

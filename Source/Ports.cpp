@@ -11,7 +11,7 @@
 #include "Ports.h"
 
 
-AudioPort::AudioPort(bool isInput) : ConnectionPort()
+AudioPort::AudioPort(bool isInput) : ConnectionPort_old()
         , internalPort(new InternalConnectionPort(this, !isInput))
 {
     linkedPort = internalPort.get();
@@ -25,7 +25,7 @@ AudioPort::AudioPort(bool isInput) : ConnectionPort()
     this->isInput = isInput;
 }
 
-bool AudioPort::canConnect(const ConnectionPort* other) const {
+bool AudioPort::canConnect(const ConnectionPort_old* other) const {
     // Cannot connect to two of the same type.
     if (this->isInput == other->isInput) {
         return false;
@@ -49,7 +49,7 @@ Component *AudioPort::getDragLineParent() {
 }
 
 
-void ConnectionPort::paint(Graphics &g) {
+void ConnectionPort_old::paint(Graphics &g) {
     g.setColour(Colours::whitesmoke);
     g.fillRect(outline);
 
@@ -69,44 +69,44 @@ void ConnectionPort::paint(Graphics &g) {
     }
 }
 
-void ConnectionPort::mouseDown(const MouseEvent &event) {
+void ConnectionPort_old::mouseDown(const MouseEvent &event) {
     getParentComponent()->mouseDown(event);
 }
 
-void ConnectionPort::mouseDrag(const MouseEvent &event) {
+void ConnectionPort_old::mouseDrag(const MouseEvent &event) {
     getParentComponent()->mouseDrag(event);
 }
 
-void ConnectionPort::mouseUp(const MouseEvent &event) {
+void ConnectionPort_old::mouseUp(const MouseEvent &event) {
     getParentComponent()->mouseUp(event);
 }
 
-ConnectionPort::ConnectionPort() {
+ConnectionPort_old::ConnectionPort_old() {
     setColour(portColour, Colours::black);
 }
 
-ConnectionPort *ConnectionPort::getLinkedPort() const {
+ConnectionPort_old *ConnectionPort_old::getLinkedPort() const {
     return linkedPort;
 }
 
 
-ConnectionPort* ConnectionPort::getOtherPort() {
+ConnectionPort_old* ConnectionPort_old::getOtherPort() {
     return otherPort;
 }
 
-void ConnectionPort::setOtherPort(ConnectionPort *newPort) {
+void ConnectionPort_old::setOtherPort(ConnectionPort_old *newPort) {
     otherPort = newPort;
 }
 
-void ConnectionPort::setLinkedPort(ConnectionPort *port) {
+void ConnectionPort_old::setLinkedPort(ConnectionPort_old *port) {
     linkedPort = port;
 }
 
-Component *ConnectionPort::getParentEffect() {
+Component *ConnectionPort_old::getParentEffect() {
     return getParentComponent();
 }
 
-bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
+bool InternalConnectionPort::canConnect(const ConnectionPort_old* other) const {
     if (dynamic_cast<const ParameterPort*>(other)) {
         return false;
     }
@@ -116,7 +116,7 @@ bool InternalConnectionPort::canConnect(const ConnectionPort* other) const {
              && this->getParentComponent() == other->getParentComponent());
 }
 
-InternalConnectionPort::InternalConnectionPort(AudioPort *parent, bool isInput) : ConnectionPort() {
+InternalConnectionPort::InternalConnectionPort(AudioPort *parent, bool isInput) : ConnectionPort_old() {
     audioPort = parent;
     linkedPort = audioPort;
 
@@ -134,7 +134,7 @@ Component *InternalConnectionPort::getDragLineParent() {
     return getParentComponent();
 }
 
-bool ParameterPort::canConnect(const ConnectionPort* other) const {
+bool ParameterPort::canConnect(const ConnectionPort_old* other) const {
     if (auto p = dynamic_cast<const ParameterPort*>(other)) {
         if (p->getParentComponent() == getLinkedPort()->getParentComponent()) {
             return false;
@@ -146,7 +146,7 @@ bool ParameterPort::canConnect(const ConnectionPort* other) const {
 }
 
 ParameterPort::ParameterPort(bool isInternal, SelectHoverObject* parameterParent)
-    : ConnectionPort()
+    : ConnectionPort_old()
     , parameterParent(parameterParent)
 {
     hoverBox = Rectangle<int>(0,0,36,36);

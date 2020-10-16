@@ -15,7 +15,7 @@
 class Effect;
 class EffectBase;
 class ConnectionLine;
-class ConnectionPort;
+class ConnectionPort_old;
 
 
 /**
@@ -66,7 +66,7 @@ private:
     int getFittedDistance(const Effect* leftEffect, const Effect* rightEffect) const;
 
     // Connectivity Convenience functions
-    ConnectionLine* getConnectionToPort(ConnectionPort* port) const;
+    ConnectionLine* getConnectionToPort(ConnectionPort_old* port) const;
 
     // Geometric Convenience functions
     Point<int> getEffectCenter(Effect* effect) const;

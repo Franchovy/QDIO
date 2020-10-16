@@ -27,4 +27,8 @@ EffectSceneComponent::EffectSceneComponent() {
     parentComponent.setHoverable(true);
     addAndMakeVisible(parentComponent);
     parentComponent.setBounds(1000, 500, 500, 500);
+
+    effect.setBounds(500, 500, 200, 200);
+    addAndMakeVisible(effect);
+    effect.setNumPorts(1, 2);
 }

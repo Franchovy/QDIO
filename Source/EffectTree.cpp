@@ -296,7 +296,7 @@ void EffectTree::componentChildrenChanged(Component &component) {
                             }
                         }
                         // Create Port
-                        else if (auto port = dynamic_cast<ConnectionPort*>(c)) {
+                        else if (auto port = dynamic_cast<ConnectionPort_old*>(c)) {
                             auto portTree = ValueTree(PORT_ID);
                             portTree.setProperty(IDs::component, port, nullptr);
                             String portID = std::to_string(reinterpret_cast<int64>(port));
@@ -325,7 +325,7 @@ void EffectTree::componentParentHierarchyChanged(Component &component) {
                 tree.getParent().removeChild(tree, undoManager);
             }
         }
-    } else if (auto port = dynamic_cast<ConnectionPort*>(&component)) {
+    } else if (auto port = dynamic_cast<ConnectionPort_old*>(&component)) {
         if (port->getParentComponent() == nullptr) {
             auto tree = findTree(effectTree, port);
             if (tree.isValid()) {
@@ -478,14 +478,14 @@ void EffectTree::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged
         auto line = getFromTree<ConnectionLine>(treeWhosePropertyHasChanged);
         if (property == Identifier(ConnectionLine::IDs::InPort)) {
             // Set line inPort
-            auto inPort = getPropertyFromTree<ConnectionPort>(treeWhosePropertyHasChanged, ConnectionLine::IDs::InPort);
+            auto inPort = getPropertyFromTree<ConnectionPort_old>(treeWhosePropertyHasChanged, ConnectionLine::IDs::InPort);
             if (inPort != nullptr) {
                 line->setPort(inPort);
             } else if (line->isConnected()) {
                 line->unsetPort(line->getInPort());
             }
         } else if (property == Identifier(ConnectionLine::IDs::OutPort)) {
-            auto outPort = getPropertyFromTree<ConnectionPort>(treeWhosePropertyHasChanged, ConnectionLine::IDs::OutPort);
+            auto outPort = getPropertyFromTree<ConnectionPort_old>(treeWhosePropertyHasChanged, ConnectionLine::IDs::OutPort);
             if (outPort != nullptr) {
                 line->setPort(outPort);
             } else if (line->isConnected()){
@@ -647,7 +647,7 @@ ValueTree EffectTree::storeEffect(const ValueTree &storeData) {
             // Port
             else if (child.hasType(PORT_ID)) {
                 auto childCopy = child.createCopy();
-                auto port = getFromTree<ConnectionPort>(child);
+                auto port = getFromTree<ConnectionPort_old>(child);
 
                 if (port != nullptr) {
                     childCopy.removeProperty(IDs::component, nullptr);
@@ -950,7 +950,7 @@ bool EffectTree::loadPort(ValueTree portData) {
     bool isInternal = portData.getProperty("isInternal");
     String linkedID = portData.getProperty("linkedPortID");
 
-    ConnectionPort* port = nullptr;
+    ConnectionPort_old* port = nullptr;
 
     String type = portData.getProperty("type");
     if (type == "audio") {
