@@ -31,6 +31,9 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
+    void addSceneComponent(SceneComponent* child);
+    void removeSceneComponent(SceneComponent* child);
+
     Array<SceneComponent*> getSelectedComponents();
     template<class Type> Array<Type*> getSelectedComponentsOfType();
     void deselectAll();

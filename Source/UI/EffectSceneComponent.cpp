@@ -20,15 +20,15 @@ EffectSceneComponent::EffectSceneComponent() {
     childComponent.setSelectable(true);
     childComponent.setDraggable(true);
     childComponent.setExitDraggable(true);
-    addAndMakeVisible(childComponent);
+    addSceneComponent(&childComponent);
     childComponent.setBounds(getHeight() / 2, getWidth() / 2, 200, 200);
 
     parentComponent.setDragExitable(true);
     parentComponent.setHoverable(true);
-    addAndMakeVisible(parentComponent);
+    addSceneComponent(&parentComponent);
     parentComponent.setBounds(1000, 500, 500, 500);
 
     effect.setBounds(500, 500, 200, 200);
-    addAndMakeVisible(effect);
+    addSceneComponent(&effect);
     effect.setNumPorts(1, 2);
 }

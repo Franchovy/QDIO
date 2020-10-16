@@ -182,6 +182,16 @@ void SceneComponent::toggleSelect() {
 
 }
 
+void SceneComponent::addSceneComponent(SceneComponent *child) {
+    children.add(child);
+    Component::addAndMakeVisible(child);
+}
+
+void SceneComponent::removeSceneComponent(SceneComponent *child) {
+    children.removeObject(child);
+    Component::removeChildComponent(child);
+}
+
 
 
 
