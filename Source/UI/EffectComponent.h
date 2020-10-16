@@ -9,3 +9,15 @@
 */
 
 #pragma once
+
+#include <JuceHeader.h>
+#include "SceneComponent.h"
+
+class EffectComponent : SceneComponent
+{
+public:
+
+private:
+
+
+};

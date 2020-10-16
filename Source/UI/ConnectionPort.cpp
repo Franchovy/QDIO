@@ -9,3 +9,7 @@
 */
 
 #include "ConnectionPort.h"
+
+ConnectionPort::ConnectionPort() {
+
+}

@@ -9,3 +9,10 @@
 */
 
 #pragma once
+#include <JuceHeader.h>
+
+class ConnectionPort : public SceneComponent
+{
+public:
+    ConnectionPort();
+};
