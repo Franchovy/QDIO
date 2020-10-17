@@ -26,9 +26,9 @@ void Connection::connectStart(ConnectionPort *startPort, Point<int> dragPos) {
     setBounds(newBounds);
 
     port1 = startPort;
-    socket1.pos = this->getLocalPoint(startPort,
+    socket1.pos = getLocalPoint(startPort,
                       portCenter);
-    socket2.pos = this->getLocalPoint(getParentComponent(),
+    socket2.pos = getLocalPoint(getParentComponent(),
                                   dragPos);
     socket1.relativeToParentPos = getParentComponent()->getLocalPoint(startPort,
                                                      portCenter);
@@ -51,7 +51,28 @@ void Connection::connectDrag(Point<int> dragPos) {
 }
 
 void Connection::connectEnd(ConnectionPort *endPort) {
+    if (endPort != nullptr) {
+        // Create connection
+        port2 = endPort;
 
+        // Update bounds
+        auto portCenter = Point<int>(endPort->getWidth() / 2, endPort->getHeight() / 2);
+        Rectangle<int> bounds(
+                socket1.relativeToParentPos,
+                getParentComponent()->getLocalPoint(endPort, portCenter));
+        setBounds(bounds);
+
+        // Update socket1 pos if bounds have changed
+        socket1.pos = getLocalPoint(getParentComponent(), socket1.relativeToParentPos);
+        // Update socket2 to dragPos
+        socket2.pos = getLocalPoint(endPort, portCenter);
+        socket2.relativeToParentPos = getParentComponent()->getLocalPoint(this,
+                                                                          socket2.pos);
+    } else {
+        // Cancel connection
+        auto parent = dynamic_cast<SceneComponent*>(getParentComponent());
+        parent->removeSceneComponent(this);
+    }
 
 }
 

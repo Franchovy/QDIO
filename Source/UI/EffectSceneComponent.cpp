@@ -31,6 +31,10 @@ EffectSceneComponent::EffectSceneComponent() {
     effect.setBounds(500, 500, 200, 200);
     addSceneComponent(&effect);
     effect.setNumPorts(1, 2);
+
+    effect2.setBounds(900, 200, 200, 200);
+    addSceneComponent(&effect2);
+    effect2.setNumPorts(2, 2);
 }
 
 void EffectSceneComponent::mouseDown(const MouseEvent &event) {

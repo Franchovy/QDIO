@@ -21,7 +21,7 @@ public:
 
     void startConnectionDrag(Component* thisComponent, ConnectionPort* port1, Point<float> mousePos);
     void connectionDrag(Point<float> mousePos);
-    void endConnectionDrag(Point<float> mousePos);
+    void endConnectionDrag(ConnectionPort* port2);
 
 private:
     Connection* activeConnection = nullptr;

@@ -30,4 +30,5 @@ private:
     SceneComponent parentComponent;
 
     EffectComponent effect;
+    EffectComponent effect2;
 };
