@@ -56,5 +56,10 @@ void Connection::connectEnd(ConnectionPort *endPort) {
 }
 
 void Connection::paint(Graphics &g) {
-    g.drawLine(Line<float>(socket1.pos.toFloat(), socket2.pos.toFloat()), 2);
+    auto line = Line<float>(socket1.pos.toFloat(), socket2.pos.toFloat());
+    g.setColour(Colours::lightgrey);
+    g.drawLine(line, 4);
+    g.setColour(Colours::darkgrey);
+    g.drawLine(line, 2);
+    
 }
