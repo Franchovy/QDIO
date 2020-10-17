@@ -90,6 +90,51 @@ void SceneComponent::mouseExit(const MouseEvent &event) {
     Component::mouseExit(event);
 }
 
+void SceneComponent::targetHoverMouseUp(const MouseEvent &event, SceneComponent *targetComponent) {
+    std::cout << event.eventComponent << " drags into " << targetComponent << newLine;
+}
+
+Array<SceneComponent *> SceneComponent::getSelectedComponents() {
+    Array<SceneComponent*> array;
+    for (auto s : selectedComponents) {
+        array.add(s);
+    }
+    return array;
+}
+
+template<class Type>
+Array<Type *> SceneComponent::getSelectedComponentsOfType() {
+    Array<Type*> array;
+    for (auto s : selectedComponents) {
+        if (dynamic_cast<Type*>(s)) {
+            array.add(s);
+        }
+    }
+    return array;
+}
+
+void SceneComponent::deselectAll() {
+
+}
+
+void SceneComponent::select() {
+
+}
+
+void SceneComponent::toggleSelect() {
+
+}
+
+void SceneComponent::addSceneComponent(SceneComponent *child) {
+    children.add(child);
+    Component::addAndMakeVisible(child);
+}
+
+void SceneComponent::removeSceneComponent(SceneComponent *child) {
+    children.removeObject(child);
+    Component::removeChildComponent(child);
+}
+
 void SceneComponent::mouseDown(const MouseEvent &event) {
     if (isDraggable) {
         toFront(false);
@@ -147,65 +192,10 @@ void SceneComponent::mouseUp(const MouseEvent &event) {
     Component::mouseUp(event);
 }
 
-void SceneComponent::targetHoverMouseUp(const MouseEvent &event, SceneComponent *targetComponent) {
-    std::cout << event.eventComponent << " drags into " << targetComponent << newLine;
-}
-
-Array<SceneComponent *> SceneComponent::getSelectedComponents() {
-    Array<SceneComponent*> array;
-    for (auto s : selectedComponents) {
-        array.add(s);
+SceneComponent::~SceneComponent() {
+    if (auto parent = dynamic_cast<SceneComponent*>(getParentComponent())) {
+        parent->removeSceneComponent(this);
     }
-    return array;
-}
-
-template<class Type>
-Array<Type *> SceneComponent::getSelectedComponentsOfType() {
-    Array<Type*> array;
-    for (auto s : selectedComponents) {
-        if (dynamic_cast<Type*>(s)) {
-            array.add(s);
-        }
-    }
-    return array;
-}
-
-void SceneComponent::deselectAll() {
-
-}
-
-void SceneComponent::select() {
-
-}
-
-void SceneComponent::toggleSelect() {
-
-}
-
-void SceneComponent::addSceneComponent(SceneComponent *child) {
-    children.add(child);
-    Component::addAndMakeVisible(child);
-}
-
-void SceneComponent::removeSceneComponent(SceneComponent *child) {
-    children.removeObject(child);
-    Component::removeChildComponent(child);
-}
-
-void SceneComponent::onMouseDown(const MouseEvent &event) {
-    if (auto component = dynamic_cast<SceneComponent*>(getComponentAt(event.getPosition()))) {
-        component->onMouseDown(event.getEventRelativeTo(component));
-    }
-}
-
-void SceneComponent::onMouseDrag(const MouseEvent &event) {
-    if (auto component = dynamic_cast<SceneComponent*>(getComponentAt(event.getPosition()))) {
-        component->onMouseDown(event.getEventRelativeTo(component));
-    }
-}
-
-void SceneComponent::onMouseUp(const MouseEvent &event) {
-
 }
 
 

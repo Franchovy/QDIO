@@ -11,6 +11,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "ConnectionPort.h"
+#include "ConnectionContainer.h"
 
 struct EffectPorts {
     OwnedArray<ConnectionPort> inPorts;

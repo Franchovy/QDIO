@@ -16,13 +16,13 @@ void ConnectionContainer::addConnection(ConnectionPort *port1, ConnectionPort *p
 }
 
 void ConnectionContainer::startConnectionDrag(ConnectionPort *port1, Point<float> mousePos) {
-    std::cout << "Drag start!" << newLine;
+    std::cout << "Drag start: " << mousePos.toString() << newLine;
 }
 
 void ConnectionContainer::connectionDrag(Point<float> mousePos) {
-
+    std::cout << "Dragging: " << mousePos.toString() << newLine;
 }
 
 void ConnectionContainer::endConnectionDrag(Point<float> mousePos) {
-
+    std::cout << "Drag end: " << mousePos.toString() << newLine;
 }

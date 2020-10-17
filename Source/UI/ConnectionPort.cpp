@@ -13,3 +13,18 @@
 ConnectionPort::ConnectionPort() {
 
 }
+
+void ConnectionPort::mouseDown(const MouseEvent &event) {
+    getParentComponent()->mouseDown(event);
+    SceneComponent::mouseDown(event);
+}
+
+void ConnectionPort::mouseDrag(const MouseEvent &event) {
+    getParentComponent()->mouseDrag(event);
+    SceneComponent::mouseDrag(event);
+}
+
+void ConnectionPort::mouseUp(const MouseEvent &event) {
+    getParentComponent()->mouseUp(event);
+    SceneComponent::mouseUp(event);
+}

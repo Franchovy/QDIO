@@ -43,17 +43,36 @@ void EffectComponent::setNumPorts(int numIn, int numOut) {
 }
 
 void EffectComponent::mouseDown(const MouseEvent &event) {
-    if (auto dragStartPort = dynamic_cast<ConnectionPort*>(getComponentAt(event.getPosition()))) {
-        startConnectionDrag(dragStartPort, event.getPosition().toFloat());
+    if (auto dragPort = dynamic_cast<ConnectionPort*>(event.eventComponent)) {
+        dynamic_cast<ConnectionContainer*>(getParentComponent())->startConnectionDrag(
+                dragPort,
+                event.getEventRelativeTo(
+                        getParentComponent()
+                    ).getPosition().toFloat()
+                );
+    } else {
+        SceneComponent::mouseDown(event);
     }
-    SceneComponent::mouseDown(event);
 }
 
 void EffectComponent::mouseDrag(const MouseEvent &event) {
-    SceneComponent::mouseDrag(event);
+    if (dynamic_cast<ConnectionPort*>(event.eventComponent) != nullptr) {
+        dynamic_cast<ConnectionContainer*>(getParentComponent())->connectionDrag(
+                event.getEventRelativeTo(
+                        getParentComponent()).getPosition().toFloat()
+                        );
+    } else {
+        SceneComponent::mouseDrag(event);
+    }
 }
 
 void EffectComponent::mouseUp(const MouseEvent &event) {
-    SceneComponent::mouseUp(event);
+    if (auto dragStartPort = dynamic_cast<ConnectionPort*>(event.eventComponent)) {
+        dynamic_cast<ConnectionContainer*>(getParentComponent())->endConnectionDrag(
+                event.getEventRelativeTo(
+                        getParentComponent()).getPosition().toFloat());
+    } else {
+        SceneComponent::mouseUp(event);
+    }
 }
 

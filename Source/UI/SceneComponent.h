@@ -16,6 +16,8 @@ class SceneComponent : public Component, public ReferenceCountedObject
 {
 public:
     SceneComponent();
+    ~SceneComponent();
+
     void paint(Graphics &g) override;
 
     void setHoverable(bool isHoverable);
@@ -30,10 +32,6 @@ public:
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
-
-    void onMouseDown(const MouseEvent &event);
-    void onMouseDrag(const MouseEvent &event);
-    void onMouseUp(const MouseEvent &event);
 
     void addSceneComponent(SceneComponent* child);
     void removeSceneComponent(SceneComponent* child);

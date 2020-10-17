@@ -32,3 +32,15 @@ EffectSceneComponent::EffectSceneComponent() {
     addSceneComponent(&effect);
     effect.setNumPorts(1, 2);
 }
+
+void EffectSceneComponent::mouseDown(const MouseEvent &event) {
+    SceneComponent::mouseDown(event);
+}
+
+void EffectSceneComponent::mouseDrag(const MouseEvent &event) {
+    SceneComponent::mouseDrag(event);
+}
+
+void EffectSceneComponent::mouseUp(const MouseEvent &event) {
+    SceneComponent::mouseUp(event);
+}
