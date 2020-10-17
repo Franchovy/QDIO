@@ -14,31 +14,47 @@ Connection::Connection() {
 
 }
 
-Connection::Connection(ConnectionPort *inPort, ConnectionPort *outPort) {
-    this->inPort = inPort;
-    this->outPort = outPort;
+Connection::Connection(ConnectionPort *port1, ConnectionPort *port2) {
+    this->port1 = port1;
+    this->port2 = port2;
 }
 
-void Connection::connectStart(ConnectionPort *start) {
-    inPort = start;
-    inSocketPosition = this->getLocalPoint(inPort,
-            Point<int>(
-                    inPort->getX() + inPort->getWidth(),
-                    inPort->getY() + inPort->getHeight()
-                    )
-                ).toFloat();
+void Connection::connectStart(ConnectionPort *startPort, Point<int> dragPos) {
+    auto portCenter = Point<int>(startPort->getWidth() / 2, startPort->getHeight() / 2);
+    Rectangle<int> newBounds(getParentComponent()->getLocalPoint(startPort, portCenter),
+            dragPos);
+    setBounds(newBounds);
+
+    port1 = startPort;
+    socket1.pos = this->getLocalPoint(startPort,
+                      portCenter);
+    socket2.pos = this->getLocalPoint(getParentComponent(),
+                                  dragPos);
+    socket1.relativeToParentPos = getParentComponent()->getLocalPoint(startPort,
+                                                     portCenter);
+    socket2.relativeToParentPos = getParentComponent()->getLocalPoint(
+            this, socket2.pos);
 }
 
 void Connection::connectDrag(Point<int> dragPos) {
+    Rectangle<int> bounds(
+            socket1.relativeToParentPos,
+            dragPos);
+    setBounds(bounds);
 
+    // Update socket1 pos if bounds have changed
+    socket1.pos = getLocalPoint(getParentComponent(), socket1.relativeToParentPos);
+    // Update socket2 to dragPos
+    socket2.pos = getLocalPoint(getParentComponent(), dragPos);
+    socket2.relativeToParentPos = getParentComponent()->getLocalPoint(this,
+            socket2.pos);
 }
 
-void Connection::connectEnd(ConnectionPort *end) {
+void Connection::connectEnd(ConnectionPort *endPort) {
+
 
 }
 
 void Connection::paint(Graphics &g) {
-    g.drawLine(Line<float>(inSocketPosition, outSocketPosition), 2);
-
-    SceneComponent::paint(g);
+    g.drawLine(Line<float>(socket1.pos.toFloat(), socket2.pos.toFloat()), 2);
 }

@@ -45,6 +45,7 @@ void EffectComponent::setNumPorts(int numIn, int numOut) {
 void EffectComponent::mouseDown(const MouseEvent &event) {
     if (auto dragPort = dynamic_cast<ConnectionPort*>(event.eventComponent)) {
         dynamic_cast<ConnectionContainer*>(getParentComponent())->startConnectionDrag(
+                getParentComponent(),
                 dragPort,
                 event.getEventRelativeTo(
                         getParentComponent()

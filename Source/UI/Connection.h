@@ -17,7 +17,8 @@
 class ConnectionPlug : public SceneComponent
 {
 public:
-
+    Point<int> relativeToParentPos;
+    Point<int> pos;
 private:
 
 };
@@ -26,20 +27,17 @@ class Connection : public SceneComponent
 {
 public:
     Connection();
-    Connection(ConnectionPort* inPort, ConnectionPort* outPort);
+    Connection(ConnectionPort* port1, ConnectionPort* port2);
 
-private:
+    void connectStart(ConnectionPort* startPort, Point<int> dragPos);
+    void connectDrag(Point<int> dragPos);
+    void connectEnd(ConnectionPort* endPort);
+
     void paint(Graphics &g) override;
 
-public:
-
-    void connectStart(ConnectionPort* start);
-    void connectDrag(Point<int> dragPos);
-    void connectEnd(ConnectionPort* end);
-
 private:
-    ConnectionPort* inPort = nullptr;
-    ConnectionPort* outPort = nullptr;
-    Point<float> inSocketPosition;
-    Point<float> outSocketPosition;
+    ConnectionPort* port1 = nullptr;
+    ConnectionPort* port2 = nullptr;
+    ConnectionPlug socket1;
+    ConnectionPlug socket2;
 };
