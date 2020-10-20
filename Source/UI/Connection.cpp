@@ -50,7 +50,7 @@ void Connection::connectDrag(Point<int> dragPos) {
             socket2.pos);
 }
 
-void Connection::connectEnd(ConnectionPort *endPort) {
+bool Connection::connectEnd(ConnectionPort *endPort) {
     if (endPort != nullptr) {
         // Create connection
         port2 = endPort;
@@ -68,10 +68,14 @@ void Connection::connectEnd(ConnectionPort *endPort) {
         socket2.pos = getLocalPoint(endPort, portCenter);
         socket2.relativeToParentPos = getParentComponent()->getLocalPoint(this,
                                                                           socket2.pos);
+
+        return true;
     } else {
         // Cancel connection
         auto parent = dynamic_cast<SceneComponent*>(getParentComponent());
         parent->removeSceneComponent(this);
+
+        return false;
     }
 
 }
@@ -83,4 +87,39 @@ void Connection::paint(Graphics &g) {
     g.setColour(Colours::darkgrey);
     g.drawLine(line, 2);
     
+}
+
+bool Connection::isConnectedTo(SceneComponent *componentToCheck) {
+    if (componentToCheck == nullptr) return false;
+    return port1->getParentComponent() == componentToCheck || port2->getParentComponent() == componentToCheck;
+}
+
+void Connection::updatePosition() {
+    // Update bounds
+    auto port1Center = Point<int>(port1->getWidth() / 2, port1->getHeight() / 2);
+    auto port2Center = Point<int>(port2->getWidth() / 2, port2->getHeight() / 2);
+
+    Rectangle<int> bounds(
+            getParentComponent()->getLocalPoint(port1, port1Center),
+            getParentComponent()->getLocalPoint(port2, port2Center));
+    setBounds(bounds);
+
+    // Update sockets pos based on new parent positions
+    socket1.pos = getLocalPoint(port1, port1Center);
+    socket2.pos = getLocalPoint(port2, port2Center);
+    // Update sockets relative pos
+    socket1.relativeToParentPos = getParentComponent()->getLocalPoint(this,
+                                                                      socket1.pos);
+    socket2.relativeToParentPos = getParentComponent()->getLocalPoint(this,
+                                                                      socket2.pos);
+}
+
+void Connection::addListener(ComponentListener *listener) {
+    if (port1 != nullptr) port1->getParentComponent()->addComponentListener(listener);
+    if (port2 != nullptr) port2->getParentComponent()->addComponentListener(listener);
+}
+
+void Connection::removeListener(ComponentListener *listener) {
+    if (port1 != nullptr) port1->getParentComponent()->removeComponentListener(listener);
+    if (port2 != nullptr) port2->getParentComponent()->removeComponentListener(listener);
 }

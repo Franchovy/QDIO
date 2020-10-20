@@ -14,7 +14,7 @@
 #include "ConnectionPort.h"
 #include "Connection.h"
 
-class ConnectionContainer
+class ConnectionContainer : public ComponentListener
 {
 public:
     void addConnection(ConnectionPort* port1, ConnectionPort* port2);
@@ -22,6 +22,8 @@ public:
     void startConnectionDrag(Component* thisComponent, ConnectionPort* port1, Point<float> mousePos);
     void connectionDrag(Point<float> mousePos);
     void endConnectionDrag(ConnectionPort* port2);
+
+    void componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) override;
 
 private:
     Connection* activeConnection = nullptr;

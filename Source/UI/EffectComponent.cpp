@@ -74,15 +74,8 @@ void EffectComponent::mouseUp(const MouseEvent &event) {
 
         auto endPort = dynamic_cast<ConnectionPort*>(componentAt);
 
-        if (endPort != nullptr) {
-            std::cout << "Successful connection" << newLine;
-            dynamic_cast<ConnectionContainer*>(getParentComponent())->endConnectionDrag(
+        dynamic_cast<ConnectionContainer*>(getParentComponent())->endConnectionDrag(
                     endPort);
-        } else {
-            std::cout << "Connection failed" << newLine;
-            dynamic_cast<ConnectionContainer*>(getParentComponent())->endConnectionDrag(
-                    nullptr);
-        }
     } else {
         SceneComponent::mouseUp(event);
     }

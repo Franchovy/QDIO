@@ -31,9 +31,15 @@ public:
 
     void connectStart(ConnectionPort* startPort, Point<int> dragPos);
     void connectDrag(Point<int> dragPos);
-    void connectEnd(ConnectionPort* endPort);
+    bool connectEnd(ConnectionPort* endPort);
+
+    void addListener(ComponentListener* listener);
+    void removeListener(ComponentListener* listener);
 
     void paint(Graphics &g) override;
+
+    bool isConnectedTo(SceneComponent* componentToCheck);
+    void updatePosition();
 
 private:
     ConnectionPort* port1 = nullptr;

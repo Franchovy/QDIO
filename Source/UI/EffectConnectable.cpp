@@ -42,3 +42,11 @@ void EffectConnectable::setNumPorts(int numIn, int numOut) {
 std::unique_ptr<ConnectionPort> EffectConnectable::createPort(bool isInput) {
     return std::make_unique<ConnectionPort>();
 }
+
+void EffectConnectable::moveConnectedComponent(SceneComponent *component, Point<int> delta) {
+    component->setTopLeftPosition(component->getX() + delta.x, component->getY() + delta.y);
+}
+
+void EffectConnectable::addConnectionToThis(Connection *newConnection) {
+    connections.add(newConnection);
+}

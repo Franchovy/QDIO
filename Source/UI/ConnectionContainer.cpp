@@ -28,5 +28,21 @@ void ConnectionContainer::connectionDrag(Point<float> mousePos) {
 }
 
 void ConnectionContainer::endConnectionDrag(ConnectionPort* port2) {
-    activeConnection->connectEnd(port2);
+    if (activeConnection->connectEnd(port2)) {
+        // Connection was successful
+        activeConnection->addListener(this);
+    } else {
+        // Connection unsuccessful, got cancelled
+        activeConnection->removeListener(this);
+    }
+
+}
+
+void ConnectionContainer::componentMovedOrResized(Component &component, bool wasMoved, bool wasResized) {
+    for (auto c : connections) {
+        if (c->isConnectedTo(dynamic_cast<SceneComponent*>(&component))) {
+            c->updatePosition();
+        }
+    }
+    ComponentListener::componentMovedOrResized(component, wasMoved, wasResized);
 }

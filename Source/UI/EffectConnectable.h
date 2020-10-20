@@ -25,10 +25,13 @@ public:
 
     virtual void setNumPorts(int numIn, int numOut);
 
+    void addConnectionToThis(Connection* newConnection);
+    void moveConnectedComponent(SceneComponent* component, Point<int> delta);
+
 protected:
     EffectPorts ports;
 
 private:
     std::unique_ptr<ConnectionPort> createPort(bool isInput);
-
+    ReferenceCountedArray<Connection> connections;
 };
