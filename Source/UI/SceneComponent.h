@@ -33,6 +33,9 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
+    void holdSizeOnHover(int deltaSize);
+    void resetHoverSize();
+
     void addSceneComponent(SceneComponent* child);
     void removeSceneComponent(SceneComponent* child);
 
@@ -73,6 +76,8 @@ private:
 
     /// Array to maintain a referenceCount for children
     ReferenceCountedArray<SceneComponent> children;
+
+    int holdingHoverSize = 0;
 
     bool isDraggable = false;
     bool isDragExitable = false;

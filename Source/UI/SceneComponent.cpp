@@ -91,7 +91,9 @@ void SceneComponent::mouseExit(const MouseEvent &event) {
 }
 
 void SceneComponent::targetHoverMouseUp(const MouseEvent &event, SceneComponent *targetComponent) {
-    std::cout << event.eventComponent << " drags into " << targetComponent << newLine;
+    auto newPosition = getPosition() - targetComponent->getPosition();
+    targetComponent->addAndMakeVisible(this);
+    setTopLeftPosition(newPosition);
 }
 
 Array<SceneComponent *> SceneComponent::getSelectedComponents() {
@@ -156,12 +158,19 @@ void SceneComponent::mouseDrag(const MouseEvent &event) {
                     targetHoverComponent = target;
                     targetHoverComponent->hovered = true;
                     targetHoverComponent->repaint();
+
+                    // Visual react if component is dragInto-able
+                    if (target->canDragInto(*this, false)) {
+                        target->holdSizeOnHover(100);
+                    }
+
                 }
             }
         }
         // Deselect any target component if not hovered
         if (targetHoverComponent != nullptr && ! targetHoverComponent->contains(
                 targetHoverComponent->getLocalPoint(event.eventComponent, event.getPosition()))) {
+            targetHoverComponent->resetHoverSize();
             targetHoverComponent->hovered = false;
             targetHoverComponent->repaint();
             targetHoverComponent = nullptr;
@@ -173,7 +182,10 @@ void SceneComponent::mouseDrag(const MouseEvent &event) {
 void SceneComponent::mouseUp(const MouseEvent &event) {
     //  Operation on target hover component
     if (targetHoverComponent != nullptr) {
-        targetHoverMouseUp(event, targetHoverComponent);
+        if (targetHoverComponent->canDragInto(*this, false)) {
+            targetHoverMouseUp(event, targetHoverComponent);
+        }
+
 
         targetHoverComponent->hovered = false;
         targetHoverComponent->repaint();
@@ -196,6 +208,22 @@ SceneComponent::~SceneComponent() {
     if (auto parent = dynamic_cast<SceneComponent*>(getParentComponent())) {
         parent->removeSceneComponent(this);
     }
+}
+
+void SceneComponent::holdSizeOnHover(int deltaSize) {
+    auto centerPosition = Point<int>(getX() + getWidth() / 2, getY() + getHeight() / 2);
+    setSize(getWidth() + deltaSize - holdingHoverSize, getHeight() + deltaSize - holdingHoverSize);
+    holdingHoverSize = deltaSize;
+    setCentrePosition(centerPosition);
+
+}
+
+void SceneComponent::resetHoverSize() {
+    auto centerPosition = Point<int>(getX() + getWidth() / 2, getY() + getHeight() / 2);
+    setSize(getWidth() - holdingHoverSize,
+            getHeight() - holdingHoverSize);
+    setCentrePosition(centerPosition);
+    holdingHoverSize = 0;
 }
 
 
