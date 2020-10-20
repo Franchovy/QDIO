@@ -91,10 +91,10 @@
               file="Source/UI/EffectConnectable.cpp"/>
         <FILE id="E6khf0" name="EffectConnectable.h" compile="0" resource="0"
               file="Source/UI/EffectConnectable.h"/>
-        <FILE id="NrDIaI" name="EffectSceneComponent.cpp" compile="1" resource="0"
-              file="Source/UI/EffectSceneComponent.cpp"/>
-        <FILE id="RbXb2C" name="EffectSceneComponent.h" compile="0" resource="0"
-              file="Source/UI/EffectSceneComponent.h"/>
+        <FILE id="NrDIaI" name="Scene.cpp" compile="1" resource="0"
+              file="Source/UI/Scene.cpp"/>
+        <FILE id="RbXb2C" name="Scene.h" compile="0" resource="0"
+              file="Source/UI/Scene.h"/>
         <FILE id="NIGiEv" name="ParameterComponent.cpp" compile="1" resource="0"
               file="Source/UI/ParameterComponent.cpp"/>
         <FILE id="oTyiLC" name="ParameterComponent.h" compile="0" resource="0"

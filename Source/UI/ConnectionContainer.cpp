@@ -10,9 +10,15 @@
 
 #include "ConnectionContainer.h"
 
-void ConnectionContainer::addConnection(ConnectionPort *port1, ConnectionPort *port2) {
+void ConnectionContainer::addConnection(Component* thisComponent, ConnectionPort *port1, ConnectionPort *port2) {
+    auto connection = new Connection();
+    thisComponent->addAndMakeVisible(connection);
 
-
+    connection->connectStart(port1, Point<int>());
+    if (connection->connectEnd(port2)) {
+        connection->addListener(this);
+        connections.add(connection);
+    }
 }
 
 void ConnectionContainer::startConnectionDrag(Component* thisComponent, ConnectionPort *port1, Point<float> mousePos) {

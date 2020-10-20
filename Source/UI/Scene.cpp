@@ -1,16 +1,16 @@
 /*
   ==============================================================================
 
-    EffectSceneComponent.cpp
+    Scene.cpp
     Created: 15 Oct 2020 11:18:51am
     Author:  maxime
 
   ==============================================================================
 */
 
-#include "EffectSceneComponent.h"
+#include "Scene.h"
 
-EffectSceneComponent::EffectSceneComponent() {
+Scene::Scene() {
     setColour(backgroundID, Colours::grey);
 
     //=======================================================================
@@ -35,16 +35,19 @@ EffectSceneComponent::EffectSceneComponent() {
     effect2.setBounds(900, 200, 200, 200);
     addSceneComponent(&effect2);
     effect2.setNumPorts(2, 2);
+
+    addConnection(this, effect.getPorts()[0], effect2.getPorts()[0]);
+
 }
 
-void EffectSceneComponent::mouseDown(const MouseEvent &event) {
+void Scene::mouseDown(const MouseEvent &event) {
     SceneComponent::mouseDown(event);
 }
 
-void EffectSceneComponent::mouseDrag(const MouseEvent &event) {
+void Scene::mouseDrag(const MouseEvent &event) {
     SceneComponent::mouseDrag(event);
 }
 
-void EffectSceneComponent::mouseUp(const MouseEvent &event) {
+void Scene::mouseUp(const MouseEvent &event) {
     SceneComponent::mouseUp(event);
 }

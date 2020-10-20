@@ -15,7 +15,7 @@
 #include "EffectScene.h"
 #include "IDs"
 #include "Settings.h"
-#include "UI/EffectSceneComponent.h"
+#include "UI/Scene.h"
 #include "AudioSystem.h"
 
 /**
@@ -51,7 +51,7 @@ private:
 
     void populateEffectMenu(PopupMenu& menu);
 
-    EffectSceneComponent effectScene;
+    Scene effectScene;
     AudioSystem audioSystem;
 
     ImageButton settingsButton;

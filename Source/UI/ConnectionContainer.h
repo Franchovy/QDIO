@@ -17,7 +17,7 @@
 class ConnectionContainer : public ComponentListener
 {
 public:
-    void addConnection(ConnectionPort* port1, ConnectionPort* port2);
+    void addConnection(Component* thisComponent, ConnectionPort* port1, ConnectionPort* port2);
 
     void startConnectionDrag(Component* thisComponent, ConnectionPort* port1, Point<float> mousePos);
     void connectionDrag(Point<float> mousePos);

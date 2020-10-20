@@ -50,3 +50,15 @@ void EffectConnectable::moveConnectedComponent(SceneComponent *component, Point<
 void EffectConnectable::addConnectionToThis(Connection *newConnection) {
     connections.add(newConnection);
 }
+
+Array<ConnectionPort*> EffectConnectable::getPorts() {
+    Array<ConnectionPort*> array;
+
+    for (auto port : ports.inPorts) {
+        array.add(port);
+    }
+    for (auto port : ports.outPorts) {
+        array.add(port);
+    }
+    return array;
+}

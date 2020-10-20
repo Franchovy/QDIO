@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    EffectSceneComponent.h
+    Scene.h
     Created: 15 Oct 2020 11:18:51am
     Author:  maxime
 
@@ -14,10 +14,10 @@
 #include "ConnectionContainer.h"
 #include "EffectComponent.h"
 
-class EffectSceneComponent : public SceneComponent, public ConnectionContainer
+class Scene : public SceneComponent, public ConnectionContainer
 {
 public:
-    EffectSceneComponent();
+    Scene();
 
     void mouseDown(const MouseEvent &event) override;
     void mouseDrag(const MouseEvent &event) override;

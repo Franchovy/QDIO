@@ -23,9 +23,7 @@ public:
     void setNumPorts(int numIn, int numOut) override;
 
     void mouseDown(const MouseEvent &event) override;
-
     void mouseDrag(const MouseEvent &event) override;
-
     void mouseUp(const MouseEvent &event) override;
 
 private:

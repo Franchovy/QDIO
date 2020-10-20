@@ -28,6 +28,8 @@ public:
     void addConnectionToThis(Connection* newConnection);
     void moveConnectedComponent(SceneComponent* component, Point<int> delta);
 
+    Array<ConnectionPort*> getPorts();
+
 protected:
     EffectPorts ports;
 
