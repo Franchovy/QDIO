@@ -51,3 +51,11 @@ void Scene::mouseDrag(const MouseEvent &event) {
 void Scene::mouseUp(const MouseEvent &event) {
     SceneComponent::mouseUp(event);
 }
+
+bool Scene::canDragHover(const SceneComponent &other, bool isRightClickDrag) const {
+    return dynamic_cast<const EffectConnectable*>(&other) != nullptr;
+}
+
+bool Scene::canDragInto(const SceneComponent &other, bool isRightClickDrag) const {
+    return dynamic_cast<const EffectConnectable*>(&other) != nullptr;
+}

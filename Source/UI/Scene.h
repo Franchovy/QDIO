@@ -23,6 +23,10 @@ public:
     void mouseDrag(const MouseEvent &event) override;
     void mouseUp(const MouseEvent &event) override;
 
+    bool canDragHover(const SceneComponent &other, bool isRightClickDrag) const override;
+
+    bool canDragInto(const SceneComponent &other, bool isRightClickDrag) const override;
+
 private:
     //=============================================================================
     // Test stuff
