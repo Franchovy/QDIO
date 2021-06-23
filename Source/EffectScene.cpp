@@ -15,7 +15,7 @@ EffectScene::EffectScene()
 
     //================================================================================
     // LOADING PARAMETERS
-
+    
     // If this is the Initial Use Case
     loadInitialCase = getAppProperties().getUserSettings()->getBoolValue(KEYNAME_INITIAL_USE, true);
 
@@ -36,6 +36,8 @@ EffectScene::EffectScene()
     } else {
         dontLoad = true;
     }
+    
+    dontLoad = true;
 
 
     //dontLoad = true;
@@ -71,7 +73,7 @@ EffectScene::EffectScene()
    
     //======================
     // Set up devices
-    if (loadInitialCase) {
+    //if (loadInitialCase) {
         /*auto inNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioInputNode));
         auto outNode = audioGraph.addNode(std::make_unique<AudioGraphIOProcessor>(AudioGraphIOProcessor::audioOutputNode));
         */
@@ -122,18 +124,19 @@ EffectScene::EffectScene()
         newSetup.outputDeviceName = deviceSelectWindow.getComboBoxComponent("Output Device")->getText();
 
         deviceManager.setAudioDeviceSetup(newSetup, true);
-    }
+    //}
     
     
     
 
         //getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get()
-
+    if (false) {
     if (! dontLoadDevices && getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS)) != nullptr) {
         std::cout << "Device state: " << getAppProperties().getUserSettings()->getXmlValue((KEYNAME_DEVICE_SETTINGS))->toString() << newLine;
 
         deviceManager.initialise(2, 2, getAppProperties().getUserSettings()->getXmlValue(KEYNAME_DEVICE_SETTINGS).get(),
                                  true);
+    }
     }
 
     deviceManager.addAudioCallback(&processorPlayer);
